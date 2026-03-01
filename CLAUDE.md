@@ -34,7 +34,7 @@ pnpm --filter @seeun-log/client dev # client만 실행
 - **AI 번역**: OpenAI GPT-4o로 다국어 번역 처리
 - **TypeScript**: Strict mode. ES2022, bundler resolution. Path alias `@/*` → `./src/*` (admin).
 - **ESLint**: Flat config (v9). `_` prefix 변수 unused 허용.
-- **Styling**: Tailwind CSS v4 utility classes. 공통 테마는 `@seeun-log/config/theme.css`에서 `@theme inline`으로 정의하며, 양 앱(`apps/client`, `apps/admin`)에서 import. Canonical class 사용 필수 (`flex-shrink-0` → `shrink-0`, `flex-grow` → `grow`, `overflow-ellipsis` → `text-ellipsis` 등). 상세 컬러 시스템: [`docs/theme.md`](docs/theme.md)
+- **Styling**: Tailwind CSS v4 utility classes. 공통 테마는 `@seeun-log/config/theme.css`에서 `@theme inline`으로 정의하며, 양 앱(`apps/client`, `apps/admin`)에서 import. Canonical class 사용 필수 (`flex-shrink-0` → `shrink-0`, `flex-grow` → `grow`, `overflow-ellipsis` → `text-ellipsis` 등). Primary: Sage Green, Secondary: Soft Coral (협찬, Pick, CTA). 상세 컬러 시스템: [`docs/theme.md`](docs/theme.md)
 
 상세 아키텍처: [`docs/architecture.md`](docs/architecture.md)
 
@@ -49,10 +49,14 @@ pnpm --filter @seeun-log/client dev # client만 실행
 ### URL Structure
 
 ```
+# 한국어 (기본 — locale prefix 없음)
 /{category}/{sub_category}/{slug}
+
+# 다국어
+/{locale}/{category}/{sub_category}/{slug}
 ```
 
-예: `/delicious/korean/gangnam-pasta`
+예: `/delicious/korean/gangnam-pasta`, `/en/delicious/korean/gangnam-pasta`
 
 ### 콘텐츠 타입
 
@@ -67,6 +71,8 @@ pnpm --filter @seeun-log/client dev # client만 실행
 - **피드 로딩**: 무한스크롤 (SSG 첫 페이지 + Static JSON fetch로 추가 로드)
 - **반응형 전환**: `hidden lg:block` / `block lg:hidden`으로 CSS 토글. 별도 HTML 구조 금지.
 - **Mobile Footer**: Left Sidebar 대체 — 전체 서브카테고리 링크 필수 (SEO)
+- **Image Style**: 이미지/썸네일 `rounded-none` (sharp corners). 애드센스 플레이스홀더도 동일.
+- **검색**: `/search/` — 빌드 타임 JSON 인라인, 클라이언트 JS 필터링. `noindex, follow`.
 
 상세 UI 스펙: [`docs/ui-specs.md`](docs/ui-specs.md)
 
@@ -78,12 +84,13 @@ pnpm --filter @seeun-log/client dev # client만 실행
 - Canonical tag, Open Graph, trailing slash 일관성 필수.
 - 이미지: WebP/AVIF, srcset, 명시적 width/height. 첫 번째 카드 LCP priority.
 - `client:load` 최소화 — 네비게이션, 광고 토글은 CSS로 처리.
+- Internal Linking: 카테고리 간 크로스링크 최소화 (Silo 유지).
 
 상세 SEO 전략: [`docs/seo-strategy.md`](docs/seo-strategy.md)
 
 ## Database
 
-Supabase PostgreSQL `posts` 테이블 — slug(unique), category(enum), sub_category, is_sponsored, is_recommended, rating, place_name, address 등.
+Supabase PostgreSQL `posts` 테이블 — slug(unique), category(enum), sub_category, is_sponsored, is_recommended, rating, place_name, address 등. `post_translations` 테이블 — 다국어 번역 저장 (post_id + locale unique).
 
 상세 스키마: [`docs/database.md`](docs/database.md)
 
@@ -95,7 +102,8 @@ docs/
 ├── ui-specs.md       # PC/Mobile 레이아웃 규칙, 컴포넌트 스펙, 반응형 전략
 ├── database.md       # DB 스키마, 인덱스 권장사항
 ├── seo-strategy.md   # SEO, JSON-LD, URL 구조, 이미지 최적화
-└── theme.md          # 컬러 팔레트, 시맨틱 토큰, 테마 사용 가이드
+├── theme.md          # 컬러 팔레트, 시맨틱 토큰, 테마 사용 가이드
+└── TODO.md           # 미구현 기능 목록
 ```
 
 Sub-agent 작업 시 반드시 관련 docs 파일을 참조할 것. 코드 변경이 docs와 불일치하면 qa가 REJECT.

@@ -103,14 +103,14 @@
    [In-feed Adsense 1]  ← index 1
    [Post Card 2]
    [Post Card 3]
+   [In-feed Adsense 2]  ← index 3
    [Post Card 4]
    [Post Card 5]
-   [In-feed Adsense 2]  ← index 5
    [Post Card 6]
    ...
    ```
 
-   - SSG 빌드 시 index 1, 5에 광고 삽입 (추가 페이지 로드 시에도 동일 패턴)
+   - SSG 빌드 시 index 1, 3에 광고 삽입 (추가 페이지 로드 시에도 동일 패턴)
    - CSS `lg:hidden` / `hidden lg:block`으로 visibility 토글 (별도 HTML 구조 금지)
 
 3. **피드 로딩**: IntersectionObserver 페이지네이션 (SSG 첫 페이지 + Static JSON fetch로 추가 로드)
@@ -133,7 +133,7 @@
 #### `PostCardGrid.astro`
 
 - **위치**: `features/post-feed/components/PostCardGrid.astro`
-- PostCard 목록을 그리드 형태로 렌더링 + InFeedAdsense를 index 1, 5에 자동 삽입
+- PostCard 목록을 그리드 형태로 렌더링 + InFeedAdsense를 index 1, 3에 자동 삽입
 - IntersectionObserver 페이지네이션 지원
 
 #### `MobileHeader.astro`
@@ -241,7 +241,7 @@
 - Props: `searchData`, `suggestedKeywords`, `placeholderText`, `noResultsText`, `noResultsHintText`, `resultsText`, `suggestedText`, `sponsoredLabel`
 - 검색 폼, 추천 키워드 chip, 결과 리스트, 빈 결과 UI, 클라이언트 검색 스크립트를 하나의 컴포넌트로 통합
 - `<script type="application/json">` 으로 검색 데이터 인라인 삽입
-- 클라이언트 JS가 PostCard DOM을 동적 생성 + In-feed Adsense를 index 1, 5에 삽입
+- 클라이언트 JS가 PostCard DOM을 동적 생성 + In-feed Adsense를 index 1, 3에 삽입
 
 ### Shared Utilities
 
@@ -283,7 +283,7 @@
 | PostLayout Fixed Adsense | 300x50 | 468x60 (중앙 정렬) | 게시글 상세 본문 상단 | `FixedAdsense variant="post-top"` |
 | RightSidebar Fixed Adsense | -- | 300x250 | PC 우측 사이드바 상단 (sticky) | `FixedAdsense variant="sidebar"` |
 | In-Article Adsense | fluid (h-300px) | fluid (h-300px) | 게시글 본문 중간 (## 헤딩 앞에 삽입) | `insertInArticleAds()` |
-| In-feed Adsense | fluid (h-250px) | fluid (h-250px) | 카드 피드 index 1, 5 / 검색 결과 index 1, 5 | `InFeedAdsense` |
+| In-feed Adsense | fluid (h-250px) | fluid (h-250px) | 카드 피드 index 1, 3 / 검색 결과 index 1, 3 | `InFeedAdsense` |
 
 ### AdSense 컴포넌트
 
@@ -321,7 +321,7 @@
 
 1. **검색 입력**: 돋보기 아이콘(좌측) + `<input type="search">`. Enter(form submit)로 검색 실행, 실시간 필터링 아님.
 2. **추천 키워드**: place_name + 카테고리 라벨을 빌드 타임에 추출. 클릭 가능한 chip 형태.
-3. **검색 결과**: 결과 건수 표시 + PostCard 리스트. In-feed Adsense를 result index 1, 5에 삽입.
+3. **검색 결과**: 결과 건수 표시 + PostCard 리스트. In-feed Adsense를 result index 1, 3에 삽입.
 4. **결과 없음**: 아이콘 + 안내 메시지 + 힌트 텍스트
 5. **URL**: `history.replaceState`로 `?q=` 파라미터 반영 (페이지 새로고침 없음)
 
@@ -340,5 +340,5 @@
 | Left Sidebar  | `hidden lg:block` | 숨김 (Footer로 대체) |
 | Right Sidebar | `hidden lg:block` | In-Feed Ad로 전환    |
 | Header Nav    | 텍스트 메뉴       | Snap Scroll          |
-| Ad 배치       | Right Sidebar     | In-Feed (index 1, 5) |
+| Ad 배치       | Right Sidebar     | In-Feed (index 1, 3) |
 | Footer Links  | 기본              | Full Sitemap (SEO)   |
