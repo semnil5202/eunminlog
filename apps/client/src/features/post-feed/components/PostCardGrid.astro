@@ -1,5 +1,5 @@
 ---
-/** 포스트 피드를 단일 컬럼 리스트로 렌더링한다. 2번째, 6번째 슬롯에 인피드 광고 삽입. */
+/** 포스트 피드를 단일 컬럼 리스트로 렌더링한다. 2번째, 5번째 슬롯에 인피드 광고 삽입. */
 import type { Post } from "@/shared/types/post";
 import type { Locale } from "@/shared/types/common";
 import PostCard from "./PostCard.astro";
@@ -24,7 +24,7 @@ const feedItems: FeedItem[] = [];
 let cardIndex = 0;
 
 for (let i = 0; i < posts.length; i++) {
-  if (cardIndex === 1 || cardIndex === 5) {
+  if (cardIndex === 1 || cardIndex === 3) {
     feedItems.push({ type: "ad" });
   }
 
@@ -162,7 +162,7 @@ for (let i = 0; i < posts.length; i++) {
 
           let localIndex = 0;
           for (const post of posts) {
-            if (localIndex === 1 || localIndex === 5) {
+            if (localIndex === 1 || localIndex === 3) {
               feed.appendChild(createAdSlot());
             }
             feed.appendChild(createPostCard(post));
