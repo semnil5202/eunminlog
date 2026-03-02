@@ -1,9 +1,9 @@
 import { defineConfig } from 'astro/config';
 import tailwindcss from '@tailwindcss/vite';
-import { SITE_URL } from '@eunmin-log/config/site';
+import { getSiteUrlFromEnv } from '@eunmin-log/config/site';
 
 export default defineConfig({
-  site: SITE_URL,
+  site: getSiteUrlFromEnv(process.env.PUBLIC_STAGE),
   trailingSlash: 'always',
   i18n: {
     defaultLocale: 'ko',

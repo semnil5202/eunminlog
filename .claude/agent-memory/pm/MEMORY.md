@@ -27,7 +27,8 @@
 - Refactoring completed: PostLayout 336->179 lines, search.astro 272->52 lines, feature-based component extraction, shared utility dedup, arrow function convention
 - Client features: post-feed, post-detail (PlaceInfoCard, NearbyPostList, PostBadges, ads.ts, schema.ts), search (SearchUI, search-data.ts)
 - Client shared: ad/ (FixedAdsense, InFeedAdsense), ui/ (StarRating, SponsoredBadge), navigation/ (LanguageSelector, CategoryTree, Breadcrumb, SubCategoryTabs), layout/ (SponsoredPostItem, etc.), lib/ (date.ts, navigation.ts)
-- Missing: Supabase connection (using mock data), editor, auth, CI/CD, real AdSense integration
+- Missing: Supabase connection (using mock data), editor, auth, real AdSense integration
+- CI/CD: designed (docs/ci-cd.md) -- pending se implementation
 - GA4 tracking strategy designed (docs/ga4-tracking.md) -- pending implementation
 
 ### Theme System
@@ -55,6 +56,7 @@
 - docs/seo-strategy.md -- SEO, JSON-LD, URL structure, image optimization
 - docs/theme.md -- color palette, semantic tokens, usage guide
 - docs/ga4-tracking.md -- GA4 event tracking strategy, event schema, implementation guide
+- docs/ci-cd.md -- GitHub Actions CI/CD pipeline design (deploy-client.yml)
 
 ### Search Feature Decisions
 
@@ -83,6 +85,15 @@
 - Implementation pattern: event delegation for clicks, IntersectionObserver for ad tracking
 - Analytics code goes in shared/lib/analytics/ (gtag.ts, post-tracker.ts, ad-tracker.ts)
 - 14 custom dimensions to register in GA4 console
+
+### CI/CD
+
+- Pipeline: GitHub Actions, single workflow `deploy-client.yml`
+- Branch strategy: main -> prod (prod-eunminlog-static), develop -> dev (dev-eunminlog-static)
+- AWS region: ap-northeast-2, CloudFront OAC, S3 public access blocked
+- SITE_URL: needs env var support in astro.config.mjs (process.env.SITE_URL fallback to packages/config/site.ts)
+- Supabase env vars: not needed yet (mock data), add when Supabase integration is done
+- Secrets: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, PROD/DEV_CLOUDFRONT_DISTRIBUTION_ID
 
 ### Open Design Questions
 

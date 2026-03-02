@@ -104,6 +104,7 @@ docs/
 ├── seo-strategy.md   # SEO, JSON-LD, URL 구조, 이미지 최적화
 ├── theme.md          # 컬러 팔레트, 시맨틱 토큰, 테마 사용 가이드
 ├── ga4-tracking.md   # GA4 이벤트 트래킹 전략, 이벤트 스키마, 구현 가이드
+├── ci-cd.md          # GitHub Actions CI/CD 파이프라인 설계
 └── TODO.md           # 미구현 기능 목록
 ```
 

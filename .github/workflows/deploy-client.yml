@@ -1,0 +1,56 @@
+name: Deploy Client
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Set environment variables
+        run: |
+          if [ "${{ github.ref_name }}" = "main" ]; then
+            echo "S3_BUCKET=prod-eunminlog-static" >> $GITHUB_ENV
+            echo "CLOUDFRONT_DISTRIBUTION_ID=${{ secrets.PROD_CLOUDFRONT_DISTRIBUTION_ID }}" >> $GITHUB_ENV
+            echo "PUBLIC_STAGE=production" >> $GITHUB_ENV
+          else
+            echo "S3_BUCKET=dev-eunminlog-static" >> $GITHUB_ENV
+            echo "CLOUDFRONT_DISTRIBUTION_ID=${{ secrets.DEV_CLOUDFRONT_DISTRIBUTION_ID }}" >> $GITHUB_ENV
+            echo "PUBLIC_STAGE=development" >> $GITHUB_ENV
+          fi
+
+      - name: Build client
+        run: pnpm --filter @eunmin-log/client build
+        env:
+          PUBLIC_STAGE: ${{ env.PUBLIC_STAGE }}
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
+      - name: Deploy to S3
+        run: aws s3 sync apps/client/dist/ s3://${{ env.S3_BUCKET }} --delete
+
+      - name: Invalidate CloudFront cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ env.CLOUDFRONT_DISTRIBUTION_ID }} \
+            --paths "/*"
