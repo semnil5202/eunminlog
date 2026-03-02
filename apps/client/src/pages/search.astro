@@ -37,6 +37,7 @@ const sponsoredLabel = t("post.sponsored", locale);
   path="/search/"
   locale={locale}
   sponsoredPosts={sponsoredLocalized}
+  gaPageParams={{ page_type: 'search', content_category: 'all', content_sub_category: 'all', content_locale: locale }}
 >
   <Fragment slot="head">
     <meta name="robots" content="noindex, follow" />

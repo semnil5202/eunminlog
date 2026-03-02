@@ -40,7 +40,7 @@ const {
       </a>
     </div>
 
-    <ul role="list">
+    <ul role="list" id="nearby-posts">
       {posts.map((item) => {
         const isCurrent = item.slug === currentSlug;
         const href = getLocalePath(
@@ -48,10 +48,16 @@ const {
           locale,
         );
         return (
-          <li class:list={[
+          <li
+            class:list={[
             "border-b border-gray-100",
             isCurrent && "border-l-2 border-l-primary-500",
-          ]}>
+          ]}
+            data-post-slug={item.slug}
+            data-post-category={item.category}
+            data-post-sub-category={item.sub_category}
+            data-post-sponsored={String(item.is_sponsored)}
+          >
             <a
               href={href}
               class:list={[
@@ -89,3 +95,8 @@ const {
     </ul>
   </section>
 )}
+
+<script>
+  import { initPostClickTracker } from "@/shared/lib/analytics/post-tracker";
+  initPostClickTracker("nearby-posts");
+</script>

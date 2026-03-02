@@ -14,6 +14,7 @@ interface Props {
   locale?: Locale;
   path: string;
   type?: "website" | "article";
+  gaPageParams?: Record<string, string | number | boolean>;
 }
 
 const {
@@ -24,6 +25,7 @@ const {
   locale = DEFAULT_LOCALE,
   path,
   type = "website",
+  gaPageParams = {},
 } = Astro.props;
 ---
 
@@ -41,11 +43,11 @@ const {
     />
     <slot name="head" />
     <script async src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}></script>
-    <script is:inline define:vars={{ GA_MEASUREMENT_ID }}>
+    <script is:inline define:vars={{ GA_MEASUREMENT_ID, gaPageParams }}>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
-      gtag('config', GA_MEASUREMENT_ID);
+      gtag('config', GA_MEASUREMENT_ID, gaPageParams);
     </script>
   </head>
   <body class="min-h-screen bg-white text-gray-900 antialiased font-pretendard">

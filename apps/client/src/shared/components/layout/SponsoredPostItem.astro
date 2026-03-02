@@ -24,6 +24,10 @@ const href = getLocalePath(
     "border-b border-gray-100",
     isCurrent && "border-l-2 border-l-primary-500",
   ]}
+  data-post-slug={post.slug}
+  data-post-category={post.category}
+  data-post-sub-category={post.sub_category}
+  data-post-sponsored={String(post.is_sponsored)}
 >
   <a
     href={href}

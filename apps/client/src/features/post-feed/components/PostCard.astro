@@ -29,7 +29,13 @@ const dateStr = new Date(post.created_at).toLocaleDateString(locale, {
 });
 ---
 
-<article class:list={["group", className]}>
+<article
+  class:list={["group", className]}
+  data-post-slug={post.slug}
+  data-post-category={post.category}
+  data-post-sub-category={post.sub_category}
+  data-post-sponsored={String(post.is_sponsored)}
+>
   <a href={localizedHref} class="block">
     <div class="relative w-full aspect-7/3 overflow-hidden bg-gray-100">
       <img

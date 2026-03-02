@@ -82,6 +82,7 @@ const pageDescription = `${SITE_NAME_KO} ${categoryLabel} > ${subCategoryLabel} 
   path={path}
   locale={locale}
   sponsoredPosts={sponsoredLocalized}
+  gaPageParams={{ page_type: 'list', content_category: category, content_sub_category: sub_category, content_locale: locale }}
 >
   <BreadcrumbJsonLd slot="head" items={breadcrumbItems} />
 

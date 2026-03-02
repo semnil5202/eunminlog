@@ -18,14 +18,16 @@ const { posts, locale, feedEndpoint, hasNextPage = false, sponsoredLabel = "" } 
 
 type FeedItem =
   | { type: "post"; post: Post; cardIndex: number }
-  | { type: "ad" };
+  | { type: "ad"; adIndex: number };
 
 const feedItems: FeedItem[] = [];
 let cardIndex = 0;
+let adIndex = 0;
 
 for (let i = 0; i < posts.length; i++) {
   if (cardIndex === 1 || cardIndex === 3) {
-    feedItems.push({ type: "ad" });
+    adIndex++;
+    feedItems.push({ type: "ad", adIndex });
   }
 
   feedItems.push({ type: "post", post: posts[i]!, cardIndex });
@@ -43,7 +45,7 @@ for (let i = 0; i < posts.length; i++) {
 >
   {feedItems.map((item) => {
     if (item.type === "ad") {
-      return <InFeedAdsense class="h-[250px]" />;
+      return <InFeedAdsense class="h-[250px]" slotId={`in_feed_${item.adIndex}`} position={`feed_index_${item.adIndex}`} />;
     }
 
     if (item.post.is_sponsored) {
@@ -83,13 +85,18 @@ for (let i = 0; i < posts.length; i++) {
       let nextPage = parseInt(feed.dataset.nextPage!, 10);
       let hasNext = feed.dataset.hasNext === "true";
       let loading = false;
+      let dynamicAdCounter = 2;
       const sponsoredLabel = feed.dataset.sponsoredLabel || "";
 
       const createAdSlot = (): HTMLDivElement => {
+        dynamicAdCounter++;
         const wrapper = document.createElement("div");
         wrapper.className = "w-full h-[250px] bg-gray-100 rounded-none flex items-center justify-center";
         wrapper.setAttribute("role", "complementary");
         wrapper.setAttribute("aria-label", "Advertisement");
+        wrapper.dataset.adSlot = `in_feed_${dynamicAdCounter}`;
+        wrapper.dataset.adFormat = "in_feed";
+        wrapper.dataset.adPosition = `feed_index_${dynamicAdCounter}`;
         const span = document.createElement("span");
         span.className = "text-body2 text-gray-400 select-none";
         span.textContent = "In-feed Adsense";
@@ -100,6 +107,10 @@ for (let i = 0; i < posts.length; i++) {
       const createPostCard = (post: any): HTMLElement => {
         const article = document.createElement("article");
         article.className = "group";
+        article.dataset.postSlug = post.slug;
+        article.dataset.postCategory = post.category;
+        article.dataset.postSubCategory = post.subCategory;
+        article.dataset.postSponsored = String(post.isSponsored);
 
         const showBadge = post.isSponsored || post.isRecommended;
 
@@ -163,7 +174,11 @@ for (let i = 0; i < posts.length; i++) {
           let localIndex = 0;
           for (const post of posts) {
             if (localIndex === 1 || localIndex === 3) {
-              feed.appendChild(createAdSlot());
+              const adSlot = createAdSlot();
+              feed.appendChild(adSlot);
+              if ((window as any).__observeNewAdSlot) {
+                (window as any).__observeNewAdSlot(adSlot);
+              }
             }
             feed.appendChild(createPostCard(post));
             localIndex++;
@@ -198,3 +213,11 @@ for (let i = 0; i < posts.length; i++) {
     }
   </script>
 )}
+
+<script>
+  import { initPostClickTracker } from "@/shared/lib/analytics/post-tracker";
+  import { initAdTracker, observeNewAdSlot } from "@/shared/lib/analytics/ad-tracker";
+  initPostClickTracker("post-feed");
+  initAdTracker("list");
+  (window as any).__observeNewAdSlot = observeNewAdSlot;
+</script>

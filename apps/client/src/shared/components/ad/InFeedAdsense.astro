@@ -3,9 +3,11 @@
 
 interface Props {
   class?: string;
+  slotId?: string;
+  position?: string;
 }
 
-const { class: className } = Astro.props;
+const { class: className, slotId = "in_feed", position = "feed" } = Astro.props;
 ---
 
 <div
@@ -15,6 +17,9 @@ const { class: className } = Astro.props;
   ]}
   role="complementary"
   aria-label="Advertisement"
+  data-ad-slot={slotId}
+  data-ad-format="in_feed"
+  data-ad-position={position}
 >
   <span class="text-body2 text-gray-400 select-none">In-feed Adsense</span>
 </div>

@@ -18,7 +18,7 @@ const sponsoredLabel = t("sidebar.sponsored", locale);
 const emptyLabel = t("sidebar.empty", locale);
 ---
 
-<section>
+<section class="sponsored-post-list">
   <h2 class="text-[16px] font-bold text-gray-900 pb-2 border-b border-gray-200">
     {sponsoredLabel}
   </h2>
@@ -45,3 +45,21 @@ const emptyLabel = t("sidebar.empty", locale);
     <p class="text-caption1 text-gray-400 text-center py-6">{emptyLabel}</p>
   )}
 </section>
+
+<script>
+  import { trackEvent } from "@/shared/lib/analytics/gtag";
+
+  document.querySelectorAll<HTMLElement>(".sponsored-post-list").forEach((container) => {
+    container.addEventListener("click", (e) => {
+      const el = (e.target as HTMLElement).closest<HTMLElement>("[data-post-slug]");
+      if (!el) return;
+      trackEvent("select_content", {
+        content_type: "post",
+        content_slug: el.dataset.postSlug!,
+        content_category: el.dataset.postCategory!,
+        content_sub_category: el.dataset.postSubCategory!,
+        is_sponsored: el.dataset.postSponsored === "true",
+      });
+    });
+  });
+</script>

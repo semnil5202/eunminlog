@@ -142,10 +142,16 @@ const {
     input?.focus();
   });
 
+  let searchAdCounter = 0;
+
   const createAdSlot = () => {
+    searchAdCounter++;
     const wrapper = document.createElement('div');
     wrapper.setAttribute('role', 'complementary');
     wrapper.setAttribute('aria-label', 'Advertisement');
+    wrapper.dataset.adSlot = `search_in_feed_${searchAdCounter}`;
+    wrapper.dataset.adFormat = 'in_feed';
+    wrapper.dataset.adPosition = `search_feed_${searchAdCounter}`;
     const inner = document.createElement('div');
     inner.className = 'w-full h-[250px] bg-gray-100 rounded-none flex items-center justify-center';
     const span = document.createElement('span');
@@ -159,6 +165,10 @@ const {
   const createPostCard = (post) => {
     const article = document.createElement('article');
     article.className = 'group';
+    article.dataset.postSlug = post.slug;
+    article.dataset.postCategory = post.category;
+    article.dataset.postSubCategory = post.subCategory;
+    article.dataset.postSponsored = String(post.isSponsored);
 
     let badgeHtml = '';
     if (post.isSponsored) {
@@ -244,8 +254,12 @@ const {
     if (input) input.value = query;
     renderResults(query);
     const url = new URL(window.location.href);
-    if (query.trim()) {
-      url.searchParams.set('q', query.trim());
+    const trimmed = query.trim();
+    if (trimmed) {
+      url.searchParams.set('q', trimmed);
+      if (typeof window.gtag === 'function') {
+        window.gtag('event', 'search', { search_term: trimmed });
+      }
     } else {
       url.searchParams.delete('q');
     }
@@ -268,4 +282,9 @@ const {
       doSearch(chip.dataset.keyword || '');
     });
   });
+</script>
+
+<script>
+  import { initPostClickTracker } from "@/shared/lib/analytics/post-tracker";
+  initPostClickTracker("search-results");
 </script>

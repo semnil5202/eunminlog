@@ -56,6 +56,15 @@ const contentWithAds = insertInArticleAds(post.content);
 const blogPosting = buildBlogPostingSchema(post, canonical);
 const reviewSchema = buildReviewSchema(post);
 const sponsoredLabel = t("post.sponsored", locale);
+
+const gaPageParams = {
+  page_type: 'post',
+  content_slug: post.slug,
+  content_category: post.category,
+  content_sub_category: post.sub_category,
+  content_locale: locale,
+  is_sponsored: post.is_sponsored,
+};
 ---
 
 <Layout
@@ -66,6 +75,7 @@ const sponsoredLabel = t("post.sponsored", locale);
   locale={locale}
   ogImage={post.thumbnail}
   type="article"
+  gaPageParams={gaPageParams}
 >
   <Fragment slot="head">
     <BreadcrumbJsonLd items={breadcrumbs} />
@@ -175,4 +185,9 @@ const sponsoredLabel = t("post.sponsored", locale);
 
     </div>
   </div>
+
+  <script>
+    import { initAdTracker } from "@/shared/lib/analytics/ad-tracker";
+    initAdTracker("post");
+  </script>
 </Layout>
