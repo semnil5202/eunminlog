@@ -97,11 +97,15 @@
 
 ### Multilingual Conditional Processing (is_multilingual)
 
-- Decision date: 2026-03-03
+- Decision date: 2026-03-03 (updated approach)
 - `posts.is_multilingual` (boolean, default true): controls per-post multilingual support
-- false = Korean-only: no locale routes, no hreflang, no translation, no card in locale lists
-- List/index pages always generate all locale routes regardless of is_multilingual
-- LanguageSelector on non-multilingual post detail -> locale-specific fallback page ("not available in this language")
+- false = Korean-only: no locale routes for post detail, no hreflang, no translation, no card in locale lists
+- LanguageSelector: disabled state (CSS-only tooltip) for non-ko buttons on non-multilingual posts -- NO fallback page
+- `/not-available/` page to be deleted (replaced by LanguageSelector disabled state)
+- Locale nav filtering: hide categories/subcategories with 0 multilingual posts from sidebar/header on locale pages
+- Locale path generation: category/subcategory index locale routes only generated when multilingual posts >= 1 in that classification
+- Home (`/{locale}/`) always generated regardless
+- Empty feed state: "Content coming soon" message when category/subcategory feed is empty (locale-translated)
 - Non-multilingual posts excluded from locale feed JSON and locale search data
 - Implementation order: Client mock first -> DB migration + Admin UI later (tracked in docs/TODO.md)
 

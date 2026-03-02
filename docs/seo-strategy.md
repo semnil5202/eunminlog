@@ -99,15 +99,33 @@ OpenAI GPT-4o로 자동 번역. 한국어가 기본 언어.
 - 다국어 검색 페이지(`/{locale}/search/`)의 검색 데이터에서 제외
 - AI 번역(GPT-4o) 호출 스킵 — `post_translations` 레코드 미생성
 
-**다국어 미지원 포스트 접근 시 fallback**:
+**LanguageSelector 비활성화**:
 
-- LanguageSelector에서 언어를 전환하면 locale별 fallback 페이지로 이동
-- Fallback 페이지는 "해당 글은 다국어를 지원하지 않습니다." 메시지를 해당 locale로 표시
+- `is_multilingual === false`인 포스트 상세 페이지에서 비한국어 locale 버튼을 `disabled` 처리
+- CSS-only 툴팁으로 "이 글은 한국어만 지원합니다" 안내 표시
+- 비활성화된 버튼은 `<a>` 대신 `<span>`으로 렌더링하여 크롤러가 링크를 수집하지 않음
+
+**Locale 네비게이션 필터링**:
+
+- 다국어 페이지(`/{locale}/...`)에서 multilingual 포스트가 0개인 카테고리/서브카테고리를 사이드바, 헤더 네비게이션에서 숨김
+- 빈 페이지로의 내부 링크를 제거하여 크롤 버짓 보존 및 Silo 구조 유지
+
+**Locale 경로 조건부 생성**:
+
+- multilingual 포스트가 0개인 카테고리/서브카테고리의 locale 경로를 `getStaticPaths`에서 제외
+- thin content 페이지 생성을 원천 방지하여 검색 엔진 품질 신호 보존
+- 홈(`/{locale}/`) 경로는 multilingual 포스트 존재 여부와 무관하게 항상 생성
+
+**빈 피드 empty state**:
+
+- 카테고리/서브카테고리 인덱스 페이지에서 피드가 비어있을 때 "콘텐츠 준비 중" 메시지 표시
+- locale별 번역된 메시지 제공
 
 **리스트/인덱스 페이지**:
 
-- 홈, 카테고리, 서브카테고리 인덱스의 다국어 경로는 `is_multilingual`과 무관하게 항상 생성
-- 해당 페이지의 hreflang도 항상 출력
+- 홈 인덱스의 다국어 경로는 `is_multilingual`과 무관하게 항상 생성
+- 카테고리/서브카테고리 인덱스의 다국어 경로는 해당 분류에 multilingual 포스트가 1개 이상 존재할 때만 생성
+- 해당 페이지의 hreflang은 생성된 경로에 한해서만 출력
 
 ## Search Page SEO
 

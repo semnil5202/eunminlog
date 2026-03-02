@@ -3,6 +3,7 @@ import { GA_MEASUREMENT_ID } from "@eunmin-log/config/site";
 import BaseHead from "@/shared/components/layout/BaseHead.astro";
 import Header from "@/shared/components/layout/Header.astro";
 import Footer from "@/shared/components/layout/Footer.astro";
+import Toast from "@/shared/components/ui/Toast.astro";
 import type { Locale } from "@/shared/types/common";
 import { DEFAULT_LOCALE } from "@/shared/types/common";
 
@@ -60,5 +61,6 @@ const isDev = import.meta.env.PUBLIC_STAGE === "development";
     <Header locale={locale} path={path} isMultilingual={isMultilingual} />
     <slot />
     <Footer locale={locale} />
+    <Toast />
   </body>
 </html>

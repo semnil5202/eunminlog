@@ -197,3 +197,21 @@ export const getPaginatedPostsBySubCategory = async (
   const posts = sorted.slice(from, from + perPage);
   return { posts, totalPages };
 };
+
+/** Returns CategorySlug values that have at least one multilingual post. */
+export const getMultilingualCategories = async (): Promise<CategorySlug[]> => {
+  const multilingualPosts = MOCK_POSTS.filter((p) => p.is_multilingual);
+  const categorySet = new Set(multilingualPosts.map((p) => p.category));
+  return Array.from(categorySet) as CategorySlug[];
+};
+
+/**
+ * Returns sub-category slugs within a category that have at least one multilingual post.
+ *
+ * @param category Top-level category to filter by.
+ */
+export const getMultilingualSubCategories = async (category: CategorySlug): Promise<string[]> => {
+  const multilingualPosts = MOCK_POSTS.filter((p) => p.is_multilingual && p.category === category);
+  const subCategorySet = new Set(multilingualPosts.map((p) => p.sub_category));
+  return Array.from(subCategorySet);
+};

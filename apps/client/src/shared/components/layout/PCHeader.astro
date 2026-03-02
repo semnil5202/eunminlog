@@ -5,8 +5,10 @@ import { getCategoryTree } from "@/shared/lib/i18n/categories";
 import { getLocalePath } from "@/shared/lib/i18n/locales";
 import { t } from "@/shared/lib/i18n/translations";
 import type { Locale } from "@/shared/types/common";
+import { DEFAULT_LOCALE } from "@/shared/types/common";
 import LanguageSelector from "@/shared/components/navigation/LanguageSelector.astro";
 import { getActiveSegments } from "@/shared/lib/navigation";
+import { getMultilingualCategories } from "@/features/post-feed/api/posts";
 import { SITE_NAME_KO } from "@eunmin-log/config/site";
 
 interface Props {
@@ -17,7 +19,11 @@ interface Props {
 
 const { locale, path, isMultilingual = true } = Astro.props;
 
-const categories = getCategoryTree(locale);
+const allCategories = getCategoryTree(locale);
+const multilingualCategorySlugs = locale !== DEFAULT_LOCALE ? await getMultilingualCategories() : null;
+const categories = multilingualCategorySlugs
+  ? allCategories.filter((c) => multilingualCategorySlugs.includes(c.slug))
+  : allCategories;
 const homeHref = getLocalePath("/", locale);
 const searchHref = getLocalePath("/search/", locale);
 

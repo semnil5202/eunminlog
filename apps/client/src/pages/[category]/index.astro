@@ -11,6 +11,7 @@ import type { CategorySlug } from "@/shared/types/category";
 import {
   getPaginatedPostsByCategory,
   getSponsoredPosts,
+  getMultilingualCategories,
 } from "@/features/post-feed/api/posts";
 import { getCategoryLabel } from "@/shared/lib/i18n/categories";
 import { t } from "@/shared/lib/i18n/translations";
@@ -31,10 +32,13 @@ interface Props {
 const { category } = Astro.props;
 const locale = DEFAULT_LOCALE;
 
-const [{ posts, totalPages }, sponsored] = await Promise.all([
+const [{ posts, totalPages }, sponsored, multilingualCategories] = await Promise.all([
   getPaginatedPostsByCategory(category, 1),
   getSponsoredPosts(category),
+  getMultilingualCategories(),
 ]);
+
+const isMultilingual = multilingualCategories.includes(category);
 
 const sponsoredLocalized: LocalizedPost[] = sponsored.map((p) => ({ ...p, locale }));
 
@@ -59,6 +63,7 @@ const pageDescription = `${SITE_NAME_KO} ${categoryLabel} 카테고리 — 커�
   locale={locale}
   sponsoredPosts={sponsoredLocalized}
   gaPageParams={{ page_type: 'list', content_category: category, content_sub_category: 'all', content_locale: locale }}
+  isMultilingual={isMultilingual}
 >
   <BreadcrumbJsonLd slot="head" items={breadcrumbItems} />
 

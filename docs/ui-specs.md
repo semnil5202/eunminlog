@@ -159,8 +159,14 @@
 
 - **위치**: `shared/components/navigation/LanguageSelector.astro`
 - `<details>/<summary>` 기반 언어 선택 드롭다운. PC/Mobile 헤더에서 공유.
-- Props: `locale`, `path`, `showLabel?` (true이면 현재 locale 텍스트 + 화살표 아이콘 표시)
-- JavaScript 없음 -- 순수 HTML/CSS `<details>` 토글
+- Props: `locale`, `path`, `showLabel?` (true이면 현재 locale 텍스트 + 화살표 아이콘 표시), `isMultilingual?`
+
+**다국어 미지원 포스트 비활성화 동작** (`isMultilingual === false`):
+
+- 비한국어 locale 버튼을 disabled 처리 (`<span>` 렌더링, 클릭 불가)
+- CSS-only 툴팁으로 "이 글은 한국어만 지원합니다" 메시지 표시 (locale별 번역)
+- 한국어(`ko`) 버튼은 항상 활성 상태 유지
+- JavaScript 없음 -- 순수 HTML/CSS로 disabled 상태 + 툴팁 구현
 
 #### `SubCategoryTabs.astro`
 
@@ -182,6 +188,22 @@
 
 - **위치**: `shared/components/navigation/CategoryTree.astro`
 - getActiveSegments 사용으로 활성 카테고리/서브카테고리 감지 로직 중복 제거
+
+### Locale 네비게이션 필터링
+
+다국어 페이지(`/{locale}/...`)에서 multilingual 포스트가 0개인 카테고리/서브카테고리를 네비게이션에서 숨긴다.
+
+**적용 대상 컴포넌트**:
+
+- CategoryTree (PC Left Sidebar) — 해당 카테고리/서브카테고리 항목 미렌더링
+- PCHeader / MobileHeader — 해당 카테고리 탭 미렌더링
+- SubCategoryTabs (Mobile) — 해당 서브카테고리 탭 미렌더링
+- Footer — 해당 카테고리/서브카테고리 링크 미렌더링
+
+**규칙**:
+
+- 한국어(`ko`) 페이지에서는 필터링 없이 전체 카테고리/서브카테고리를 항상 표시
+- 빈 피드 empty state: 카테고리/서브카테고리 인덱스 페이지에서 피드가 비어있을 때 "콘텐츠 준비 중" 메시지를 locale별 번역으로 표시
 
 #### Header Search Button
 

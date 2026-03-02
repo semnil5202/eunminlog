@@ -16,6 +16,7 @@ interface Props {
   ogImage?: string;
   sponsoredPosts?: LocalizedPost[];
   gaPageParams?: Record<string, string | number | boolean>;
+  isMultilingual?: boolean;
 }
 
 const {
@@ -27,6 +28,7 @@ const {
   ogImage,
   sponsoredPosts = [],
   gaPageParams,
+  isMultilingual = true,
 } = Astro.props;
 ---
 
@@ -39,6 +41,7 @@ const {
   path={path}
   type="website"
   gaPageParams={gaPageParams}
+  isMultilingual={isMultilingual}
 >
   <slot name="head" slot="head" />
   <ThreeColumnLayout

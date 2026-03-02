@@ -6,6 +6,8 @@ import type { CategorySlug } from "@/shared/types/category";
 import { getSubCategoryLabel } from "@/shared/lib/i18n/categories";
 import { getLocalePath } from "@/shared/lib/i18n/locales";
 import type { Locale } from "@/shared/types/common";
+import { DEFAULT_LOCALE } from "@/shared/types/common";
+import { getMultilingualSubCategories } from "@/features/post-feed/api/posts";
 
 interface Props {
   category: CategorySlug;
@@ -15,7 +17,9 @@ interface Props {
 
 const { category, activeSubCategory, locale } = Astro.props;
 
-const subCategories = SUB_CATEGORY_MAP[category];
+const allSubCategories = SUB_CATEGORY_MAP[category];
+const multilingualSubs = locale !== DEFAULT_LOCALE ? await getMultilingualSubCategories(category) : null;
+const subCategories = multilingualSubs ? allSubCategories.filter((s) => multilingualSubs.includes(s)) : allSubCategories;
 ---
 
 <nav aria-label="Sub-category navigation" class="block lg:hidden -mx-4 mb-4 border-b border-gray-200">

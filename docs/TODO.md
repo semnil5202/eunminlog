@@ -29,7 +29,11 @@
 - [ ] Admin: `is_multilingual === false` 저장 시 GPT-4o 번역 API 호출 스킵 로직
 - [ ] DB: `posts` 테이블에 `is_multilingual` 컬럼 추가 (boolean, default `true`) — Supabase 마이그레이션
 - [ ] DB: 기존 포스트 `is_multilingual = true` 일괄 설정 (데이터 마이그레이션)
-- Client 빌드 로직 (`is_multilingual` 기반 필터링)은 mock 데이터 기반으로 선행 구현 완료 예정
+- [ ] Client: LanguageSelector 비활성화 — `is_multilingual === false` 포스트에서 비한국어 locale 버튼 disabled 처리 (CSS-only 툴팁)
+- [ ] Client: Locale 네비게이션 필터링 — multilingual 포스트 0개인 카테고리/서브카테고리를 다국어 페이지 사이드바/헤더에서 숨김
+- [ ] Client: Locale 경로 조건부 생성 — multilingual 포스트 0개인 카테고리/서브카테고리의 locale 경로를 getStaticPaths에서 제외
+- [ ] Client: 빈 피드 empty state — 카테고리/서브카테고리 인덱스에서 피드가 비어있을 때 "콘텐츠 준비 중" 메시지 표시
+- [ ] Client: `/not-available/` 페이지 삭제 (LanguageSelector 비활성화로 대체)
 
 ## Ads
 

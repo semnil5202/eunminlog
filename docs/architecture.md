@@ -50,7 +50,7 @@ graph LR
 1. **콘텐츠 작성**: Admin이 Next.js Editor에서 글 작성 → Server Action → Supabase에 저장
 2. **AI 번역**: 저장 시 OpenAI GPT-4o를 통해 다국어 번역 처리 (`is_multilingual === true`인 포스트만)
 3. **빌드 트리거**: Node.js Logic이 GitHub Actions에 빌드 트리거 API 호출
-4. **SSG 빌드**: Astro가 빌드 타임에 Supabase에서 전체 포스트 Fetch → 정적 HTML 생성. 다국어 경로는 `is_multilingual === true`인 포스트만 생성
+4. **SSG 빌드**: Astro가 빌드 타임에 Supabase에서 전체 포스트 Fetch → 정적 HTML 생성. 다국어 경로 조건부 생성: 포스트 상세는 `is_multilingual === true`인 포스트만, 카테고리/서브카테고리 인덱스는 해당 분류에 multilingual 포스트가 1개 이상 존재할 때만 locale 경로를 생성 (thin content 방지)
 5. **배포**: 생성된 HTML을 AWS S3에 업로드, CloudFront CDN으로 서빙. CloudFront Function(Viewer Request)이 `/path/` → `/path/index.html` 매핑을 처리.
 6. **사용자 접근**: 브라우저에서 정적 HTML 로드 (JS 최소화)
 

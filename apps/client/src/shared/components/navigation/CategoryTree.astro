@@ -4,7 +4,10 @@
 import { getCategoryTree } from "@/shared/lib/i18n/categories";
 import { getLocalePath } from "@/shared/lib/i18n/locales";
 import type { Locale } from "@/shared/types/common";
+import { DEFAULT_LOCALE } from "@/shared/types/common";
 import { getActiveSegments } from "@/shared/lib/navigation";
+import { getMultilingualCategories, getMultilingualSubCategories } from "@/features/post-feed/api/posts";
+import type { CategorySlug } from "@/shared/types/category";
 
 interface Props {
   locale: Locale;
@@ -13,7 +16,22 @@ interface Props {
 
 const { locale, class: className } = Astro.props;
 
-const categories = getCategoryTree(locale);
+const allCategories = getCategoryTree(locale);
+
+let categories = allCategories;
+if (locale !== DEFAULT_LOCALE) {
+  const multilingualCategorySlugs = await getMultilingualCategories();
+  const filteredCategories = allCategories.filter((c) => multilingualCategorySlugs.includes(c.slug));
+  categories = await Promise.all(
+    filteredCategories.map(async (cat) => {
+      const multilingualSubs = await getMultilingualSubCategories(cat.slug as CategorySlug);
+      return {
+        ...cat,
+        subCategories: cat.subCategories.filter((sub) => multilingualSubs.includes(sub.slug)),
+      };
+    })
+  );
+}
 
 const { activeCategory, activeSubCategory } = getActiveSegments(Astro.url.pathname, locale);
 ---

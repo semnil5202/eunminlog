@@ -12,6 +12,7 @@ import type { CategorySlug } from "@/shared/types/category";
 import {
   getPaginatedMultilingualPostsByCategory,
   getMultilingualSponsoredPosts,
+  getMultilingualCategories,
 } from "@/features/post-feed/api/posts";
 import { getLocalizedPost } from "@/features/post-feed/api/translations";
 import { getCategoryLabel } from "@/shared/lib/i18n/categories";
@@ -21,6 +22,7 @@ import { SITE_NAME_KO, SITE_NAME_EN } from "@eunmin-log/config/site";
 
 export const getStaticPaths = async () => {
   const nonDefaultLocales = LOCALES.filter((l) => l !== DEFAULT_LOCALE);
+  const multilingualCategorySlugs = await getMultilingualCategories();
   const paths: {
     params: { locale: string; category: string };
     props: { locale: Locale; category: CategorySlug };
@@ -28,6 +30,7 @@ export const getStaticPaths = async () => {
 
   for (const locale of nonDefaultLocales) {
     for (const category of CATEGORY_SLUGS) {
+      if (!multilingualCategorySlugs.includes(category)) continue;
       paths.push({
         params: { locale, category },
         props: { locale, category },
@@ -83,11 +86,23 @@ const pageDescription = `${SITE_NAME_KO} ${categoryLabel} 카테고리 — 커�
 
   <SubCategoryTabs category={category} locale={locale} />
 
-  <PostCardGrid
-    posts={localizedPosts}
-    locale={locale}
-    feedEndpoint={`/api/feed/${locale}/${category}/`}
-    hasNextPage={totalPages > 1}
-    sponsoredLabel={t("post.sponsored", locale)}
-  />
+  {localizedPosts.length > 0 ? (
+    <PostCardGrid
+      posts={localizedPosts}
+      locale={locale}
+      feedEndpoint={`/api/feed/${locale}/${category}/`}
+      hasNextPage={totalPages > 1}
+      sponsoredLabel={t("post.sponsored", locale)}
+    />
+  ) : (
+    <div class="flex flex-col items-center justify-center py-20 gap-4 text-center">
+      <p class="text-body1 text-gray-500">{t("feed.empty", locale)}</p>
+      <a
+        href={`/${category}/`}
+        class="inline-block rounded-lg bg-primary-600 px-5 py-2.5 text-body2 font-semibold text-white transition-colors hover:bg-primary-700"
+      >
+        {t("i18n.viewInKorean", locale)}
+      </a>
+    </div>
+  )}
 </ListLayout>

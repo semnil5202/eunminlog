@@ -20,11 +20,15 @@
 - `is_multilingual: boolean` on Post type controls multilingual behavior
 - `is_multilingual: false` → no locale paths, no hreflang tags, excluded from multilingual feeds/search
 - Korean (ko) paths always generated regardless of `is_multilingual`
-- Fallback page: `/not-available/` — JS reads locale from URL, swaps text client-side (same pattern as 404)
-- LanguageSelector: `isMultilingual=false` → non-ko links go to `/not-available/`
+- LanguageSelector: `isMultilingual=false` → non-ko buttons are `disabled` (CSS opacity + cursor-not-allowed) with CSS-only tooltip
+- `/not-available/` page removed — disabled UX in LanguageSelector replaces it
+- Locale category/sub-category paths not generated if no multilingual posts exist (filtered in getStaticPaths)
+- PCHeader/MobileHeader/CategoryTree filter categories by `getMultilingualCategories()` when `locale !== 'ko'`
 
 ### Feed / Search API
 - Multilingual-aware functions in `posts.ts`: `getMultilingualPosts`, `getPaginatedMultilingualPosts`, etc.
+- `getMultilingualCategories()` → CategorySlug[] with ≥1 multilingual post
+- `getMultilingualSubCategories(category)` → string[] with ≥1 multilingual post in that category
 - Feed JSON API (`api/feed/[...path].json.ts`) uses multilingual functions for non-ko locales
 - `[locale]/search.astro` uses `getMultilingualPosts()` (not `getAllPosts()`)
 

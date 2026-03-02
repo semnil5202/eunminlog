@@ -11,7 +11,7 @@ interface Props {
   path: string;
   /** true이면 현재 locale 텍스트와 화살표 아이콘을 summary에 표시한다 (PC 헤더 variant). */
   showLabel?: boolean;
-  /** false이면 언어 선택 시 다국어 미지원 fallback 페이지로 이동한다. */
+  /** false이면 비한국어 언어 버튼을 disabled 처리한다. */
   isMultilingual?: boolean;
 }
 
@@ -66,12 +66,25 @@ const { locale, path, showLabel = false, isMultilingual = true } = Astro.props;
     {
       LOCALES.map((loc) => {
         const isCurrentLocale = loc === locale;
-        const href = !isMultilingual && loc !== 'ko'
-          ? `/not-available/`
-          : getLocalePath(path, loc);
+        const isDisabled = !isMultilingual && loc !== 'ko';
+        if (isDisabled) {
+          const isPostPage = path.split('/').filter(Boolean).length >= 3;
+          const key = isPostPage ? 'i18n.unavailablePost' : 'i18n.unavailableCategory';
+          const toastMsg = `${t(key, "ko")}\n${t(key, loc)}`;
+          return (
+            <button
+              type="button"
+              class="block w-full px-4 py-2 text-left text-body2 text-gray-300 cursor-not-allowed select-none"
+              data-toast={toastMsg}
+              lang={loc}
+            >
+              {LOCALE_LABELS[loc]}
+            </button>
+          );
+        }
         return (
           <a
-            href={href}
+            href={getLocalePath(path, loc)}
             class:list={[
               "block px-4 py-2 text-body2 transition-colors duration-100",
               isCurrentLocale
