@@ -15,6 +15,7 @@ interface Props {
   path: string;
   type?: "website" | "article";
   gaPageParams?: Record<string, string | number | boolean>;
+  isMultilingual?: boolean;
 }
 
 const {
@@ -26,6 +27,7 @@ const {
   path,
   type = "website",
   gaPageParams = {},
+  isMultilingual = true,
 } = Astro.props;
 
 const isDev = import.meta.env.PUBLIC_STAGE === "development";
@@ -42,6 +44,7 @@ const isDev = import.meta.env.PUBLIC_STAGE === "development";
       locale={locale}
       path={path}
       type={type}
+      isMultilingual={isMultilingual}
     />
     <meta name="robots" content={isDev ? "noindex, nofollow" : "index, follow"} />
     <slot name="head" />
@@ -54,7 +57,7 @@ const isDev = import.meta.env.PUBLIC_STAGE === "development";
     </script>
   </head>
   <body class="flex min-h-screen flex-col bg-white text-gray-900 antialiased font-pretendard">
-    <Header locale={locale} path={path} />
+    <Header locale={locale} path={path} isMultilingual={isMultilingual} />
     <slot />
     <Footer locale={locale} />
   </body>

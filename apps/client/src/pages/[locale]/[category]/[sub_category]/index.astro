@@ -10,8 +10,8 @@ import type { LocalizedPost } from "@/shared/types/post";
 import { CATEGORY_SLUGS, SUB_CATEGORY_MAP } from "@/shared/types/category";
 import type { CategorySlug } from "@/shared/types/category";
 import {
-  getPaginatedPostsBySubCategory,
-  getSponsoredPosts,
+  getPaginatedMultilingualPostsBySubCategory,
+  getMultilingualSponsoredPosts,
 } from "@/features/post-feed/api/posts";
 import { getLocalizedPost } from "@/features/post-feed/api/translations";
 import { getCategoryLabel, getSubCategoryLabel } from "@/shared/lib/i18n/categories";
@@ -49,8 +49,8 @@ interface Props {
 const { locale, category, sub_category } = Astro.props;
 
 const [{ posts, totalPages }, sponsored] = await Promise.all([
-  getPaginatedPostsBySubCategory(category, sub_category, 1),
-  getSponsoredPosts(category, sub_category),
+  getPaginatedMultilingualPostsBySubCategory(category, sub_category, 1),
+  getMultilingualSponsoredPosts(category, sub_category),
 ]);
 
 const localizedPosts = await Promise.all(posts.map((p) => getLocalizedPost(p, locale)));

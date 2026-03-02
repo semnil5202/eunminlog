@@ -11,7 +11,8 @@ import FixedAdsense from "@/shared/components/ad/FixedAdsense.astro";
 import PostBadges from "@/features/post-detail/components/PostBadges.astro";
 import PlaceInfoCard from "@/features/post-detail/components/PlaceInfoCard.astro";
 import NearbyPostList from "@/features/post-detail/components/NearbyPostList.astro";
-import { getSponsoredPosts, getPostsBySubCategory } from "@/features/post-feed/api/posts";
+import { getSponsoredPosts, getMultilingualSponsoredPosts, getPostsBySubCategory } from "@/features/post-feed/api/posts";
+import { DEFAULT_LOCALE } from "@/shared/types/common";
 import { getLocalizedPost } from "@/features/post-feed/api/translations";
 import { getLocalePath } from "@/shared/lib/i18n/locales";
 import { t } from "@/shared/lib/i18n/translations";
@@ -34,8 +35,12 @@ interface Props {
 
 const { post, locale, breadcrumbs, canonical, path, categoryLabel, subCategoryLabel } = Astro.props;
 
+const fetchSponsored = locale === DEFAULT_LOCALE
+  ? getSponsoredPosts(post.category, post.sub_category)
+  : getMultilingualSponsoredPosts(post.category, post.sub_category);
+
 const [sponsoredRaw, subCategoryPosts] = await Promise.all([
-  getSponsoredPosts(post.category, post.sub_category),
+  fetchSponsored,
   getPostsBySubCategory(post.category, post.sub_category),
 ]);
 const sponsoredLocalized = await Promise.all(
@@ -76,6 +81,7 @@ const gaPageParams = {
   ogImage={post.thumbnail}
   type="article"
   gaPageParams={gaPageParams}
+  isMultilingual={post.is_multilingual}
 >
   <Fragment slot="head">
     <BreadcrumbJsonLd items={breadcrumbs} />

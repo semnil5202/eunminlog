@@ -12,9 +12,10 @@ interface Props {
   locale: Locale;
   path: string;
   type?: "website" | "article";
+  isMultilingual?: boolean;
 }
 
-const { title, description, canonical, ogImage, locale, path, type = "website" } = Astro.props;
+const { title, description, canonical, ogImage, locale, path, type = "website", isMultilingual = true } = Astro.props;
 const site = Astro.site?.origin ?? "";
 ---
 
@@ -31,5 +32,5 @@ const site = Astro.site?.origin ?? "";
   locale={locale}
   type={type}
 />
-<Hreflang path={path} />
+<Hreflang path={path} isMultilingual={isMultilingual} />
 <slot />

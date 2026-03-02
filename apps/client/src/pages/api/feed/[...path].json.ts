@@ -7,7 +7,11 @@ import {
   getPaginatedPosts,
   getPaginatedPostsByCategory,
   getPaginatedPostsBySubCategory,
+  getPaginatedMultilingualPosts,
+  getPaginatedMultilingualPostsByCategory,
+  getPaginatedMultilingualPostsBySubCategory,
 } from '@/features/post-feed/api/posts';
+import { DEFAULT_LOCALE } from '@/shared/types/common';
 import { getLocalizedPost } from '@/features/post-feed/api/translations';
 import { getLocalePath } from '@/shared/lib/i18n/locales';
 import { getCategoryLabel } from '@/shared/lib/i18n/categories';
@@ -57,22 +61,36 @@ const buildFeedPostData = async (post: Post, locale: Locale): Promise<FeedPostDa
   };
 };
 
-const fetchPage = async (category: CategorySlug | null, subCategory: string | null, page: number) => {
+const fetchPage = async (
+  category: CategorySlug | null,
+  subCategory: string | null,
+  page: number,
+  locale: Locale,
+) => {
+  const isDefault = locale === DEFAULT_LOCALE;
   if (category && subCategory) {
-    return getPaginatedPostsBySubCategory(category, subCategory, page);
+    return isDefault
+      ? getPaginatedPostsBySubCategory(category, subCategory, page)
+      : getPaginatedMultilingualPostsBySubCategory(category, subCategory, page);
   }
   if (category) {
-    return getPaginatedPostsByCategory(category, page);
+    return isDefault
+      ? getPaginatedPostsByCategory(category, page)
+      : getPaginatedMultilingualPostsByCategory(category, page);
   }
-  return getPaginatedPosts(page);
+  return isDefault ? getPaginatedPosts(page) : getPaginatedMultilingualPosts(page);
 };
 
 export const getStaticPaths: GetStaticPaths = async () => {
   const paths: { params: { path: string }; props: PathProps }[] = [];
 
   for (const locale of LOCALES) {
+    const isDefault = locale === DEFAULT_LOCALE;
+
     // all posts
-    const { totalPages: allTotal } = await getPaginatedPosts(1);
+    const { totalPages: allTotal } = isDefault
+      ? await getPaginatedPosts(1)
+      : await getPaginatedMultilingualPosts(1);
     for (let page = 2; page <= allTotal; page++) {
       paths.push({
         params: { path: `${locale}/all/${page}` },
@@ -82,7 +100,9 @@ export const getStaticPaths: GetStaticPaths = async () => {
 
     // category pages
     for (const category of CATEGORY_SLUGS) {
-      const { totalPages: catTotal } = await getPaginatedPostsByCategory(category, 1);
+      const { totalPages: catTotal } = isDefault
+        ? await getPaginatedPostsByCategory(category, 1)
+        : await getPaginatedMultilingualPostsByCategory(category, 1);
       for (let page = 2; page <= catTotal; page++) {
         paths.push({
           params: { path: `${locale}/${category}/${page}` },
@@ -92,7 +112,9 @@ export const getStaticPaths: GetStaticPaths = async () => {
 
       // subcategory pages
       for (const sub of SUB_CATEGORY_MAP[category]) {
-        const { totalPages: subTotal } = await getPaginatedPostsBySubCategory(category, sub, 1);
+        const { totalPages: subTotal } = isDefault
+          ? await getPaginatedPostsBySubCategory(category, sub, 1)
+          : await getPaginatedMultilingualPostsBySubCategory(category, sub, 1);
         for (let page = 2; page <= subTotal; page++) {
           paths.push({
             params: { path: `${locale}/${category}/${sub}/${page}` },
@@ -109,7 +131,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
 export const GET: APIRoute = async ({ props }) => {
   const { locale, category, subCategory, page } = props as PathProps;
 
-  const { posts, totalPages } = await fetchPage(category, subCategory, page);
+  const { posts, totalPages } = await fetchPage(category, subCategory, page, locale);
 
   const feedPosts = await Promise.all(posts.map((post) => buildFeedPostData(post, locale)));
 

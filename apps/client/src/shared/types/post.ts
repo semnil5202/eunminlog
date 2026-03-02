@@ -12,6 +12,7 @@ export type Post = {
   thumbnail: string;
   is_sponsored: boolean;
   is_recommended: boolean;
+  is_multilingual: boolean;
   rating: number;
   place_name: string;
   address: string;

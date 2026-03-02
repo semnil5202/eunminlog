@@ -25,6 +25,9 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'error.title': '페이지를 찾을 수 없습니다.',
     'error.description': '요청하신 페이지가 존재하지 않거나 이동되었을 수 있습니다.',
     'error.goHome': '메인페이지로 이동하기',
+    'i18n.unavailable': '이 글은 다국어를 지원하지 않습니다.',
+    'i18n.unavailableDescription': '이 콘텐츠는 한국어로만 제공됩니다.',
+    'i18n.viewInKorean': '한국어로 보기',
   },
   en: {
     'nav.home': 'Home',
@@ -49,6 +52,9 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'error.title': 'Page not found.',
     'error.description': 'The page you requested does not exist or may have been moved.',
     'error.goHome': 'Go to Home',
+    'i18n.unavailable': 'This post is not available in multiple languages.',
+    'i18n.unavailableDescription': 'This content is only available in Korean.',
+    'i18n.viewInKorean': 'View in Korean',
   },
   ja: {
     'nav.home': 'ホーム',
@@ -73,6 +79,9 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'error.title': 'ページが見つかりません。',
     'error.description': 'リクエストされたページは存在しないか、移動された可能性があります。',
     'error.goHome': 'ホームへ戻る',
+    'i18n.unavailable': 'この記事は多言語に対応していません。',
+    'i18n.unavailableDescription': 'このコンテンツは韓国語でのみご利用いただけます。',
+    'i18n.viewInKorean': '韓国語で見る',
   },
   'zh-CN': {
     'nav.home': '首页',
@@ -97,6 +106,9 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'error.title': '页面未找到。',
     'error.description': '您请求的页面不存在或已被移动。',
     'error.goHome': '返回首页',
+    'i18n.unavailable': '该文章不支持多语言。',
+    'i18n.unavailableDescription': '此内容仅提供韩语版本。',
+    'i18n.viewInKorean': '查看韩语版',
   },
   'zh-TW': {
     'nav.home': '首頁',
@@ -121,6 +133,9 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'error.title': '找不到頁面。',
     'error.description': '您請求的頁面不存在或已被移動。',
     'error.goHome': '返回首頁',
+    'i18n.unavailable': '此文章不支援多語言。',
+    'i18n.unavailableDescription': '此內容僅提供韓語版本。',
+    'i18n.viewInKorean': '查看韓語版',
   },
   id: {
     'nav.home': 'Beranda',
@@ -145,6 +160,9 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'error.title': 'Halaman tidak ditemukan.',
     'error.description': 'Halaman yang Anda minta tidak ada atau telah dipindahkan.',
     'error.goHome': 'Ke Beranda',
+    'i18n.unavailable': 'Artikel ini tidak tersedia dalam berbagai bahasa.',
+    'i18n.unavailableDescription': 'Konten ini hanya tersedia dalam bahasa Korea.',
+    'i18n.viewInKorean': 'Lihat dalam bahasa Korea',
   },
   vi: {
     'nav.home': 'Trang chủ',
@@ -169,6 +187,9 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'error.title': 'Không tìm thấy trang.',
     'error.description': 'Trang bạn yêu cầu không tồn tại hoặc đã được di chuyển.',
     'error.goHome': 'Về trang chủ',
+    'i18n.unavailable': 'Bài viết này không hỗ trợ đa ngôn ngữ.',
+    'i18n.unavailableDescription': 'Nội dung này chỉ có sẵn bằng tiếng Hàn.',
+    'i18n.viewInKorean': 'Xem bằng tiếng Hàn',
   },
   th: {
     'nav.home': 'หน้าแรก',
@@ -193,6 +214,9 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'error.title': 'ไม่พบหน้าเว็บ.',
     'error.description': 'หน้าเว็บที่คุณร้องขอไม่มีอยู่หรืออาจถูกย้าย',
     'error.goHome': 'กลับหน้าแรก',
+    'i18n.unavailable': 'บทความนี้ไม่รองรับหลายภาษา',
+    'i18n.unavailableDescription': 'เนื้อหานี้มีให้เฉพาะภาษาเกาหลีเท่านั้น',
+    'i18n.viewInKorean': 'ดูเป็นภาษาเกาหลี',
   },
 };
 

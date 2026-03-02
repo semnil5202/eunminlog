@@ -7,7 +7,7 @@ import BreadcrumbJsonLd from "@/shared/components/seo/BreadcrumbJsonLd.astro";
 import { LOCALES, DEFAULT_LOCALE } from "@/shared/types/common";
 import type { Locale } from "@/shared/types/common";
 import type { LocalizedPost } from "@/shared/types/post";
-import { getPaginatedPosts, getSponsoredPosts } from "@/features/post-feed/api/posts";
+import { getPaginatedMultilingualPosts, getMultilingualSponsoredPosts } from "@/features/post-feed/api/posts";
 import { getLocalizedPost } from "@/features/post-feed/api/translations";
 import { t } from "@/shared/lib/i18n/translations";
 import { SITE_NAME_KO, SITE_NAME_EN } from "@eunmin-log/config/site";
@@ -28,8 +28,8 @@ interface Props {
 const { locale } = Astro.props;
 
 const [{ posts, totalPages }, sponsored] = await Promise.all([
-  getPaginatedPosts(1),
-  getSponsoredPosts(),
+  getPaginatedMultilingualPosts(1),
+  getMultilingualSponsoredPosts(),
 ]);
 
 const localizedPosts = await Promise.all(posts.map((p) => getLocalizedPost(p, locale)));

@@ -12,9 +12,10 @@ import { SITE_NAME_KO } from "@eunmin-log/config/site";
 interface Props {
   locale: Locale;
   path: string;
+  isMultilingual?: boolean;
 }
 
-const { locale, path } = Astro.props;
+const { locale, path, isMultilingual = true } = Astro.props;
 
 const categories = getCategoryTree(locale);
 const homeHref = getLocalePath("/", locale);
@@ -60,7 +61,7 @@ const { activeCategory } = getActiveSegments(Astro.url.pathname, locale);
 
     <div class="ml-auto flex items-center gap-4">
 
-      <LanguageSelector locale={locale} path={path} showLabel={true} />
+      <LanguageSelector locale={locale} path={path} showLabel={true} isMultilingual={isMultilingual} />
 
       <a
         href={searchHref}

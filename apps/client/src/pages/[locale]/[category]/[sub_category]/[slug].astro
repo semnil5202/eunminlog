@@ -20,7 +20,7 @@ export const getStaticPaths = async () => {
   }[] = [];
 
   for (const locale of nonDefaultLocales) {
-    for (const post of posts) {
+    for (const post of posts.filter((p) => p.is_multilingual)) {
       paths.push({
         params: {
           locale,

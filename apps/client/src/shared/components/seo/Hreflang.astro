@@ -3,15 +3,18 @@ import { getHreflangEntries, getXDefaultHref } from "@/shared/lib/i18n/locales";
 
 interface Props {
   path: string;
+  isMultilingual?: boolean;
 }
 
-const { path } = Astro.props;
+const { path, isMultilingual = true } = Astro.props;
 const site = Astro.site?.origin ?? "";
-const entries = getHreflangEntries(path);
-const xDefault = getXDefaultHref(path);
+const entries = isMultilingual ? getHreflangEntries(path) : [];
+const xDefault = isMultilingual ? getXDefaultHref(path) : null;
 ---
 
-{entries.map(({ locale, href }) => (
+{isMultilingual && entries.map(({ locale, href }) => (
   <link rel="alternate" hreflang={locale} href={`${site}${href}`} />
 ))}
-<link rel="alternate" hreflang="x-default" href={`${site}${xDefault}`} />
+{isMultilingual && xDefault && (
+  <link rel="alternate" hreflang="x-default" href={`${site}${xDefault}`} />
+)}

@@ -11,9 +11,11 @@ interface Props {
   path: string;
   /** true이면 현재 locale 텍스트와 화살표 아이콘을 summary에 표시한다 (PC 헤더 variant). */
   showLabel?: boolean;
+  /** false이면 언어 선택 시 다국어 미지원 fallback 페이지로 이동한다. */
+  isMultilingual?: boolean;
 }
 
-const { locale, path, showLabel = false } = Astro.props;
+const { locale, path, showLabel = false, isMultilingual = true } = Astro.props;
 ---
 
 <details class="relative group">
@@ -62,21 +64,27 @@ const { locale, path, showLabel = false } = Astro.props;
 
   <div class="absolute right-0 top-full mt-2 w-44 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-50">
     {
-      LOCALES.map((loc) => (
-        <a
-          href={getLocalePath(path, loc)}
-          class:list={[
-            "block px-4 py-2 text-body2 transition-colors duration-100",
-            loc === locale
-              ? "text-primary-500 font-semibold bg-primary-50"
-              : "text-gray-700 hover:bg-gray-50 hover:text-primary-500",
-          ]}
-          hreflang={loc}
-          lang={loc}
-        >
-          {LOCALE_LABELS[loc]}
-        </a>
-      ))
+      LOCALES.map((loc) => {
+        const isCurrentLocale = loc === locale;
+        const href = !isMultilingual && loc !== 'ko'
+          ? `/not-available/`
+          : getLocalePath(path, loc);
+        return (
+          <a
+            href={href}
+            class:list={[
+              "block px-4 py-2 text-body2 transition-colors duration-100",
+              isCurrentLocale
+                ? "text-primary-500 font-semibold bg-primary-50"
+                : "text-gray-700 hover:bg-gray-50 hover:text-primary-500",
+            ]}
+            hreflang={loc}
+            lang={loc}
+          >
+            {LOCALE_LABELS[loc]}
+          </a>
+        );
+      })
     }
   </div>
 </details>
