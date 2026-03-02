@@ -27,6 +27,8 @@ const {
   type = "website",
   gaPageParams = {},
 } = Astro.props;
+
+const isDev = import.meta.env.PUBLIC_STAGE === "development";
 ---
 
 <!doctype html>
@@ -41,6 +43,7 @@ const {
       path={path}
       type={type}
     />
+    <meta name="robots" content={isDev ? "noindex, nofollow" : "index, follow"} />
     <slot name="head" />
     <script async src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}></script>
     <script is:inline define:vars={{ GA_MEASUREMENT_ID, gaPageParams }}>
