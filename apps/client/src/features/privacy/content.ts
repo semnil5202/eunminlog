@@ -1,17 +1,17 @@
 import type { Locale } from '@/shared/types/common';
 import { SITE_NAME_KO, SITE_NAME_EN, SITE_URL } from '@eunminlog/config/site';
 
-interface PrivacySection {
+type PrivacySection = {
   heading: string;
   body: string;
-}
+};
 
-interface PrivacyContent {
+type PrivacyContent = {
   title: string;
   lastUpdated: string;
   intro: string;
   sections: PrivacySection[];
-}
+};
 
 const PRIVACY: Record<Locale, PrivacyContent> = {
   ko: {

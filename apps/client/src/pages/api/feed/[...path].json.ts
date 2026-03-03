@@ -1,7 +1,7 @@
 /** 빌드 타임 피드 JSON 엔드포인트. 무한스크롤 Page 2+ 데이터를 정적 JSON으로 생성한다. */
 
 import type { APIRoute, GetStaticPaths } from 'astro';
-import { type Locale, LOCALES } from '@/shared/types/common';
+import { type Locale, LOCALES, DEFAULT_LOCALE } from '@/shared/types/common';
 import { CATEGORY_SLUGS, SUB_CATEGORY_MAP, type CategorySlug } from '@/shared/types/category';
 import {
   getPaginatedPosts,
@@ -11,7 +11,6 @@ import {
   getPaginatedMultilingualPostsByCategory,
   getPaginatedMultilingualPostsBySubCategory,
 } from '@/features/post-feed/api/posts';
-import { DEFAULT_LOCALE } from '@/shared/types/common';
 import { getLocalizedPost } from '@/features/post-feed/api/translations';
 import { getLocalePath } from '@/shared/lib/i18n/locales';
 import { getCategoryLabel } from '@/shared/lib/i18n/categories';

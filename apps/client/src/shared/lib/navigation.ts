@@ -1,9 +1,7 @@
 /** URL pathname에서 현재 활성 카테고리/서브카테고리를 추출한다. */
 
-import type { CategorySlug } from '@/shared/types/category';
-import { CATEGORY_SLUGS } from '@/shared/types/category';
-import { DEFAULT_LOCALE } from '@/shared/types/common';
-import type { Locale } from '@/shared/types/common';
+import { CATEGORY_SLUGS, type CategorySlug } from '@/shared/types/category';
+import { DEFAULT_LOCALE, type Locale } from '@/shared/types/common';
 
 /**
  * pathname과 locale을 기반으로 활성 카테고리와 서브카테고리를 반환한다.

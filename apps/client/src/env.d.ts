@@ -1,5 +1,5 @@
 /// <reference types="astro/client" />
 
-interface Window {
+type Window = {
   gtag: (...args: any[]) => void;
-}
+};
