@@ -37,8 +37,8 @@ export default function SearchFilter({
 
   return (
     <div className="space-y-3 rounded-lg border bg-card p-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <span className="shrink-0 text-sm font-bold text-primary-600">기간</span>
+      <div className="flex flex-wrap items-center gap-3 max-md:flex-col max-md:items-start">
+        <span className="w-12 shrink-0 text-sm font-bold text-primary-600">기간</span>
         <div className="flex flex-wrap items-center gap-2">
           <Input
             type="date"
@@ -54,23 +54,25 @@ export default function SearchFilter({
             className="w-[150px]"
           />
         </div>
-        {children && <div className="ml-auto flex items-center gap-2">{children}</div>}
+        {children && <div className="ml-auto flex items-center gap-2 max-md:ml-0">{children}</div>}
       </div>
 
-      <div className="flex items-center gap-3">
-        <span className="shrink-0 text-sm font-bold text-primary-600">검색어</span>
-        <Input
-          type="text"
-          placeholder={searchPlaceholder}
-          value={searchQuery}
-          onChange={(e) => onSearchQueryChange(e.target.value)}
-          onKeyDown={handleKeyDown}
-          className="w-full max-w-[300px]"
-        />
-        <Button onClick={onSearch}>
-          <Search className="mr-1 h-4 w-4" />
-          검색
-        </Button>
+      <div className="flex items-center gap-3 max-md:flex-col max-md:items-start">
+        <span className="w-12 shrink-0 text-sm font-bold text-primary-600">검색어</span>
+        <div className="flex flex-1 items-center gap-3">
+          <Input
+            type="text"
+            placeholder={searchPlaceholder}
+            value={searchQuery}
+            onChange={(e) => onSearchQueryChange(e.target.value)}
+            onKeyDown={handleKeyDown}
+            className="w-full max-w-[330px]"
+          />
+          <Button onClick={onSearch}>
+            <Search className="mr-1 h-4 w-4" />
+            검색
+          </Button>
+        </div>
       </div>
     </div>
   );
