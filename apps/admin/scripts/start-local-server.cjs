@@ -18,7 +18,7 @@ if (!fs.existsSync(keyFile) || !fs.existsSync(certFile)) {
   process.exit(1);
 }
 
-const app = next({ dev: true, hostname: '0.0.0.0', port });
+const app = next({ dev: true, hostname: localDomain, port });
 const handle = app.getRequestHandler();
 
 console.log('');
