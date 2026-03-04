@@ -11,8 +11,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="ko">
-      <body className="font-pretendard antialiased">{children}</body>
+    <html lang="ko" suppressHydrationWarning>
+      <body className="font-pretendard antialiased" suppressHydrationWarning>
+        {children}
+      </body>
     </html>
   );
 }

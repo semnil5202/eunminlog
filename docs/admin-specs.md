@@ -1,0 +1,802 @@
+# Admin App Specification
+
+> Date: 2026-03-04
+> Status: Draft (PM 작성, 승인 후 se가 구현)
+
+## 1. Overview
+
+### 1-1. 목적
+
+은민로그 관리자 앱. 포스트 작성/편집, 미디어 업로드, 다국어 번역, 빌드 트리거를 수행하는 내부 도구.
+
+### 1-2. 사용자
+
+- 운영자 1-2명 (Semin & Chaeun)
+- Supabase Dashboard에서 계정 수동 생성. 회원가입 플로우 불필요.
+
+### 1-3. 기술 스택
+
+| 항목 | 기술 |
+|------|------|
+| Framework | Next.js 15 (App Router, React 19) |
+| 렌더링 | CSR 기반. Server Action/API Route는 보안 민감 로직에만 사용 |
+| 에디터 | Tiptap (ProseMirror 기반 리치 텍스트 에디터) |
+| 인증 | Supabase Auth (email/password) |
+| DB | Supabase PostgreSQL (`posts`, `post_translations`) |
+| 미디어 | AWS S3 (`media-eunminlog` 버킷) + CloudFront (`media.eunminlog.site`) |
+| 번역 | OpenAI GPT-4o (CSR에서 직접 호출) |
+| 빌드 트리거 | GitHub Actions API (`workflow_dispatch`) |
+| 배포 | Vercel Hobby 플랜 |
+| 스타일링 | Tailwind CSS v4 (`@eunminlog/config/theme.css` 공유) |
+| Port | 3001 (dev) |
+
+### 1-4. 핵심 제약사항
+
+| 제약 | 이유 | 대응 |
+|------|------|------|
+| Vercel Hobby 10초 타임아웃 | Serverless Function 실행 시간 제한 | GPT-4o 번역을 CSR 브라우저에서 직접 호출 |
+| S3 퍼블릭 액세스 차단 | 보안 정책 | Pre-signed URL로 업로드, CloudFront OAC로 서빙 |
+| Admin은 SEO 불필요 | 관리자 전용, 크롤링 대상 아님 | CSR 기반, `robots: noindex` |
+
+---
+
+## 2. Page & Route Structure
+
+### 2-1. 라우트 맵
+
+```
+/                          → 로그인 페이지 (비인증 시) 또는 대시보드 리다이렉트
+/dashboard                 → 대시보드 (포스트 목록 + 빠른 액션)
+/posts/new                 → 포스트 생성 (Tiptap 에디터)
+/posts/[id]/edit           → 포스트 편집 (Tiptap 에디터)
+```
+
+### 2-2. 인증 가드
+
+- 모든 `/dashboard`, `/posts/*` 라우트는 인증 필수.
+- 비인증 사용자는 `/` (로그인 페이지)로 리다이렉트.
+- 인증 상태는 Supabase Auth 세션으로 관리. CSR에서 `supabase.auth.getSession()`으로 확인.
+
+### 2-3. 레이아웃 구조
+
+```
+RootLayout (app/layout.tsx)
+├── / → LoginPage (비인증 전용)
+└── AuthLayout (인증 필수 래퍼)
+    ├── /dashboard → DashboardPage
+    ├── /posts/new → PostEditorPage
+    └── /posts/[id]/edit → PostEditorPage
+```
+
+**AuthLayout 역할**:
+- Supabase 세션 확인. 비인증 시 `/`로 리다이렉트.
+- 상단 네비게이션 바 (로고, 네비게이션 링크, 로그아웃 버튼) 제공.
+
+---
+
+## 3. Feature 분리
+
+6개 Feature로 구성한다. Feature 간 직접 import 금지 -- 공유 필요 시 `shared/`로 이동.
+
+| Feature | 설명 | 주요 페이지 |
+|---------|------|------------|
+| `auth` | 로그인/로그아웃, 세션 관리 | `/` |
+| `post-editor` | Tiptap 에디터, 포스트 생성/편집 폼 | `/posts/new`, `/posts/[id]/edit` |
+| `post-management` | 포스트 목록, 삭제, 발행 상태 관리 | `/dashboard` |
+| `media` | 이미지 업로드, Pre-signed URL | 에디터 내 사용 |
+| `translation` | GPT-4o 다국어 번역 | 에디터 내 사용 |
+| `build-trigger` | GitHub Actions 빌드 트리거 | 대시보드/에디터 내 사용 |
+
+---
+
+## 4. Feature 상세 요구사항
+
+### 4-1. auth
+
+#### 기능 요구사항
+
+| ID | 요구사항 | 우선순위 |
+|----|---------|---------|
+| AUTH-1 | Email/password 로그인 폼 | P0 |
+| AUTH-2 | 로그인 에러 메시지 표시 (잘못된 이메일/비밀번호) | P0 |
+| AUTH-3 | 로그아웃 (세션 파기) | P0 |
+| AUTH-4 | 인증 상태 전역 관리 (Context 또는 hook) | P0 |
+| AUTH-5 | 인증 가드 (비인증 시 로그인 페이지 리다이렉트) | P0 |
+
+#### Supabase Auth Flow
+
+```
+[로그인 페이지]
+  → 이메일/비밀번호 입력
+  → supabase.auth.signInWithPassword({ email, password })
+  → 성공: /dashboard로 리다이렉트
+  → 실패: 에러 메시지 표시
+
+[로그아웃]
+  → supabase.auth.signOut()
+  → /로 리다이렉트
+
+[세션 확인]
+  → supabase.auth.getSession()
+  → 세션 있음: 인증 상태 유지
+  → 세션 없음/만료: /로 리다이렉트
+
+[세션 갱신]
+  → supabase.auth.onAuthStateChange() 리스너로 자동 갱신
+```
+
+#### Server Action vs CSR 구분
+
+| 작업 | 처리 위치 | 이유 |
+|------|----------|------|
+| 로그인/로그아웃 | CSR (Supabase Client SDK) | 클라이언트 세션 관리 |
+| 세션 확인 | CSR (Supabase Client SDK) | 실시간 상태 확인 |
+
+#### 폴더 구조
+
+```
+features/auth/
+├── components/
+│   └── LoginForm.tsx          # 로그인 폼 UI (email, password 입력 + submit)
+├── hooks/
+│   └── useAuth.ts             # 인증 상태 관리 hook (login, logout, session)
+└── containers/
+    └── LoginContainer.tsx     # LoginForm + useAuth 조합
+```
+
+---
+
+### 4-2. post-editor
+
+#### 기능 요구사항
+
+| ID | 요구사항 | 우선순위 |
+|----|---------|---------|
+| PE-1 | Tiptap 리치 텍스트 에디터 (Heading, Bold, Italic, List, Link, Image, Blockquote) | P0 |
+| PE-2 | 포스트 메타데이터 폼 (title, description, slug, category, sub_category, thumbnail 등) | P0 |
+| PE-3 | 이미지 삽입 (미디어 업로드 연동) | P0 |
+| PE-4 | 이미지 삭제 및 순서 변경 (드래그 앤 드롭) | P1 |
+| PE-5 | 포스트 저장 (Supabase `posts` 테이블 upsert) | P0 |
+| PE-6 | 포스트 편집 (기존 데이터 로드 → 에디터에 반영) | P0 |
+| PE-7 | is_multilingual 토글 (기본값 `true`) | P0 |
+| PE-8 | is_sponsored / is_recommended 토글 | P0 |
+| PE-9 | rating 입력 (1.0-5.0, 0.5 단위) | P1 |
+| PE-10 | place_name, address, price_level 입력 | P1 |
+| PE-11 | 저장 시 번역 트리거 (`is_multilingual === true`이면) | P0 |
+| PE-12 | 저장 시 빌드 트리거 옵션 | P1 |
+| PE-13 | 미리보기 (선택적) | P2 |
+
+#### 포스트 메타데이터 폼 필드
+
+| 필드 | 입력 타입 | 필수 | DB 컬럼 | 비고 |
+|------|----------|------|---------|------|
+| 제목 | text input | Y | `title` | |
+| 설명 | textarea | Y | `description` | 요약 설명 |
+| Slug | text input | Y | `slug` | URL slug, unique. 자동 생성 + 수동 편집 가능 |
+| 카테고리 | select | Y | `category` | `delicious`, `cafe`, `travel` |
+| 서브카테고리 | select | Y | `sub_category` | 카테고리에 따라 동적 변경 |
+| 썸네일 | 이미지 업로드 | Y | `thumbnail` | URL 저장 |
+| 협찬 여부 | toggle | N | `is_sponsored` | 기본값 `false` |
+| 추천 여부 | toggle | N | `is_recommended` | 기본값 `false` |
+| 다국어 제공 | toggle | N | `is_multilingual` | 기본값 `true` |
+| 평점 | number input | N | `rating` | 1.0-5.0, 0.5 단위 |
+| 장소명 | text input | N | `place_name` | Schema.org `itemReviewed` |
+| 주소 | text input | N | `address` | Schema.org |
+| 가격대 | text input | N | `price_level` | |
+
+#### 카테고리-서브카테고리 매핑
+
+```
+delicious (맛집) → korean (한식), western (양식), japanese (일식), pub (주점)
+cafe (카페)      → hotplace (핫플), study (카공)
+travel (여행)    → domestic (국내), overseas (해외), accommodation (숙소)
+```
+
+#### Tiptap 에디터 구성
+
+**필수 Extension**:
+- `StarterKit` (Document, Paragraph, Text, Heading, Bold, Italic, BulletList, OrderedList, Blockquote, HorizontalRule, HardBreak, History)
+- `Link` (URL 링크)
+- `Image` (이미지 삽입 -- 커스텀 노드 필요)
+- `Placeholder` (빈 에디터 placeholder 텍스트)
+
+**에디터 출력 포맷**: HTML 문자열. DB `content` 컬럼에 HTML로 저장.
+
+> **Note**: 현재 DB 스키마의 `content` 컬럼 설명은 "MDX/Markdown"이나, Tiptap 에디터 도입으로 HTML 포맷으로 전환한다. Client 앱(Astro)에서 HTML을 직접 렌더링. DB 스키마 문서(`docs/database.md`)의 content 설명을 업데이트해야 한다.
+
+#### 미디어 갤러리 -- 연속 이미지 처리 (B 방식)
+
+- Tiptap 에디터에서는 이미지를 개별 노드로 삽입/삭제/순서 변경만 관리.
+- Client(Astro) 렌더링 시 HTML 내 연속 `<img>` 태그를 감지하여 CSS snap 갤러리(`scroll-snap-type: x mandatory`)로 자동 변환.
+- Admin 에디터에서는 별도의 갤러리 UI를 구현하지 않는다. 이미지를 순서대로 삽입하면 Client에서 갤러리로 표시됨.
+
+#### Server Action vs CSR 구분
+
+| 작업 | 처리 위치 | 이유 |
+|------|----------|------|
+| 에디터 렌더링/조작 | CSR | UI 인터랙션 |
+| 포스트 저장 (Supabase insert/update) | Server Action | Supabase Service Role Key 보호 |
+| 포스트 조회 (편집 시 데이터 로드) | Server Action | Supabase Service Role Key 보호 |
+| 이미지 업로드 | CSR → Server Action (Pre-signed URL 생성) → CSR (S3 PUT) | 하이브리드 |
+| 번역 (GPT-4o) | CSR | Vercel Hobby 10초 타임아웃 회피 |
+| 빌드 트리거 | Server Action | GitHub Token 보호 |
+
+#### 폴더 구조
+
+```
+features/post-editor/
+├── components/
+│   ├── TiptapEditor.tsx       # Tiptap 에디터 인스턴스 (에디터 영역 UI)
+│   ├── EditorToolbar.tsx      # 에디터 툴바 (Bold, Italic, Heading, Image 삽입 등)
+│   ├── PostMetaForm.tsx       # 메타데이터 입력 폼 (title, slug, category 등)
+│   └── ImageUploadButton.tsx  # 이미지 업로드 트리거 버튼
+├── hooks/
+│   ├── usePostEditor.ts       # 에디터 상태 관리 (content, meta, dirty 체크)
+│   └── usePostSave.ts         # 포스트 저장 로직 (저장 + 번역 트리거 + 빌드 트리거)
+├── api/
+│   └── post-actions.ts        # Server Actions (savePost, getPost, deletePost)
+├── containers/
+│   └── PostEditorContainer.tsx  # 에디터 + 메타 폼 + 저장 로직 통합
+└── constants/
+    └── categories.ts          # 카테고리-서브카테고리 매핑 상수
+```
+
+---
+
+### 4-3. post-management
+
+#### 기능 요구사항
+
+| ID | 요구사항 | 우선순위 |
+|----|---------|---------|
+| PM-1 | 포스트 목록 테이블 (제목, 카테고리, 날짜, 상태 표시) | P0 |
+| PM-2 | 포스트 삭제 (확인 다이얼로그 포함) | P0 |
+| PM-3 | 포스트 편집 페이지로 이동 | P0 |
+| PM-4 | 카테고리/서브카테고리 필터링 | P1 |
+| PM-5 | 검색 (제목, slug 기준) | P2 |
+| PM-6 | 빌드 트리거 버튼 (대시보드 레벨) | P1 |
+| PM-7 | 최근 포스트 순 정렬 (기본) | P0 |
+
+#### 포스트 목록 테이블 컬럼
+
+| 컬럼 | 표시 내용 | 비고 |
+|------|----------|------|
+| 제목 | `title` | 클릭 시 편집 페이지 이동 |
+| 카테고리 | `category` / `sub_category` | 뱃지 형태 |
+| 협찬 | `is_sponsored` | 아이콘 또는 뱃지 |
+| 추천 | `is_recommended` | 아이콘 또는 뱃지 |
+| 다국어 | `is_multilingual` | 아이콘 또는 뱃지 |
+| 작성일 | `created_at` | 포맷: YYYY-MM-DD |
+| 수정일 | `updated_at` | 포맷: YYYY-MM-DD |
+| 액션 | 편집, 삭제 | 버튼 |
+
+#### Server Action vs CSR 구분
+
+| 작업 | 처리 위치 | 이유 |
+|------|----------|------|
+| 포스트 목록 조회 | Server Action | Supabase 통신 |
+| 포스트 삭제 | Server Action | Supabase 통신 |
+| 필터링/검색 | CSR (클라이언트 필터링) 또는 Server Action | 데이터 규모에 따라 결정. 초기에는 전체 로드 후 CSR 필터링으로 충분 |
+
+#### 폴더 구조
+
+```
+features/post-management/
+├── components/
+│   ├── PostTable.tsx          # 포스트 목록 테이블 UI
+│   ├── PostTableRow.tsx       # 개별 포스트 행
+│   ├── PostFilters.tsx        # 카테고리/서브카테고리 필터 UI
+│   └── DeleteConfirmDialog.tsx  # 삭제 확인 다이얼로그
+├── hooks/
+│   ├── usePostList.ts         # 포스트 목록 데이터 + 필터 상태
+│   └── usePostDelete.ts       # 포스트 삭제 로직
+├── api/
+│   └── post-list-actions.ts   # Server Actions (getPosts, deletePost)
+└── containers/
+    └── DashboardContainer.tsx # 포스트 테이블 + 필터 + 빌드 트리거 통합
+```
+
+---
+
+### 4-4. media
+
+#### 기능 요구사항
+
+| ID | 요구사항 | 우선순위 |
+|----|---------|---------|
+| MEDIA-1 | 이미지 업로드 (단일/복수) | P0 |
+| MEDIA-2 | Pre-signed URL 생성 (Server Action) | P0 |
+| MEDIA-3 | S3 직접 PUT 업로드 (CSR) | P0 |
+| MEDIA-4 | 파일 유효성 검사 (형식, 크기) | P0 |
+| MEDIA-5 | 업로드 진행률 표시 | P1 |
+| MEDIA-6 | 업로드 완료 후 에디터에 이미지 URL 삽입 | P0 |
+| MEDIA-7 | 썸네일 업로드 (메타 폼 연동) | P0 |
+
+#### 미디어 업로드 파이프라인
+
+```
+[브라우저]                    [Server Action]                [AWS S3]
+    │                              │                           │
+    ├─ 파일 선택 ─────────────────>│                           │
+    │                              │                           │
+    │  1. 파일 메타 전달           │                           │
+    │     (name, type, size)       │                           │
+    │                              │                           │
+    │<── 2. Pre-signed URL 반환 ───┤                           │
+    │     (PUT URL, 만료시간)      │  generatePresignedUrl()   │
+    │                              │  ├─ UUID 파일명 생성      │
+    │                              │  ├─ 형식/크기 검증        │
+    │                              │  └─ PutObjectCommand      │
+    │                              │                           │
+    ├─ 3. S3 직접 PUT ────────────────────────────────────────>│
+    │     (Pre-signed URL로)       │                           │
+    │                              │                           │
+    │<─ 4. 업로드 완료 (200) ──────────────────────────────────┤
+    │                              │                           │
+    ├─ 5. CDN URL 조합             │                           │
+    │     https://media.eunminlog.site/{key}                   │
+    │                              │                           │
+    └─ 6. 에디터에 이미지 삽입     │                           │
+```
+
+#### 파일 유효성 규칙
+
+| 항목 | 제한 |
+|------|------|
+| 허용 형식 | `image/jpeg`, `image/png`, `image/webp`, `image/avif` |
+| 최대 크기 | 10MB |
+| 파일명 | UUID v4로 대체 (원본 파일명 사용 안 함) |
+| 키 구조 | `posts/{YYYY}/{MM}/{uuid}.{ext}` |
+
+#### CDN URL
+
+업로드 완료 후 이미지 접근 URL:
+```
+https://media.eunminlog.site/posts/{YYYY}/{MM}/{uuid}.{ext}
+```
+
+#### Server Action vs CSR 구분
+
+| 작업 | 처리 위치 | 이유 |
+|------|----------|------|
+| 파일 선택 UI | CSR | 브라우저 File API |
+| 파일 유효성 검사 (클라이언트) | CSR | 빠른 피드백 (서버 요청 전 차단) |
+| Pre-signed URL 생성 | Server Action | AWS 자격 증명 보호 (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY) |
+| S3 PUT 업로드 | CSR | Pre-signed URL로 브라우저에서 직접 업로드 |
+| CDN URL 조합 | CSR | 정적 도메인 + 키 조합 |
+
+#### 폴더 구조
+
+```
+features/media/
+├── components/
+│   ├── ImageUploader.tsx      # 파일 선택 + 드래그 앤 드롭 UI
+│   └── UploadProgress.tsx     # 업로드 진행률 표시
+├── hooks/
+│   └── useImageUpload.ts      # 업로드 로직 (검증 → Pre-signed URL → S3 PUT → URL 반환)
+├── api/
+│   └── media-actions.ts       # Server Action (generatePresignedUrl)
+└── constants/
+    └── media.ts               # 허용 형식, 최대 크기, CDN 도메인 상수
+```
+
+---
+
+### 4-5. translation
+
+#### 기능 요구사항
+
+| ID | 요구사항 | 우선순위 |
+|----|---------|---------|
+| TR-1 | GPT-4o 번역 호출 (CSR 브라우저에서 직접) | P0 |
+| TR-2 | 번역 대상 locale 6개: en, ja, zh-CN, zh-TW, id, vi (th 포함 시 7개) | P0 |
+| TR-3 | 번역 대상 필드: title, description, content | P0 |
+| TR-4 | 번역 진행 상태 표시 (locale별 진행/완료/실패) | P0 |
+| TR-5 | 번역 결과 `post_translations` 테이블에 저장 | P0 |
+| TR-6 | `is_multilingual === false`이면 번역 스킵 | P0 |
+| TR-7 | 번역 재시도 (실패 시) | P1 |
+| TR-8 | 개별 locale 번역 실행 (선택적 재번역) | P2 |
+
+#### GPT-4o 번역 Flow (CSR)
+
+```
+[브라우저]                                  [OpenAI API]
+    │                                           │
+    ├─ 1. 포스트 저장 완료                      │
+    │     (is_multilingual === true 확인)       │
+    │                                           │
+    ├─ 2. locale별 순차/병렬 번역 요청 ───────>│
+    │     POST https://api.openai.com/v1/chat/completions
+    │     ├─ model: gpt-4o                      │
+    │     ├─ 시스템 프롬프트: 번역 지침         │
+    │     └─ 유저 메시지: title + description + content
+    │                                           │
+    │<── 3. 번역 결과 수신 ─────────────────────┤
+    │                                           │
+    ├─ 4. post_translations upsert ────────> [Server Action → Supabase]
+    │     (post_id + locale unique)
+    │
+    └─ 5. 번역 상태 UI 업데이트
+```
+
+#### 번역 API 호출 전략
+
+- **호출 위치**: CSR 브라우저에서 `fetch('https://api.openai.com/v1/chat/completions')` 직접 호출.
+- **API Key 보안**: OpenAI API Key는 환경 변수로 관리. **CSR에서 직접 호출하므로 `NEXT_PUBLIC_` prefix가 필요**하며, OpenAI API Key에 사용량 제한(Rate Limit)과 월 비용 상한을 반드시 설정해야 한다.
+- **타임아웃 회피**: Vercel Hobby 플랜 10초 Serverless Function 타임아웃을 회피. 브라우저에서는 시간 제한 없음.
+- **병렬 처리**: locale별 번역을 `Promise.allSettled()`로 병렬 실행. 개별 실패가 전체를 중단시키지 않음.
+- **번역 저장**: 번역 결과를 Server Action으로 `post_translations` 테이블에 upsert. (Supabase Service Role Key 보호)
+
+> **API Key 보안 대안**: CSR 직접 호출의 보안 우려가 있다면, Server Action을 프록시로 사용하되 Streaming Response(`ReadableStream`)를 반환하여 타임아웃을 회피하는 방안도 검토 가능. 다만 Vercel Hobby에서 Streaming의 안정성을 별도 검증해야 한다.
+
+#### 번역 프롬프트 전략
+
+```
+System: You are a professional translator. Translate the following blog post content
+from Korean to {target_language}. Maintain the original HTML formatting and structure.
+Do not translate proper nouns (restaurant names, place names, brand names).
+Return a JSON object with keys: title, description, content.
+
+User: {title}\n---\n{description}\n---\n{content}
+```
+
+- 응답 포맷: JSON (`{ title, description, content }`)
+- `response_format: { type: "json_object" }` 사용으로 JSON 파싱 안정성 확보.
+
+#### Server Action vs CSR 구분
+
+| 작업 | 처리 위치 | 이유 |
+|------|----------|------|
+| GPT-4o API 호출 | CSR | Vercel 10초 타임아웃 회피 |
+| 번역 결과 저장 (post_translations upsert) | Server Action | Supabase Service Role Key 보호 |
+| 번역 상태 UI | CSR | 실시간 상태 업데이트 |
+
+#### 폴더 구조
+
+```
+features/translation/
+├── components/
+│   └── TranslationStatus.tsx  # locale별 번역 진행/완료/실패 상태 UI
+├── hooks/
+│   └── useTranslation.ts      # GPT-4o 번역 호출 + 상태 관리
+├── api/
+│   └── translation-actions.ts # Server Action (saveTranslation -- post_translations upsert)
+└── constants/
+    └── locales.ts             # 번역 대상 locale 목록, 프롬프트 템플릿
+```
+
+---
+
+### 4-6. build-trigger
+
+#### 기능 요구사항
+
+| ID | 요구사항 | 우선순위 |
+|----|---------|---------|
+| BT-1 | GitHub Actions `workflow_dispatch` API 호출 | P0 |
+| BT-2 | 빌드 트리거 버튼 (대시보드, 에디터 저장 후) | P0 |
+| BT-3 | 빌드 대상 환경 선택 (production / development) | P1 |
+| BT-4 | 트리거 결과 표시 (성공/실패) | P0 |
+| BT-5 | 빌드 상태 조회 (GitHub Actions Run 상태) | P2 |
+
+#### 빌드 트리거 Flow
+
+```
+[브라우저]              [Server Action]              [GitHub API]
+    │                        │                           │
+    ├─ 빌드 트리거 클릭 ───>│                           │
+    │                        │                           │
+    │                        ├─ POST /repos/{owner}/{repo}/actions/workflows/{workflow_id}/dispatches
+    │                        │  ├─ ref: main 또는 develop │
+    │                        │  └─ Authorization: Bearer {GITHUB_TOKEN}
+    │                        │                           │
+    │<── 트리거 결과 ────────┤                           │
+    │    (204 No Content = 성공)                         │
+    │                                                    │
+    └─ UI 상태 업데이트                                  │
+```
+
+#### GitHub API 설정
+
+| 항목 | 값 |
+|------|-----|
+| API Endpoint | `https://api.github.com/repos/{owner}/{repo}/actions/workflows/{workflow_id}/dispatches` |
+| Method | POST |
+| Auth | `Authorization: Bearer {GITHUB_TOKEN}` |
+| Body | `{ "ref": "main" }` 또는 `{ "ref": "develop" }` |
+| 성공 응답 | 204 No Content |
+
+- `GITHUB_TOKEN`은 Server Action에서만 접근. 환경 변수로 관리. (`GITHUB_TOKEN` -- workflow dispatch 권한이 있는 Personal Access Token 또는 Fine-grained Token)
+
+#### Server Action vs CSR 구분
+
+| 작업 | 처리 위치 | 이유 |
+|------|----------|------|
+| 빌드 트리거 (GitHub API 호출) | Server Action | GitHub Token 보호 |
+| 빌드 상태 조회 | Server Action | GitHub Token 보호 |
+| 트리거 버튼 UI | CSR | UI 인터랙션 |
+
+#### 폴더 구조
+
+```
+features/build-trigger/
+├── components/
+│   └── BuildTriggerButton.tsx  # 빌드 트리거 버튼 (환경 선택 포함)
+├── hooks/
+│   └── useBuildTrigger.ts      # 트리거 호출 + 상태 관리
+└── api/
+    └── build-actions.ts        # Server Action (triggerBuild, getBuildStatus)
+```
+
+---
+
+## 5. Shared 모듈
+
+Feature 간 공유되는 모듈은 `shared/`에 위치한다.
+
+```
+shared/
+├── components/
+│   └── ui/
+│       ├── Button.tsx         # 공용 버튼
+│       ├── Input.tsx          # 공용 텍스트 입력
+│       ├── Select.tsx         # 공용 셀렉트
+│       ├── Toggle.tsx         # 공용 토글 스위치
+│       ├── Dialog.tsx         # 공용 다이얼로그 (확인/취소)
+│       ├── Badge.tsx          # 상태 뱃지 (카테고리, 협찬, 추천 등)
+│       ├── Spinner.tsx        # 로딩 스피너
+│       └── Toast.tsx          # 알림 토스트 (성공/에러/정보)
+├── lib/
+│   ├── supabase.ts            # Supabase 클라이언트 인스턴스 (브라우저용)
+│   ├── supabase-server.ts     # Supabase 서버 클라이언트 (Server Action용, Service Role Key)
+│   └── utils.ts               # 범용 유틸리티 (slug 생성, 날짜 포맷 등)
+└── types/
+    ├── post.ts                # Post, PostTranslation 타입 정의
+    └── database.ts            # Supabase Database 타입 (자동 생성 또는 수동 정의)
+```
+
+---
+
+## 6. 환경 변수
+
+### 6-1. 공개 (클라이언트 노출)
+
+`NEXT_PUBLIC_` prefix 필수.
+
+| 변수명 | 용도 | 예시 |
+|--------|------|------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase Project URL | `https://xxx.supabase.co` |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase Anonymous Key | `eyJ...` |
+| `NEXT_PUBLIC_OPENAI_API_KEY` | OpenAI API Key (CSR 번역용) | `sk-...` |
+| `NEXT_PUBLIC_MEDIA_CDN_URL` | 미디어 CDN 도메인 | `https://media.eunminlog.site` |
+
+### 6-2. 비공개 (서버 전용)
+
+Server Action/API Route에서만 접근.
+
+| 변수명 | 용도 | 예시 |
+|--------|------|------|
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase Service Role Key (RLS 우회) | `eyJ...` |
+| `AWS_ACCESS_KEY_ID` | AWS 자격 증명 (S3 Pre-signed URL) | `AKIA...` |
+| `AWS_SECRET_ACCESS_KEY` | AWS 자격 증명 | `wJal...` |
+| `AWS_S3_BUCKET` | S3 버킷 이름 | `media-eunminlog` |
+| `AWS_REGION` | AWS 리전 | `ap-northeast-2` |
+| `GITHUB_TOKEN` | GitHub Personal Access Token | `ghp_...` |
+| `GITHUB_REPO` | GitHub 리포지토리 (owner/repo) | `semnil5202/eunminlog` |
+| `GITHUB_WORKFLOW_ID` | GitHub Actions Workflow ID | `deploy-client.yml` |
+
+> **보안 주의**: `NEXT_PUBLIC_OPENAI_API_KEY`는 클라이언트에 노출된다. OpenAI Dashboard에서 반드시 (1) 사용량 제한 (Rate Limit), (2) 월 비용 상한 (Usage Limit)을 설정해야 한다.
+
+---
+
+## 7. 전체 폴더 구조
+
+```
+apps/admin/src/
+├── app/                                   # Next.js App Router
+│   ├── layout.tsx                         # RootLayout (html, body, global styles)
+│   ├── page.tsx                           # / — 로그인 페이지
+│   ├── globals.css                        # Tailwind + 테마 import
+│   └── (authenticated)/                   # 인증 필수 라우트 그룹
+│       ├── layout.tsx                     # AuthLayout (네비게이션 바 + 인증 가드)
+│       ├── dashboard/
+│       │   └── page.tsx                   # /dashboard — 대시보드
+│       └── posts/
+│           ├── new/
+│           │   └── page.tsx               # /posts/new — 포스트 생성
+│           └── [id]/
+│               └── edit/
+│                   └── page.tsx           # /posts/[id]/edit — 포스트 편집
+├── features/
+│   ├── auth/
+│   │   ├── components/
+│   │   │   └── LoginForm.tsx
+│   │   ├── hooks/
+│   │   │   └── useAuth.ts
+│   │   └── containers/
+│   │       └── LoginContainer.tsx
+│   ├── post-editor/
+│   │   ├── components/
+│   │   │   ├── TiptapEditor.tsx
+│   │   │   ├── EditorToolbar.tsx
+│   │   │   ├── PostMetaForm.tsx
+│   │   │   └── ImageUploadButton.tsx
+│   │   ├── hooks/
+│   │   │   ├── usePostEditor.ts
+│   │   │   └── usePostSave.ts
+│   │   ├── api/
+│   │   │   └── post-actions.ts
+│   │   ├── containers/
+│   │   │   └── PostEditorContainer.tsx
+│   │   └── constants/
+│   │       └── categories.ts
+│   ├── post-management/
+│   │   ├── components/
+│   │   │   ├── PostTable.tsx
+│   │   │   ├── PostTableRow.tsx
+│   │   │   ├── PostFilters.tsx
+│   │   │   └── DeleteConfirmDialog.tsx
+│   │   ├── hooks/
+│   │   │   ├── usePostList.ts
+│   │   │   └── usePostDelete.ts
+│   │   ├── api/
+│   │   │   └── post-list-actions.ts
+│   │   └── containers/
+│   │       └── DashboardContainer.tsx
+│   ├── media/
+│   │   ├── components/
+│   │   │   ├── ImageUploader.tsx
+│   │   │   └── UploadProgress.tsx
+│   │   ├── hooks/
+│   │   │   └── useImageUpload.ts
+│   │   ├── api/
+│   │   │   └── media-actions.ts
+│   │   └── constants/
+│   │       └── media.ts
+│   ├── translation/
+│   │   ├── components/
+│   │   │   └── TranslationStatus.tsx
+│   │   ├── hooks/
+│   │   │   └── useTranslation.ts
+│   │   ├── api/
+│   │   │   └── translation-actions.ts
+│   │   └── constants/
+│   │       └── locales.ts
+│   └── build-trigger/
+│       ├── components/
+│       │   └── BuildTriggerButton.tsx
+│       ├── hooks/
+│       │   └── useBuildTrigger.ts
+│       └── api/
+│           └── build-actions.ts
+└── shared/
+    ├── components/
+    │   └── ui/
+    │       ├── Button.tsx
+    │       ├── Input.tsx
+    │       ├── Select.tsx
+    │       ├── Toggle.tsx
+    │       ├── Dialog.tsx
+    │       ├── Badge.tsx
+    │       ├── Spinner.tsx
+    │       └── Toast.tsx
+    ├── lib/
+    │   ├── supabase.ts
+    │   ├── supabase-server.ts
+    │   └── utils.ts
+    └── types/
+        ├── post.ts
+        └── database.ts
+```
+
+---
+
+## 8. 추가 의존성 패키지
+
+현재 `apps/admin/package.json`에 추가해야 할 패키지 목록.
+
+| 패키지 | 용도 | 카테고리 |
+|--------|------|---------|
+| `@supabase/supabase-js` | Supabase 클라이언트 (Auth + DB) | dependencies |
+| `@tiptap/react` | Tiptap React 통합 | dependencies |
+| `@tiptap/starter-kit` | Tiptap 기본 Extension 번들 | dependencies |
+| `@tiptap/extension-link` | 링크 Extension | dependencies |
+| `@tiptap/extension-image` | 이미지 Extension | dependencies |
+| `@tiptap/extension-placeholder` | Placeholder Extension | dependencies |
+| `@tiptap/pm` | ProseMirror 코어 (peer dependency) | dependencies |
+| `@aws-sdk/client-s3` | S3 Pre-signed URL 생성 (Server Action) | dependencies |
+| `@aws-sdk/s3-request-presigner` | Pre-signed URL 유틸리티 | dependencies |
+
+---
+
+## 9. 데이터 Flow 요약
+
+### 9-1. 포스트 생성 전체 Flow
+
+```
+1. [로그인] → Supabase Auth 세션 획득
+
+2. [에디터] → Tiptap으로 본문 작성 + 메타 입력
+     ├─ 이미지 삽입 시: media feature 호출
+     │    ├─ Server Action: Pre-signed URL 생성
+     │    ├─ CSR: S3 PUT 업로드
+     │    └─ CDN URL을 에디터에 삽입
+     └─ is_multilingual 토글 설정
+
+3. [저장] → Server Action: posts 테이블 INSERT
+     └─ 성공 시 post ID 반환
+
+4. [번역] → is_multilingual === true인 경우
+     ├─ CSR: GPT-4o API 호출 (locale별 병렬)
+     ├─ Server Action: post_translations UPSERT (locale별)
+     └─ 번역 상태 UI 업데이트
+
+5. [빌드 트리거] → (선택적)
+     ├─ Server Action: GitHub API workflow_dispatch
+     └─ 트리거 결과 표시
+
+6. [Client 반영] → GitHub Actions가 Astro SSG 빌드 → S3 배포 → CloudFront 무효화
+```
+
+### 9-2. 포스트 편집 Flow
+
+```
+1. [대시보드] → 포스트 목록에서 편집 클릭
+
+2. [데이터 로드] → Server Action: posts 테이블에서 해당 포스트 조회
+     └─ 에디터에 기존 데이터 반영 (content, meta)
+
+3. [편집] → 에디터에서 수정
+
+4. [저장] → Server Action: posts 테이블 UPDATE
+     └─ updated_at 자동 갱신
+
+5. [번역] → is_multilingual === true이고 content/title/description 변경 시
+     ├─ 기존 번역 덮어쓰기 (UPSERT)
+     └─ 또는 개별 locale 재번역 (선택적)
+
+6. [빌드 트리거] → (선택적)
+```
+
+---
+
+## 10. 구현 순서 (권장)
+
+| Phase | Feature | 작업 | 우선순위 |
+|-------|---------|------|---------|
+| 1 | shared | Supabase 클라이언트 설정, 공용 UI 컴포넌트, 타입 정의 | P0 |
+| 2 | auth | 로그인/로그아웃, 인증 가드, AuthLayout | P0 |
+| 3 | post-editor | Tiptap 에디터 기본, 메타 폼, 포스트 저장(생성) | P0 |
+| 4 | media | Pre-signed URL, S3 업로드, 에디터 이미지 삽입 | P0 |
+| 5 | post-management | 대시보드, 포스트 목록, 삭제 | P0 |
+| 6 | post-editor | 포스트 편집 (기존 데이터 로드 + 수정) | P0 |
+| 7 | translation | GPT-4o 번역, 번역 상태 UI | P0 |
+| 8 | build-trigger | GitHub Actions 트리거, 환경 선택 | P1 |
+| 9 | post-editor | 이미지 순서 변경, rating 입력, place 정보 | P1 |
+| 10 | post-management | 필터링, 검색 | P2 |
+
+---
+
+## 11. DB 스키마 업데이트 필요 사항
+
+### 11-1. `content` 컬럼 포맷 변경
+
+| 항목 | Before | After |
+|------|--------|-------|
+| `posts.content` | MDX/Markdown | HTML (Tiptap 출력) |
+| `post_translations.content` | MDX/Markdown | HTML (GPT-4o 번역 결과) |
+
+Tiptap 에디터 도입에 따라 `content` 컬럼에 저장되는 포맷이 HTML로 변경된다. Client(Astro)에서 HTML을 직접 렌더링하므로 별도의 Markdown → HTML 변환이 불필요해진다.
+
+> **Action Item**: `docs/database.md`의 `content` 컬럼 설명을 "본문 (MDX/Markdown)" → "본문 (HTML — Tiptap 에디터 출력)"으로 업데이트 필요. 유저 승인 후 진행.
+
+---
+
+## 12. 보안 체크리스트
+
+- [ ] Supabase RLS(Row Level Security) 정책 설정 -- 인증된 사용자만 posts/post_translations CRUD 가능
+- [ ] OpenAI API Key에 사용량 제한(Rate Limit) 및 월 비용 상한(Usage Limit) 설정
+- [ ] AWS IAM 정책 -- Pre-signed URL 생성용 최소 권한 원칙 (PutObject only on media-eunminlog bucket)
+- [ ] GitHub Token -- workflow dispatch 최소 권한 (Fine-grained Token 권장)
+- [ ] `NEXT_PUBLIC_OPENAI_API_KEY` 클라이언트 노출에 대한 도메인 제한(Allowed origins) 검토
+- [ ] Admin 앱 Vercel 배포 시 접근 제한 (Vercel Authentication 또는 Supabase Auth로 충분)

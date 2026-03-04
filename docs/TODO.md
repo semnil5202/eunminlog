@@ -1,5 +1,18 @@
 # TODO
 
+## Admin App
+
+> 상세 스펙: [`docs/admin-specs.md`](admin-specs.md)
+
+- [ ] Supabase Auth 로그인/로그아웃 (email/password)
+- [ ] Tiptap 포스트 에디터 (생성/편집)
+- [ ] 포스트 메타데이터 폼 (title, slug, category, sub_category, thumbnail 등)
+- [ ] 포스트 관리 대시보드 (목록, 삭제)
+- [ ] 미디어 업로드 (S3 Pre-signed URL) — 아래 Media Upload 섹션과 연동
+- [ ] GPT-4o 다국어 번역 (CSR) — 아래 i18n 섹션과 연동
+- [ ] GitHub Actions 빌드 트리거
+- [ ] is_multilingual 토글 — 아래 i18n 섹션과 연동
+
 ## SEO
 
 - [ ] `Layout.astro`의 `TEMP_NOINDEX = true` → `false`로 변경하여 `index, follow` 복원 (실제 콘텐츠 준비 완료 후)

@@ -8,7 +8,7 @@
 | `slug`           | text (unique)                        | URL slug                                      |
 | `title`          | text                                 | 게시글 제목                                   |
 | `description`    | text                                 | 요약 설명                                     |
-| `content`        | text                                 | 본문 (MDX/Markdown)                           |
+| `content`        | text                                 | 본문 (HTML — Tiptap 에디터 출력)              |
 | `category`       | enum (`delicious`, `cafe`, `travel`) | 대분류                                        |
 | `sub_category`   | text                                 | 소분류 (한식, 양식, 핫플 등)                  |
 | `thumbnail`      | text                                 | 썸네일 이미지 URL                             |
@@ -31,7 +31,7 @@
 | `locale`      | text                 | 언어 코드 (`en`, `ja`, `zh-CN`, `zh-TW`, `id`, `vi`) |
 | `title`       | text                 | 번역된 제목                                          |
 | `description` | text                 | 번역된 요약                                          |
-| `content`     | text                 | 번역된 본문                                          |
+| `content`     | text                 | 번역된 본문 (HTML)                                   |
 | `created_at`  | timestamptz          | 번역 생성일                                          |
 | `updated_at`  | timestamptz          | 번역 수정일                                          |
 
