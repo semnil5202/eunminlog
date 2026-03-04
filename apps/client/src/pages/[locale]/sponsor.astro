@@ -25,6 +25,7 @@ const { locale } = Astro.props;
 const sponsor = getSponsorContent(locale);
 const mailtoHref = buildMailtoHref(sponsor);
 const canonical = `/${locale}/sponsor/`;
+const isCjk = ['ja', 'zh-CN', 'zh-TW'].includes(locale);
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -47,7 +48,7 @@ const jsonLd = {
     <JsonLd schema={jsonLd} />
   </Fragment>
 
-  <main class="grow">
+  <main class:list={['grow', isCjk ? 'break-all' : 'break-keep']}>
     <section class="bg-primary-50 py-16 lg:py-24">
       <div class="mx-auto max-w-screen-md px-4 lg:px-6 text-center">
         <h1 class="text-3xl lg:text-4xl font-bold text-gray-900 whitespace-pre-line">
@@ -58,7 +59,7 @@ const jsonLd = {
         </p>
         <a
           href={mailtoHref}
-          class="mt-8 inline-block bg-secondary-600 text-white px-8 py-3 text-sm font-semibold hover:bg-secondary-700 transition-colors"
+          class="mt-8 inline-block bg-primary-600 text-white px-8 py-3 text-sm font-semibold hover:bg-primary-700 transition-colors"
         >
           {sponsor.hero.cta}
         </a>
@@ -71,6 +72,7 @@ const jsonLd = {
         {sponsor.blogIntro.paragraphs.map((p) => (
           <p class="mt-4 text-gray-700 leading-relaxed">{p}</p>
         ))}
+        <p class="mt-3 text-xs text-gray-400">{sponsor.blogIntro.note}</p>
       </div>
     </section>
 
@@ -102,6 +104,7 @@ const jsonLd = {
     <section class="py-12 lg:py-16">
       <div class="mx-auto max-w-screen-md px-4 lg:px-6 text-center">
         <h2 class="text-2xl font-bold text-gray-900">{sponsor.stats.heading}</h2>
+        <p class="mt-2 text-xs text-gray-400">{sponsor.stats.note}</p>
         <div class="mt-8 grid grid-cols-2 gap-6 sm:grid-cols-4">
           {sponsor.stats.items.map((stat) => (
             <div>
@@ -135,7 +138,7 @@ const jsonLd = {
         <p class="mt-3 text-gray-600">{sponsor.cta.subtext}</p>
         <a
           href={mailtoHref}
-          class="mt-8 inline-block bg-secondary-600 text-white px-10 py-4 text-base font-semibold hover:bg-secondary-700 transition-colors"
+          class="mt-8 inline-block bg-primary-600 text-white px-8 py-3 text-sm font-semibold hover:bg-primary-700 transition-colors"
         >
           {sponsor.cta.buttonLabel}
         </a>
