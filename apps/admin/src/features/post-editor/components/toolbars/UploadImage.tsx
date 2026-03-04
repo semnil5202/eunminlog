@@ -19,8 +19,62 @@ export function UploadImage({ editor }: EditorProps) {
     if (!file) return;
 
     const url = URL.createObjectURL(file);
-    editor.chain().focus().setImage({ src: url }).run();
+    const { state } = editor;
+    const { $from } = state.selection;
 
+    // Case 1: cursor after an imageCarousel block
+    const posBefore = $from.before();
+    if (posBefore > 0) {
+      const resolved = state.doc.resolve(posBefore);
+      const nodeBeforeBlock = resolved.nodeBefore;
+      if (nodeBeforeBlock?.type.name === 'imageCarousel') {
+        const carouselPos = posBefore - nodeBeforeBlock.nodeSize;
+        editor.commands.addImageToCarousel(carouselPos, url);
+        e.target.value = '';
+        return;
+      }
+    }
+
+    // Case 2: cursor right after an inline image
+    const nodeBefore = $from.nodeBefore;
+    if (nodeBefore?.type.name === 'image') {
+      const existingSrc = nodeBefore.attrs.src as string;
+      const imageEndPos = $from.pos;
+      const imageStartPos = imageEndPos - nodeBefore.nodeSize;
+
+      editor
+        .chain()
+        .focus()
+        .command(({ tr, dispatch }) => {
+          if (!dispatch) return true;
+
+          tr.delete(imageStartPos, imageEndPos);
+
+          const $afterDelete = tr.doc.resolve(imageStartPos);
+          const parentNode = $afterDelete.parent;
+          const parentStart = $afterDelete.start($afterDelete.depth);
+          const parentEnd = $afterDelete.end($afterDelete.depth);
+
+          const carouselNode = editor.schema.nodes.imageCarousel.create({
+            images: [{ src: existingSrc }, { src: url }],
+          });
+
+          if (parentNode.content.size === 0) {
+            tr.replaceWith(parentStart - 1, parentEnd + 1, carouselNode);
+          } else {
+            tr.insert(parentEnd + 1, carouselNode);
+          }
+
+          return true;
+        })
+        .run();
+
+      e.target.value = '';
+      return;
+    }
+
+    // Case 3: default — insert as single image
+    editor.chain().focus().setImage({ src: url }).run();
     e.target.value = '';
   };
 
