@@ -7,6 +7,31 @@ import { ImageIcon } from '../icons';
 
 import type { EditorProps } from './types';
 
+function toWebP(file: File): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        reject(new Error('Canvas context failed'));
+        return;
+      }
+      ctx.drawImage(img, 0, 0);
+      canvas.toBlob(
+        (blob) => (blob ? resolve(blob) : reject(new Error('toBlob failed'))),
+        'image/webp',
+        1,
+      );
+      URL.revokeObjectURL(img.src);
+    };
+    img.onerror = reject;
+    img.src = URL.createObjectURL(file);
+  });
+}
+
 export function UploadImage({ editor }: EditorProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -14,11 +39,12 @@ export function UploadImage({ editor }: EditorProps) {
     fileInputRef.current?.click();
   };
 
-  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const url = URL.createObjectURL(file);
+    const webpBlob = await toWebP(file);
+    const url = URL.createObjectURL(webpBlob);
     const { state } = editor;
     const { $from } = state.selection;
 
