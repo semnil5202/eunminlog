@@ -46,7 +46,7 @@ for (let i = 0; i < posts.length; i++) {
 >
   {feedItems.map((item) => {
     if (item.type === "ad") {
-      return <InFeedAdsense class="max-w-[718px] lg:max-w-none aspect-7/3" slotId={`in_feed_${item.adIndex}`} position={`feed_index_${item.adIndex}`} />;
+      return <InFeedAdsense class="max-w-[640px] lg:max-w-none aspect-7/3" slotId={`in_feed_${item.adIndex}`} position={`feed_index_${item.adIndex}`} />;
     }
 
     if (item.post.is_recommended) {
@@ -71,9 +71,7 @@ for (let i = 0; i < posts.length; i++) {
 </div>
 
 {feedEndpoint && (
-  <div id="feed-sentinel" class="py-4">
-    <PostCardSkeleton />
-  </div>
+  <div id="feed-sentinel" class="h-1" />
 )}
 
 {feedEndpoint && (
@@ -92,7 +90,7 @@ for (let i = 0; i < posts.length; i++) {
       const createAdSlot = (): HTMLDivElement => {
         dynamicAdCounter++;
         const wrapper = document.createElement("div");
-        wrapper.className = "w-full max-w-[718px] lg:max-w-none aspect-7/3 bg-gray-100 rounded-none flex items-center justify-center";
+        wrapper.className = "w-full max-w-[640px] lg:max-w-none aspect-7/3 bg-gray-100 rounded-none flex items-center justify-center";
         wrapper.setAttribute("role", "complementary");
         wrapper.setAttribute("aria-label", "Advertisement");
         wrapper.dataset.adSlot = `in_feed_${dynamicAdCounter}`;
@@ -215,12 +213,6 @@ for (let i = 0; i < posts.length; i++) {
   </script>
 )}
 
-<div id="post-feed-skeleton" class="hidden flex-col gap-10">
-  <PostCardSkeleton />
-  <PostCardSkeleton />
-  <PostCardSkeleton />
-</div>
-
 <script>
   import { initPostClickTracker } from "@/shared/lib/analytics/post-tracker";
   import { initAdTracker, observeNewAdSlot } from "@/shared/lib/analytics/ad-tracker";
@@ -229,10 +221,11 @@ for (let i = 0; i < posts.length; i++) {
   (window as any).__observeNewAdSlot = observeNewAdSlot;
 
   const feed = document.getElementById("post-feed");
-  const skeleton = document.getElementById("post-feed-skeleton");
   const sentinel = document.getElementById("feed-sentinel");
 
-  if (feed && skeleton) {
+  const skeletonCard = `<div class="animate-pulse"><div class="w-full aspect-7/3 bg-gray-200"></div><div class="mt-4 flex flex-col gap-2"><div class="h-5 bg-gray-200 rounded w-3/4"></div><div class="h-4 bg-gray-200 rounded w-full"></div><div class="h-4 bg-gray-200 rounded w-2/3"></div><div class="flex items-center gap-1.5"><div class="h-3 bg-gray-200 rounded w-20"></div><div class="h-3 bg-gray-200 rounded w-16"></div><div class="h-3 bg-gray-200 rounded w-12"></div></div></div></div>`;
+
+  if (feed) {
     document.addEventListener("click", (e) => {
       const link = (e.target as HTMLElement).closest<HTMLAnchorElement>(
         "nav a[href]"
@@ -240,10 +233,9 @@ for (let i = 0; i < posts.length; i++) {
       if (!link || link.getAttribute("aria-current")) return;
 
       e.preventDefault();
-      feed.classList.add("hidden");
       if (sentinel) sentinel.classList.add("hidden");
-      skeleton.classList.remove("hidden");
-      skeleton.classList.add("flex");
+      feed.style.width = `${feed.offsetWidth}px`;
+      feed.innerHTML = skeletonCard + skeletonCard + skeletonCard;
       window.location.href = link.href;
     });
   }
