@@ -1,6 +1,8 @@
 import { Node, mergeAttributes } from '@tiptap/core';
 
-type ImageItem = { src: string };
+type ImageItem = { src: string; width: string };
+
+const DEFAULT_WIDTH = '90%';
 
 declare module '@tiptap/core' {
   // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
@@ -36,6 +38,7 @@ export const CustomImageCarousel = Node.create({
           const imgs = element.querySelectorAll('img');
           return Array.from(imgs).map((img) => ({
             src: img.getAttribute('src') ?? '',
+            width: img.getAttribute('data-width') ?? DEFAULT_WIDTH,
           }));
         },
         renderHTML: () => ({}),
@@ -58,7 +61,7 @@ export const CustomImageCarousel = Node.create({
   renderHTML({ node, HTMLAttributes }) {
     const images = (node.attrs.images as ImageItem[]).map((img) => [
       'img',
-      { src: img.src },
+      { src: img.src, 'data-width': img.width },
     ]);
     return [
       'div',
@@ -83,7 +86,7 @@ export const CustomImageCarousel = Node.create({
 
           const currentImages = [
             ...(node.attrs.images as ImageItem[]),
-            { src },
+            { src, width: DEFAULT_WIDTH },
           ];
 
           if (dispatch) {
@@ -109,12 +112,12 @@ export const CustomImageCarousel = Node.create({
 
           if (dispatch) {
             if (currentImages.length <= 1) {
-              const remainingSrc = currentImages[0]?.src;
+              const remaining = currentImages[0];
               tr.delete(pos, pos + node.nodeSize);
-              if (remainingSrc) {
+              if (remaining) {
                 const imageNode = editor.schema.nodes.image.create({
-                  src: remainingSrc,
-                  style: 'width: 100%; height: auto;',
+                  src: remaining.src,
+                  style: `width: ${remaining.width}; height: auto;`,
                 });
                 const paragraph =
                   editor.schema.nodes.paragraph.create(null, imageNode);
@@ -135,6 +138,7 @@ export const CustomImageCarousel = Node.create({
   addNodeView() {
     return ({ node, editor, getPos }) => {
       const {
+        view,
         options: { editable },
       } = editor;
       const images = node.attrs.images as ImageItem[];
@@ -147,14 +151,18 @@ export const CustomImageCarousel = Node.create({
       $viewport.className = 'image-carousel-viewport';
       $container.appendChild($viewport);
 
+      const slides: HTMLElement[] = [];
+
       images.forEach((img) => {
         const $slide = document.createElement('div');
         $slide.className = 'image-carousel-slide';
+        $slide.style.flex = `0 0 ${img.width}`;
         const $img = document.createElement('img');
         $img.src = img.src;
         $img.style.cssText = 'width: 100%; height: auto; display: block;';
         $slide.appendChild($img);
         $viewport.appendChild($slide);
+        slides.push($slide);
       });
 
       // Navigation arrows (< >)
@@ -223,11 +231,30 @@ export const CustomImageCarousel = Node.create({
 
       if (!editable) return { dom: $container };
 
-      // Selection + delete buttons
-      let isSelected = false;
-      const deleteButtons: HTMLElement[] = [];
+      const updateImages = (newImages: ImageItem[]) => {
+        if (typeof getPos !== 'function') return;
+        const pos = getPos();
+        if (pos === undefined) return;
+        view.dispatch(
+          view.state.tr.setNodeMarkup(pos, null, {
+            ...node.attrs,
+            images: newImages,
+          }),
+        );
+      };
 
+      // State
+      let isSelected = false;
+      let activeSlideIndex = -1;
+      const deleteButtons: HTMLElement[] = [];
+      const cornerDotSets: HTMLElement[][] = [];
+
+      // Build per-slide UI (delete button + 4-corner resize dots)
       images.forEach((_, i) => {
+        const $slide = slides[i];
+        if (!$slide) return;
+
+        // Delete button
         const $deleteBtn = document.createElement('button');
         $deleteBtn.className = 'image-carousel-delete';
         $deleteBtn.textContent = '\u00D7';
@@ -241,10 +268,122 @@ export const CustomImageCarousel = Node.create({
             }
           }
         });
-        $viewport.children[i]?.appendChild($deleteBtn);
+        $slide.appendChild($deleteBtn);
         deleteButtons.push($deleteBtn);
+
+        // 4-corner resize dots (hidden until double-click)
+        const dotPositions = [
+          { top: '-4px', left: '-4px', cursor: 'nw-resize' },
+          { top: '-4px', right: '-4px', cursor: 'ne-resize' },
+          { bottom: '-4px', left: '-4px', cursor: 'sw-resize' },
+          { bottom: '-4px', right: '-4px', cursor: 'se-resize' },
+        ];
+
+        const dots: HTMLElement[] = [];
+        dotPositions.forEach((pos) => {
+          const dot = document.createElement('div');
+          dot.setAttribute(
+            'style',
+            [
+              'position: absolute',
+              'width: 9px',
+              'height: 9px',
+              'background: #4a90d9',
+              'border: 1px solid white',
+              'border-radius: 50%',
+              'display: none',
+              'z-index: 3',
+              `cursor: ${pos.cursor}`,
+              pos.top !== undefined ? `top: ${pos.top}` : '',
+              pos.bottom !== undefined ? `bottom: ${pos.bottom}` : '',
+              pos.left !== undefined ? `left: ${pos.left}` : '',
+              pos.right !== undefined ? `right: ${pos.right}` : '',
+            ]
+              .filter(Boolean)
+              .join('; '),
+          );
+          $slide.appendChild(dot);
+          dots.push(dot);
+
+          // Resize drag logic
+          const isLeft = pos.left !== undefined;
+          let startX = 0;
+          let startWidth = 0;
+
+          const onMouseMove = (e: MouseEvent) => {
+            const viewportWidth = $viewport.clientWidth || 400;
+            const deltaX = isLeft ? startX - e.clientX : e.clientX - startX;
+            const newWidth = Math.max(startWidth + deltaX, 80);
+            const percent = Math.min(
+              (newWidth / viewportWidth) * 100,
+              100,
+            ).toFixed(1);
+            $slide.style.flex = `0 0 ${percent}%`;
+          };
+
+          const onMouseUp = (e: MouseEvent) => {
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+            const viewportWidth = $viewport.clientWidth || 400;
+            const deltaX = isLeft ? startX - e.clientX : e.clientX - startX;
+            const newWidth = Math.max(startWidth + deltaX, 80);
+            const percent = Math.min(
+              (newWidth / viewportWidth) * 100,
+              100,
+            ).toFixed(1);
+            const newImages = images.map((img, idx) =>
+              idx === i ? { ...img, width: `${percent}%` } : img,
+            );
+            updateImages(newImages);
+          };
+
+          dot.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            startX = e.clientX;
+            startWidth = $slide.offsetWidth;
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+          });
+        });
+
+        cornerDotSets.push(dots);
+
+        // Double-click on slide → activate individual image
+        $slide.addEventListener('dblclick', (e) => {
+          e.stopPropagation();
+          selectSlide(i);
+        });
       });
 
+      const selectSlide = (index: number) => {
+        deselectSlide();
+        activeSlideIndex = index;
+        const $slide = slides[index];
+        if ($slide) {
+          $slide.style.outline = '2px solid #4a90d9';
+          $slide.style.outlineOffset = '-2px';
+        }
+        cornerDotSets[index]?.forEach((dot) => {
+          dot.style.display = 'block';
+        });
+      };
+
+      const deselectSlide = () => {
+        if (activeSlideIndex >= 0) {
+          const $prev = slides[activeSlideIndex];
+          if ($prev) {
+            $prev.style.outline = 'none';
+            $prev.style.outlineOffset = '';
+          }
+          cornerDotSets[activeSlideIndex]?.forEach((dot) => {
+            dot.style.display = 'none';
+          });
+          activeSlideIndex = -1;
+        }
+      };
+
+      // Carousel-level selection (single click)
       const showSelection = () => {
         isSelected = true;
         $container.style.outline = '1px dashed #4a90d9';
@@ -259,10 +398,20 @@ export const CustomImageCarousel = Node.create({
         deleteButtons.forEach((btn) => {
           btn.style.display = 'none';
         });
+        deselectSlide();
       };
 
       $container.addEventListener('click', (e) => {
         e.stopPropagation();
+        if (activeSlideIndex >= 0) {
+          const clickedSlide = (e.target as HTMLElement).closest(
+            '.image-carousel-slide',
+          );
+          if (clickedSlide !== slides[activeSlideIndex]) {
+            deselectSlide();
+          }
+          return;
+        }
         if (!isSelected) showSelection();
       });
 

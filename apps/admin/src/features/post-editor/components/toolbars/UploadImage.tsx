@@ -56,7 +56,10 @@ export function UploadImage({ editor }: EditorProps) {
           const parentEnd = $afterDelete.end($afterDelete.depth);
 
           const carouselNode = editor.schema.nodes.imageCarousel.create({
-            images: [{ src: existingSrc }, { src: url }],
+            images: [
+              { src: existingSrc, width: '90%' },
+              { src: url, width: '90%' },
+            ],
           });
 
           if (parentNode.content.size === 0) {
