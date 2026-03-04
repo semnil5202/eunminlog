@@ -44,6 +44,12 @@ export default [
       'no-unused-vars': 'off',
     },
   },
+  {
+    files: ['**/*.cjs'],
+    rules: {
+      '@typescript-eslint/no-require-imports': 'off',
+    },
+  },
   prettier,
   {
     ignores: ['node_modules/', 'dist/', '.next/', '.astro/', '.turbo/'],

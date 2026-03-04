@@ -7,6 +7,7 @@
   },
   "packageManager": "pnpm@10.6.2",
   "scripts": {
+    "setup:local": "pnpm --filter @eunminlog/client setup:local && pnpm --filter @eunminlog/admin setup:local",
     "dev": "turbo dev",
     "build": "turbo build",
     "lint": "turbo lint",

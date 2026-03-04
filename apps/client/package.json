@@ -5,6 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "astro dev",
+    "setup:local": "bash scripts/setup-local-https.sh",
     "build": "astro build",
     "preview": "astro preview",
     "lint": "eslint ."
