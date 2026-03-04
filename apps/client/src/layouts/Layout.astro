@@ -4,6 +4,7 @@ import BaseHead from "@/shared/components/layout/BaseHead.astro";
 import Header from "@/shared/components/layout/Header.astro";
 import Footer from "@/shared/components/layout/Footer.astro";
 import Toast from "@/shared/components/ui/Toast.astro";
+import ImageLightbox from "@/shared/components/ui/ImageLightbox.astro";
 import type { Locale } from "@/shared/types/common";
 import { DEFAULT_LOCALE } from "@/shared/types/common";
 
@@ -63,5 +64,6 @@ const TEMP_NOINDEX = true;
     <slot />
     <Footer locale={locale} />
     <Toast />
+    <ImageLightbox />
   </body>
 </html>

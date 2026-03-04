@@ -1,0 +1,85 @@
+---
+/** 전역 이미지 라이트박스. Layout에 1회 삽입한다. 게시글 본문 이미지 클릭 시 확대 표시. */
+---
+
+<div
+  id="lightbox"
+  class="fixed inset-0 z-50 hidden items-center justify-center bg-black/0 transition-colors duration-300"
+  role="dialog"
+  aria-modal="true"
+  aria-label="Image preview"
+>
+  <button
+    id="lightbox-close"
+    type="button"
+    class="absolute top-4 right-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-black/50 text-white opacity-0 hover:bg-black/70 transition-all duration-300"
+    aria-label="Close"
+  >
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="18" y1="6" x2="6" y2="18"></line>
+      <line x1="6" y1="6" x2="18" y2="18"></line>
+    </svg>
+  </button>
+  <img
+    id="lightbox-img"
+    class="max-h-[90vh] max-w-[90vw] object-contain scale-75 opacity-0 transition-all duration-300"
+    alt=""
+  />
+</div>
+
+<script>
+  const lightbox = document.getElementById("lightbox")!;
+  const lightboxImg = document.getElementById("lightbox-img") as HTMLImageElement;
+  const closeBtn = document.getElementById("lightbox-close")!;
+
+  const open = (src: string, alt: string) => {
+    lightboxImg.src = src;
+    lightboxImg.alt = alt;
+    lightbox.classList.remove("hidden");
+    lightbox.classList.add("flex");
+    document.body.style.overflow = "hidden";
+
+    requestAnimationFrame(() => {
+      lightbox.classList.replace("bg-black/0", "bg-black/80");
+      lightboxImg.classList.remove("scale-75", "opacity-0");
+      lightboxImg.classList.add("scale-100", "opacity-100");
+      closeBtn.classList.remove("opacity-0");
+      closeBtn.classList.add("opacity-100");
+    });
+  };
+
+  const close = () => {
+    lightbox.classList.replace("bg-black/80", "bg-black/0");
+    lightboxImg.classList.remove("scale-100", "opacity-100");
+    lightboxImg.classList.add("scale-75", "opacity-0");
+    closeBtn.classList.remove("opacity-100");
+    closeBtn.classList.add("opacity-0");
+
+    setTimeout(() => {
+      lightbox.classList.remove("flex");
+      lightbox.classList.add("hidden");
+      lightboxImg.src = "";
+      document.body.style.overflow = "";
+    }, 300);
+  };
+
+  closeBtn.addEventListener("click", close);
+
+  lightbox.addEventListener("click", (e) => {
+    if (e.target === lightbox) close();
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !lightbox.classList.contains("hidden")) close();
+  });
+
+  document.addEventListener("click", (e) => {
+    const img = (e.target as HTMLElement).closest<HTMLImageElement>(
+      "[itemprop='articleBody'] img"
+    );
+    if (img) {
+      e.preventDefault();
+      open(img.src, img.alt || "");
+    }
+  });
+</script>
