@@ -4,7 +4,6 @@ type ImageItem = { src: string; width: string; height: string };
 
 const DEFAULT_WIDTH = '90%';
 const DEFAULT_HEIGHT = 'auto';
-const MIN_SLIDE_PERCENT = 90;
 
 declare module '@tiptap/core' {
   // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
@@ -156,28 +155,30 @@ export const CustomImageCarousel = Node.create({
 
       const slides: HTMLElement[] = [];
       const imgElements: HTMLImageElement[] = [];
+      const imgWrappers: HTMLElement[] = [];
 
       images.forEach((img) => {
         const $slide = document.createElement('div');
         $slide.className = 'image-carousel-slide';
-        const imgPercent = parseFloat(img.width) || 90;
-        const slidePercent = Math.max(imgPercent, MIN_SLIDE_PERCENT);
-        $slide.style.flex = `0 0 ${slidePercent}%`;
-        $slide.style.display = 'flex';
-        $slide.style.justifyContent = 'center';
+        $slide.style.flex = `0 0 ${img.width}`;
+
+        const $wrapper = document.createElement('div');
+        $wrapper.style.position = 'relative';
 
         const $img = document.createElement('img');
         $img.src = img.src;
-        const imgRelative = (imgPercent / slidePercent) * 100;
         const heightCss =
           img.height === 'auto'
             ? 'height: auto'
             : `height: ${img.height}; object-fit: cover`;
-        $img.style.cssText = `width: ${imgRelative.toFixed(1)}%; ${heightCss}; display: block;`;
-        $slide.appendChild($img);
+        $img.style.cssText = `width: 100%; ${heightCss}; display: block;`;
+
+        $wrapper.appendChild($img);
+        $slide.appendChild($wrapper);
         $viewport.appendChild($slide);
         slides.push($slide);
         imgElements.push($img);
+        imgWrappers.push($wrapper);
       });
 
       // Navigation arrows (< >)
@@ -187,12 +188,8 @@ export const CustomImageCarousel = Node.create({
         const scrollTo = (index: number) => {
           const slide = slides[index];
           if (slide) {
-            const vRect = $viewport.getBoundingClientRect();
-            const sRect = slide.getBoundingClientRect();
-            const delta =
-              sRect.left + sRect.width / 2 - (vRect.left + vRect.width / 2);
             $viewport.scrollTo({
-              left: $viewport.scrollLeft + delta,
+              left: slide.offsetLeft,
               behavior: 'smooth',
             });
             currentIndex = index;
@@ -242,13 +239,11 @@ export const CustomImageCarousel = Node.create({
         $container.appendChild(createArrow('next'));
 
         $viewport.addEventListener('scrollend', () => {
-          const vRect = $viewport.getBoundingClientRect();
-          const centerX = vRect.left + vRect.width / 2;
+          const scrollLeft = $viewport.scrollLeft;
           let closestIdx = 0;
           let closestDist = Infinity;
           slides.forEach((s, idx) => {
-            const r = s.getBoundingClientRect();
-            const dist = Math.abs(r.left + r.width / 2 - centerX);
+            const dist = Math.abs(s.offsetLeft - scrollLeft);
             if (dist < closestDist) {
               closestDist = dist;
               closestIdx = idx;
@@ -281,7 +276,8 @@ export const CustomImageCarousel = Node.create({
       // Build per-slide UI (delete button + 4-corner resize dots)
       images.forEach((_, i) => {
         const $slide = slides[i];
-        if (!$slide) return;
+        const $wrapper = imgWrappers[i];
+        if (!$slide || !$wrapper) return;
 
         // Delete button
         const $deleteBtn = document.createElement('button');
@@ -297,7 +293,7 @@ export const CustomImageCarousel = Node.create({
             }
           }
         });
-        $slide.appendChild($deleteBtn);
+        $wrapper.appendChild($deleteBtn);
         deleteButtons.push($deleteBtn);
 
         // 4-corner resize dots (hidden until double-click)
@@ -331,7 +327,7 @@ export const CustomImageCarousel = Node.create({
               .filter(Boolean)
               .join('; '),
           );
-          $slide.appendChild(dot);
+          $wrapper.appendChild(dot);
           dots.push(dot);
 
           // Resize drag logic
@@ -342,40 +338,35 @@ export const CustomImageCarousel = Node.create({
           let startWidth = 0;
           let startHeight = 0;
 
-          const onMouseMove = (e: MouseEvent) => {
+          const onPointerMove = (cx: number, cy: number) => {
             const $curImg = imgElements[i];
             if (!$curImg) return;
 
             const viewportWidth = $viewport.clientWidth || 400;
-            const deltaX = isLeft ? startX - e.clientX : e.clientX - startX;
+            const deltaX = isLeft ? startX - cx : cx - startX;
             const newImgPx = Math.max(startWidth + deltaX, 80);
-            const imgPct = Math.min(
+            const percent = Math.min(
               (newImgPx / viewportWidth) * 100,
               100,
             );
-            const slidePct = Math.max(imgPct, MIN_SLIDE_PERCENT);
-            $slide.style.flex = `0 0 ${slidePct}%`;
-            $curImg.style.width = `${((imgPct / slidePct) * 100).toFixed(1)}%`;
+            $slide.style.flex = `0 0 ${percent.toFixed(1)}%`;
 
-            const deltaY = isTop ? startY - e.clientY : e.clientY - startY;
+            const deltaY = isTop ? startY - cy : cy - startY;
             const newH = Math.max(startHeight + deltaY, 60);
             $curImg.style.height = `${newH}px`;
             $curImg.style.objectFit = 'cover';
           };
 
-          const onMouseUp = (e: MouseEvent) => {
-            document.removeEventListener('mousemove', onMouseMove);
-            document.removeEventListener('mouseup', onMouseUp);
-
+          const onPointerEnd = (cx: number, cy: number) => {
             const viewportWidth = $viewport.clientWidth || 400;
-            const deltaX = isLeft ? startX - e.clientX : e.clientX - startX;
+            const deltaX = isLeft ? startX - cx : cx - startX;
             const newImgPx = Math.max(startWidth + deltaX, 80);
             const widthPct = Math.min(
               (newImgPx / viewportWidth) * 100,
               100,
             ).toFixed(1);
 
-            const deltaY = isTop ? startY - e.clientY : e.clientY - startY;
+            const deltaY = isTop ? startY - cy : cy - startY;
             const newH = Math.max(startHeight + deltaY, 60);
 
             const newImages = images.map((img, idx) =>
@@ -386,35 +377,122 @@ export const CustomImageCarousel = Node.create({
             updateImages(newImages);
           };
 
-          dot.addEventListener('mousedown', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            startX = e.clientX;
-            startY = e.clientY;
+          const initDrag = (cx: number, cy: number) => {
+            startX = cx;
+            startY = cy;
             const $curImg = imgElements[i];
             startWidth = $curImg?.offsetWidth ?? $slide.offsetWidth;
             startHeight = $curImg?.offsetHeight ?? 200;
+          };
+
+          // Mouse
+          const onMouseMove = (e: MouseEvent) =>
+            onPointerMove(e.clientX, e.clientY);
+          const onMouseUp = (e: MouseEvent) => {
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+            onPointerEnd(e.clientX, e.clientY);
+          };
+
+          dot.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            initDrag(e.clientX, e.clientY);
             document.addEventListener('mousemove', onMouseMove);
             document.addEventListener('mouseup', onMouseUp);
           });
+
+          // Touch
+          const onTouchMove = (e: TouchEvent) => {
+            const t = e.touches[0];
+            if (t) onPointerMove(t.clientX, t.clientY);
+          };
+          const onTouchEnd = (e: TouchEvent) => {
+            document.removeEventListener('touchmove', onTouchMove);
+            document.removeEventListener('touchend', onTouchEnd);
+            const t = e.changedTouches[0];
+            if (t) onPointerEnd(t.clientX, t.clientY);
+          };
+
+          dot.addEventListener(
+            'touchstart',
+            (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              const t = e.touches[0];
+              if (!t) return;
+              initDrag(t.clientX, t.clientY);
+              document.addEventListener('touchmove', onTouchMove, {
+                passive: false,
+              });
+              document.addEventListener('touchend', onTouchEnd);
+            },
+            { passive: false },
+          );
         });
 
         cornerDotSets.push(dots);
 
-        // Double-click on slide → activate individual image
+        // Double-click (desktop) → activate individual image
         $slide.addEventListener('dblclick', (e) => {
           e.stopPropagation();
           selectSlide(i);
         });
+
+        // Long-press (mobile) → activate individual image
+        let lpTimer: ReturnType<typeof setTimeout> | null = null;
+        let lpStart = { x: 0, y: 0 };
+
+        $slide.addEventListener(
+          'touchstart',
+          (e) => {
+            const t = e.touches[0];
+            if (!t) return;
+            lpStart = { x: t.clientX, y: t.clientY };
+            lpTimer = setTimeout(() => {
+              selectSlide(i);
+              lpTimer = null;
+            }, 500);
+          },
+          { passive: true },
+        );
+
+        $slide.addEventListener(
+          'touchmove',
+          (e) => {
+            if (!lpTimer) return;
+            const t = e.touches[0];
+            if (!t) return;
+            if (
+              Math.abs(t.clientX - lpStart.x) > 10 ||
+              Math.abs(t.clientY - lpStart.y) > 10
+            ) {
+              clearTimeout(lpTimer);
+              lpTimer = null;
+            }
+          },
+          { passive: true },
+        );
+
+        $slide.addEventListener(
+          'touchend',
+          () => {
+            if (lpTimer) {
+              clearTimeout(lpTimer);
+              lpTimer = null;
+            }
+          },
+          { passive: true },
+        );
       });
 
       const selectSlide = (index: number) => {
         deselectSlide();
         activeSlideIndex = index;
-        const $slide = slides[index];
-        if ($slide) {
-          $slide.style.outline = '2px solid #4a90d9';
-          $slide.style.outlineOffset = '-2px';
+        const $w = imgWrappers[index];
+        if ($w) {
+          $w.style.outline = '2px solid #4a90d9';
+          $w.style.outlineOffset = '-2px';
         }
         cornerDotSets[index]?.forEach((dot) => {
           dot.style.display = 'block';
@@ -423,10 +501,10 @@ export const CustomImageCarousel = Node.create({
 
       const deselectSlide = () => {
         if (activeSlideIndex >= 0) {
-          const $prev = slides[activeSlideIndex];
-          if ($prev) {
-            $prev.style.outline = 'none';
-            $prev.style.outlineOffset = '';
+          const $w = imgWrappers[activeSlideIndex];
+          if ($w) {
+            $w.style.outline = 'none';
+            $w.style.outlineOffset = '';
           }
           cornerDotSets[activeSlideIndex]?.forEach((dot) => {
             dot.style.display = 'none';

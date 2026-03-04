@@ -170,7 +170,8 @@
 
 .image-carousel-slide {
   position: relative;
-  scroll-snap-align: center;
+  flex: 0 0 90%;
+  scroll-snap-align: start;
 }
 
 .image-carousel-arrow {
