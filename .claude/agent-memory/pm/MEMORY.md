@@ -12,7 +12,7 @@
 ### Architecture
 
 - Monorepo: pnpm workspaces + TurboRepo
-- apps/admin: Next.js 15 (App Router, React 19) -- CSR + Server Action, port 3001
+- apps/admin: Next.js 15 (App Router, React 19) -- CSR + Server Action, HTTPS dev at local-admin.eunminlog.site:4322, shadcn/ui, flat route structure
 - apps/client: Astro 5 -- SSG only, port 4321
 - DB: Supabase PostgreSQL, `posts` + `post_translations` tables
 - AI: OpenAI GPT-4o for multilingual translation
@@ -20,16 +20,22 @@
 - Shared packages: tsconfig, eslint-config, config (future: types, ui)
 - Styling: Tailwind CSS v4, shared theme via @eunminlog/config/theme.css (@theme inline)
 
-### Current Status (as of 2026-03-01)
+### Current Status (as of 2026-03-04)
 
-- Phase: Scaffolding + theme + client UI components + full page routing + major refactoring complete (208 pages built)
-- Implemented: monorepo, apps, shared packages, docs, Tailwind v4 theme, all UI components, all page routes (ko + 7 locales)
-- Refactoring completed: PostLayout 336->179 lines, search.astro 272->52 lines, feature-based component extraction, shared utility dedup, arrow function convention
-- Client features: post-feed, post-detail (PlaceInfoCard, NearbyPostList, PostBadges, ads.ts, schema.ts), search (SearchUI, search-data.ts)
-- Client shared: ad/ (FixedAdsense, InFeedAdsense), ui/ (StarRating, SponsoredBadge), navigation/ (LanguageSelector, CategoryTree, Breadcrumb, SubCategoryTabs), layout/ (SponsoredPostItem, etc.), lib/ (date.ts, navigation.ts)
-- Missing: Supabase connection (using mock data), editor, auth, real AdSense integration
+- Phase: Client app complete (208 pages), Admin Phase 1 complete
+- Client: monorepo, shared packages, docs, Tailwind v4 theme, all UI components, all page routes (ko + 7 locales), GA4 tracking implemented
+- Client features: post-feed, post-detail, search -- all mock data (Supabase connection pending)
+- Admin Phase 1 completed:
+  - Supabase client setup (browser lazy init + server service role)
+  - Shared types (Post, PostTranslation, Category, SubCategory, TranslationLocale)
+  - HTTPS local dev server (mkcert, local-admin.eunminlog.site:4322)
+  - shadcn/ui components (sidebar, button, input, table, select, calendar, popover, collapsible, separator, sheet, skeleton, tooltip)
+  - Global sidebar (AppSidebar -- 5 nav groups, Collapsible, logo)
+  - Metrics page (/ -- mock data, SearchFilter + sort dropdown + Table)
+  - Flat route structure (no route groups), placeholder pages for /dashboard, /posts/new, /posts/[id]/edit
+  - SearchFilter as shared/global component (date range + search + children extension)
+- Admin remaining: auth, post-editor (Tiptap), post-management, media upload, translation, build trigger
 - CI/CD: designed (docs/ci-cd.md) -- pending se implementation
-- GA4 tracking strategy designed (docs/ga4-tracking.md) -- pending implementation
 
 ### Theme System
 

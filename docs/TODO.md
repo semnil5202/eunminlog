@@ -4,7 +4,24 @@
 
 > 상세 스펙: [`docs/admin-specs.md`](admin-specs.md)
 
+### Phase 1 (완료)
+
+- [x] Supabase 클라이언트 설정 (browser: lazy init, server: service role)
+- [x] 공유 타입 정의 (Post, PostTranslation, Category, SubCategory, TranslationLocale)
+- [x] HTTPS 로컬 dev 서버 (`local-admin.eunminlog.site:4322`, mkcert)
+- [x] shadcn/ui 컴포넌트 설치 (sidebar, button, input, table, select, calendar, popover, collapsible, separator, sheet, skeleton, tooltip)
+- [x] 글로벌 사이드바 (AppSidebar — 5개 nav 그룹, Collapsible, 로고 "은민로그")
+- [x] SidebarLayout 클라이언트 컴포넌트 래퍼 (`sidebar-layout.tsx`)
+- [x] 핵심 지표 페이지 (`/` — 게시글 조회수/추천수/댓글수, mock 데이터, sort dropdown)
+- [x] 공유 SearchFilter 컴포넌트 (날짜 범위 + 검색 + children 확장)
+- [x] 라우트 구조 확립 (flat, route group 미사용)
+- [x] ESLint 설정 (.cjs, shadcn 생성 파일 예외)
+- [x] placeholder 페이지: `/dashboard`, `/posts/new`, `/posts/[id]/edit`
+
+### Phase 2+ (미구현)
+
 - [ ] Supabase Auth 로그인/로그아웃 (email/password)
+- [ ] 인증 가드 (비인증 시 로그인 리다이렉트)
 - [ ] Tiptap 포스트 에디터 (생성/편집)
 - [ ] 포스트 메타데이터 폼 (title, slug, category, sub_category, thumbnail 등)
 - [ ] 포스트 관리 대시보드 (목록, 삭제)
@@ -12,6 +29,7 @@
 - [ ] GPT-4o 다국어 번역 (CSR) — 아래 i18n 섹션과 연동
 - [ ] GitHub Actions 빌드 트리거
 - [ ] is_multilingual 토글 — 아래 i18n 섹션과 연동
+- [ ] 핵심 지표 GA4 API 연동 (mock → 실제 데이터)
 
 ## SEO
 

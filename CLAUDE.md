@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **은민로그 (eunmin log)** — 커플 블로그 플랫폼. 맛집, 카페, 여행 콘텐츠 중심. SEO 최적화와 협찬/광고 수익화가 핵심 목표.
 
-- **apps/admin** — Next.js 15 (React 19, App Router, port 3001). 글 작성/편집, 빌드 트리거 담당. CSR 기반, 서버 로직은 Server Action/API Route로만 처리.
+- **apps/admin** — Next.js 15 (React 19, App Router). 글 작성/편집, 빌드 트리거 담당. CSR 기반, 서버 로직은 Server Action/API Route로만 처리. UI는 shadcn/ui (Radix UI + Tailwind). 로컬 HTTPS dev: `local-admin.eunminlog.site:4322` (mkcert). Flat 라우트 구조 (route group 미사용).
 - **apps/client** — Astro 5 (SSG). 공개 블로그 뷰어. React는 interactive island에만 사용.
 - **packages/tsconfig** — 공유 TypeScript 설정 (base, nextjs, astro)
 - **packages/eslint-config** — 공유 ESLint 설정
@@ -22,7 +22,8 @@ pnpm build                         # 전체 빌드 (topological)
 pnpm lint                          # 전체 린트
 pnpm format                        # Prettier 포맷팅
 pnpm format:check                  # 포맷 검사
-pnpm --filter @eunminlog/admin dev # admin만 실행
+pnpm --filter @eunminlog/admin dev # admin만 실행 (HTTPS, local-admin.eunminlog.site:4322)
+pnpm --filter @eunminlog/admin setup:local # admin mkcert 초기 설정 (최초 1회)
 pnpm --filter @eunminlog/client dev # client만 실행
 ```
 

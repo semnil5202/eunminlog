@@ -93,8 +93,8 @@ export default function AppSidebar() {
 
   return (
     <Sidebar>
-      <SidebarHeader className="px-4 py-4">
-        <Link href="/" className="block text-center text-title1 font-bold text-primary-600">
+      <SidebarHeader className="px-4 py-4 pl-6">
+        <Link href="/" className="text-title1 font-bold text-primary-600">
           은민로그
         </Link>
       </SidebarHeader>

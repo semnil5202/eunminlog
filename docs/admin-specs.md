@@ -1,7 +1,8 @@
 # Admin App Specification
 
 > Date: 2026-03-04
-> Status: Draft (PM 작성, 승인 후 se가 구현)
+> Last Updated: 2026-03-04
+> Status: Phase 1 완료, Phase 2 진행 예정
 
 ## 1. Overview
 
@@ -28,9 +29,22 @@
 | 빌드 트리거 | GitHub Actions API (`workflow_dispatch`) |
 | 배포 | Vercel Hobby 플랜 |
 | 스타일링 | Tailwind CSS v4 (`@eunminlog/config/theme.css` 공유) |
-| Port | 3001 (dev) |
+| UI 컴포넌트 | shadcn/ui (Radix UI + Tailwind) |
+| Port | 4322 (local HTTPS dev), 3001 (next dev fallback) |
 
-### 1-4. 핵심 제약사항
+### 1-4. 로컬 개발 서버
+
+Admin 앱은 HTTPS 환경에서 로컬 개발한다 (Supabase Auth 등 보안 기능을 위해).
+
+| 항목 | 값 |
+|------|-----|
+| URL | `https://local-admin.eunminlog.site:4322` |
+| 인증서 | mkcert 로컬 CA |
+| 설정 스크립트 | `pnpm --filter @eunminlog/admin setup:local` (최초 1회) |
+| 실행 명령 | `pnpm --filter @eunminlog/admin dev` |
+| 서버 구현 | `scripts/start-local-server.cjs` (Node.js HTTPS + Next.js handler) |
+
+### 1-5. 핵심 제약사항
 
 | 제약 | 이유 | 대응 |
 |------|------|------|
@@ -45,47 +59,64 @@
 ### 2-1. 라우트 맵
 
 ```
-/                          → 로그인 페이지 (비인증 시) 또는 대시보드 리다이렉트
-/dashboard                 → 대시보드 (포스트 목록 + 빠른 액션)
-/posts/new                 → 포스트 생성 (Tiptap 에디터)
-/posts/[id]/edit           → 포스트 편집 (Tiptap 에디터)
+/                          → 핵심 지표 (게시글 조회수/추천수/댓글수) — 메트릭스 페이지
+/dashboard                 → 대시보드 (포스트 목록 + 빠른 액션) — placeholder
+/posts/new                 → 포스트 생성 (Tiptap 에디터) — placeholder
+/posts/[id]/edit           → 포스트 편집 (Tiptap 에디터) — placeholder
 ```
 
-### 2-2. 인증 가드
+> **구현 결정**: Route Groups (`(authenticated)` 등)를 사용하지 않고 **flat 구조**를 채택했다. 사이드바가 전체 페이지에 글로벌로 적용되며, 인증 가드는 추후 auth feature에서 추가한다.
 
-- 모든 `/dashboard`, `/posts/*` 라우트는 인증 필수.
-- 비인증 사용자는 `/` (로그인 페이지)로 리다이렉트.
+### 2-2. 인증 가드 (미구현)
+
+- 모든 `/dashboard`, `/posts/*` 라우트는 인증 필수 (예정).
+- 비인증 사용자는 로그인 페이지로 리다이렉트 (예정).
 - 인증 상태는 Supabase Auth 세션으로 관리. CSR에서 `supabase.auth.getSession()`으로 확인.
+- 로그인 페이지의 URL은 auth feature 구현 시 확정.
 
 ### 2-3. 레이아웃 구조
 
 ```
 RootLayout (app/layout.tsx)
-├── / → LoginPage (비인증 전용)
-└── AuthLayout (인증 필수 래퍼)
-    ├── /dashboard → DashboardPage
-    ├── /posts/new → PostEditorPage
-    └── /posts/[id]/edit → PostEditorPage
+└── SidebarLayout (app/sidebar-layout.tsx — 'use client')
+    ├── AppSidebar (shared/components/layout/AppSidebar.tsx)
+    └── SidebarInset > main
+        ├── /               → MetricsPage (핵심 지표)
+        ├── /dashboard      → DashboardPage (포스트 목록) — placeholder
+        ├── /posts/new      → NewPostPage (포스트 생성) — placeholder
+        └── /posts/[id]/edit → EditPostPage (포스트 편집) — placeholder
 ```
 
-**AuthLayout 역할**:
-- Supabase 세션 확인. 비인증 시 `/`로 리다이렉트.
-- 상단 네비게이션 바 (로고, 네비게이션 링크, 로그아웃 버튼) 제공.
+**SidebarLayout 역할**:
+- `SidebarProvider` + `AppSidebar` + `SidebarInset`로 전체 레이아웃 구성.
+- `'use client'` 컴포넌트로 분리 (shadcn Sidebar가 클라이언트 상태 필요).
+
+**AppSidebar 구성** (5개 네비게이션 그룹, Collapsible):
+- **핵심 지표** (BarChart3): 게시글 조회수/추천수/댓글수 (`/`), 광고 지표 (미구현)
+- **에디터** (FileEdit): 새 게시글 작성 (`/posts/new`), 게시글 목록 (`/dashboard`)
+- **카테고리** (FolderTree): 카테고리 생성/수정 (미구현)
+- **부가기능 관리** (MessageSquare): 댓글 조회/삭제, 추천수 관리 (미구현)
+- **협찬 관리** (HandCoins): 협찬 조회 (미구현)
+
+로고: "은민로그" (`text-title1 font-bold text-primary-600`). 하단에 로그아웃 버튼 (기능 미연결).
 
 ---
 
 ## 3. Feature 분리
 
-6개 Feature로 구성한다. Feature 간 직접 import 금지 -- 공유 필요 시 `shared/`로 이동.
+7개 Feature로 구성한다. Feature 간 직접 import 금지 -- 공유 필요 시 `shared/`로 이동.
 
-| Feature | 설명 | 주요 페이지 |
-|---------|------|------------|
-| `auth` | 로그인/로그아웃, 세션 관리 | `/` |
-| `post-editor` | Tiptap 에디터, 포스트 생성/편집 폼 | `/posts/new`, `/posts/[id]/edit` |
-| `post-management` | 포스트 목록, 삭제, 발행 상태 관리 | `/dashboard` |
-| `media` | 이미지 업로드, Pre-signed URL | 에디터 내 사용 |
-| `translation` | GPT-4o 다국어 번역 | 에디터 내 사용 |
-| `build-trigger` | GitHub Actions 빌드 트리거 | 대시보드/에디터 내 사용 |
+| Feature | 설명 | 주요 페이지 | 상태 |
+|---------|------|------------|------|
+| `metrics` | 핵심 지표 (조회수/추천수/댓글수) | `/` | Mock 구현 완료 |
+| `auth` | 로그인/로그아웃, 세션 관리 | TBD (로그인 페이지) | 미구현 |
+| `post-editor` | Tiptap 에디터, 포스트 생성/편집 폼 | `/posts/new`, `/posts/[id]/edit` | placeholder |
+| `post-management` | 포스트 목록, 삭제, 발행 상태 관리 | `/dashboard` | placeholder |
+| `media` | 이미지 업로드, Pre-signed URL | 에디터 내 사용 | 미구현 |
+| `translation` | GPT-4o 다국어 번역 | 에디터 내 사용 | 미구현 |
+| `build-trigger` | GitHub Actions 빌드 트리거 | 대시보드/에디터 내 사용 | 미구현 |
+
+> **Note**: `metrics`는 현재 `app/page.tsx`에 직접 구현되어 있으며, 복잡도가 높아지면 `features/metrics/`로 분리 예정. 현재는 shared SearchFilter와 shadcn Table/Select를 사용하는 단일 페이지.
 
 ---
 
@@ -532,28 +563,61 @@ features/build-trigger/
 
 ## 5. Shared 모듈
 
-Feature 간 공유되는 모듈은 `shared/`에 위치한다.
+Feature 간 공유되는 모듈은 두 곳에 나뉜다:
+- `shared/` — 프로젝트 고유 공유 컴포넌트, 라이브러리, 타입
+- `components/ui/` — shadcn/ui 생성 컴포넌트 (Radix UI 기반 프리미티브)
+
+### 5-1. 현재 구현된 구조
 
 ```
-shared/
-├── components/
-│   └── ui/
-│       ├── Button.tsx         # 공용 버튼
-│       ├── Input.tsx          # 공용 텍스트 입력
-│       ├── Select.tsx         # 공용 셀렉트
-│       ├── Toggle.tsx         # 공용 토글 스위치
-│       ├── Dialog.tsx         # 공용 다이얼로그 (확인/취소)
-│       ├── Badge.tsx          # 상태 뱃지 (카테고리, 협찬, 추천 등)
-│       ├── Spinner.tsx        # 로딩 스피너
-│       └── Toast.tsx          # 알림 토스트 (성공/에러/정보)
-├── lib/
-│   ├── supabase.ts            # Supabase 클라이언트 인스턴스 (브라우저용)
-│   ├── supabase-server.ts     # Supabase 서버 클라이언트 (Server Action용, Service Role Key)
-│   └── utils.ts               # 범용 유틸리티 (slug 생성, 날짜 포맷 등)
-└── types/
-    ├── post.ts                # Post, PostTranslation 타입 정의
-    └── database.ts            # Supabase Database 타입 (자동 생성 또는 수동 정의)
+src/
+├── shared/
+│   ├── components/
+│   │   ├── layout/
+│   │   │   └── AppSidebar.tsx       # 글로벌 사이드바 (5개 nav 그룹, Collapsible)
+│   │   └── filter/
+│   │       └── SearchFilter.tsx     # 공유 검색 필터 (날짜 범위 + 검색 + children 확장)
+│   ├── lib/
+│   │   ├── supabase.ts              # Supabase 브라우저 클라이언트 (lazy init)
+│   │   └── supabase-server.ts       # Supabase 서버 클라이언트 (Service Role Key)
+│   └── types/
+│       └── post.ts                  # Post, PostTranslation, Category, SubCategory, TranslationLocale
+├── components/ui/                   # shadcn/ui 생성 컴포넌트 (아래 목록)
+├── hooks/
+│   └── use-mobile.ts                # shadcn 모바일 감지 hook
+└── lib/
+    └── utils.ts                     # shadcn cn() 유틸리티 (clsx + tailwind-merge)
 ```
+
+### 5-2. 설치된 shadcn/ui 컴포넌트
+
+`src/components/ui/` 에 위치. shadcn CLI로 생성되며 직접 수정 가능.
+
+| 컴포넌트 | 파일 | 용도 |
+|----------|------|------|
+| Button | button.tsx | 공용 버튼 |
+| Input | input.tsx | 텍스트 입력 |
+| Select | select.tsx | 드롭다운 셀렉트 |
+| Table | table.tsx | 데이터 테이블 |
+| Calendar | calendar.tsx | 날짜 선택기 (react-day-picker) |
+| Popover | popover.tsx | 팝오버 컨테이너 |
+| Sidebar | sidebar.tsx | 사이드바 레이아웃 시스템 |
+| Collapsible | collapsible.tsx | 접이식 섹션 |
+| Separator | separator.tsx | 구분선 |
+| Sheet | sheet.tsx | 모바일 시트 |
+| Skeleton | skeleton.tsx | 로딩 스켈레톤 |
+| Tooltip | tooltip.tsx | 툴팁 |
+
+### 5-3. 추가 예정 공용 컴포넌트
+
+Feature 구현 시 필요에 따라 추가:
+
+| 컴포넌트 | 위치 | 용도 |
+|----------|------|------|
+| Toggle | shared/components/ui/ 또는 shadcn | 토글 스위치 (is_sponsored, is_recommended 등) |
+| Dialog | shadcn | 확인/취소 다이얼로그 |
+| Badge | shadcn | 상태 뱃지 (카테고리, 협찬, 추천) |
+| Toast | shadcn | 알림 토스트 (성공/에러/정보) |
 
 ---
 
@@ -591,121 +655,151 @@ Server Action/API Route에서만 접근.
 
 ## 7. 전체 폴더 구조
 
+### 7-1. 현재 구현된 구조 (Phase 1 완료)
+
 ```
-apps/admin/src/
-├── app/                                   # Next.js App Router
-│   ├── layout.tsx                         # RootLayout (html, body, global styles)
-│   ├── page.tsx                           # / — 로그인 페이지
-│   ├── globals.css                        # Tailwind + 테마 import
-│   └── (authenticated)/                   # 인증 필수 라우트 그룹
-│       ├── layout.tsx                     # AuthLayout (네비게이션 바 + 인증 가드)
-│       ├── dashboard/
-│       │   └── page.tsx                   # /dashboard — 대시보드
-│       └── posts/
-│           ├── new/
-│           │   └── page.tsx               # /posts/new — 포스트 생성
-│           └── [id]/
-│               └── edit/
-│                   └── page.tsx           # /posts/[id]/edit — 포스트 편집
-├── features/
-│   ├── auth/
-│   │   ├── components/
-│   │   │   └── LoginForm.tsx
-│   │   ├── hooks/
-│   │   │   └── useAuth.ts
-│   │   └── containers/
-│   │       └── LoginContainer.tsx
-│   ├── post-editor/
-│   │   ├── components/
-│   │   │   ├── TiptapEditor.tsx
-│   │   │   ├── EditorToolbar.tsx
-│   │   │   ├── PostMetaForm.tsx
-│   │   │   └── ImageUploadButton.tsx
-│   │   ├── hooks/
-│   │   │   ├── usePostEditor.ts
-│   │   │   └── usePostSave.ts
-│   │   ├── api/
-│   │   │   └── post-actions.ts
-│   │   ├── containers/
-│   │   │   └── PostEditorContainer.tsx
-│   │   └── constants/
-│   │       └── categories.ts
-│   ├── post-management/
-│   │   ├── components/
-│   │   │   ├── PostTable.tsx
-│   │   │   ├── PostTableRow.tsx
-│   │   │   ├── PostFilters.tsx
-│   │   │   └── DeleteConfirmDialog.tsx
-│   │   ├── hooks/
-│   │   │   ├── usePostList.ts
-│   │   │   └── usePostDelete.ts
-│   │   ├── api/
-│   │   │   └── post-list-actions.ts
-│   │   └── containers/
-│   │       └── DashboardContainer.tsx
-│   ├── media/
-│   │   ├── components/
-│   │   │   ├── ImageUploader.tsx
-│   │   │   └── UploadProgress.tsx
-│   │   ├── hooks/
-│   │   │   └── useImageUpload.ts
-│   │   ├── api/
-│   │   │   └── media-actions.ts
-│   │   └── constants/
-│   │       └── media.ts
-│   ├── translation/
-│   │   ├── components/
-│   │   │   └── TranslationStatus.tsx
-│   │   ├── hooks/
-│   │   │   └── useTranslation.ts
-│   │   ├── api/
-│   │   │   └── translation-actions.ts
-│   │   └── constants/
-│   │       └── locales.ts
-│   └── build-trigger/
-│       ├── components/
-│       │   └── BuildTriggerButton.tsx
-│       ├── hooks/
-│       │   └── useBuildTrigger.ts
-│       └── api/
-│           └── build-actions.ts
-└── shared/
-    ├── components/
-    │   └── ui/
-    │       ├── Button.tsx
-    │       ├── Input.tsx
-    │       ├── Select.tsx
-    │       ├── Toggle.tsx
-    │       ├── Dialog.tsx
-    │       ├── Badge.tsx
-    │       ├── Spinner.tsx
-    │       └── Toast.tsx
+apps/admin/
+├── scripts/
+│   ├── start-local-server.cjs       # HTTPS dev 서버 (mkcert)
+│   └── setup-local-https.sh         # mkcert 초기 설정 스크립트
+└── src/
+    ├── app/                         # Next.js App Router (flat 구조)
+    │   ├── layout.tsx               # RootLayout (SidebarLayout 래핑)
+    │   ├── sidebar-layout.tsx       # 'use client' — SidebarProvider + AppSidebar
+    │   ├── page.tsx                 # / — 핵심 지표 (MetricsPage)
+    │   ├── globals.css              # Tailwind + shadcn + 테마 import
+    │   ├── dashboard/
+    │   │   └── page.tsx             # /dashboard — 대시보드 (placeholder)
+    │   └── posts/
+    │       ├── new/
+    │       │   └── page.tsx         # /posts/new — 포스트 생성 (placeholder)
+    │       └── [id]/
+    │           └── edit/
+    │               └── page.tsx     # /posts/[id]/edit — 포스트 편집 (placeholder)
+    ├── components/ui/               # shadcn/ui 생성 컴포넌트
+    │   ├── button.tsx
+    │   ├── calendar.tsx
+    │   ├── collapsible.tsx
+    │   ├── input.tsx
+    │   ├── popover.tsx
+    │   ├── select.tsx
+    │   ├── separator.tsx
+    │   ├── sheet.tsx
+    │   ├── sidebar.tsx
+    │   ├── skeleton.tsx
+    │   ├── table.tsx
+    │   └── tooltip.tsx
+    ├── hooks/
+    │   └── use-mobile.ts            # shadcn 모바일 감지 hook
     ├── lib/
-    │   ├── supabase.ts
-    │   ├── supabase-server.ts
-    │   └── utils.ts
-    └── types/
-        ├── post.ts
-        └── database.ts
+    │   └── utils.ts                 # shadcn cn() 유틸리티
+    └── shared/
+        ├── components/
+        │   ├── layout/
+        │   │   └── AppSidebar.tsx   # 글로벌 사이드바
+        │   └── filter/
+        │       └── SearchFilter.tsx # 공유 검색 필터
+        ├── lib/
+        │   ├── supabase.ts          # Supabase 브라우저 클라이언트
+        │   └── supabase-server.ts   # Supabase 서버 클라이언트
+        └── types/
+            └── post.ts              # Post, PostTranslation 타입
+```
+
+### 7-2. 계획된 Feature 구조 (Phase 2 이후)
+
+Feature 구현 시 아래 구조로 확장:
+
+```
+src/features/
+├── auth/
+│   ├── components/
+│   │   └── LoginForm.tsx
+│   ├── hooks/
+│   │   └── useAuth.ts
+│   └── containers/
+│       └── LoginContainer.tsx
+├── post-editor/
+│   ├── components/
+│   │   ├── TiptapEditor.tsx
+│   │   ├── EditorToolbar.tsx
+│   │   ├── PostMetaForm.tsx
+│   │   └── ImageUploadButton.tsx
+│   ├── hooks/
+│   │   ├── usePostEditor.ts
+│   │   └── usePostSave.ts
+│   ├── api/
+│   │   └── post-actions.ts
+│   ├── containers/
+│   │   └── PostEditorContainer.tsx
+│   └── constants/
+│       └── categories.ts
+├── post-management/
+│   ├── components/
+│   │   ├── PostTable.tsx
+│   │   ├── PostTableRow.tsx
+│   │   ├── PostFilters.tsx
+│   │   └── DeleteConfirmDialog.tsx
+│   ├── hooks/
+│   │   ├── usePostList.ts
+│   │   └── usePostDelete.ts
+│   ├── api/
+│   │   └── post-list-actions.ts
+│   └── containers/
+│       └── DashboardContainer.tsx
+├── media/
+│   ├── components/
+│   │   ├── ImageUploader.tsx
+│   │   └── UploadProgress.tsx
+│   ├── hooks/
+│   │   └── useImageUpload.ts
+│   ├── api/
+│   │   └── media-actions.ts
+│   └── constants/
+│       └── media.ts
+├── translation/
+│   ├── components/
+│   │   └── TranslationStatus.tsx
+│   ├── hooks/
+│   │   └── useTranslation.ts
+│   ├── api/
+│   │   └── translation-actions.ts
+│   └── constants/
+│       └── locales.ts
+└── build-trigger/
+    ├── components/
+    │   └── BuildTriggerButton.tsx
+    ├── hooks/
+    │   └── useBuildTrigger.ts
+    └── api/
+        └── build-actions.ts
 ```
 
 ---
 
-## 8. 추가 의존성 패키지
+## 8. 의존성 패키지
 
-현재 `apps/admin/package.json`에 추가해야 할 패키지 목록.
+`apps/admin/package.json` 기준. 설치 완료된 패키지.
 
-| 패키지 | 용도 | 카테고리 |
-|--------|------|---------|
-| `@supabase/supabase-js` | Supabase 클라이언트 (Auth + DB) | dependencies |
-| `@tiptap/react` | Tiptap React 통합 | dependencies |
-| `@tiptap/starter-kit` | Tiptap 기본 Extension 번들 | dependencies |
-| `@tiptap/extension-link` | 링크 Extension | dependencies |
-| `@tiptap/extension-image` | 이미지 Extension | dependencies |
-| `@tiptap/extension-placeholder` | Placeholder Extension | dependencies |
-| `@tiptap/pm` | ProseMirror 코어 (peer dependency) | dependencies |
-| `@aws-sdk/client-s3` | S3 Pre-signed URL 생성 (Server Action) | dependencies |
-| `@aws-sdk/s3-request-presigner` | Pre-signed URL 유틸리티 | dependencies |
+| 패키지 | 용도 | 상태 |
+|--------|------|------|
+| `@supabase/supabase-js` | Supabase 클라이언트 (Auth + DB) | 설치 완료 |
+| `@tiptap/react` | Tiptap React 통합 | 설치 완료 |
+| `@tiptap/starter-kit` | Tiptap 기본 Extension 번들 | 설치 완료 |
+| `@tiptap/extension-link` | 링크 Extension | 설치 완료 |
+| `@tiptap/extension-image` | 이미지 Extension | 설치 완료 |
+| `@tiptap/extension-placeholder` | Placeholder Extension | 설치 완료 |
+| `@tiptap/pm` | ProseMirror 코어 (peer dependency) | 설치 완료 |
+| `@aws-sdk/client-s3` | S3 Pre-signed URL 생성 (Server Action) | 설치 완료 |
+| `@aws-sdk/s3-request-presigner` | Pre-signed URL 유틸리티 | 설치 완료 |
+| `shadcn` | shadcn/ui CLI + 컴포넌트 런타임 | 설치 완료 |
+| `radix-ui` | Radix UI 프리미티브 (shadcn 의존) | 설치 완료 |
+| `class-variance-authority` | 컴포넌트 variant 유틸리티 (shadcn) | 설치 완료 |
+| `clsx` + `tailwind-merge` | 조건부 클래스 + Tailwind 충돌 해결 (shadcn) | 설치 완료 |
+| `lucide-react` | 아이콘 라이브러리 | 설치 완료 |
+| `date-fns` | 날짜 유틸리티 (Calendar 컴포넌트) | 설치 완료 |
+| `react-day-picker` | 달력 UI (shadcn Calendar) | 설치 완료 |
+| `tw-animate-css` | Tailwind 애니메이션 (shadcn) | 설치 완료 |
 
 ---
 
@@ -760,20 +854,21 @@ apps/admin/src/
 
 ---
 
-## 10. 구현 순서 (권장)
+## 10. 구현 순서
 
-| Phase | Feature | 작업 | 우선순위 |
-|-------|---------|------|---------|
-| 1 | shared | Supabase 클라이언트 설정, 공용 UI 컴포넌트, 타입 정의 | P0 |
-| 2 | auth | 로그인/로그아웃, 인증 가드, AuthLayout | P0 |
-| 3 | post-editor | Tiptap 에디터 기본, 메타 폼, 포스트 저장(생성) | P0 |
-| 4 | media | Pre-signed URL, S3 업로드, 에디터 이미지 삽입 | P0 |
-| 5 | post-management | 대시보드, 포스트 목록, 삭제 | P0 |
-| 6 | post-editor | 포스트 편집 (기존 데이터 로드 + 수정) | P0 |
-| 7 | translation | GPT-4o 번역, 번역 상태 UI | P0 |
-| 8 | build-trigger | GitHub Actions 트리거, 환경 선택 | P1 |
-| 9 | post-editor | 이미지 순서 변경, rating 입력, place 정보 | P1 |
-| 10 | post-management | 필터링, 검색 | P2 |
+| Phase | Feature | 작업 | 우선순위 | 상태 |
+|-------|---------|------|---------|------|
+| 1 | shared + infra | Supabase 클라이언트, 타입 정의, HTTPS 로컬 dev 서버, 사이드바, 핵심 지표 페이지 (mock), SearchFilter | P0 | **완료** |
+| 2 | auth | 로그인/로그아웃, 인증 가드 | P0 | 미착수 |
+| 3 | post-editor | Tiptap 에디터 기본, 메타 폼, 포스트 저장(생성) | P0 | 미착수 |
+| 4 | media | Pre-signed URL, S3 업로드, 에디터 이미지 삽입 | P0 | 미착수 |
+| 5 | post-management | 대시보드, 포스트 목록, 삭제 | P0 | 미착수 |
+| 6 | post-editor | 포스트 편집 (기존 데이터 로드 + 수정) | P0 | 미착수 |
+| 7 | translation | GPT-4o 번역, 번역 상태 UI | P0 | 미착수 |
+| 8 | build-trigger | GitHub Actions 트리거, 환경 선택 | P1 | 미착수 |
+| 9 | post-editor | 이미지 순서 변경, rating 입력, place 정보 | P1 | 미착수 |
+| 10 | post-management | 필터링, 검색 | P2 | 미착수 |
+| 11 | metrics | GA4 API 연동 (mock → 실제 데이터) | P2 | 미착수 |
 
 ---
 
@@ -788,7 +883,7 @@ apps/admin/src/
 
 Tiptap 에디터 도입에 따라 `content` 컬럼에 저장되는 포맷이 HTML로 변경된다. Client(Astro)에서 HTML을 직접 렌더링하므로 별도의 Markdown → HTML 변환이 불필요해진다.
 
-> **Action Item**: `docs/database.md`의 `content` 컬럼 설명을 "본문 (MDX/Markdown)" → "본문 (HTML — Tiptap 에디터 출력)"으로 업데이트 필요. 유저 승인 후 진행.
+> **완료**: `docs/database.md`의 `content` 컬럼 설명이 "본문 (HTML -- Tiptap 에디터 출력)"으로 업데이트됨.
 
 ---
 
