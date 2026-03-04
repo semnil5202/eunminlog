@@ -20,7 +20,7 @@ export default function NewPostPage() {
 
   return (
     <div className="mx-auto max-w-[688px]">
-      <div className="rounded-lg border">
+      <TiptapEditorContainer content={content} onChange={setContent}>
         <div className="p-4">
           <div className="flex items-center justify-between">
             <input
@@ -28,7 +28,7 @@ export default function NewPostPage() {
               value={title}
               onChange={handleTitleChange}
               placeholder="게시글 제목"
-              className="w-full text-title2 font-semibold outline-none placeholder:text-muted-foreground"
+              className="w-full text-title2 font-bold outline-none placeholder:text-muted-foreground"
             />
             <span className="shrink-0 pl-3 text-caption1 text-muted-foreground">
               {title.length}/{TITLE_MAX_LENGTH}
@@ -36,12 +36,7 @@ export default function NewPostPage() {
           </div>
         </div>
         <Separator />
-        <TiptapEditorContainer
-          content={content}
-          onChange={setContent}
-          className="rounded-none border-0"
-        />
-      </div>
+      </TiptapEditorContainer>
     </div>
   );
 }

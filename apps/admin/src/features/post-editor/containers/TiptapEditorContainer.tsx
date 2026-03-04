@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { type ReactNode, useEffect, useState } from 'react';
 
 import { cn } from '@/lib/utils';
 import { useTiptapEditor } from '../hooks/useTiptapEditor';
@@ -13,6 +13,7 @@ type TiptapEditorContainerProps = {
   onChange: (content: string) => void;
   placeholder?: string;
   className?: string;
+  children?: ReactNode;
 };
 
 export function TiptapEditorContainer({
@@ -20,6 +21,7 @@ export function TiptapEditorContainer({
   onChange,
   placeholder = '본문을 입력하세요.',
   className,
+  children,
 }: TiptapEditorContainerProps) {
   const [isMounted, setIsMounted] = useState(false);
   const editor = useTiptapEditor({ content, onChange });
@@ -33,8 +35,9 @@ export function TiptapEditorContainer({
   }
 
   return (
-    <div className={cn('overflow-hidden rounded-lg border', className)}>
+    <div className={cn('overflow-hidden border-t', className)}>
       <Toolbar editor={editor} />
+      {children}
       <TiptapEditor editor={editor} placeholder={placeholder} />
     </div>
   );
