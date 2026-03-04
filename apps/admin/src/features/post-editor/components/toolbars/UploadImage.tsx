@@ -57,8 +57,8 @@ export function UploadImage({ editor }: EditorProps) {
 
           const carouselNode = editor.schema.nodes.imageCarousel.create({
             images: [
-              { src: existingSrc, width: '90%' },
-              { src: url, width: '90%' },
+              { src: existingSrc, width: '90%', height: 'auto' },
+              { src: url, width: '90%', height: 'auto' },
             ],
           });
 

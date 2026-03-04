@@ -1,8 +1,10 @@
 import { Node, mergeAttributes } from '@tiptap/core';
 
-type ImageItem = { src: string; width: string };
+type ImageItem = { src: string; width: string; height: string };
 
 const DEFAULT_WIDTH = '90%';
+const DEFAULT_HEIGHT = 'auto';
+const MIN_SLIDE_PERCENT = 90;
 
 declare module '@tiptap/core' {
   // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
@@ -39,6 +41,7 @@ export const CustomImageCarousel = Node.create({
           return Array.from(imgs).map((img) => ({
             src: img.getAttribute('src') ?? '',
             width: img.getAttribute('data-width') ?? DEFAULT_WIDTH,
+            height: img.getAttribute('data-height') ?? DEFAULT_HEIGHT,
           }));
         },
         renderHTML: () => ({}),
@@ -61,7 +64,7 @@ export const CustomImageCarousel = Node.create({
   renderHTML({ node, HTMLAttributes }) {
     const images = (node.attrs.images as ImageItem[]).map((img) => [
       'img',
-      { src: img.src, 'data-width': img.width },
+      { src: img.src, 'data-width': img.width, 'data-height': img.height },
     ]);
     return [
       'div',
@@ -86,7 +89,7 @@ export const CustomImageCarousel = Node.create({
 
           const currentImages = [
             ...(node.attrs.images as ImageItem[]),
-            { src, width: DEFAULT_WIDTH },
+            { src, width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT },
           ];
 
           if (dispatch) {
@@ -117,7 +120,7 @@ export const CustomImageCarousel = Node.create({
               if (remaining) {
                 const imageNode = editor.schema.nodes.image.create({
                   src: remaining.src,
-                  style: `width: ${remaining.width}; height: auto;`,
+                  style: `width: ${remaining.width}; height: ${remaining.height};${remaining.height !== 'auto' ? ' object-fit: cover;' : ''}`,
                 });
                 const paragraph =
                   editor.schema.nodes.paragraph.create(null, imageNode);
@@ -152,17 +155,29 @@ export const CustomImageCarousel = Node.create({
       $container.appendChild($viewport);
 
       const slides: HTMLElement[] = [];
+      const imgElements: HTMLImageElement[] = [];
 
       images.forEach((img) => {
         const $slide = document.createElement('div');
         $slide.className = 'image-carousel-slide';
-        $slide.style.flex = `0 0 ${img.width}`;
+        const imgPercent = parseFloat(img.width) || 90;
+        const slidePercent = Math.max(imgPercent, MIN_SLIDE_PERCENT);
+        $slide.style.flex = `0 0 ${slidePercent}%`;
+        $slide.style.display = 'flex';
+        $slide.style.justifyContent = 'center';
+
         const $img = document.createElement('img');
         $img.src = img.src;
-        $img.style.cssText = 'width: 100%; height: auto; display: block;';
+        const imgRelative = (imgPercent / slidePercent) * 100;
+        const heightCss =
+          img.height === 'auto'
+            ? 'height: auto'
+            : `height: ${img.height}; object-fit: cover`;
+        $img.style.cssText = `width: ${imgRelative.toFixed(1)}%; ${heightCss}; display: block;`;
         $slide.appendChild($img);
         $viewport.appendChild($slide);
         slides.push($slide);
+        imgElements.push($img);
       });
 
       // Navigation arrows (< >)
@@ -170,10 +185,14 @@ export const CustomImageCarousel = Node.create({
         let currentIndex = 0;
 
         const scrollTo = (index: number) => {
-          const slide = $viewport.children[index] as HTMLElement | undefined;
+          const slide = slides[index];
           if (slide) {
+            const vRect = $viewport.getBoundingClientRect();
+            const sRect = slide.getBoundingClientRect();
+            const delta =
+              sRect.left + sRect.width / 2 - (vRect.left + vRect.width / 2);
             $viewport.scrollTo({
-              left: slide.offsetLeft,
+              left: $viewport.scrollLeft + delta,
               behavior: 'smooth',
             });
             currentIndex = index;
@@ -223,9 +242,19 @@ export const CustomImageCarousel = Node.create({
         $container.appendChild(createArrow('next'));
 
         $viewport.addEventListener('scrollend', () => {
-          const slideWidth =
-            ($viewport.children[0] as HTMLElement)?.offsetWidth ?? 1;
-          currentIndex = Math.round($viewport.scrollLeft / slideWidth);
+          const vRect = $viewport.getBoundingClientRect();
+          const centerX = vRect.left + vRect.width / 2;
+          let closestIdx = 0;
+          let closestDist = Infinity;
+          slides.forEach((s, idx) => {
+            const r = s.getBoundingClientRect();
+            const dist = Math.abs(r.left + r.width / 2 - centerX);
+            if (dist < closestDist) {
+              closestDist = dist;
+              closestIdx = idx;
+            }
+          });
+          currentIndex = closestIdx;
         });
       }
 
@@ -307,32 +336,52 @@ export const CustomImageCarousel = Node.create({
 
           // Resize drag logic
           const isLeft = pos.left !== undefined;
+          const isTop = pos.top !== undefined;
           let startX = 0;
+          let startY = 0;
           let startWidth = 0;
+          let startHeight = 0;
 
           const onMouseMove = (e: MouseEvent) => {
+            const $curImg = imgElements[i];
+            if (!$curImg) return;
+
             const viewportWidth = $viewport.clientWidth || 400;
             const deltaX = isLeft ? startX - e.clientX : e.clientX - startX;
-            const newWidth = Math.max(startWidth + deltaX, 80);
-            const percent = Math.min(
-              (newWidth / viewportWidth) * 100,
+            const newImgPx = Math.max(startWidth + deltaX, 80);
+            const imgPct = Math.min(
+              (newImgPx / viewportWidth) * 100,
               100,
-            ).toFixed(1);
-            $slide.style.flex = `0 0 ${percent}%`;
+            );
+            const slidePct = Math.max(imgPct, MIN_SLIDE_PERCENT);
+            $slide.style.flex = `0 0 ${slidePct}%`;
+            $curImg.style.width = `${((imgPct / slidePct) * 100).toFixed(1)}%`;
+
+            const deltaY = isTop ? startY - e.clientY : e.clientY - startY;
+            const newH = Math.max(startHeight + deltaY, 60);
+            $curImg.style.height = `${newH}px`;
+            $curImg.style.objectFit = 'cover';
           };
 
           const onMouseUp = (e: MouseEvent) => {
             document.removeEventListener('mousemove', onMouseMove);
             document.removeEventListener('mouseup', onMouseUp);
+
             const viewportWidth = $viewport.clientWidth || 400;
             const deltaX = isLeft ? startX - e.clientX : e.clientX - startX;
-            const newWidth = Math.max(startWidth + deltaX, 80);
-            const percent = Math.min(
-              (newWidth / viewportWidth) * 100,
+            const newImgPx = Math.max(startWidth + deltaX, 80);
+            const widthPct = Math.min(
+              (newImgPx / viewportWidth) * 100,
               100,
             ).toFixed(1);
+
+            const deltaY = isTop ? startY - e.clientY : e.clientY - startY;
+            const newH = Math.max(startHeight + deltaY, 60);
+
             const newImages = images.map((img, idx) =>
-              idx === i ? { ...img, width: `${percent}%` } : img,
+              idx === i
+                ? { ...img, width: `${widthPct}%`, height: `${newH}px` }
+                : img,
             );
             updateImages(newImages);
           };
@@ -341,7 +390,10 @@ export const CustomImageCarousel = Node.create({
             e.preventDefault();
             e.stopPropagation();
             startX = e.clientX;
-            startWidth = $slide.offsetWidth;
+            startY = e.clientY;
+            const $curImg = imgElements[i];
+            startWidth = $curImg?.offsetWidth ?? $slide.offsetWidth;
+            startHeight = $curImg?.offsetHeight ?? 200;
             document.addEventListener('mousemove', onMouseMove);
             document.addEventListener('mouseup', onMouseUp);
           });
