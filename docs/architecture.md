@@ -127,8 +127,10 @@ src/
 │   │   │   ├── OpenGraph.astro             # Open Graph 메타 태그
 │   │   │   └── Hreflang.astro              # hreflang 대체 링크
 │   │   └── ui/
+│   │       ├── ImageLightbox.astro         # 전역 이미지 라이트박스 (Layout에 1회 삽입)
 │   │       ├── StarRating.astro            # 별점 SVG (Schema.org Rating 포함)
-│   │       └── SponsoredBadge.astro        # 협찬 라벨 뱃지
+│   │       ├── SponsoredBadge.astro        # 협찬 라벨 뱃지
+│   │       └── Toast.astro                 # 전역 토스트 알림 (Layout에 1회 삽입)
 │   ├── lib/
 │   │   ├── date.ts                         # formatDate(dateStr, locale)
 │   │   ├── navigation.ts                   # getActiveSegments(pathname, locale)
@@ -156,6 +158,19 @@ src/
 - **DB 의존성 없음**: 런타임 DB 쿼리 없이 완전한 정적 페이지로 동작
 - **라우팅**: `/search/` (한국어), `/{locale}/search/` (다국어)
 - **Header**: PC/Mobile 헤더 모두 순수 HTML/CSS — JavaScript 없음 (검색 버튼은 `/search/`로의 `<a>` 링크)
+
+## 로컬 HTTPS 개발 환경
+
+양 앱 모두 mkcert 기반 self-signed 인증서를 사용한 HTTPS 로컬 개발 환경을 제공한다.
+
+| 앱 | 도메인 | 포트 | 셋업 스크립트 |
+|-----|--------|------|---------------|
+| Admin | `https://local-admin.eunminlog.site` | 4322 | `apps/admin/scripts/setup-local-https.sh` |
+| Client | `https://local-client.eunminlog.site` | 4321 | `apps/client/scripts/setup-local-https.sh` |
+
+- **일괄 셋업**: `pnpm setup:local` (root) -- client + admin 동시 실행
+- Admin은 `scripts/start-local-server.cjs` (Node.js HTTPS + Next.js handler)로 서버 구동
+- Client는 `astro.config.mjs`에서 Vite HTTPS 설정 (`vite.server.https`)으로 구동
 
 ## 공유 패키지
 

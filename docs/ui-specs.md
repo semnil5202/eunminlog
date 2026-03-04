@@ -129,6 +129,7 @@
 - Thumbnail: 첫 번째 카드는 LCP Priority, 나머지는 Lazy Load
 - Content: Category Badge, Title (`<h2>`), Description (line-clamp 2줄)
 - Ad Variation: PostCard와 유사하되 "Sponsored" 라벨/배경으로 구분
+- **반응형 크기 제한**: 모바일 `max-w-[718px] max-h-[404px]`, PC 제한 없음 (`lg:max-w-none lg:max-h-none`). SponsoredCard도 동일.
 
 #### `PostCardGrid.astro`
 
@@ -218,6 +219,16 @@
 - Main 영역 패딩: 모바일 `pt-3 pb-6`, PC `py-6`
 - 최대 너비: `max-w-screen-xl`, 수평 패딩: `px-4 lg:px-6`
 
+#### `ImageLightbox.astro`
+
+- **위치**: `shared/components/ui/ImageLightbox.astro`
+- 전역 이미지 라이트박스. `Layout.astro`에 1회 삽입 (Toast와 동일 패턴)
+- 게시글 본문(`[itemprop='articleBody'] img`) 이미지 클릭 시 풀스크린 확대
+- 열기 애니메이션: `scale-75 opacity-0` -> `scale-100 opacity-100`, 배경 `bg-black/0` -> `bg-black/80`
+- 닫기: X 버튼 / 바깥 클릭 / ESC 키 (역순 애니메이션 후 300ms 뒤 hidden)
+- 본문 이미지에 `prose-img:cursor-pointer` 적용 (PostLayout CSS, 에디터 독립)
+- 접근성: `role="dialog"`, `aria-modal="true"`, `aria-label`
+
 #### `StarRating.astro`
 
 - **위치**: `shared/components/ui/StarRating.astro`
@@ -241,6 +252,13 @@
 - Schema.org `LocalBusiness` 마이크로데이터 포함
 - StarRating 컴포넌트를 내부에서 사용
 - `<dl>` 기반 키-값 레이아웃: 카테고리, 장소, 주소, 가격대, 평점
+
+#### AI 번역 안내 문구
+
+- **위치**: `PostLayout.astro` 내 본문과 NearbyPostList 사이
+- 한국어(`ko`) 이외 모든 다국어 게시글 하단에 표시
+- 번역 키: `post.aiTranslated` (8개 locale별 번역 제공)
+- 스타일: `text-sm text-gray-400 mt-6`
 
 #### `NearbyPostList.astro`
 
@@ -305,7 +323,7 @@
 | PostLayout Fixed Adsense | 300x50 | 468x60 (중앙 정렬) | 게시글 상세 본문 상단 | `FixedAdsense variant="post-top"` |
 | RightSidebar Fixed Adsense | -- | 300x250 | PC 우측 사이드바 상단 (sticky) | `FixedAdsense variant="sidebar"` |
 | In-Article Adsense | fluid (h-300px) | fluid (h-300px) | 게시글 본문 중간 (## 헤딩 앞에 삽입) | `insertInArticleAds()` |
-| In-feed Adsense | fluid (h-250px) | fluid (h-250px) | 카드 피드 index 1, 3 / 검색 결과 index 1, 3 | `InFeedAdsense` |
+| In-feed Adsense | fluid (aspect-7/3) | fluid (aspect-7/3) | 카드 피드 index 1, 3 / 검색 결과 index 1, 3 | `InFeedAdsense` |
 
 ### AdSense 컴포넌트
 
@@ -320,7 +338,9 @@
 
 - **위치**: `shared/components/ad/InFeedAdsense.astro`
 - Props: `class?` (높이, grid span 등 오버라이드용)
-- 기본 높이 h-250px, `role="complementary"` 접근성 속성
+- 피드 내 배치 시 `aspect-7/3`로 카드 썸네일과 동일 비율 적용 (고정 높이 제거)
+- 모바일 `max-w-[718px]`, PC 제한 없음 (`lg:max-w-none`)
+- `role="complementary"` 접근성 속성
 
 ### In-Article Adsense 삽입 규칙
 

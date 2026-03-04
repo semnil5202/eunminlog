@@ -39,7 +39,7 @@
 ## Media
 
 - [ ] 이미지 여러 개일 때 가로 스크롤 (이미지 갤러리/캐러셀)
-- [ ] 이미지 클릭 시 확대 (Lightbox)
+- [x] 이미지 클릭 시 확대 (Lightbox) — 전역 `ImageLightbox` 컴포넌트, Layout에 1회 삽입, scale 애니메이션
 - [ ] 동영상 mp4 최적화 재생
 - [ ] 이미지 최적화 — srcset/`<picture>`, Astro `<Image>` 컴포넌트 검토
 - [ ] Google Embed Map 적용 (장소 정보 카드 연동)

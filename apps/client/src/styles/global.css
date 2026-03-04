@@ -1,6 +1,11 @@
 @import 'tailwindcss';
 @import '@eunminlog/config/theme.css';
 
+[itemprop='articleBody'] img,
+img[data-lightbox] {
+  cursor: pointer;
+}
+
 @utility scrollbar-none {
   -ms-overflow-style: none;
   scrollbar-width: none;
