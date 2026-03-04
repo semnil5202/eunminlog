@@ -33,9 +33,10 @@
 ## Admin Phase Status (as of 2026-03-04)
 
 - Phase 1 completed: Supabase client, types, HTTPS dev server, sidebar, metrics page (mock), SearchFilter, shadcn components, ESLint config
-- Phase 3 (partial): Tiptap editor implemented -- extensions (CustomStarterKit, BulletList, Heading h2-h6, Link, Underline), toolbar (Bold/Italic/Underline/Link/List/Undo/Redo), /posts/new page (title+editor), SSR-safe container (isMounted+skeleton), ProseMirror CSS (OL nesting, link hover)
+- Phase 3 (partial): Tiptap editor + image insert implemented -- extensions (CustomStarterKit, BulletList, Heading h2-h6, Link, Underline, CustomResizableImage), toolbar (Bold/Italic/Underline/Link/List/Image/Undo/Redo), /posts/new page (title+editor), SSR-safe container (isMounted+skeleton), ProseMirror CSS (OL nesting, link hover, img max-width)
+- Image insert: CustomResizableImage (DOM NodeView, 4-corner resize handles, width % storage), UploadImage toolbar (blob URL temp, S3 presigned URL not yet), image output `<img style="width: X%; height: auto;" />`
 - Tiptap HTML output uses inline styles on all elements -- critical Client impact: `insertInArticleAds()` in `features/post-detail/lib/ads.ts` uses Markdown `## ` regex, needs migration to `<h2>` pattern
-- Post-editor remaining: meta form, Zod validation, image insert (media feature), save (Server Action), edit page (/posts/[id]/edit), Placeholder extension
+- Post-editor remaining: meta form, Zod validation, S3 upload integration, image crop (react-image-crop), drag-and-drop/paste image, save (Server Action), edit page (/posts/[id]/edit), Placeholder extension
 - Next: Phase 2 (auth), then remaining Phase 3 tasks
 
 ## Documentation Patterns
