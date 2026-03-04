@@ -35,6 +35,7 @@ pnpm --filter @eunminlog/client dev # client만 실행 (HTTPS, local-client.eunm
 - **AI 번역**: OpenAI GPT-4o로 다국어 번역 처리
 - **TypeScript**: Strict mode. ES2022, bundler resolution. Path alias `@/*` → `./src/*` (admin).
 - **ESLint**: Flat config (v9). `_` prefix 변수 unused 허용.
+- **React import 규칙**: `import * as React` 금지. 구조분해할당으로 필요한 것만 import. 예: `import { useState, useEffect } from 'react'`, `import type { ReactNode } from 'react'`.
 - **Styling**: Tailwind CSS v4 utility classes. 공통 테마는 `@eunminlog/config/theme.css`에서 `@theme inline`으로 정의하며, 양 앱(`apps/client`, `apps/admin`)에서 import. Canonical class 사용 필수 (`flex-shrink-0` → `shrink-0`, `flex-grow` → `grow`, `overflow-ellipsis` → `text-ellipsis` 등). Primary: Sage Green, Secondary: Soft Coral (협찬, Pick, CTA). 상세 컬러 시스템: [`docs/theme.md`](docs/theme.md)
 
 상세 아키텍처: [`docs/architecture.md`](docs/architecture.md)

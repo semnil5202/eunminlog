@@ -37,16 +37,86 @@ const SORT_OPTIONS: { value: SortKey; label: string }[] = [
 ];
 
 const MOCK_DATA: PostMetric[] = [
-  { id: 1, title: '강남역 숨은 파스타 맛집 베스트 5', views: 2341, recommendations: 112, comments: 45, publishedAt: '2026-02-28' },
-  { id: 2, title: '제주도 3박 4일 여행 코스 추천', views: 1892, recommendations: 89, comments: 34, publishedAt: '2026-02-25' },
-  { id: 3, title: '홍대 감성 카페 투어', views: 1567, recommendations: 76, comments: 28, publishedAt: '2026-02-22' },
-  { id: 4, title: '을지로 힙한 술집 모음', views: 1234, recommendations: 54, comments: 19, publishedAt: '2026-02-20' },
-  { id: 5, title: '부산 해운대 맛집 리스트', views: 987, recommendations: 43, comments: 15, publishedAt: '2026-02-18' },
-  { id: 6, title: '성수동 브런치 카페 TOP 7', views: 876, recommendations: 38, comments: 12, publishedAt: '2026-02-15' },
-  { id: 7, title: '경주 당일치기 여행 코스', views: 765, recommendations: 31, comments: 9, publishedAt: '2026-02-12' },
-  { id: 8, title: '이태원 이색 레스토랑 추천', views: 654, recommendations: 27, comments: 7, publishedAt: '2026-02-10' },
-  { id: 9, title: '양양 서핑 스팟 & 카페', views: 543, recommendations: 22, comments: 5, publishedAt: '2026-02-08' },
-  { id: 10, title: '전주 한옥마을 먹거리 투어', views: 432, recommendations: 18, comments: 3, publishedAt: '2026-02-05' },
+  {
+    id: 1,
+    title: '강남역 숨은 파스타 맛집 베스트 5',
+    views: 2341,
+    recommendations: 112,
+    comments: 45,
+    publishedAt: '2026-02-28',
+  },
+  {
+    id: 2,
+    title: '제주도 3박 4일 여행 코스 추천',
+    views: 1892,
+    recommendations: 89,
+    comments: 34,
+    publishedAt: '2026-02-25',
+  },
+  {
+    id: 3,
+    title: '홍대 감성 카페 투어',
+    views: 1567,
+    recommendations: 76,
+    comments: 28,
+    publishedAt: '2026-02-22',
+  },
+  {
+    id: 4,
+    title: '을지로 힙한 술집 모음',
+    views: 1234,
+    recommendations: 54,
+    comments: 19,
+    publishedAt: '2026-02-20',
+  },
+  {
+    id: 5,
+    title: '부산 해운대 맛집 리스트',
+    views: 987,
+    recommendations: 43,
+    comments: 15,
+    publishedAt: '2026-02-18',
+  },
+  {
+    id: 6,
+    title: '성수동 브런치 카페 TOP 7',
+    views: 876,
+    recommendations: 38,
+    comments: 12,
+    publishedAt: '2026-02-15',
+  },
+  {
+    id: 7,
+    title: '경주 당일치기 여행 코스',
+    views: 765,
+    recommendations: 31,
+    comments: 9,
+    publishedAt: '2026-02-12',
+  },
+  {
+    id: 8,
+    title: '이태원 이색 레스토랑 추천',
+    views: 654,
+    recommendations: 27,
+    comments: 7,
+    publishedAt: '2026-02-10',
+  },
+  {
+    id: 9,
+    title: '양양 서핑 스팟 & 카페',
+    views: 543,
+    recommendations: 22,
+    comments: 5,
+    publishedAt: '2026-02-08',
+  },
+  {
+    id: 10,
+    title: '전주 한옥마을 먹거리 투어',
+    views: 432,
+    recommendations: 18,
+    comments: 3,
+    publishedAt: '2026-02-05',
+  },
 ];
 
 function getDefaultDateRange(): DateRange {
@@ -64,13 +134,12 @@ export default function MetricsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<SortKey>('views');
 
-  const filteredData = MOCK_DATA
-    .filter((post) => {
-      if (searchQuery) {
-        return post.title.toLowerCase().includes(searchQuery.toLowerCase());
-      }
-      return true;
-    })
+  const filteredData = MOCK_DATA.filter((post) => {
+    if (searchQuery) {
+      return post.title.toLowerCase().includes(searchQuery.toLowerCase());
+    }
+    return true;
+  })
     .filter((post) => {
       if (dateRange.from && post.publishedAt < dateRange.from) return false;
       if (dateRange.to && post.publishedAt > dateRange.to) return false;
@@ -136,9 +205,15 @@ export default function MetricsPage() {
                 filteredData.map((post) => (
                   <TableRow key={post.id}>
                     <TableCell className="py-3 font-medium">{post.title}</TableCell>
-                    <TableCell className="py-3 text-center">{post.views.toLocaleString()}</TableCell>
-                    <TableCell className="py-3 text-center">{post.recommendations.toLocaleString()}</TableCell>
-                    <TableCell className="py-3 text-center">{post.comments.toLocaleString()}</TableCell>
+                    <TableCell className="py-3 text-center">
+                      {post.views.toLocaleString()}
+                    </TableCell>
+                    <TableCell className="py-3 text-center">
+                      {post.recommendations.toLocaleString()}
+                    </TableCell>
+                    <TableCell className="py-3 text-center">
+                      {post.comments.toLocaleString()}
+                    </TableCell>
                     <TableCell className="py-3 text-center">{post.publishedAt}</TableCell>
                   </TableRow>
                 ))

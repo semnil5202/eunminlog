@@ -4,15 +4,7 @@ import type { ComponentType } from 'react';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import {
-  BarChart3,
-  ChevronRight,
-  FileEdit,
-  FolderTree,
-  HandCoins,
-  LogOut,
-  MessageSquare,
-} from 'lucide-react';
+import { BarChart3, ChevronRight, FileEdit, HandCoins, LogOut } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -28,11 +20,7 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from '@/components/ui/sidebar';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 type NavChild = {
   label: string;
@@ -55,27 +43,12 @@ const NAV_ITEMS: NavGroup[] = [
     ],
   },
   {
-    label: '에디터',
+    label: '게시글 관리',
     icon: FileEdit,
     children: [
-      { label: '새 게시글 작성', href: '/posts/new' },
-      { label: '게시글 목록', href: '/dashboard' },
-    ],
-  },
-  {
-    label: '카테고리',
-    icon: FolderTree,
-    children: [
-      { label: '카테고리 생성', href: null },
-      { label: '카테고리 수정', href: null },
-    ],
-  },
-  {
-    label: '부가기능 관리',
-    icon: MessageSquare,
-    children: [
-      { label: '게시글 댓글 조회/삭제', href: null },
-      { label: '추천수 관리', href: null },
+      { label: '게시글 작성/수정/삭제', href: '/posts/new' },
+      { label: '카테고리 생성/수정/삭제', href: null },
+      { label: '댓글 수정/삭제', href: null },
     ],
   },
   {
@@ -105,7 +78,10 @@ export default function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu className="gap-2">
               {NAV_ITEMS.map((group) => (
-                <Collapsible key={group.label} defaultOpen={isGroupActive(group) || group.label === '핵심 지표'}>
+                <Collapsible
+                  key={group.label}
+                  defaultOpen={isGroupActive(group) || group.label === '핵심 지표'}
+                >
                   <SidebarMenuItem>
                     <CollapsibleTrigger asChild>
                       <SidebarMenuButton>

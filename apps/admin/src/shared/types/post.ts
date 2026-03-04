@@ -11,14 +11,7 @@ export type SubCategory =
   | 'overseas'
   | 'accommodation';
 
-export type TranslationLocale =
-  | 'en'
-  | 'ja'
-  | 'zh-CN'
-  | 'zh-TW'
-  | 'id'
-  | 'vi'
-  | 'th';
+export type TranslationLocale = 'en' | 'ja' | 'zh-CN' | 'zh-TW' | 'id' | 'vi' | 'th';
 
 export type Post = {
   id: string;
@@ -38,7 +31,7 @@ export type Post = {
   price_level: string | null;
   created_at: string;
   updated_at: string;
-}
+};
 
 export type PostTranslation = {
   id: string;
@@ -49,4 +42,4 @@ export type PostTranslation = {
   content: string;
   created_at: string;
   updated_at: string;
-}
+};

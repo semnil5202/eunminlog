@@ -4,11 +4,7 @@ import type { ReactNode } from 'react';
 
 import { Menu } from 'lucide-react';
 
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from '@/components/ui/sidebar';
+import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import AppSidebar from '@/shared/components/layout/AppSidebar';
 
 export function SidebarLayout({ children }: { children: ReactNode }) {
