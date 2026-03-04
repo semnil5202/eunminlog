@@ -123,3 +123,27 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Tiptap ProseMirror */
+.ProseMirror:focus {
+  outline: none;
+}
+
+.ProseMirror a:hover,
+.ProseMirror .link:hover {
+  color: var(--color-primary-strong);
+}
+
+.ProseMirror > ol {
+  list-style-type: decimal !important;
+}
+
+.ProseMirror ol ol,
+.ProseMirror ul ol {
+  list-style-type: lower-alpha !important;
+}
+
+.ProseMirror ol ol ol,
+.ProseMirror ul ol ol {
+  list-style-type: lower-roman !important;
+}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { Suspense, useCallback, useState } from 'react';
 
 import { useRouter, useSearchParams } from 'next/navigation';
 
@@ -132,6 +132,14 @@ function getDefaultDateRange(): DateRange {
 }
 
 export default function MetricsPage() {
+  return (
+    <Suspense>
+      <MetricsContent />
+    </Suspense>
+  );
+}
+
+function MetricsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
