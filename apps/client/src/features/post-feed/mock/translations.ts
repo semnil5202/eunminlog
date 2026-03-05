@@ -66,8 +66,8 @@ Over seven decades of hand-crafted flavour shine through every bite. Pair the pe
 
 ### Verdict
 Osaka's street-food scene rivals Tokyo at a noticeably lower price point. The city rewards anyone willing to simply walk and eat.`,
-    place_name: null,
-    address: null,
+    place_name: 'Dotonbori',
+    address: '1-6 Dotonbori, Chuo-ku, Osaka, Japan',
     created_at: '2025-01-07T06:00:00.000Z',
     updated_at: '2025-01-07T06:00:00.000Z',
   },
@@ -98,8 +98,8 @@ Osaka's street-food scene rivals Tokyo at a noticeably lower price point. The ci
 
 ### 総評
 大阪は東京よりも物価が安く、食のクオリティは決して負けていません。歩いて食べるだけで最高の旅になります。`,
-    place_name: null,
-    address: null,
+    place_name: '道頓堀',
+    address: '日本 大阪市 中央区 道頓堀 1-6',
     created_at: '2025-01-07T07:00:00.000Z',
     updated_at: '2025-01-07T07:00:00.000Z',
   },
