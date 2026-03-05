@@ -248,10 +248,13 @@
 #### `PlaceInfoCard.astro`
 
 - **위치**: `features/post-detail/components/PlaceInfoCard.astro`
-- Props: `categoryLabel`, `subCategoryLabel`, `placeName`, `address?`, `priceLevel?`, `rating?`, `locale`
+- Props: `categoryLabel`, `subCategoryLabel`, `placeName`, `translatedPlaceName`, `address?`, `translatedAddress`, `priceMin?`, `priceMax?`, `rating?`, `locale`
 - Schema.org `LocalBusiness` 마이크로데이터 포함
 - StarRating 컴포넌트를 내부에서 사용
 - `<dl>` 기반 키-값 레이아웃: 카테고리, 장소, 주소, 가격대, 평점
+- 필드 라벨은 `t()` 함수로 다국어 처리 (`place.category`, `place.name`, `place.address`, `place.price`)
+- 장소명/주소: 번역 텍스트 표시, 복사 시 한글 원문 복사, 다국어 페이지에서 토스트 알림
+- 상세 스펙: [`docs/place-i18n-specs.md`](place-i18n-specs.md)
 
 #### AI 번역 안내 문구
 

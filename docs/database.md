@@ -33,6 +33,8 @@
 | `title`       | text                 | 번역된 제목                                          |
 | `description` | text                 | 번역된 요약                                          |
 | `content`     | text                 | 번역된 본문 (HTML)                                   |
+| `place_name`  | text (nullable)      | 번역된 장소명                                        |
+| `address`     | text (nullable)      | 번역된 주소                                          |
 | `created_at`  | timestamptz          | 번역 생성일                                          |
 | `updated_at`  | timestamptz          | 번역 수정일                                          |
 

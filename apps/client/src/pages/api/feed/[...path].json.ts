@@ -53,7 +53,7 @@ const buildFeedPostData = async (post: Post, locale: Locale): Promise<FeedPostDa
       month: 'long',
       day: 'numeric',
     }),
-    placeName: post.place_name || null,
+    placeName: localized.translated_place_name ?? post.place_name ?? null,
     isSponsored: post.is_sponsored,
     isRecommended: post.is_recommended,
     sponsoredLabel: t('post.sponsored', locale),

@@ -29,6 +29,8 @@ export type PostTranslation = {
   title: string;
   description: string;
   content: string;
+  place_name: string | null;
+  address: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -38,4 +40,6 @@ export type LocalizedPost = {
   description: string;
   content: string;
   locale: Locale;
+  translated_place_name: string | null;
+  translated_address: string | null;
 } & Omit<Post, 'title' | 'description' | 'content'>;

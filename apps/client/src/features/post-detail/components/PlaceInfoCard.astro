@@ -9,15 +9,27 @@ interface Props {
   categoryLabel: string;
   subCategoryLabel: string;
   placeName: string;
+  translatedPlaceName?: string | null;
   address?: string;
+  translatedAddress?: string | null;
   priceMin?: number | null;
   priceMax?: number | null;
   rating?: number;
   locale: Locale;
 }
 
-const { categoryLabel, subCategoryLabel, placeName, address, priceMin, priceMax, rating, locale } =
-  Astro.props;
+const {
+  categoryLabel,
+  subCategoryLabel,
+  placeName,
+  translatedPlaceName,
+  address,
+  translatedAddress,
+  priceMin,
+  priceMax,
+  rating,
+  locale,
+} = Astro.props;
 
 const priceLabel = priceMin != null && priceMax != null
   ? `${priceMin.toLocaleString()}원 ~ ${priceMax.toLocaleString()}원`
@@ -28,6 +40,7 @@ const priceLabel = priceMin != null && priceMax != null
       : null;
 
 const ratingLabel = t("post.rating", locale);
+const copyToast = locale !== 'ko' ? t("place.copyToast", locale) : undefined;
 ---
 
 <div
@@ -37,23 +50,40 @@ const ratingLabel = t("post.rating", locale);
 >
   <dl class="space-y-3 text-sm">
     <div class="flex items-baseline gap-3">
-      <dt class="shrink-0 w-16 text-gray-500 font-medium">카테고리</dt>
+      <dt class="shrink-0 w-20 text-gray-500 font-medium">{t("place.category", locale)}</dt>
       <dd class="text-gray-900">{categoryLabel} › {subCategoryLabel}</dd>
     </div>
     <div class="flex items-baseline gap-3">
-      <dt class="shrink-0 w-16 text-gray-500 font-medium">장소</dt>
-      <dd class="text-gray-900 font-semibold" itemprop="name">{placeName}</dd>
+      <dt class="shrink-0 w-20 text-gray-500 font-medium">{t("place.name", locale)}</dt>
+      <dd class="flex items-baseline gap-1.5">
+        <span class="text-gray-900 font-semibold" itemprop="name">
+          {translatedPlaceName ?? placeName}
+        </span>
+        <button
+          type="button"
+          class="shrink-0 translate-y-px text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+          data-copy={placeName}
+          data-toast={copyToast}
+          aria-label={t("place.name", locale) + " copy"}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+          </svg>
+        </button>
+      </dd>
     </div>
     {address && (
       <div class="flex items-baseline gap-3">
-        <dt class="shrink-0 w-16 text-gray-500 font-medium">주소</dt>
+        <dt class="shrink-0 w-20 text-gray-500 font-medium">{t("place.address", locale)}</dt>
         <dd class="flex items-baseline gap-1.5">
-          <span class="text-gray-900" itemprop="address">{address}</span>
+          <span class="text-gray-900" itemprop="address">{translatedAddress ?? address}</span>
           <button
             type="button"
-            class="copy-address shrink-0 translate-y-px text-gray-400 hover:text-gray-600 transition-colors"
-            data-address={address}
-            aria-label="주소 복사"
+            class="shrink-0 translate-y-px text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+            data-copy={address}
+            data-toast={copyToast}
+            aria-label={t("place.address", locale) + " copy"}
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
@@ -65,13 +95,13 @@ const ratingLabel = t("post.rating", locale);
     )}
     {priceLabel && (
       <div class="flex items-baseline gap-3">
-        <dt class="shrink-0 w-16 text-gray-500 font-medium">가격대</dt>
+        <dt class="shrink-0 w-20 text-gray-500 font-medium">{t("place.price", locale)}</dt>
         <dd class="text-gray-900">{priceLabel}</dd>
       </div>
     )}
     {rating !== undefined && rating > 0 && (
       <div class="flex items-center gap-3">
-        <dt class="shrink-0 w-16 text-gray-500 font-medium">{ratingLabel}</dt>
+        <dt class="shrink-0 w-20 text-gray-500 font-medium">{ratingLabel}</dt>
         <dd>
           <StarRating rating={rating} />
         </dd>
@@ -81,16 +111,15 @@ const ratingLabel = t("post.rating", locale);
 </div>
 
 <script>
-  document.querySelector('.copy-address')?.addEventListener('click', async (e) => {
-    const btn = (e.currentTarget as HTMLButtonElement);
-    const address = btn.dataset.address;
-    if (!address) return;
-
-    await navigator.clipboard.writeText(address);
-
-    const svg = btn.querySelector('svg')!;
-    const original = svg.innerHTML;
-    svg.innerHTML = '<polyline points="20 6 9 17 4 12"></polyline>';
-    setTimeout(() => { svg.innerHTML = original; }, 1500);
+  document.querySelectorAll<HTMLButtonElement>('[data-copy]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const text = btn.dataset.copy;
+      if (!text) return;
+      await navigator.clipboard.writeText(text);
+      const svg = btn.querySelector('svg')!;
+      const original = svg.innerHTML;
+      svg.innerHTML = '<polyline points="20 6 9 17 4 12"></polyline>';
+      setTimeout(() => { svg.innerHTML = original; }, 1500);
+    });
   });
 </script>

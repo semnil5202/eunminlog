@@ -1,13 +1,13 @@
 ---
 /** 단일 포스트 카드. 썸네일 + 제목 + 설명 + 메타 정보를 표시한다. */
-import type { Post } from "@/shared/types/post";
+import type { LocalizedPost } from "@/shared/types/post";
 import type { Locale } from "@/shared/types/common";
 import { getCategoryLabel } from "@/shared/lib/i18n/categories";
 import { getLocalePath } from "@/shared/lib/i18n/locales";
 import SponsoredBadge from "@/shared/components/ui/SponsoredBadge.astro";
 
 interface Props {
-  post: Post;
+  post: LocalizedPost;
   locale: Locale;
   index: number;
   sponsoredLabel?: string;
@@ -65,7 +65,7 @@ const dateStr = new Date(post.created_at).toLocaleDateString(locale, {
         {post.place_name && (
           <>
             <span aria-hidden="true">&middot;</span>
-            <span>{post.place_name}</span>
+            <span>{post.translated_place_name ?? post.place_name}</span>
           </>
         )}
         <span aria-hidden="true">&middot;</span>

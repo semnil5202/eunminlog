@@ -1,6 +1,6 @@
 ---
 /** 포스트 피드를 단일 컬럼 리스트로 렌더링한다. 2번째, 5번째 슬롯에 인피드 광고 삽입. */
-import type { Post } from "@/shared/types/post";
+import type { LocalizedPost } from "@/shared/types/post";
 import type { Locale } from "@/shared/types/common";
 import PostCard from "./PostCard.astro";
 import SponsoredCard from "./SponsoredCard.astro";
@@ -8,7 +8,7 @@ import PostCardSkeleton from "./PostCardSkeleton.astro";
 import InFeedAdsense from "@/shared/components/ad/InFeedAdsense.astro";
 
 interface Props {
-  posts: Post[];
+  posts: LocalizedPost[];
   locale: Locale;
   feedEndpoint?: string;
   hasNextPage?: boolean;
@@ -18,7 +18,7 @@ interface Props {
 const { posts, locale, feedEndpoint, hasNextPage = false, sponsoredLabel = "" } = Astro.props;
 
 type FeedItem =
-  | { type: "post"; post: Post; cardIndex: number }
+  | { type: "post"; post: LocalizedPost; cardIndex: number }
   | { type: "ad"; adIndex: number };
 
 const feedItems: FeedItem[] = [];

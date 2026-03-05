@@ -41,12 +41,16 @@ export const getLocalizedPost = async (post: Post, locale: Locale): Promise<Loca
       title: translation.title,
       description: translation.description,
       content: translation.content,
+      translated_place_name: translation.place_name,
+      translated_address: translation.address,
       locale,
     };
   }
 
   return {
     ...post,
+    translated_place_name: null,
+    translated_address: null,
     locale,
   };
 };

@@ -40,7 +40,7 @@ export const buildSearchData = (posts: LocalizedPost[], locale: Locale): SearchB
     category: p.category,
     subCategory: p.sub_category,
     thumbnail: p.thumbnail,
-    placeName: p.place_name,
+    placeName: p.translated_place_name ?? p.place_name,
     isSponsored: p.is_sponsored,
     isRecommended: p.is_recommended,
     createdAt: p.created_at,
@@ -53,7 +53,9 @@ export const buildSearchData = (posts: LocalizedPost[], locale: Locale): SearchB
     }),
   }));
 
-  const placeNames = [...new Set(posts.map((p) => p.place_name).filter(Boolean))] as string[];
+  const placeNames = [...new Set(
+    posts.map((p) => p.translated_place_name ?? p.place_name).filter(Boolean),
+  )] as string[];
   const categoryLabels = CATEGORY_SLUGS.map((slug) => getCategoryLabel(slug, locale));
   const suggestedKeywords = [...placeNames, ...categoryLabels];
 

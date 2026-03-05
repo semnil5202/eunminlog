@@ -12,12 +12,13 @@ import { SITE_NAME_KO } from "@eunminlog/config/site";
 
 const locale = DEFAULT_LOCALE;
 
-const [{ posts, totalPages }, sponsored] = await Promise.all([
+const [{ posts: rawPosts, totalPages }, sponsored] = await Promise.all([
   getPaginatedPosts(1),
   getSponsoredPosts(),
 ]);
 
-const sponsoredLocalized: LocalizedPost[] = sponsored.map((p) => ({ ...p, locale }));
+const posts: LocalizedPost[] = rawPosts.map((p) => ({ ...p, translated_place_name: null, translated_address: null, locale }));
+const sponsoredLocalized: LocalizedPost[] = sponsored.map((p) => ({ ...p, translated_place_name: null, translated_address: null, locale }));
 
 const breadcrumbItems = [{ name: "홈", url: "/" }];
 

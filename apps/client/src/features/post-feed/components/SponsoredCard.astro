@@ -1,6 +1,6 @@
 ---
 /** 추천 포스트 카드. primary 컬러 배지로 일반 카드와 시각적으로 구분한다. */
-import type { Post } from "@/shared/types/post";
+import type { LocalizedPost } from "@/shared/types/post";
 import type { Locale } from "@/shared/types/common";
 import { getCategoryLabel } from "@/shared/lib/i18n/categories";
 import { getLocalePath } from "@/shared/lib/i18n/locales";
@@ -8,7 +8,7 @@ import { t } from "@/shared/lib/i18n/translations";
 import SponsoredBadge from "@/shared/components/ui/SponsoredBadge.astro";
 
 interface Props {
-  post: Post;
+  post: LocalizedPost;
   locale: Locale;
   index: number;
 }
@@ -65,7 +65,7 @@ const dateStr = new Date(post.created_at).toLocaleDateString(locale, {
         {post.place_name && (
           <>
             <span aria-hidden="true">&middot;</span>
-            <span>{post.place_name}</span>
+            <span>{post.translated_place_name ?? post.place_name}</span>
           </>
         )}
         <span aria-hidden="true">&middot;</span>
