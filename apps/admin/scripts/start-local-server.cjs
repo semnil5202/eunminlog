@@ -25,10 +25,19 @@ console.log('');
 console.log('  로컬 HTTPS 서버 시작중...');
 
 app.prepare().then(() => {
-  createServer({ key: fs.readFileSync(keyFile), cert: fs.readFileSync(certFile) }, (req, res) => {
-    const parsedUrl = parse(req.url, true);
-    handle(req, res, parsedUrl);
-  }).listen(port, '0.0.0.0', () => {
+  const server = createServer(
+    { key: fs.readFileSync(keyFile), cert: fs.readFileSync(certFile) },
+    (req, res) => {
+      const parsedUrl = parse(req.url, true);
+      handle(req, res, parsedUrl);
+    },
+  );
+
+  server.on('upgrade', (req, socket, head) => {
+    handle(req, socket, head);
+  });
+
+  server.listen(port, '0.0.0.0', () => {
     console.log('  로컬 서버가 시작되었습니다!');
     console.log('');
     console.log(`  https://${localDomain}:${port}`);
