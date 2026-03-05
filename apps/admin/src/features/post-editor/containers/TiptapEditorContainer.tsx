@@ -35,7 +35,7 @@ export function TiptapEditorContainer({
   }
 
   return (
-    <div className={cn('overflow-hidden border-t', className)}>
+    <div className={cn('overflow-hidden border-t border-b', className)}>
       <Toolbar editor={editor} />
       {children}
       <TiptapEditor editor={editor} placeholder={placeholder} />
