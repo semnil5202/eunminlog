@@ -17,7 +17,10 @@ export default function NewPostPage() {
   const [category, setCategory] = useState<Category | ''>('');
   const [subCategory, setSubCategory] = useState<SubCategory | ''>('');
   const [thumbnail, setThumbnail] = useState<string | null>(null);
+  const [placeName, setPlaceName] = useState('');
   const [address, setAddress] = useState('');
+  const [priceMin, setPriceMin] = useState('');
+  const [priceMax, setPriceMax] = useState('');
 
   const handleTitleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -53,14 +56,44 @@ export default function NewPostPage() {
           <ThumbnailUpload thumbnail={thumbnail} onThumbnailChange={setThumbnail} />
         </div>
         <div>
+          <label className="mb-1 block text-sm font-bold text-primary-600">장소</label>
+          <input
+            type="text"
+            value={placeName}
+            onChange={(e) => setPlaceName(e.target.value)}
+            placeholder="장소를 입력해주세요."
+            className="h-9 w-full border border-input bg-transparent px-3 text-sm shadow-xs outline-none placeholder:text-muted-foreground"
+          />
+        </div>
+        <div>
           <label className="mb-1 block text-sm font-bold text-primary-600">주소</label>
           <input
             type="text"
             value={address}
             onChange={(e) => setAddress(e.target.value)}
             placeholder="주소를 입력해주세요."
-            className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 placeholder:text-muted-foreground"
+            className="h-9 w-full border border-input bg-transparent px-3 text-sm shadow-xs outline-none placeholder:text-muted-foreground"
           />
+        </div>
+        <div>
+          <label className="mb-1 block text-sm font-bold text-primary-600">가격대</label>
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              value={priceMin}
+              onChange={(e) => setPriceMin(e.target.value)}
+              placeholder="최소"
+              className="h-9 w-full border border-input bg-transparent px-3 text-sm shadow-xs outline-none placeholder:text-muted-foreground [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+            />
+            <span className="shrink-0 text-sm text-muted-foreground">-</span>
+            <input
+              type="number"
+              value={priceMax}
+              onChange={(e) => setPriceMax(e.target.value)}
+              placeholder="최대"
+              className="h-9 w-full border border-input bg-transparent px-3 text-sm shadow-xs outline-none placeholder:text-muted-foreground [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+            />
+          </div>
         </div>
       </div>
       <label className="mb-1 block text-sm font-bold text-primary-600">본문</label>

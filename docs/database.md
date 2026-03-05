@@ -18,7 +18,8 @@
 | `rating`          | numeric (1.0 ~ 5.0)                  | 평점                                                                                |
 | `place_name`      | text                                 | 장소명 (Schema.org `itemReviewed`)                                                  |
 | `address`         | text                                 | 주소 (Schema.org)                                                                   |
-| `price_level`     | text                                 | 가격대                                                                              |
+| `price_min`       | integer                              | 최소 가격 (원)                                                                      |
+| `price_max`       | integer                              | 최대 가격 (원)                                                                      |
 | `created_at`      | timestamptz                          | 작성일                                                                              |
 | `updated_at`      | timestamptz                          | 수정일                                                                              |
 

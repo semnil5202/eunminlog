@@ -194,7 +194,7 @@ features/auth/
 | PE-7  | is_multilingual 토글 (기본값 `true`)                                                  | P0       |
 | PE-8  | is_sponsored / is_recommended 토글                                                    | P0       |
 | PE-9  | rating 입력 (1.0-5.0, 0.5 단위)                                                       | P1       |
-| PE-10 | place_name, address, price_level 입력                                                 | P1       |
+| PE-10 | place_name, address, price_min, price_max 입력                                        | P1       |
 | PE-11 | 저장 시 번역 트리거 (`is_multilingual === true`이면)                                  | P0       |
 | PE-12 | 저장 시 빌드 트리거 옵션                                                              | P1       |
 | PE-13 | 미리보기 (선택적)                                                                     | P2       |
@@ -215,7 +215,8 @@ features/auth/
 | 평점         | number input  | N    | `rating`          | 1.0-5.0, 0.5 단위                            |
 | 장소명       | text input    | N    | `place_name`      | Schema.org `itemReviewed`                    |
 | 주소         | text input    | N    | `address`         | Schema.org                                   |
-| 가격대       | text input    | N    | `price_level`     |                                              |
+| 최소 가격    | number input  | N    | `price_min`       | 원 단위 정수                                 |
+| 최대 가격    | number input  | N    | `price_max`       | 원 단위 정수                                 |
 
 #### 카테고리-서브카테고리 매핑
 

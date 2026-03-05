@@ -10,13 +10,22 @@ interface Props {
   subCategoryLabel: string;
   placeName: string;
   address?: string;
-  priceLevel?: string;
+  priceMin?: number | null;
+  priceMax?: number | null;
   rating?: number;
   locale: Locale;
 }
 
-const { categoryLabel, subCategoryLabel, placeName, address, priceLevel, rating, locale } =
+const { categoryLabel, subCategoryLabel, placeName, address, priceMin, priceMax, rating, locale } =
   Astro.props;
+
+const priceLabel = priceMin != null && priceMax != null
+  ? `${priceMin.toLocaleString()}원 ~ ${priceMax.toLocaleString()}원`
+  : priceMin != null
+    ? `${priceMin.toLocaleString()}원 ~`
+    : priceMax != null
+      ? `~ ${priceMax.toLocaleString()}원`
+      : null;
 
 const ratingLabel = t("post.rating", locale);
 ---
@@ -38,13 +47,26 @@ const ratingLabel = t("post.rating", locale);
     {address && (
       <div class="flex items-baseline gap-3">
         <dt class="shrink-0 w-16 text-gray-500 font-medium">주소</dt>
-        <dd class="text-gray-900" itemprop="address">{address}</dd>
+        <dd class="flex items-baseline gap-1.5">
+          <span class="text-gray-900" itemprop="address">{address}</span>
+          <button
+            type="button"
+            class="copy-address shrink-0 translate-y-px text-gray-400 hover:text-gray-600 transition-colors"
+            data-address={address}
+            aria-label="주소 복사"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+          </button>
+        </dd>
       </div>
     )}
-    {priceLevel && (
+    {priceLabel && (
       <div class="flex items-baseline gap-3">
         <dt class="shrink-0 w-16 text-gray-500 font-medium">가격대</dt>
-        <dd class="text-gray-900">{priceLevel}</dd>
+        <dd class="text-gray-900">{priceLabel}</dd>
       </div>
     )}
     {rating !== undefined && rating > 0 && (
@@ -57,3 +79,18 @@ const ratingLabel = t("post.rating", locale);
     )}
   </dl>
 </div>
+
+<script>
+  document.querySelector('.copy-address')?.addEventListener('click', async (e) => {
+    const btn = (e.currentTarget as HTMLButtonElement);
+    const address = btn.dataset.address;
+    if (!address) return;
+
+    await navigator.clipboard.writeText(address);
+
+    const svg = btn.querySelector('svg')!;
+    const original = svg.innerHTML;
+    svg.innerHTML = '<polyline points="20 6 9 17 4 12"></polyline>';
+    setTimeout(() => { svg.innerHTML = original; }, 1500);
+  });
+</script>

@@ -55,7 +55,7 @@ export function ThumbnailUpload({ thumbnail, onThumbnailChange }: ThumbnailUploa
         <button
           type="button"
           onClick={handleClick}
-          className="flex aspect-[7/3] w-full cursor-pointer flex-col items-center justify-center gap-2 border-2 border-dashed border-muted-foreground/30 text-muted-foreground transition-colors hover:border-muted-foreground/50 hover:text-muted-foreground/70"
+          className="flex aspect-[7/3] w-full cursor-pointer flex-col items-center justify-center gap-2 border border-input text-muted-foreground shadow-xs transition-colors hover:border-muted-foreground/50 hover:text-muted-foreground/70"
         >
           <ImageIcon />
           <span className="text-sm">썸네일 이미지 추가</span>

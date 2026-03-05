@@ -28,7 +28,8 @@ export type Post = {
   rating: number | null;
   place_name: string | null;
   address: string | null;
-  price_level: string | null;
+  price_min: number | null;
+  price_max: number | null;
   created_at: string;
   updated_at: string;
 };
