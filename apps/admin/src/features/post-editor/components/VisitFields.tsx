@@ -1,26 +1,14 @@
 /** 체험 방문 전용 필드 — 장소, 주소, 가격. */
 
+import type { UseFormRegister } from 'react-hook-form';
+
+import type { PostFormValues } from '../types/form';
+
 type VisitFieldsProps = {
-  placeName: string;
-  address: string;
-  pricePrefix: string;
-  price: string;
-  onPlaceNameChange: (value: string) => void;
-  onAddressChange: (value: string) => void;
-  onPricePrefixChange: (value: string) => void;
-  onPriceChange: (value: string) => void;
+  register: UseFormRegister<PostFormValues>;
 };
 
-export function VisitFields({
-  placeName,
-  address,
-  pricePrefix,
-  price,
-  onPlaceNameChange,
-  onAddressChange,
-  onPricePrefixChange,
-  onPriceChange,
-}: VisitFieldsProps) {
+export function VisitFields({ register }: VisitFieldsProps) {
   return (
     <div className="mt-8 space-y-4">
       <div>
@@ -29,8 +17,7 @@ export function VisitFields({
         </label>
         <input
           type="text"
-          value={placeName}
-          onChange={(e) => onPlaceNameChange(e.target.value)}
+          {...register('placeName')}
           placeholder="장소를 입력해주세요."
           className="h-9 w-full border border-input bg-transparent px-3 text-sm shadow-xs outline-none placeholder:text-muted-foreground"
         />
@@ -41,8 +28,7 @@ export function VisitFields({
         </label>
         <input
           type="text"
-          value={address}
-          onChange={(e) => onAddressChange(e.target.value)}
+          {...register('address')}
           placeholder="주소를 입력해주세요."
           className="h-9 w-full border border-input bg-transparent px-3 text-sm shadow-xs outline-none placeholder:text-muted-foreground"
         />
@@ -50,27 +36,25 @@ export function VisitFields({
       <div className="flex gap-2">
         <div className="grow-[2] basis-0">
           <label className="mb-1 block text-base font-bold">
-            가격 설명 <span className="text-muted-foreground">(선택)</span>
+            가격 설명
           </label>
           <input
             type="text"
-            value={pricePrefix}
-            onChange={(e) => onPricePrefixChange(e.target.value)}
-            placeholder="ex: 메인 메뉴 평균 가격: "
+            {...register('pricePrefix')}
+            placeholder="ex) 메인 메뉴 평균 가격: "
             className="h-9 w-full border border-input bg-transparent px-3 text-sm shadow-xs outline-none placeholder:text-muted-foreground"
           />
         </div>
         <div className="grow basis-0">
           <div className="mb-1 flex items-baseline gap-1.5">
             <label className="text-base font-bold">
-              금액 <span className="text-muted-foreground">(필수값)</span>
+              금액 <span className="text-primary-600">*</span>
             </label>
             <span className="text-[14px] text-muted-foreground">(단위: 만원)</span>
           </div>
           <input
             type="number"
-            value={price}
-            onChange={(e) => onPriceChange(e.target.value)}
+            {...register('price')}
             placeholder="금액"
             className="h-9 w-full border border-input bg-transparent px-3 text-sm shadow-xs outline-none placeholder:text-muted-foreground [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
           />

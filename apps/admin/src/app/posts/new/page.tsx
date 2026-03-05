@@ -1,6 +1,8 @@
 'use client';
 
-import { type ChangeEvent, useState } from 'react';
+import { useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 
 import {
   Select,
@@ -16,6 +18,12 @@ import { VisitFields } from '@/features/post-editor/components/VisitFields';
 import { TiptapEditorContainer } from '@/features/post-editor/containers/TiptapEditorContainer';
 import { FORM_TYPE_OPTIONS } from '@/features/post-editor/constants/category';
 import { generateSummary } from '@/features/post-editor/api/actions';
+import {
+  postFormSchema,
+  POST_FORM_DEFAULTS,
+  TITLE_MAX_LENGTH,
+  type PostFormValues,
+} from '@/features/post-editor/types/form';
 import { extractFlaggedTerms, translatePost } from '@/features/translation/api/actions';
 import { TranslationPreviewSheet } from '@/features/translation/components/TranslationPreviewSheet';
 import { TranslationSheetContainer } from '@/features/translation/containers/TranslationSheetContainer';
@@ -24,20 +32,21 @@ import { LoaderIcon } from 'lucide-react';
 import type { Category, PostFormType, SubCategory } from '@/shared/types/post';
 import type { FlaggedTerm, TranslationResult } from '@/features/translation/types';
 
-const TITLE_MAX_LENGTH = 40;
-
 export default function NewPostPage() {
-  const [formType, setFormType] = useState<PostFormType>('visit');
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
-  const [category, setCategory] = useState<Category | ''>('');
-  const [subCategory, setSubCategory] = useState<SubCategory | ''>('');
-  const [thumbnail, setThumbnail] = useState<string | null>(null);
-  const [placeName, setPlaceName] = useState('');
-  const [address, setAddress] = useState('');
-  const [pricePrefix, setPricePrefix] = useState('');
-  const [price, setPrice] = useState('');
-  const [description, setDescription] = useState('');
+  const {
+    register,
+    control,
+    watch,
+    setValue,
+    getValues,
+    trigger,
+    formState: { isValid },
+  } = useForm<PostFormValues>({
+    resolver: zodResolver(postFormSchema),
+    defaultValues: POST_FORM_DEFAULTS,
+    mode: 'onChange',
+  });
+
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [isSummarized, setIsSummarized] = useState(false);
   const [isTranslated, setIsTranslated] = useState(false);
@@ -47,24 +56,24 @@ export default function NewPostPage() {
   const [flaggedTerms, setFlaggedTerms] = useState<FlaggedTerm[]>([]);
   const [translationResults, setTranslationResults] = useState<TranslationResult[]>([]);
 
-  const handleFormTypeChange = (value: PostFormType) => {
-    setFormType(value);
-    setPlaceName('');
-    setAddress('');
-    setPricePrefix('');
-    setPrice('');
-  };
+  const formType = watch('formType');
+  const title = watch('title');
+  const category = watch('category');
+  const subCategory = watch('subCategory');
+  const description = watch('description');
 
-  const handleTitleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    if (value.length <= TITLE_MAX_LENGTH) {
-      setTitle(value);
-    }
+  const handleFormTypeChange = (value: PostFormType) => {
+    setValue('formType', value);
+    setValue('placeName', '');
+    setValue('address', '');
+    setValue('pricePrefix', '');
+    setValue('price', '');
+    trigger();
   };
 
   const handleCategoryChange = (value: Category) => {
-    setCategory(value);
-    setSubCategory('');
+    setValue('category', value, { shouldValidate: true });
+    setValue('subCategory', '', { shouldValidate: true });
     setIsTranslated(false);
     setTranslationResults([]);
   };
@@ -73,8 +82,9 @@ export default function NewPostPage() {
     setIsSummarizing(true);
 
     try {
-      const summary = await generateSummary(title, content);
-      setDescription(summary);
+      const { title: t, content: c } = getValues();
+      const summary = await generateSummary(t, c);
+      setValue('description', summary, { shouldValidate: true });
       setIsSummarized(true);
     } catch {
       // TODO: 에러 처리 (toast 등)
@@ -87,18 +97,20 @@ export default function NewPostPage() {
     setIsExtracting(true);
 
     try {
+      const { title: t, content: c, placeName: pn, address: addr } = getValues();
+
       const terms = await extractFlaggedTerms(
-        content,
-        placeName || undefined,
-        address || undefined,
+        c,
+        pn || undefined,
+        addr || undefined,
       );
 
       if (terms.length === 0) {
         const results = await translatePost({
-          title,
-          content,
-          placeName: placeName || undefined,
-          address: address || undefined,
+          title: t,
+          content: c,
+          placeName: pn || undefined,
+          address: addr || undefined,
           confirmedTerms: [],
         });
         setTranslationResults(results);
@@ -120,10 +132,8 @@ export default function NewPostPage() {
     setIsSheetOpen(false);
   };
 
-  const commonFieldsFilled = !!(title.trim() && content.trim() && thumbnail && category && subCategory && description.trim());
-  const visitFieldsFilled = formType !== 'visit' || !!(placeName.trim() && address.trim() && price.trim());
   const needsTranslation = !!(category && subCategory);
-  const isSubmitDisabled = !commonFieldsFilled || !visitFieldsFilled || (needsTranslation && !isTranslated);
+  const isSubmitDisabled = !isValid || (needsTranslation && !isTranslated);
 
   return (
     <>
@@ -137,27 +147,42 @@ export default function NewPostPage() {
             <label className="mb-1 block text-base font-bold">
               폼 형식 <span className="text-primary-600">*</span>
             </label>
-            <Select
-              value={formType}
-              onValueChange={(value) => handleFormTypeChange(value as PostFormType)}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {FORM_TYPE_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Controller
+              name="formType"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  value={field.value}
+                  onValueChange={(value) => handleFormTypeChange(value as PostFormType)}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {FORM_TYPE_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
           </div>
           <div>
             <label className="mb-1 block text-base font-bold">
               썸네일 <span className="text-primary-600">*</span>
             </label>
-            <ThumbnailUpload thumbnail={thumbnail} onThumbnailChange={setThumbnail} />
+            <Controller
+              name="thumbnail"
+              control={control}
+              render={({ field }) => (
+                <ThumbnailUpload
+                  thumbnail={field.value || null}
+                  onThumbnailChange={(url) => field.onChange(url ?? '')}
+                />
+              )}
+            />
           </div>
         </div>
 
@@ -165,23 +190,29 @@ export default function NewPostPage() {
           <label className="mb-1 block text-base font-bold">
             본문 <span className="text-primary-600">*</span>
           </label>
-          <TiptapEditorContainer content={content} onChange={setContent}>
-            <div className="p-4">
-              <div className="flex items-center justify-between">
-                <input
-                  type="text"
-                  value={title}
-                  onChange={handleTitleChange}
-                  placeholder="게시글 제목"
-                  className="w-full text-title2 font-bold outline-none placeholder:text-muted-foreground"
-                />
-                <span className="shrink-0 pl-3 text-caption1 text-muted-foreground">
-                  {title.length}/{TITLE_MAX_LENGTH}
-                </span>
-              </div>
-            </div>
-            <Separator />
-          </TiptapEditorContainer>
+          <Controller
+            name="content"
+            control={control}
+            render={({ field }) => (
+              <TiptapEditorContainer content={field.value} onChange={field.onChange}>
+                <div className="p-4">
+                  <div className="flex items-center justify-between">
+                    <input
+                      type="text"
+                      {...register('title')}
+                      maxLength={TITLE_MAX_LENGTH}
+                      placeholder="게시글 제목"
+                      className="w-full text-title2 font-bold outline-none placeholder:text-muted-foreground"
+                    />
+                    <span className="shrink-0 pl-3 text-caption1 text-muted-foreground">
+                      {title.length}/{TITLE_MAX_LENGTH}
+                    </span>
+                  </div>
+                </div>
+                <Separator />
+              </TiptapEditorContainer>
+            )}
+          />
         </div>
 
         <div className="mt-8">
@@ -189,25 +220,14 @@ export default function NewPostPage() {
             카테고리 <span className="text-primary-600">*</span>
           </label>
           <CategorySelector
-            category={category}
-            subCategory={subCategory}
+            category={(category || '') as Category | ''}
+            subCategory={(subCategory || '') as SubCategory | ''}
             onCategoryChange={handleCategoryChange}
-            onSubCategoryChange={setSubCategory}
+            onSubCategoryChange={(value) => setValue('subCategory', value, { shouldValidate: true })}
           />
         </div>
 
-        {formType === 'visit' && (
-          <VisitFields
-            placeName={placeName}
-            address={address}
-            pricePrefix={pricePrefix}
-            price={price}
-            onPlaceNameChange={setPlaceName}
-            onAddressChange={setAddress}
-            onPricePrefixChange={setPricePrefix}
-            onPriceChange={setPrice}
-          />
-        )}
+        {formType === 'visit' && <VisitFields register={register} />}
 
         <div className="mt-8">
           <div className="mb-1 flex items-center justify-between">
@@ -226,15 +246,23 @@ export default function NewPostPage() {
               )}
             </button>
           </div>
-          <textarea
-            value={description}
-            onChange={(e) => {
-              setDescription(e.target.value);
-              setIsSummarized(false);
-            }}
-            placeholder="3줄 요약을 입력해주세요."
-            rows={3}
-            className="w-full resize-none border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none placeholder:text-muted-foreground"
+          <Controller
+            name="description"
+            control={control}
+            render={({ field }) => (
+              <textarea
+                value={field.value}
+                onChange={(e) => {
+                  field.onChange(e.target.value);
+                  setIsSummarized(false);
+                }}
+                onBlur={field.onBlur}
+                ref={field.ref}
+                placeholder="3줄 요약을 입력해주세요."
+                rows={3}
+                className="w-full resize-none border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none placeholder:text-muted-foreground"
+              />
+            )}
           />
         </div>
 
@@ -286,18 +314,18 @@ export default function NewPostPage() {
         onTranslationComplete={handleTranslationComplete}
         initialTerms={flaggedTerms}
         title={title}
-        content={content}
-        placeName={placeName || undefined}
-        address={address || undefined}
+        content={watch('content')}
+        placeName={watch('placeName') || undefined}
+        address={watch('address') || undefined}
       />
 
       <TranslationPreviewSheet
         open={isPreviewOpen}
         onOpenChange={setIsPreviewOpen}
         originalTitle={title}
-        originalContent={content}
-        originalPlaceName={placeName || undefined}
-        originalAddress={address || undefined}
+        originalContent={watch('content')}
+        originalPlaceName={watch('placeName') || undefined}
+        originalAddress={watch('address') || undefined}
         translations={translationResults}
       />
     </>
