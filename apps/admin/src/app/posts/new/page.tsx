@@ -2,21 +2,31 @@
 
 import { type ChangeEvent, useState } from 'react';
 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { CategorySelector } from '@/features/post-editor/components/CategorySelector';
 import { ThumbnailUpload } from '@/features/post-editor/components/ThumbnailUpload';
+import { VisitFields } from '@/features/post-editor/components/VisitFields';
 import { TiptapEditorContainer } from '@/features/post-editor/containers/TiptapEditorContainer';
+import { FORM_TYPE_OPTIONS } from '@/features/post-editor/constants/category';
 import { generateSummary } from '@/features/post-editor/api/actions';
 import { extractFlaggedTerms, translatePost } from '@/features/translation/api/actions';
 import { TranslationPreviewSheet } from '@/features/translation/components/TranslationPreviewSheet';
 import { TranslationSheetContainer } from '@/features/translation/containers/TranslationSheetContainer';
 
-import type { Category, SubCategory } from '@/shared/types/post';
+import type { Category, PostFormType, SubCategory } from '@/shared/types/post';
 import type { FlaggedTerm, TranslationResult } from '@/features/translation/types';
 
 const TITLE_MAX_LENGTH = 40;
 
 export default function NewPostPage() {
+  const [formType, setFormType] = useState<PostFormType>('visit');
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [category, setCategory] = useState<Category | ''>('');
@@ -35,6 +45,14 @@ export default function NewPostPage() {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [flaggedTerms, setFlaggedTerms] = useState<FlaggedTerm[]>([]);
   const [translationResults, setTranslationResults] = useState<TranslationResult[]>([]);
+
+  const handleFormTypeChange = (value: PostFormType) => {
+    setFormType(value);
+    setPlaceName('');
+    setAddress('');
+    setPriceMin('');
+    setPriceMax('');
+  };
 
   const handleTitleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -113,13 +131,22 @@ export default function NewPostPage() {
       <div className="mx-auto max-w-[688px]">
         <div className="space-y-4">
           <div>
-            <label className="mb-1 block text-base font-bold text-primary-600">카테고리</label>
-            <CategorySelector
-              category={category}
-              subCategory={subCategory}
-              onCategoryChange={handleCategoryChange}
-              onSubCategoryChange={setSubCategory}
-            />
+            <label className="mb-1 block text-base font-bold text-primary-600">폼 형식</label>
+            <Select
+              value={formType}
+              onValueChange={(value) => handleFormTypeChange(value as PostFormType)}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {FORM_TYPE_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <label className="mb-1 block text-base font-bold text-primary-600">썸네일</label>
@@ -148,76 +175,54 @@ export default function NewPostPage() {
           </TiptapEditorContainer>
         </div>
 
-        <div className="mt-8 space-y-4">
-          <div>
-            <label className="mb-1 block text-base font-bold text-primary-600">장소</label>
-            <input
-              type="text"
-              value={placeName}
-              onChange={(e) => setPlaceName(e.target.value)}
-              placeholder="장소를 입력해주세요."
-              className="h-9 w-full border border-input bg-transparent px-3 text-sm shadow-xs outline-none placeholder:text-muted-foreground"
-            />
+        <div className="mt-8">
+          <label className="mb-1 block text-base font-bold text-primary-600">카테고리</label>
+          <CategorySelector
+            category={category}
+            subCategory={subCategory}
+            onCategoryChange={handleCategoryChange}
+            onSubCategoryChange={setSubCategory}
+          />
+        </div>
+
+        {formType === 'visit' && (
+          <VisitFields
+            placeName={placeName}
+            address={address}
+            priceMin={priceMin}
+            priceMax={priceMax}
+            onPlaceNameChange={setPlaceName}
+            onAddressChange={setAddress}
+            onPriceMinChange={setPriceMin}
+            onPriceMaxChange={setPriceMax}
+          />
+        )}
+
+        <div className="mt-8">
+          <div className="mb-1 flex items-center justify-between">
+            <label className="text-base font-bold text-primary-600">3줄 요약</label>
+            <button
+              type="button"
+              onClick={handleGenerateSummary}
+              disabled={isSummarized || isSummarizing}
+              className="inline-flex items-center gap-1.5 border border-input px-3 py-1 text-xs font-semibold shadow-xs transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {isSummarized ? '요약 완료' : '요약 생성'}
+              {isSummarizing && (
+                <span className="inline-block h-3 w-3 animate-pulse bg-muted-foreground" />
+              )}
+            </button>
           </div>
-          <div>
-            <label className="mb-1 block text-base font-bold text-primary-600">주소</label>
-            <input
-              type="text"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              placeholder="주소를 입력해주세요."
-              className="h-9 w-full border border-input bg-transparent px-3 text-sm shadow-xs outline-none placeholder:text-muted-foreground"
-            />
-          </div>
-          <div>
-            <div className="mb-1 flex items-baseline gap-1.5">
-              <label className="text-base font-bold text-primary-600">가격대</label>
-              <span className="text-[14px] text-muted-foreground">(단위: 만원)</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <input
-                type="number"
-                value={priceMin}
-                onChange={(e) => setPriceMin(e.target.value)}
-                placeholder="최소"
-                className="h-9 w-full border border-input bg-transparent px-3 text-sm shadow-xs outline-none placeholder:text-muted-foreground [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-              />
-              <span className="shrink-0 text-sm text-muted-foreground">-</span>
-              <input
-                type="number"
-                value={priceMax}
-                onChange={(e) => setPriceMax(e.target.value)}
-                placeholder="최대"
-                className="h-9 w-full border border-input bg-transparent px-3 text-sm shadow-xs outline-none placeholder:text-muted-foreground [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-              />
-            </div>
-          </div>
-          <div>
-            <div className="mb-1 flex items-center justify-between">
-              <label className="text-base font-bold text-primary-600">3줄 요약</label>
-              <button
-                type="button"
-                onClick={handleGenerateSummary}
-                disabled={isSummarized || isSummarizing}
-                className="inline-flex items-center gap-1.5 border border-input px-3 py-1 text-xs font-semibold shadow-xs transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {isSummarized ? '요약 완료' : '요약 생성'}
-                {isSummarizing && (
-                  <span className="inline-block h-3 w-3 animate-pulse bg-muted-foreground" />
-                )}
-              </button>
-            </div>
-            <textarea
-              value={description}
-              onChange={(e) => {
-                setDescription(e.target.value);
-                setIsSummarized(false);
-              }}
-              placeholder="3줄 요약을 입력해주세요."
-              rows={3}
-              className="w-full resize-none border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none placeholder:text-muted-foreground"
-            />
-          </div>
+          <textarea
+            value={description}
+            onChange={(e) => {
+              setDescription(e.target.value);
+              setIsSummarized(false);
+            }}
+            placeholder="3줄 요약을 입력해주세요."
+            rows={3}
+            className="w-full resize-none border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none placeholder:text-muted-foreground"
+          />
         </div>
 
         <div className="mt-10 flex items-center justify-end gap-3">

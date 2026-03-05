@@ -30,14 +30,19 @@
 - CI/CD: GitHub Actions workflow_dispatch for build trigger
 - Global UI pattern: Layout.astro contains 1x Toast + 1x ImageLightbox (shared/components/ui/)
 
-## Admin Phase Status (as of 2026-03-04)
+## Admin Phase Status (as of 2026-03-05)
 
 - Phase 1 completed: Supabase client, types, HTTPS dev server, sidebar, metrics page (mock), SearchFilter, shadcn components, ESLint config
-- Phase 3 (partial): Tiptap editor + image insert implemented -- extensions (CustomStarterKit, BulletList, Heading h2-h6, Link, Underline, CustomResizableImage), toolbar (Bold/Italic/Underline/Link/List/Image/Undo/Redo), /posts/new page (title+editor), SSR-safe container (isMounted+skeleton), ProseMirror CSS (OL nesting, link hover, img max-width)
-- Image insert: CustomResizableImage (DOM NodeView, 4-corner resize handles, width % storage), UploadImage toolbar (blob URL temp, S3 presigned URL not yet), image output `<img style="width: X%; height: auto;" />`
-- Tiptap HTML output uses inline styles on all elements -- critical Client impact: `insertInArticleAds()` in `features/post-detail/lib/ads.ts` uses Markdown `## ` regex, needs migration to `<h2>` pattern
-- Post-editor remaining: meta form, Zod validation, S3 upload integration, image crop (react-image-crop), drag-and-drop/paste image, save (Server Action), edit page (/posts/[id]/edit), Placeholder extension
-- Next: Phase 2 (auth), then remaining Phase 3 tasks
+- Phase 3 (major progress): Tiptap editor + form type + meta form + translation integration
+  - Form type: `PostFormType = 'visit' | 'product-review'` -- UI-only concept (not stored in DB)
+  - Layout order: 폼형식 -> 썸네일 -> 본문(title+editor) -> 카테고리 -> [visit전용필드] -> 3줄요약 -> 액션버튼
+  - New components: CategorySelector, ThumbnailUpload (WebP convert), VisitFields (place/address/price)
+  - 3줄 요약: generateSummary Server Action (mock), textarea + AI button
+  - Toolbar now includes TextAlign (Left/Center/Right/Justify) + 13 SVG icons
+  - Translation: extractFlaggedTerms + translatePost Server Actions, TranslationSheetContainer, TranslationPreviewSheet
+- Image insert: CustomResizableImage (DOM NodeView, 4-corner resize handles, width % storage), UploadImage toolbar (blob URL temp)
+- Tiptap HTML output uses inline styles -- critical Client impact: `insertInArticleAds()` needs `<h2>` regex migration
+- Remaining: Zod validation, S3 upload, save action, edit page, Placeholder ext, toggles (sponsored/recommended/multilingual), rating, slug auto-gen
 
 ## Feature Specs Created
 

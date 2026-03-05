@@ -11,6 +11,8 @@ export type SubCategory =
   | 'overseas'
   | 'accommodation';
 
+export type PostFormType = 'visit' | 'product-review';
+
 export type TranslationLocale = 'en' | 'ja' | 'zh-CN' | 'zh-TW' | 'id' | 'vi' | 'th';
 
 export type Post = {

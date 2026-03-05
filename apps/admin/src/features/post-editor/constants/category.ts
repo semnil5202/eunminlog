@@ -1,4 +1,9 @@
-import type { Category, SubCategory } from '@/shared/types/post';
+import type { Category, PostFormType, SubCategory } from '@/shared/types/post';
+
+export const FORM_TYPE_OPTIONS: { value: PostFormType; label: string }[] = [
+  { value: 'visit', label: '체험 방문' },
+  { value: 'product-review', label: '제품 리뷰' },
+];
 
 export const CATEGORY_OPTIONS: { value: Category; label: string }[] = [
   { value: 'delicious', label: '맛집' },

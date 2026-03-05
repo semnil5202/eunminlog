@@ -18,32 +18,50 @@
 - [x] ESLint 설정 (.cjs, shadcn 생성 파일 예외)
 - [x] placeholder 페이지: `/dashboard`, `/posts/new`, `/posts/[id]/edit`
 
-### Phase 3 — Tiptap 에디터 (부분 완료)
+### Phase 3 — Tiptap 에디터 + 폼 (부분 완료)
 
-- [x] Tiptap 에디터 기본 구현 — Extension 설정, 툴바 (Bold/Italic/Underline/Link/List/Undo/Redo), HTML 인라인 스타일 출력
-- [x] 에디터 페이지 (`/posts/new`) — 제목 입력 (40자 제한 + 카운터), Separator, TiptapEditorContainer
+- [x] Tiptap 에디터 기본 구현 — Extension 설정, 툴바 (Bold/Italic/Underline/Link/List/TextAlign/Undo/Redo), HTML 인라인 스타일 출력
+- [x] 에디터 페이지 (`/posts/new`) — 폼 형식 + 메타 폼 + Tiptap 에디터 + 번역 연동
 - [x] SSR-safe 에디터 래핑 — `isMounted` 패턴 + `TiptapEditorSkeleton` 로딩
 - [x] ProseMirror CSS — focus outline, link hover, ordered list nesting (decimal/lower-alpha/lower-roman)
-- [ ] 포스트 메타데이터 폼 (description, slug, category, sub_category, thumbnail, toggles)
-- [ ] 폼 유효성 검사 (Zod schema)
+- [x] 폼 형식 (Form Type) — `visit` (체험 방문) / `product-review` (제품 리뷰) select. 체험 방문 선택 시 장소/주소/가격대 필드 표시
+- [x] 카테고리/서브카테고리 select — `CategorySelector` 컴포넌트, 동적 서브카테고리 매핑
+- [x] 썸네일 업로드 — `ThumbnailUpload` 컴포넌트 (WebP 변환, blob URL 미리보기, 삭제)
+- [x] 체험 방문 전용 필드 — `VisitFields` 컴포넌트 (장소명, 주소, 가격대: 만원 단위)
+- [x] 3줄 요약 — textarea + "요약 생성" AI 버튼 (Server Action `generateSummary` -- 현재 mock)
 - [x] 이미지 삽입 UI — CustomResizableImage 확장 (4코너 리사이즈, width % 저장), UploadImage 툴바 버튼 (blob URL 임시 사용)
+- [x] 번역 기능 연동 — 에디터 페이지에서 "번역본 생성" 버튼 → 고유명사 추출 → 번역 실행 → "번역본 확인하기" Sheet
+- [ ] 폼 유효성 검사 (Zod schema)
 - [ ] 이미지 S3 업로드 연동 — blob URL → S3 presigned URL 방식으로 전환 (Phase 4 Media Upload 섹션 연동)
 - [ ] 이미지 크롭 기능 (react-image-crop 활용 검토)
 - [ ] 드래그앤드롭/붙여넣기 이미지 처리 (Tiptap Drop/Paste 핸들러)
 - [ ] 포스트 저장 (Server Action → Supabase `posts` INSERT)
 - [ ] 포스트 편집 페이지 (`/posts/[id]/edit`) — 기존 데이터 로드 + 에디터 반영
 - [ ] Placeholder Extension 적용 (빈 에디터 가이드 텍스트)
+- [ ] is_sponsored / is_recommended / is_multilingual 토글
+- [ ] rating 입력 (1.0-5.0, 0.5 단위)
+- [ ] slug 자동 생성 + 수동 편집
 
 ### Phase 2 (미구현)
 
 - [ ] Supabase Auth 로그인/로그아웃 (email/password)
 - [ ] 인증 가드 (비인증 시 로그인 리다이렉트)
 
+### Phase 3-1 — 번역 (부분 완료)
+
+- [x] 고유명사 추출 Server Action (`extractFlaggedTerms`) — 본문에서 고유명사 식별 + 번역 가이드 제공
+- [x] 번역 실행 Server Action (`translatePost`) — 확인된 고유명사를 반영하여 다국어 번역
+- [x] 고유명사 검토 Sheet (`TranslationSheetContainer`) — 고유명사 리스트 검토/수정 UI + 번역 실행
+- [x] 번역 미리보기 Sheet (`TranslationPreviewSheet`) — 번역 결과 확인 UI
+- [x] 에디터 페이지 연동 — "번역본 생성" / "번역본 확인하기" 버튼
+- [ ] 번역 결과 저장 (Server Action → Supabase `post_translations` UPSERT)
+- [ ] 번역 상태 관리 (locale별 진행/완료/실패 UI)
+- [ ] 개별 locale 재번역
+
 ### Phase 4+ (미구현)
 
 - [ ] 미디어 업로드 (S3 Pre-signed URL) — 아래 Media Upload 섹션과 연동
 - [ ] 포스트 관리 대시보드 (목록, 삭제)
-- [ ] GPT-4o 다국어 번역 (CSR) — 아래 i18n 섹션과 연동
 - [ ] GitHub Actions 빌드 트리거
 - [ ] is_multilingual 토글 — 아래 i18n 섹션과 연동
 - [ ] 핵심 지표 GA4 API 연동 (mock → 실제 데이터)
