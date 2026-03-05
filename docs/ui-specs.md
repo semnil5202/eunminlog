@@ -235,6 +235,7 @@
 - Props: `rating` (number)
 - SVG 별 아이콘 5개 (filled + empty), 숫자 점수 표시
 - Schema.org `Rating` 마이크로데이터 (`itemprop="reviewRating"`) 포함
+- **현재 미사용**: PlaceInfoCard에서 평점 대신 3줄 요약으로 전환됨. 향후 rating UI 복원 시 재사용 가능
 
 #### `SponsoredPostItem.astro`
 
@@ -248,12 +249,13 @@
 #### `PlaceInfoCard.astro`
 
 - **위치**: `features/post-detail/components/PlaceInfoCard.astro`
-- Props: `categoryLabel`, `subCategoryLabel`, `placeName`, `translatedPlaceName`, `address?`, `translatedAddress`, `priceMin?`, `priceMax?`, `rating?`, `locale`
+- Props: `categoryLabel`, `subCategoryLabel`, `placeName`, `translatedPlaceName?`, `address?`, `translatedAddress?`, `priceMin?`, `priceMax?`, `description?`, `locale`
 - Schema.org `LocalBusiness` 마이크로데이터 포함
-- StarRating 컴포넌트를 내부에서 사용
-- `<dl>` 기반 키-값 레이아웃: 카테고리, 장소, 주소, 가격대, 평점
-- 필드 라벨은 `t()` 함수로 다국어 처리 (`place.category`, `place.name`, `place.address`, `place.price`)
-- 장소명/주소: 번역 텍스트 표시, 복사 시 한글 원문 복사, 다국어 페이지에서 토스트 알림
+- `border-radius` 없음 (`bg-gray-50 border border-gray-200 p-5 mb-6`)
+- `<dl>` 기반 키-값 레이아웃 (`w-20` dt 라벨 폭): 카테고리, 장소, 주소, 가격대, 3줄 요약
+- 필드 라벨은 `t()` 함수로 다국어 처리 (`place.category`, `place.name`, `place.address`, `place.price`, `post.summary`)
+- 장소명/주소: 번역 텍스트 표시, `data-copy` 속성으로 한글 원문 복사, `data-toast`로 다국어 페이지에서 토스트 알림 (`place.copyToast`)
+- 3줄 요약: `description` prop을 개행 분할하여 `⋅` 접두사 리스트로 표시 (`post.summary` 라벨)
 - 상세 스펙: [`docs/place-i18n-specs.md`](place-i18n-specs.md)
 
 #### AI 번역 안내 문구
@@ -266,7 +268,7 @@
 #### `NearbyPostList.astro`
 
 - **위치**: `features/post-detail/components/NearbyPostList.astro`
-- Props: `posts`, `currentSlug`, `categoryLabel`, `subCategoryLabel`, `nearbyLabel`, `moreLabel`, `subCategoryHref`, `locale`
+- Props: `posts`, `currentSlug`, `categoryLabel`, `subCategoryLabel`, `moreLabel`, `subCategoryHref`, `locale`
 - 같은 서브카테고리의 인근 포스트를 썸네일 + 제목 + 설명 리스트로 표시
 - 현재 포스트는 `border-l-primary-500` + `aria-current="page"`로 구분
 

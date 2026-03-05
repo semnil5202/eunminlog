@@ -44,6 +44,13 @@
 - Tiptap HTML output uses inline styles -- critical Client impact: `insertInArticleAds()` needs `<h2>` regex migration
 - Remaining: Zod validation, S3 upload, save action, edit page, Placeholder ext, toggles (sponsored/recommended/multilingual), rating, slug auto-gen
 
+## Client PlaceInfoCard Changes (2026-03-05)
+
+- rating prop removed, replaced with description prop (3줄 요약)
+- StarRating.astro no longer imported (file kept for future use, still used in schema.ts JSON-LD)
+- description displayed as `\n`-split `⋅` bullet list with `post.summary` i18n label (8 locales)
+- ui-specs.md PlaceInfoCard section updated to reflect new props and layout
+
 ## Feature Specs Created
 
 - `docs/place-i18n-specs.md` — place_name/address i18n (2026-03-05): DB schema change (post_translations add place_name, address nullable), LocalizedPost type adds translated_place_name/translated_address (separate from original), PlaceInfoCard shows translation + copies Korean original, Toast on non-ko copy, JSON-LD keeps Korean original, PlaceInfoCard field labels also i18n'd (place.category/name/address/price keys), search/feed data use translated place_name
