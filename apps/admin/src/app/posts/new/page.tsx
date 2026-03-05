@@ -6,6 +6,7 @@ import { Separator } from '@/components/ui/separator';
 import { CategorySelector } from '@/features/post-editor/components/CategorySelector';
 import { ThumbnailUpload } from '@/features/post-editor/components/ThumbnailUpload';
 import { TiptapEditorContainer } from '@/features/post-editor/containers/TiptapEditorContainer';
+import { generateSummary } from '@/features/post-editor/api/actions';
 import { extractFlaggedTerms, translatePost } from '@/features/translation/api/actions';
 import { TranslationPreviewSheet } from '@/features/translation/components/TranslationPreviewSheet';
 import { TranslationSheetContainer } from '@/features/translation/containers/TranslationSheetContainer';
@@ -25,6 +26,9 @@ export default function NewPostPage() {
   const [address, setAddress] = useState('');
   const [priceMin, setPriceMin] = useState('');
   const [priceMax, setPriceMax] = useState('');
+  const [description, setDescription] = useState('');
+  const [isSummarizing, setIsSummarizing] = useState(false);
+  const [isSummarized, setIsSummarized] = useState(false);
   const [isTranslated, setIsTranslated] = useState(false);
   const [isExtracting, setIsExtracting] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
@@ -44,6 +48,20 @@ export default function NewPostPage() {
     setSubCategory('');
     setIsTranslated(false);
     setTranslationResults([]);
+  };
+
+  const handleGenerateSummary = async () => {
+    setIsSummarizing(true);
+
+    try {
+      const summary = await generateSummary(title, content);
+      setDescription(summary);
+      setIsSummarized(true);
+    } catch {
+      // TODO: 에러 처리 (toast 등)
+    } finally {
+      setIsSummarizing(false);
+    }
   };
 
   const handleTranslationStart = async () => {
@@ -173,6 +191,32 @@ export default function NewPostPage() {
                 className="h-9 w-full border border-input bg-transparent px-3 text-sm shadow-xs outline-none placeholder:text-muted-foreground [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
               />
             </div>
+          </div>
+          <div>
+            <div className="mb-1 flex items-center justify-between">
+              <label className="text-base font-bold text-primary-600">3줄 요약</label>
+              <button
+                type="button"
+                onClick={handleGenerateSummary}
+                disabled={isSummarized || isSummarizing}
+                className="inline-flex items-center gap-1.5 border border-input px-3 py-1 text-xs font-semibold shadow-xs transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isSummarized ? '요약 완료' : '요약 생성'}
+                {isSummarizing && (
+                  <span className="inline-block h-3 w-3 animate-pulse bg-muted-foreground" />
+                )}
+              </button>
+            </div>
+            <textarea
+              value={description}
+              onChange={(e) => {
+                setDescription(e.target.value);
+                setIsSummarized(false);
+              }}
+              placeholder="3줄 요약을 입력해주세요."
+              rows={3}
+              className="w-full resize-none border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none placeholder:text-muted-foreground"
+            />
           </div>
         </div>
 
