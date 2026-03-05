@@ -32,7 +32,7 @@ pnpm --filter @eunminlog/client dev # client만 실행 (HTTPS, local-client.eunm
 - **Monorepo**: pnpm workspaces + Turbo. pnpm@10.6.2+, Node.js >=24 필요.
 - **배포 파이프라인**: Admin에서 글 저장 → GitHub Actions 트리거 → Astro SSG 빌드 → AWS S3 + CloudFront 배포
 - **DB**: Supabase PostgreSQL. Astro는 빌드 타임에 DB에서 Fetch.
-- **AI 번역**: OpenAI GPT-4o로 다국어 번역 처리
+- **AI 번역**: OpenAI GPT-5 Nano로 다국어 번역 처리 (번역+요약)
 - **TypeScript**: Strict mode. ES2022, bundler resolution. Path alias `@/*` → `./src/*` (admin).
 - **ESLint**: Flat config (v9). `_` prefix 변수 unused 허용.
 - **React import 규칙**: `import * as React` 금지. 구조분해할당으로 필요한 것만 import. 예: `import { useState, useEffect } from 'react'`, `import type { ReactNode } from 'react'`.
@@ -63,7 +63,7 @@ pnpm --filter @eunminlog/client dev # client만 실행 (HTTPS, local-client.eunm
 ### 콘텐츠 타입
 
 - 일반 포스트, 협찬 포스트 (`is_sponsored`), Editor's Pick (`is_recommended`)
-- 한국어 기본, GPT-4o 자동 번역: en, ja, zh-CN, zh-TW, id, vi, th
+- 한국어 기본, GPT-5 Nano 자동 번역: en, ja, zh-CN, zh-TW, id, vi, th
 
 ## UI/UX Constraints (엄격 적용)
 

@@ -494,7 +494,7 @@ placeName: localized.translated_place_name ?? post.place_name ?? null,
 
 ## 7. Admin 앱 변경
 
-### 7-1. GPT-4o 번역 파이프라인
+### 7-1. GPT 번역 파이프라인 (GPT-5 Nano 예정)
 
 > Admin의 번역 기능은 아직 미구현 상태 (Phase 4+). 구현 시 아래 스펙을 반영한다.
 
@@ -507,7 +507,7 @@ placeName: localized.translated_place_name ?? post.place_name ?? null,
 
 **번역 응답 파싱**:
 
-GPT-4o 응답에서 `place_name`, `address` 번역 결과를 추출하여 `post_translations` 테이블에 함께 저장한다.
+GPT 응답에서 `place_name`, `address` 번역 결과를 추출하여 `post_translations` 테이블에 함께 저장한다.
 
 **place_name/address 번역 지침 (프롬프트에 포함)**:
 
@@ -523,7 +523,7 @@ GPT-4o 응답에서 `place_name`, `address` 번역 결과를 추출하여 `post_
 포스트 저장 Server Action에서:
 
 1. `posts` 테이블에 원문 place_name, address 저장 (기존 로직)
-2. `is_multilingual === true`이면 GPT-4o 번역 요청 시 place_name, address 포함
+2. `is_multilingual === true`이면 GPT 번역 요청 시 place_name, address 포함
 3. 번역 결과를 `post_translations` 테이블에 place_name, address와 함께 INSERT/UPSERT
 
 ---
@@ -585,7 +585,7 @@ ALTER TABLE post_translations ADD COLUMN address text;
 
 | 항목 | 변경 내용 | 시점 |
 |------|-----------|------|
-| GPT-4o 번역 프롬프트 | place_name, address 포함 | Phase 4+ (번역 기능 구현 시) |
+| GPT 번역 프롬프트 (GPT-5 Nano 예정) | place_name, address 포함 | Phase 4+ (번역 기능 구현 시) |
 | 포스트 저장 Server Action | 번역 결과에 place_name, address 포함하여 저장 | Phase 4+ |
 
 ### 9-4. DB 변경
@@ -611,7 +611,7 @@ ALTER TABLE post_translations ADD COLUMN address text;
 | 9 | Client: search-data.ts — 번역 장소명 사용 | P1 | #2, #3 |
 | 10 | Client: feed JSON API — 번역 장소명 사용 | P1 | #2, #3 |
 | 11 | docs: database.md 업데이트 | P0 | #1 |
-| 12 | Admin: GPT-4o 번역 파이프라인에 place_name, address 포함 | P1 | Phase 4+ 구현 시 |
+| 12 | Admin: GPT-5 Nano 번역 파이프라인에 place_name, address 포함 | P1 | Phase 4+ 구현 시 |
 
 > **참고**: #1(DB 변경)은 Supabase 콘솔에서 직접 실행. #2~#10은 SE가 한 PR로 구현 가능. #12는 Admin 번역 기능 구현 시점에 반영.
 

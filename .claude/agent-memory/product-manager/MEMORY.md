@@ -10,7 +10,7 @@
 - Admin auth: Supabase Auth email/password (no social login, no signup flow, 1-2 users)
 - Editor: Tiptap (HTML output, not Markdown)
 - CSR-first: Server Action only for presigned URL, Supabase writes, GitHub token
-- GPT-4o translation: CSR direct call (Vercel Hobby 10s timeout workaround)
+- GPT-5 Nano translation+summary: CSR direct call (Vercel Hobby 10s timeout workaround). Currently mock, OPENAI_API_KEY env needed
 - Media gallery: Tiptap manages image insert/delete/order, Client renders consecutive images as CSS snap gallery (B approach)
 - Vercel Hobby plan is sufficient for admin
 - Content format: HTML (Tiptap) -- database.md already updated to "HTML"
@@ -39,10 +39,16 @@
   - New components: CategorySelector, ThumbnailUpload (WebP convert), VisitFields (place/address/price)
   - 3줄 요약: generateSummary Server Action (mock), textarea + AI button
   - Toolbar now includes TextAlign (Left/Center/Right/Justify) + 13 SVG icons
-  - Translation: extractFlaggedTerms + translatePost Server Actions, TranslationSheetContainer, TranslationPreviewSheet
+  - Translation: extractFlaggedTerms + translatePost Server Actions, TranslationSheetContainer (0.8s auto-close), TranslationPreviewSheet (8 locale filter tabs, default en)
+  - Form validation: runtime check (all required fields + visit fields + translation), "작성 완료" button disabled until all pass
+  - Label style: all labels `text-base font-bold` black + required `*` primary-600
+  - Loading spinners: LoaderIcon animate-spin on summary/translation buttons
+  - Translation UX: "용어 검토 계속하기" button for sheet re-open, 3줄 요약 empty disables translation
 - Image insert: CustomResizableImage (DOM NodeView, 4-corner resize handles, width % storage), UploadImage toolbar (blob URL temp)
 - Tiptap HTML output uses inline styles -- critical Client impact: `insertInArticleAds()` needs `<h2>` regex migration
+- Price field: price_prefix (text, optional) + price (number, required for visit). Display: "${prefix}${price.toLocaleString()}원"
 - Remaining: Zod validation, S3 upload, save action, edit page, Placeholder ext, toggles (sponsored/recommended/multilingual), rating, slug auto-gen
+- Pending DB migrations: posts (price_prefix, price ADD + price_min, price_max DROP), post_translations (place_name, address ADD)
 
 ## Client PlaceInfoCard Changes (2026-03-05)
 
@@ -58,7 +64,8 @@
 
 ## Feature Specs Created
 
-- `docs/place-i18n-specs.md` — place_name/address i18n (2026-03-05, updated 2026-03-05): DB schema change (post_translations add place_name, address nullable), LocalizedPost type adds translated_place_name/translated_address (separate from original), PlaceInfoCard shows translation + copies Korean original, Toast on non-ko copy, JSON-LD keeps Korean original, PlaceInfoCard field labels i18n'd (place.category/name/address/price/copyToast keys), search/feed data use translated place_name. Place i18n Client-side implementation completed (all TODO items checked except DB ALTER and Admin GPT-4o pipeline).
+- `docs/place-i18n-specs.md` — place_name/address i18n (2026-03-05, updated 2026-03-05): DB schema change (post_translations add place_name, address nullable), LocalizedPost type adds translated_place_name/translated_address (separate from original), PlaceInfoCard shows translation + copies Korean original, Toast on non-ko copy, JSON-LD keeps Korean original, PlaceInfoCard field labels i18n'd (place.category/name/address/price/copyToast keys), search/feed data use translated place_name. Place i18n Client-side implementation completed (all TODO items checked except DB ALTER and Admin GPT-5 Nano pipeline).
+- `docs/api-specs.md` — Admin API specs (also updated GPT-4o -> GPT-5 Nano)
 
 ## Documentation Patterns
 

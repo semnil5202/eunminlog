@@ -10,7 +10,7 @@
 | Client   | Astro 5 (SSG)                     |
 | Styling  | Tailwind CSS                      |
 | DB       | Supabase (PostgreSQL)             |
-| AI       | OpenAI GPT-4o (다국어 번역)       |
+| AI       | OpenAI GPT-5 Nano (다국어 번역+요약) |
 | CI/CD    | GitHub Actions                    |
 | Hosting  | AWS S3 + CloudFront               |
 | Monorepo | pnpm + TurboRepo                  |

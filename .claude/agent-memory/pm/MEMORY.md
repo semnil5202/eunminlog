@@ -15,7 +15,7 @@
 - apps/admin: Next.js 15 (App Router, React 19) -- CSR + Server Action, HTTPS dev at local-admin.eunminlog.site:4322, shadcn/ui, flat route structure
 - apps/client: Astro 5 -- SSG only, port 4321
 - DB: Supabase PostgreSQL, `posts` + `post_translations` tables
-- AI: OpenAI GPT-4o for multilingual translation
+- AI: OpenAI GPT-5 Nano for multilingual translation + summary (currently mock, OPENAI_API_KEY env needed)
 - Deploy: GitHub Actions -> Astro SSG build -> AWS S3 + CloudFront
 - Shared packages: tsconfig, eslint-config, config (future: types, ui)
 - Styling: Tailwind CSS v4, shared theme via @eunminlog/config/theme.css (@theme inline)

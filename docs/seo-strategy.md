@@ -47,7 +47,7 @@
 
 ## i18n (다국어)
 
-OpenAI GPT-4o로 자동 번역. 한국어가 기본 언어.
+OpenAI GPT-5 Nano로 자동 번역. 한국어가 기본 언어.
 
 | 언어                 | locale  | routing prefix    |
 | -------------------- | ------- | ----------------- |
@@ -97,7 +97,7 @@ OpenAI GPT-4o로 자동 번역. 한국어가 기본 언어.
 - 다국어 리스트 페이지(`/{locale}/{category}/` 등)에서 카드 미노출 — 피드, 검색 데이터에서도 제외
 - 다국어 피드 JSON(`/api/feed/{locale}/...`)에서 제외
 - 다국어 검색 페이지(`/{locale}/search/`)의 검색 데이터에서 제외
-- AI 번역(GPT-4o) 호출 스킵 — `post_translations` 레코드 미생성
+- AI 번역(GPT-5 Nano) 호출 스킵 — `post_translations` 레코드 미생성
 
 **LanguageSelector 비활성화**:
 

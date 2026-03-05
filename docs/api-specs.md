@@ -174,7 +174,7 @@ Supabase Auth 클라이언트 SDK 사용 (Server Action 아님).
 }
 ```
 
-**External:** OpenAI GPT-4o API (`OPENAI_API_KEY`)
+**External:** OpenAI GPT-5 Nano API (`OPENAI_API_KEY`)
 
 **DB:** `INSERT INTO post_translations` (locale별 레코드)
 
@@ -258,7 +258,7 @@ Supabase Auth 클라이언트 SDK 사용 (Server Action 아님).
 | `NEXT_PUBLIC_SUPABASE_URL` | Public | Supabase URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Public | 클라이언트 인증 |
 | `SUPABASE_SERVICE_ROLE_KEY` | Private | Server Action DB 접근 |
-| `OPENAI_API_KEY` | Private | GPT-4o 번역 |
+| `OPENAI_API_KEY` | Private | GPT-5 Nano 번역+요약 |
 | `GITHUB_TOKEN` | Private | 빌드 트리거 |
 | `AWS_ACCESS_KEY_ID` | Private | S3 Pre-signed URL |
 | `AWS_SECRET_ACCESS_KEY` | Private | S3 Pre-signed URL |

@@ -29,7 +29,7 @@
 | ------------- | -------------------- | ---------------------------------------------------- |
 | `id`          | uuid                 | PK                                                   |
 | `post_id`     | uuid (FK → posts.id) | 원본 포스트 참조                                     |
-| `locale`      | text                 | 언어 코드 (`en`, `ja`, `zh-CN`, `zh-TW`, `id`, `vi`) |
+| `locale`      | text                 | 언어 코드 (`en`, `ja`, `zh-CN`, `zh-TW`, `id`, `vi`, `th`) |
 | `title`       | text                 | 번역된 제목                                          |
 | `description` | text                 | 번역된 요약                                          |
 | `content`     | text                 | 번역된 본문 (HTML)                                   |

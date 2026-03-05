@@ -13,7 +13,7 @@ graph LR
 
     %% 2. AI 서비스
     subgraph Group_AI [2. AI Service: GPTs]
-        Logic <-->|Translate| OpenAI(OpenAI GPT-4o)
+        Logic <-->|Translate| OpenAI(OpenAI GPT-5 Nano)
     end
 
     %% 3. 데이터베이스 (Content Store)
@@ -48,7 +48,7 @@ graph LR
 ## Flow
 
 1. **콘텐츠 작성**: Admin이 Next.js Editor에서 글 작성 → Server Action → Supabase에 저장
-2. **AI 번역**: 저장 시 OpenAI GPT-4o를 통해 다국어 번역 처리 (`is_multilingual === true`인 포스트만)
+2. **AI 번역**: 저장 시 OpenAI GPT-5 Nano를 통해 다국어 번역 처리 (`is_multilingual === true`인 포스트만)
 3. **빌드 트리거**: Node.js Logic이 GitHub Actions에 빌드 트리거 API 호출
 4. **SSG 빌드**: Astro가 빌드 타임에 Supabase에서 전체 포스트 Fetch → 정적 HTML 생성. 다국어 경로 조건부 생성: 포스트 상세는 `is_multilingual === true`인 포스트만, 카테고리/서브카테고리 인덱스는 해당 분류에 multilingual 포스트가 1개 이상 존재할 때만 locale 경로를 생성 (thin content 방지)
 5. **배포**: 생성된 HTML을 AWS S3에 업로드, CloudFront CDN으로 서빙. CloudFront Function(Viewer Request)이 `/path/` → `/path/index.html` 매핑을 처리.
@@ -66,7 +66,7 @@ graph LR
 | 서비스                | 용도              |
 | --------------------- | ----------------- |
 | Supabase (PostgreSQL) | 콘텐츠 DB         |
-| OpenAI GPT-4o         | 다국어 번역       |
+| OpenAI GPT-5 Nano     | 다국어 번역       |
 | GitHub Actions        | CI/CD, SSG 빌드   |
 | AWS S3 + CloudFront   | 정적 호스팅 + CDN |
 
