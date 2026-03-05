@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node scripts/start-local-server.cjs",
+    "dev": "next dev -H local-admin.eunminlog.site -p 4322 --experimental-https --experimental-https-key local-key.pem --experimental-https-cert local.pem",
     "setup:local": "bash scripts/setup-local-https.sh",
     "build": "next build",
     "start": "next start",
@@ -33,6 +33,7 @@
     "date-fns": "^4.1.0",
     "lucide-react": "^0.576.0",
     "next": "^15",
+    "openai": "^6.25.0",
     "radix-ui": "^1.4.3",
     "react": "^19",
     "react-day-picker": "^9.14.0",
