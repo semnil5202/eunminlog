@@ -31,12 +31,12 @@
 - [x] 3줄 요약 — textarea + "요약 생성" AI 버튼 (Server Action `generateSummary` -- 현재 mock)
 - [x] 이미지 삽입 UI — CustomResizableImage 확장 (4코너 리사이즈, width % 저장), UploadImage 툴바 버튼 (blob URL 임시 사용)
 - [x] 번역 기능 연동 — 에디터 페이지에서 "번역본 생성" 버튼 → 고유명사 추출 → 번역 실행 → "번역본 확인하기" Sheet
-- [x] 폼 검증 (런타임) — 필수 입력값 미입력 시 "작성 완료" 비활성화 (공통 필드 + visit 전용 필드 + 번역 완료 조건)
+- [x] 폼 검증 — react-hook-form + Zod, 버튼 클릭 시 검증 + focus + 에러 메시지 (공통 필드 + visit 전용 필드 + 번역 완료 조건)
 - [x] Label 스타일 통일 — 모든 label 검은색 `text-base font-bold` + 필수값 `*` primary-600
 - [x] Loading spinner — 요약 생성/번역본 생성하기 버튼에 `LoaderIcon animate-spin` 적용
 - [x] 번역 Sheet UX — 번역 완료 시 0.8초 후 자동 닫힘, Sheet 닫은 후 "용어 검토 계속하기" 재오픈, 3줄 요약 비어있으면 번역 비활성화
 - [x] 번역본 확인 Sheet — 언어 필터 탭 (8개 locale), 기본값 영어, 제목/장소/주소/본문 label 표시
-- [ ] 폼 유효성 검사 (Zod schema) — 런타임 검증은 구현 완료, Zod schema 기반 정형화는 미구현
+- [x] 폼 유효성 검사 (Zod schema + react-hook-form) — mode: 'onSubmit', 한국어 에러 메시지, focus 연동
 - [ ] 이미지 S3 업로드 연동 — blob URL → S3 presigned URL 방식으로 전환 (Phase 4 Media Upload 섹션 연동)
 - [ ] 이미지 크롭 기능 (react-image-crop 활용 검토)
 - [ ] 드래그앤드롭/붙여넣기 이미지 처리 (Tiptap Drop/Paste 핸들러)
@@ -59,7 +59,8 @@
 - [x] 고유명사 검토 Sheet (`TranslationSheetContainer`) — 고유명사 리스트 검토/수정 UI + 번역 실행
 - [x] 번역 미리보기 Sheet (`TranslationPreviewSheet`) — 번역 결과 확인 UI (언어 필터 8개, 기본 영어, 장소/주소 포함)
 - [x] 에디터 페이지 연동 — "번역본 생성하기" / "용어 검토 계속하기" / "번역본 확인하기" 버튼
-- [x] 번역 Sheet UX — 번역 완료 0.8초 자동 닫힘, 3줄 요약 비어있으면 번역 버튼 비활성화
+- [x] 번역 Sheet UX — 번역 완료 0.8초 자동 닫힘, Sheet 닫은 후 "용어 검토 계속하기" 재오픈
+- [x] GPT 프롬프트 설계서 작성 (`docs/gpt-prompts.md`) — 요약 생성, 용어 추출, 본문 번역 3가지 프롬프트
 - [ ] 번역 결과 저장 (Server Action → Supabase `post_translations` UPSERT)
 - [ ] 번역 상태 관리 (locale별 진행/완료/실패 UI)
 - [ ] 개별 locale 재번역

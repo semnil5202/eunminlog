@@ -5,12 +5,12 @@ export const TITLE_MAX_LENGTH = 40;
 export const postFormSchema = z
   .object({
     formType: z.enum(['visit', 'product-review']),
-    title: z.string().min(1).max(TITLE_MAX_LENGTH),
-    content: z.string().min(1),
-    category: z.string().min(1),
-    subCategory: z.string().min(1),
-    thumbnail: z.string().min(1),
-    description: z.string().min(1),
+    title: z.string().min(1, '제목을 입력해주세요.').max(TITLE_MAX_LENGTH),
+    content: z.string().min(1, '본문을 입력해주세요.'),
+    category: z.string().min(1, '대분류를 선택해주세요.'),
+    subCategory: z.string().min(1, '소분류를 선택해주세요.'),
+    thumbnail: z.string().min(1, '썸네일을 등록해주세요.'),
+    description: z.string().min(1, '3줄 요약을 입력해주세요.'),
     placeName: z.string(),
     address: z.string(),
     pricePrefix: z.string(),
@@ -19,10 +19,11 @@ export const postFormSchema = z
   .superRefine((data, ctx) => {
     if (data.formType === 'visit') {
       if (!data.placeName.trim())
-        ctx.addIssue({ code: 'custom', path: ['placeName'], message: '필수' });
+        ctx.addIssue({ code: 'custom', path: ['placeName'], message: '장소를 입력해주세요.' });
       if (!data.address.trim())
-        ctx.addIssue({ code: 'custom', path: ['address'], message: '필수' });
-      if (!data.price.trim()) ctx.addIssue({ code: 'custom', path: ['price'], message: '필수' });
+        ctx.addIssue({ code: 'custom', path: ['address'], message: '주소를 입력해주세요.' });
+      if (!data.price.trim())
+        ctx.addIssue({ code: 'custom', path: ['price'], message: '금액을 입력해주세요.' });
     }
   });
 

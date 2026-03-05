@@ -40,12 +40,15 @@ export default function NewPostPage() {
     setValue,
     getValues,
     trigger,
-    formState: { isValid },
+    setFocus,
+    formState,
   } = useForm<PostFormValues>({
     resolver: zodResolver(postFormSchema),
     defaultValues: POST_FORM_DEFAULTS,
-    mode: 'onChange',
+    mode: 'onSubmit',
   });
+
+  const { errors } = formState;
 
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [isSummarized, setIsSummarized] = useState(false);
@@ -55,12 +58,52 @@ export default function NewPostPage() {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [flaggedTerms, setFlaggedTerms] = useState<FlaggedTerm[]>([]);
   const [translationResults, setTranslationResults] = useState<TranslationResult[]>([]);
+  const [translationError, setTranslationError] = useState(false);
 
   const formType = watch('formType');
   const title = watch('title');
   const category = watch('category');
   const subCategory = watch('subCategory');
-  const description = watch('description');
+
+  const needsTranslation = !!(category && subCategory);
+
+  const focusFirstEmptyField = () => {
+    const values = getValues();
+    const focusable = new Set<string>(['title', 'placeName', 'address', 'price', 'description']);
+
+    const checks: [keyof PostFormValues, boolean][] = [
+      ['title', !values.title.trim()],
+      ['content', !values.content.trim()],
+      ['thumbnail', !values.thumbnail],
+      ['category', !values.category],
+      ['subCategory', !values.subCategory],
+    ];
+
+    if (formType === 'visit') {
+      checks.push(
+        ['placeName', !values.placeName.trim()],
+        ['address', !values.address.trim()],
+        ['price', !values.price.trim()],
+      );
+    }
+
+    checks.push(['description', !values.description.trim()]);
+
+    for (const [name, isEmpty] of checks) {
+      if (!isEmpty) continue;
+
+      const el = focusable.has(name)
+        ? document.querySelector<HTMLElement>(`[name="${name}"]`)
+        : document.getElementById(`field-${name}`);
+
+      el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+      if (focusable.has(name)) {
+        setTimeout(() => setFocus(name), 300);
+      }
+      break;
+    }
+  };
 
   const handleFormTypeChange = (value: PostFormType) => {
     setValue('formType', value);
@@ -76,6 +119,7 @@ export default function NewPostPage() {
     setValue('subCategory', '', { shouldValidate: true });
     setIsTranslated(false);
     setTranslationResults([]);
+    setTranslationError(false);
   };
 
   const handleGenerateSummary = async () => {
@@ -126,14 +170,41 @@ export default function NewPostPage() {
     }
   };
 
+  const handleTranslateClick = async () => {
+    if (isExtracting) return;
+
+    const valid = await trigger();
+    if (!valid) {
+      focusFirstEmptyField();
+      return;
+    }
+
+    handleTranslationStart();
+  };
+
+  const handleSubmitClick = async () => {
+    setTranslationError(false);
+
+    const valid = await trigger();
+    if (!valid) {
+      focusFirstEmptyField();
+      return;
+    }
+
+    if (needsTranslation && !isTranslated) {
+      setTranslationError(true);
+      return;
+    }
+
+    // TODO: 작성 완료 처리
+  };
+
   const handleTranslationComplete = (results: TranslationResult[]) => {
     setTranslationResults(results);
     setIsTranslated(true);
     setIsSheetOpen(false);
+    setTranslationError(false);
   };
-
-  const needsTranslation = !!(category && subCategory);
-  const isSubmitDisabled = !isValid || (needsTranslation && !isTranslated);
 
   return (
     <>
@@ -169,7 +240,7 @@ export default function NewPostPage() {
               )}
             />
           </div>
-          <div>
+          <div id="field-thumbnail">
             <label className="mb-1 block text-base font-bold">
               썸네일 <span className="text-primary-600">*</span>
             </label>
@@ -183,10 +254,13 @@ export default function NewPostPage() {
                 />
               )}
             />
+            {errors.thumbnail && (
+              <p className="mt-1 text-[14px] text-red-500">{errors.thumbnail.message}</p>
+            )}
           </div>
         </div>
 
-        <div className="mt-8">
+        <div id="field-content" className="mt-8">
           <label className="mb-1 block text-base font-bold">
             본문 <span className="text-primary-600">*</span>
           </label>
@@ -208,14 +282,20 @@ export default function NewPostPage() {
                       {title.length}/{TITLE_MAX_LENGTH}
                     </span>
                   </div>
+                  {errors.title && (
+                    <p className="mt-1 text-[14px] text-red-500">{errors.title.message}</p>
+                  )}
                 </div>
                 <Separator />
               </TiptapEditorContainer>
             )}
           />
+          {errors.content && (
+            <p className="mt-1 text-[14px] text-red-500">{errors.content.message}</p>
+          )}
         </div>
 
-        <div className="mt-8">
+        <div id="field-category" className="mt-8">
           <label className="mb-1 block text-base font-bold">
             카테고리 <span className="text-primary-600">*</span>
           </label>
@@ -225,9 +305,14 @@ export default function NewPostPage() {
             onCategoryChange={handleCategoryChange}
             onSubCategoryChange={(value) => setValue('subCategory', value, { shouldValidate: true })}
           />
+          {(errors.category || errors.subCategory) && (
+            <p className="mt-1 text-[14px] text-red-500">
+              {errors.category?.message || errors.subCategory?.message}
+            </p>
+          )}
         </div>
 
-        {formType === 'visit' && <VisitFields register={register} />}
+        {formType === 'visit' && <VisitFields register={register} errors={errors} />}
 
         <div className="mt-8">
           <div className="mb-1 flex items-center justify-between">
@@ -260,51 +345,60 @@ export default function NewPostPage() {
                 ref={field.ref}
                 placeholder="3줄 요약을 입력해주세요."
                 rows={3}
-                className="w-full resize-none border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none placeholder:text-muted-foreground"
+                className={`w-full resize-none border ${errors.description ? 'border-red-500' : 'border-input'} bg-transparent px-3 py-2 text-sm shadow-xs outline-none placeholder:text-muted-foreground`}
               />
             )}
           />
+          {errors.description && (
+            <p className="mt-1 text-[14px] text-red-500">{errors.description.message}</p>
+          )}
         </div>
 
-        <div className="mt-10 flex items-center justify-end gap-3">
-          {needsTranslation && !isTranslated && flaggedTerms.length === 0 && (
+        <div className="mt-10">
+          <div className="flex items-center justify-end gap-3">
+            {needsTranslation && !isTranslated && flaggedTerms.length === 0 && (
+              <button
+                type="button"
+                onClick={handleTranslateClick}
+                className="inline-flex items-center gap-1.5 h-10 border border-input px-5 text-sm font-semibold shadow-xs transition-colors hover:bg-accent"
+              >
+                번역본 생성하기
+                {isExtracting && (
+                  <LoaderIcon className="size-4 animate-spin" />
+                )}
+              </button>
+            )}
+            {needsTranslation && !isTranslated && flaggedTerms.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setIsSheetOpen(true)}
+                className="h-10 border border-input px-5 text-sm font-semibold shadow-xs transition-colors hover:bg-accent"
+              >
+                용어 검토 계속하기
+              </button>
+            )}
+            {isTranslated && (
+              <button
+                type="button"
+                onClick={() => setIsPreviewOpen(true)}
+                className="h-10 border border-input px-5 text-sm font-semibold shadow-xs transition-colors hover:bg-accent"
+              >
+                번역본 확인하기
+              </button>
+            )}
             <button
               type="button"
-              onClick={handleTranslationStart}
-              disabled={isExtracting || !description.trim()}
-              className="inline-flex items-center gap-1.5 h-10 border border-input px-5 text-sm font-semibold shadow-xs transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
+              onClick={handleSubmitClick}
+              className="h-10 bg-primary-600 px-5 text-sm font-bold text-white shadow-xs transition-colors hover:bg-primary-700"
             >
-              번역본 생성하기
-              {isExtracting && (
-                <LoaderIcon className="size-4 animate-spin" />
-              )}
+              작성 완료
             </button>
+          </div>
+          {translationError && (
+            <p className="mt-2 text-end text-[14px] text-red-500">
+              번역본 생성이 먼저 필요합니다.
+            </p>
           )}
-          {needsTranslation && !isTranslated && flaggedTerms.length > 0 && (
-            <button
-              type="button"
-              onClick={() => setIsSheetOpen(true)}
-              className="h-10 border border-input px-5 text-sm font-semibold shadow-xs transition-colors hover:bg-accent"
-            >
-              용어 검토 계속하기
-            </button>
-          )}
-          {isTranslated && (
-            <button
-              type="button"
-              onClick={() => setIsPreviewOpen(true)}
-              className="h-10 border border-input px-5 text-sm font-semibold shadow-xs transition-colors hover:bg-accent"
-            >
-              번역본 확인하기
-            </button>
-          )}
-          <button
-            type="button"
-            disabled={isSubmitDisabled}
-            className="h-10 bg-primary-600 px-5 text-sm font-bold text-white shadow-xs transition-colors hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            작성 완료
-          </button>
         </div>
       </div>
 
