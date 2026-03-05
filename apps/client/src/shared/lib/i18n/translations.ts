@@ -38,6 +38,8 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'place.name': '장소',
     'place.address': '주소',
     'place.price': '가격대',
+    'place.currency': '원',
+    'place.targetCurrency': '',
     'place.copyToast': '',
   },
   en: {
@@ -76,6 +78,8 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'place.name': 'Place',
     'place.address': 'Address',
     'place.price': 'Price',
+    'place.currency': 'won',
+    'place.targetCurrency': 'USD',
     'place.copyToast': 'Copied in original Korean for accurate location search.\nIf you need to copy in English, please copy it manually.',
   },
   ja: {
@@ -114,6 +118,8 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'place.name': '場所',
     'place.address': '住所',
     'place.price': '価格帯',
+    'place.currency': 'ウォン',
+    'place.targetCurrency': 'JPY',
     'place.copyToast': '正確な位置検索のため韓国語の原文でコピーされました。\n日本語でコピーが必要な場合は、直接コピーしてください。',
   },
   'zh-CN': {
@@ -152,6 +158,8 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'place.name': '地点',
     'place.address': '地址',
     'place.price': '价格',
+    'place.currency': '韩元',
+    'place.targetCurrency': 'CNY',
     'place.copyToast': '为了准确搜索位置，已复制韩语原文。\n如需复制中文，请手动复制。',
   },
   'zh-TW': {
@@ -190,6 +198,8 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'place.name': '地點',
     'place.address': '地址',
     'place.price': '價格',
+    'place.currency': '韓元',
+    'place.targetCurrency': 'TWD',
     'place.copyToast': '為了準確搜尋位置，已複製韓語原文。\n如需複製中文，請手動複製。',
   },
   id: {
@@ -228,6 +238,8 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'place.name': 'Tempat',
     'place.address': 'Alamat',
     'place.price': 'Harga',
+    'place.currency': 'won',
+    'place.targetCurrency': 'IDR',
     'place.copyToast': 'Disalin dalam bahasa Korea asli untuk pencarian lokasi yang akurat.\nJika perlu menyalin dalam bahasa Indonesia, silakan salin secara manual.',
   },
   vi: {
@@ -266,6 +278,8 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'place.name': 'Địa điểm',
     'place.address': 'Địa chỉ',
     'place.price': 'Giá',
+    'place.currency': 'won',
+    'place.targetCurrency': 'VND',
     'place.copyToast': 'Đã sao chép bản gốc tiếng Hàn để tìm kiếm vị trí chính xác.\nNếu cần sao chép bằng tiếng Việt, vui lòng sao chép thủ công.',
   },
   th: {
@@ -304,6 +318,8 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'place.name': 'สถานที่',
     'place.address': 'ที่อยู่',
     'place.price': 'ราคา',
+    'place.currency': 'วอน',
+    'place.targetCurrency': 'THB',
     'place.copyToast': 'คัดลอกต้นฉบับภาษาเกาหลีเพื่อค้นหาตำแหน่งได้แม่นยำ\nหากต้องการคัดลอกเป็นภาษาไทย กรุณาคัดลอกด้วยตนเอง',
   },
 };

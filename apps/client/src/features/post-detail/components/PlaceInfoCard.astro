@@ -11,7 +11,7 @@ interface Props {
   translatedPlaceName?: string | null;
   address: string;
   translatedAddress?: string | null;
-  pricePrefix: string | null;
+  pricePrefix?: string | null;
   price: number | null;
   description: string;
   translatedDescription?: string | null;
@@ -32,8 +32,13 @@ const {
   locale,
 } = Astro.props;
 
+const currencyUnit = t("place.currency", locale);
 const priceLabel = price != null
-  ? `${pricePrefix ?? ''}${price.toLocaleString()}원`
+  ? `${pricePrefix ?? ''}${price.toLocaleString()}${currencyUnit}`
+  : null;
+const targetCurrency = t("place.targetCurrency", locale);
+const exchangeUrl = price != null && targetCurrency
+  ? `https://www.google.com/search?q=${price}+KRW+to+${targetCurrency}`
   : null;
 
 const summaryLabel = t("post.summary", locale);
@@ -95,7 +100,23 @@ const copyToast = locale !== 'ko' ? t("place.copyToast", locale) : undefined;
     {priceLabel && (
       <div class="flex items-baseline gap-3">
         <dt class="shrink-0 w-20 text-gray-500 font-medium">{t("place.price", locale)}</dt>
-        <dd class="text-gray-900">{priceLabel}</dd>
+        <dd class="flex items-baseline gap-1.5">
+          <span class="text-gray-900">{priceLabel}</span>
+          {exchangeUrl && (
+            <a
+              href={exchangeUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="shrink-0 translate-y-px text-gray-400 hover:text-gray-600 transition-colors"
+              aria-label="Currency converter"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M7 7h10v10"></path>
+                <path d="M7 17 17 7"></path>
+              </svg>
+            </a>
+          )}
+        </dd>
       </div>
     )}
     {summaryLines.length > 0 && (
