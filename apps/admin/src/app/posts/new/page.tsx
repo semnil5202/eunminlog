@@ -62,6 +62,7 @@ export default function NewPostPage() {
 
   const formType = watch('formType');
   const title = watch('title');
+  const description = watch('description');
   const category = watch('category');
   const subCategory = watch('subCategory');
 
@@ -141,7 +142,7 @@ export default function NewPostPage() {
     setIsExtracting(true);
 
     try {
-      const { title: t, content: c, placeName: pn, address: addr } = getValues();
+      const { title: t, content: c, description: d, placeName: pn, address: addr } = getValues();
 
       const terms = await extractFlaggedTerms(
         c,
@@ -153,6 +154,7 @@ export default function NewPostPage() {
         const results = await translatePost({
           title: t,
           content: c,
+          description: d,
           placeName: pn || undefined,
           address: addr || undefined,
           confirmedTerms: [],
@@ -204,6 +206,7 @@ export default function NewPostPage() {
     setIsTranslated(true);
     setIsSheetOpen(false);
     setTranslationError(false);
+    setTimeout(() => setIsPreviewOpen(true), 800);
   };
 
   return (
@@ -322,7 +325,7 @@ export default function NewPostPage() {
             <button
               type="button"
               onClick={handleGenerateSummary}
-              disabled={isSummarized || isSummarizing}
+              disabled={isSummarized || isSummarizing || !!description.trim()}
               className="inline-flex items-center gap-1.5 border border-input px-3 py-1 text-xs font-semibold shadow-xs transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isSummarized ? '요약 완료' : '요약 생성'}
@@ -409,8 +412,9 @@ export default function NewPostPage() {
         initialTerms={flaggedTerms}
         title={title}
         content={watch('content')}
-        placeName={watch('placeName') || undefined}
-        address={watch('address') || undefined}
+        description={description}
+        placeName={watch('placeName')}
+        address={watch('address')}
       />
 
       <TranslationPreviewSheet
