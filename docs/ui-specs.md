@@ -249,7 +249,7 @@
 #### `PlaceInfoCard.astro`
 
 - **위치**: `features/post-detail/components/PlaceInfoCard.astro`
-- Props: `categoryLabel`, `subCategoryLabel`, `placeName`, `translatedPlaceName?`, `address?`, `translatedAddress?`, `priceMin?`, `priceMax?`, `description?`, `locale`
+- Props: `categoryLabel`, `subCategoryLabel`, `placeName`, `translatedPlaceName?`, `address`, `translatedAddress?`, `pricePrefix`, `price`, `description`, `translatedDescription?`, `locale`
 - Schema.org `LocalBusiness` 마이크로데이터 포함
 - `border-radius` 없음 (`bg-gray-50 border border-gray-200 p-5 mb-6`)
 - `<dl>` 기반 키-값 레이아웃 (`w-20` dt 라벨 폭): 카테고리, 장소, 주소, 가격대, 3줄 요약

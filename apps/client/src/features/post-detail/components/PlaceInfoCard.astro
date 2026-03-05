@@ -9,11 +9,12 @@ interface Props {
   subCategoryLabel: string;
   placeName: string;
   translatedPlaceName?: string | null;
-  address?: string;
+  address: string;
   translatedAddress?: string | null;
-  priceMin?: number | null;
-  priceMax?: number | null;
-  description?: string;
+  pricePrefix: string | null;
+  price: number | null;
+  description: string;
+  translatedDescription?: string | null;
   locale: Locale;
 }
 
@@ -24,22 +25,20 @@ const {
   translatedPlaceName,
   address,
   translatedAddress,
-  priceMin,
-  priceMax,
+  pricePrefix,
+  price,
   description,
+  translatedDescription,
   locale,
 } = Astro.props;
 
-const priceLabel = priceMin != null && priceMax != null
-  ? `${priceMin.toLocaleString()}원 ~ ${priceMax.toLocaleString()}원`
-  : priceMin != null
-    ? `${priceMin.toLocaleString()}원 ~`
-    : priceMax != null
-      ? `~ ${priceMax.toLocaleString()}원`
-      : null;
+const priceLabel = price != null
+  ? `${pricePrefix ?? ''}${price.toLocaleString()}원`
+  : null;
 
 const summaryLabel = t("post.summary", locale);
-const summaryLines = description ? description.split('\n').filter(Boolean) : [];
+const summaryText = translatedDescription ?? description;
+const summaryLines = summaryText ? summaryText.split('\n').filter(Boolean) : [];
 const copyToast = locale !== 'ko' ? t("place.copyToast", locale) : undefined;
 ---
 

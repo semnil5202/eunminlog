@@ -36,8 +36,8 @@ Supabase Auth 클라이언트 SDK 사용 (Server Action 아님).
   rating?: number | null;                    // 1.0~5.0
   place_name?: string | null;
   address?: string | null;
-  price_min?: number | null;                 // 원 단위
-  price_max?: number | null;
+  price_prefix?: string | null;              // 가격 접두어 (예: "메인메뉴 평균: ")
+  price?: number | null;                     // 원 단위
 }
 ```
 

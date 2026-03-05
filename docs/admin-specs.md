@@ -201,7 +201,7 @@ features/auth/
 **체험 방문 전용 필드** (`visit` 선택 시에만 표시):
 - 장소명 (`place_name`)
 - 주소 (`address`)
-- 가격대 (`price_min`, `price_max`)
+- 가격 접두어 (`price_prefix`) + 가격 (`price`)
 
 **타입 정의**: `PostFormType = 'visit' | 'product-review'` (`shared/types/post.ts`)
 **상수**: `FORM_TYPE_OPTIONS` (`features/post-editor/constants/category.ts`)
@@ -241,7 +241,7 @@ features/auth/
 | PE-8  | is_multilingual 토글 (기본값 `true`)                                                  | P0       | 미구현    |
 | PE-9  | is_sponsored / is_recommended 토글                                                    | P0       | 미구현    |
 | PE-10 | rating 입력 (1.0-5.0, 0.5 단위)                                                       | P1       | 미구현    |
-| PE-11 | place_name, address, price_min, price_max 입력 (체험 방문 전용)                       | P1       | 구현 완료 |
+| PE-11 | place_name, address, price_prefix, price 입력 (체험 방문 전용)                        | P1       | 구현 완료 |
 | PE-12 | 3줄 요약 AI 생성 (Server Action, GPT-4o)                                              | P0       | Mock 구현 |
 | PE-13 | 번역 트리거 (에디터 내 번역본 생성/확인)                                              | P0       | 구현 완료 |
 | PE-14 | 저장 시 빌드 트리거 옵션                                                              | P1       | 미구현    |
@@ -264,8 +264,8 @@ features/auth/
 | 평점         | number input  | N    | `rating`          | 공통           | 1.0-5.0, 0.5 단위 (미구현)                   |
 | 장소명       | text input    | N    | `place_name`      | visit 전용     | Schema.org `itemReviewed`                    |
 | 주소         | text input    | N    | `address`         | visit 전용     | Schema.org                                   |
-| 최소 가격    | number input  | N    | `price_min`       | visit 전용     | 만원 단위                                    |
-| 최대 가격    | number input  | N    | `price_max`       | visit 전용     | 만원 단위                                    |
+| 가격 접두어  | text input    | N    | `price_prefix`    | visit 전용     | 예: "메인메뉴 평균: ", "1인 코스: "          |
+| 가격         | number input  | N    | `price`           | visit 전용     | 원 단위. 접두어 + 가격 조합으로 표시         |
 
 #### 카테고리-서브카테고리 매핑
 

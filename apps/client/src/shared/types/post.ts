@@ -16,8 +16,8 @@ export type Post = {
   rating: number;
   place_name: string;
   address: string;
-  price_min: number | null;
-  price_max: number | null;
+  price_prefix: string | null;
+  price: number | null;
   created_at: string;
   updated_at: string;
 };
