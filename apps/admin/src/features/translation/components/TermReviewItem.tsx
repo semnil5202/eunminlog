@@ -15,22 +15,25 @@ export function TermReviewItem({ term, confirmedValue, onChange }: TermReviewIte
       </div>
       <div>
         <span className="text-xs text-muted-foreground">추천 번역</span>
-        {term.suggestions.length > 0 ? (
-          <div className="mt-1 flex flex-wrap gap-1.5">
-            {term.suggestions.map((suggestion) => (
-              <button
-                key={suggestion}
-                type="button"
-                onClick={() => onChange(suggestion)}
-                className="border border-input px-2 py-0.5 text-xs transition-colors hover:bg-accent"
-              >
-                {suggestion}
-              </button>
-            ))}
-          </div>
-        ) : (
-          <p className="mt-1 text-xs text-muted-foreground">추천 용어가 없어요.</p>
-        )}
+        <div className="mt-1 flex flex-wrap gap-1.5">
+          <button
+            type="button"
+            onClick={() => onChange(term.original)}
+            className="border border-primary-400 bg-primary-50 px-2 py-0.5 text-xs transition-colors hover:bg-primary-100"
+          >
+            {term.original}
+          </button>
+          {term.suggestions.map((suggestion) => (
+            <button
+              key={suggestion}
+              type="button"
+              onClick={() => onChange(suggestion)}
+              className="border border-input px-2 py-0.5 text-xs transition-colors hover:bg-accent"
+            >
+              {suggestion}
+            </button>
+          ))}
+        </div>
       </div>
       <div>
         <span className="text-xs text-muted-foreground">확정 번역</span>

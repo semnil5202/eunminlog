@@ -93,10 +93,10 @@ function buildTranslateSystemPrompt(locale: TranslationLocale): string {
 
 번역 규칙:
 1. 본문(content)은 HTML 형식입니다. 아래 HTML 태그는 절대 번역하거나 제거하지 마세요. 태그 구조와 속성을 그대로 유지하고 텍스트만 번역해주세요.
-   보존 필수 태그: <p>, <br>, <strong>, <em>, <s>, <u>, <a>, <h2>, <h3>, <h4>, <h5>, <h6>, <ul>, <ol>, <li>, <blockquote>, <hr>, <img>, <table>, <thead>, <tbody>, <tr>, <th>, <td>, <div>, <span>
-   [중요] <img> 태그는 src, style 등 모든 속성값을 원본 그대로 유지해야 합니다. 속성값의 따옴표를 이스케이프(\\"나 &quot;)하거나 속성 구조를 변형하지 마세요. 입력된 <img> 태그를 수정 없이 그대로 출력하세요.
+   보존 필수 태그: <p>, <br>, <strong>, <em>, <s>, <u>, <a>, <h2>, <h3>, <h4>, <h5>, <h6>, <ul>, <ol>, <li>, <blockquote>, <hr>, <table>, <thead>, <tbody>, <tr>, <th>, <td>, <div>, <span>
+   {{IMG_0}}, {{IMG_1}} 등의 이미지 플레이스홀더는 절대 수정하지 말고 원본 그대로 출력하세요.
 2. 3줄 요약(description)은 plain text입니다. 줄바꿈(\\n)을 유지하고 텍스트만 번역해주세요.
-3. 확정 번역 용어가 제공되면 반드시 해당 번역을 사용해주세요.
+3. 확정 번역 용어가 제공됩니다. 영어(en) 번역 시에는 확정된 번역을 그대로 사용하세요. 다른 언어에서는 확정 용어를 참고하되, 해당 언어에 자연스러운 표현으로 번역해주세요. 원어(영어)를 그대로 유지하는 것이 자연스러운 경우(단위, 고유명사 등)에는 원어(영어)를 유지해도 됩니다.
 4. 장소명(place_name)과 주소(address)가 제공되면 ${placeRule}해주세요.
 5. 블로그의 친근한 어조를 유지하되, ${label}의 자연스러운 표현을 사용해주세요.
 6. 한국 고유 문화 용어는 의역하되 괄호 안에 원어를 병기할 수 있습니다.
@@ -119,6 +119,20 @@ function parseJsonResponse(raw: string): unknown {
   }
 }
 
+function replaceImgTags(html: string): { cleaned: string; imgs: string[] } {
+  const imgs: string[] = [];
+  const cleaned = html.replace(/<img[^>]*>/gi, (match) => {
+    const index = imgs.length;
+    imgs.push(match);
+    return `{{IMG_${index}}}`;
+  });
+  return { cleaned, imgs };
+}
+
+function restoreImgTags(html: string, imgs: string[]): string {
+  return html.replace(/\{\{IMG_(\d+)\}\}/g, (_, index) => imgs[Number(index)] ?? '');
+}
+
 export type TranslateParams = {
   title: string;
   content: string;
@@ -134,9 +148,20 @@ async function fetchTranslateSingle(
   locale: TranslationLocale,
   params: TranslateParams,
 ): Promise<TranslationResult> {
-  const { title, content, description, placeName, address, confirmedTerms, imageAlts, thumbnailAlt } = params;
+  const {
+    title,
+    content,
+    description,
+    placeName,
+    address,
+    confirmedTerms,
+    imageAlts,
+    thumbnailAlt,
+  } = params;
 
-  let userPrompt = `제목: ${title}\n\n본문:\n${content}\n\n3줄 요약:\n${description}`;
+  const { cleaned: contentWithPlaceholders, imgs } = replaceImgTags(content);
+
+  let userPrompt = `제목: ${title}\n\n본문:\n${contentWithPlaceholders}\n\n3줄 요약:\n${description}`;
   if (placeName) userPrompt += `\n\n장소명: ${placeName}`;
   if (address) userPrompt += `\n주소: ${address}`;
 
@@ -184,7 +209,7 @@ async function fetchTranslateSingle(
   return {
     locale,
     title: (parsed.title as string) ?? '',
-    content: (parsed.content as string) ?? '',
+    content: restoreImgTags((parsed.content as string) ?? '', imgs),
     description: (parsed.description as string) ?? '',
     place_name: (parsed.place_name as string) ?? '',
     address: (parsed.address as string) ?? '',
