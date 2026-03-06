@@ -9,7 +9,7 @@ import { DEFAULT_LOCALE } from "@/shared/types/common";
 import LanguageSelector from "@/shared/components/navigation/LanguageSelector.astro";
 import { getActiveSegments } from "@/shared/lib/navigation";
 import { getMultilingualCategories } from "@/features/post-feed/api/posts";
-import { SITE_NAME_KO } from "@eunminlog/config/site";
+import { SITE_NAME_KO, SITE_NAME_EN } from "@eunminlog/config/site";
 
 interface Props {
   locale: Locale;
@@ -38,7 +38,7 @@ const { activeCategory } = getActiveSegments(Astro.url.pathname, locale);
       class="shrink-0 text-title1 font-bold text-primary-600 tracking-tight hover:text-primary-700 transition-colors duration-150"
       aria-label={`${SITE_NAME_KO} 홈으로 이동`}
     >
-      {SITE_NAME_KO}
+      {locale === DEFAULT_LOCALE ? SITE_NAME_KO : SITE_NAME_EN}
     </a>
 
     <nav aria-label="Main navigation" class="flex items-center gap-1">
