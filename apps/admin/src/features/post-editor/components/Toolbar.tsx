@@ -4,6 +4,7 @@ import {
   FontStyles,
   History,
   List,
+  TableToolbar,
   TextAlign,
   TiptapLink,
   UploadImage,
@@ -27,6 +28,8 @@ export function Toolbar({ editor }: ToolbarProps) {
         <TextAlign editor={editor} />
         <VerticalDivider />
         <UploadImage editor={editor} />
+        <VerticalDivider />
+        <TableToolbar editor={editor} />
       </div>
       <History editor={editor} />
     </div>

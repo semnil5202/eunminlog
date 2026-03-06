@@ -1,6 +1,10 @@
 import BulletList from '@tiptap/extension-bullet-list';
 import Heading, { type Level } from '@tiptap/extension-heading';
 import Link from '@tiptap/extension-link';
+import { Table } from '@tiptap/extension-table';
+import { TableCell } from '@tiptap/extension-table-cell';
+import { TableHeader } from '@tiptap/extension-table-header';
+import { TableRow } from '@tiptap/extension-table-row';
 import TextAlign from '@tiptap/extension-text-align';
 import Underline from '@tiptap/extension-underline';
 import StarterKit from '@tiptap/starter-kit';
@@ -111,6 +115,30 @@ const CustomTextAlign = TextAlign.configure({
   types: ['heading', 'paragraph'],
 });
 
+const CustomTable = Table.configure({
+  resizable: true,
+  HTMLAttributes: {
+    style: 'border-collapse: collapse; width: 100%; margin: 16px 0;',
+  },
+});
+
+const CustomTableRow = TableRow.configure({
+  HTMLAttributes: {},
+});
+
+const CustomTableHeader = TableHeader.configure({
+  HTMLAttributes: {
+    style:
+      'border: 1px solid #d1d5db; padding: 8px 12px; background-color: #f3f4f6; font-weight: 600; text-align: left;',
+  },
+});
+
+const CustomTableCell = TableCell.configure({
+  HTMLAttributes: {
+    style: 'border: 1px solid #d1d5db; padding: 8px 12px;',
+  },
+});
+
 export const tiptapExtensions = [
   CustomStarterKit,
   CustomBulletList,
@@ -120,4 +148,8 @@ export const tiptapExtensions = [
   CustomTextAlign,
   CustomResizableImage,
   CustomImageCarousel,
+  CustomTable,
+  CustomTableRow,
+  CustomTableHeader,
+  CustomTableCell,
 ];
