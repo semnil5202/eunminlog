@@ -79,7 +79,7 @@
     );
     if (img) {
       e.preventDefault();
-      open(img.src, img.alt || "");
+      open(img.dataset.full || img.src, img.alt || "");
     }
   });
 </script>

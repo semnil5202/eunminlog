@@ -5,6 +5,7 @@ import type { Locale } from "@/shared/types/common";
 import { getCategoryLabel } from "@/shared/lib/i18n/categories";
 import { getLocalePath } from "@/shared/lib/i18n/locales";
 import SponsoredBadge from "@/shared/components/ui/SponsoredBadge.astro";
+import { optimizedUrl } from "@/shared/lib/image";
 
 interface Props {
   post: LocalizedPost;
@@ -39,7 +40,7 @@ const dateStr = new Date(post.created_at).toLocaleDateString(locale, {
   <a href={localizedHref} class="block">
     <div class="relative w-full aspect-7/3 overflow-hidden bg-gray-100">
       <img
-        src={post.thumbnail}
+        src={optimizedUrl(post.thumbnail)}
         alt={post.thumbnail_alt ?? post.title}
         width="640"
         height="180"

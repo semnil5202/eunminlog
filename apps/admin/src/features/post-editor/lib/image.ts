@@ -18,24 +18,39 @@ function drawWatermark(ctx: CanvasRenderingContext2D, width: number, height: num
   ctx.restore();
 }
 
-export function toWebP(file: File): Promise<Blob> {
+type ToWebPOptions = {
+  maxWidth?: number;
+  quality?: number;
+};
+
+export function toWebP(file: File, options: ToWebPOptions = {}): Promise<Blob> {
+  const { maxWidth, quality = 1 } = options;
+
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => {
+      let w = img.naturalWidth;
+      let h = img.naturalHeight;
+
+      if (maxWidth && w > maxWidth) {
+        h = Math.round(h * (maxWidth / w));
+        w = maxWidth;
+      }
+
       const canvas = document.createElement('canvas');
-      canvas.width = img.naturalWidth;
-      canvas.height = img.naturalHeight;
+      canvas.width = w;
+      canvas.height = h;
       const ctx = canvas.getContext('2d');
       if (!ctx) {
         reject(new Error('Canvas context failed'));
         return;
       }
-      ctx.drawImage(img, 0, 0);
-      drawWatermark(ctx, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, w, h);
+      drawWatermark(ctx, w, h);
       canvas.toBlob(
         (blob) => (blob ? resolve(blob) : reject(new Error('toBlob failed'))),
         'image/webp',
-        1,
+        quality,
       );
       URL.revokeObjectURL(img.src);
     };
