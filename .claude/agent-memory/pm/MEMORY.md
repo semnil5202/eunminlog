@@ -10,7 +10,7 @@
 - Admin auth: Supabase Auth email/password (no social login, no signup flow, 1-2 users)
 - Editor: Tiptap (HTML output, not Markdown)
 - CSR-first: Server Action only for presigned URL, Supabase writes, GitHub token, GPT API calls
-- GPT-5 Nano translation+summary+term extraction: Server Action calls (not CSR). `OPENAI_API_KEY` server-only env. `shared/lib/openai.ts` shared client. temperature not supported (default 1). `response_format: { type: 'json_object' }`. 7 locales parallel via `Promise.allSettled`. Partial failure allowed (`TranslationResult.failed?: boolean`). `retrySingleLocale` for individual locale retry.
+- GPT-5 Nano translation+summary+term extraction: Edge Runtime API Route + streaming (Server Action에서 전환, 2026-03-06). `OPENAI_API_KEY` server-only env. `response_format: { type: 'json_object' }`. 7 locales 브라우저 병렬 fetch via `Promise.allSettled`. Partial failure allowed (`TranslationResult.failed?: boolean`). 요약은 실시간 스트리밍 (타이핑 효과). API Routes: `/api/summary`, `/api/slug`, `/api/extract-terms`, `/api/translate`.
 - Media gallery: Tiptap manages image insert/delete/order, Client renders consecutive images as CSS snap gallery (B approach)
 - Vercel Hobby plan is sufficient for admin
 - Content format: HTML (Tiptap) -- database.md already updated to "HTML"
