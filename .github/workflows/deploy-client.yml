@@ -59,8 +59,19 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-northeast-2
 
-      - name: Deploy to S3
-        run: aws s3 sync apps/client/dist/ s3://${{ env.S3_BUCKET }} --delete
+      - name: Deploy to S3 (HTML — no-cache)
+        run: |
+          aws s3 sync apps/client/dist/ s3://${{ env.S3_BUCKET }} \
+            --exclude "*" --include "*.html" \
+            --cache-control "no-cache" \
+            --delete
+
+      - name: Deploy to S3 (static assets — long cache)
+        run: |
+          aws s3 sync apps/client/dist/ s3://${{ env.S3_BUCKET }} \
+            --exclude "*.html" \
+            --cache-control "public, max-age=31536000, immutable" \
+            --delete
 
       - name: Invalidate CloudFront cache
         run: |
