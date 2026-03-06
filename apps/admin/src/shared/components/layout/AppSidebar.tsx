@@ -46,7 +46,7 @@ const NAV_ITEMS: NavGroup[] = [
     label: '게시글 관리',
     icon: FileEdit,
     children: [
-      { label: '카테고리 생성/수정/삭제', href: null },
+      { label: '카테고리 생성/수정/삭제', href: '/categories' },
       { label: '게시글 작성/수정/삭제', href: '/posts' },
       { label: '댓글 수정/삭제', href: null },
     ],
