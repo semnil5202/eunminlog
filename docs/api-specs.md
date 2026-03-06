@@ -1,6 +1,6 @@
 # Admin API Specs
 
-> Last updated: 2026-03-06
+> Last updated: 2026-03-06 (prev_slug 자동 저장 로직 추가)
 
 Admin 앱에서 필요한 API 엔드포인트 목록. Server Action 기반으로 구현하며, Supabase service role 키를 사용한다.
 
@@ -73,9 +73,25 @@ RETURNING id;
 **DB:**
 
 ```sql
+-- slug가 변경된 경우: prev_slug에 기존 slug 저장
+UPDATE posts
+SET slug = :newSlug,
+    prev_slug = :oldSlug,
+    title = :title, ...,
+    updated_at = now()
+WHERE id = :postId;
+
+-- slug가 변경되지 않은 경우: prev_slug 유지 (변경하지 않음)
 UPDATE posts SET title = :title, ..., updated_at = now()
 WHERE id = :postId;
 ```
+
+**prev_slug 자동 저장 규칙:**
+
+- slug 변경 감지: 현재 DB의 slug와 입력된 slug를 비교
+- 변경된 경우에만 기존 slug를 `prev_slug`에 저장
+- 이력은 1개만 보관 (이전 `prev_slug` 값은 덮어씀)
+- 상세: [`docs/redirect-specs.md`](redirect-specs.md)
 
 ---
 
@@ -644,9 +660,23 @@ SELECT * FROM categories WHERE id = :categoryId;
 **DB:**
 
 ```sql
+-- slug가 변경된 경우: prev_slug에 기존 slug 저장 + posts 참조값 업데이트
 UPDATE categories
-SET slug = COALESCE(:slug, slug),
+SET slug = :newSlug,
+    prev_slug = :oldSlug,
     name = COALESCE(:name, name),
+    sort_order = COALESCE(:sort_order, sort_order),
+    updated_at = now()
+WHERE id = :categoryId;
+
+-- posts 참조값 업데이트 (대분류인 경우)
+UPDATE posts SET category = :newSlug WHERE category = :oldSlug;
+-- posts 참조값 업데이트 (소분류인 경우)
+UPDATE posts SET sub_category = :newSlug WHERE sub_category = :oldSlug;
+
+-- slug가 변경되지 않은 경우: prev_slug 유지
+UPDATE categories
+SET name = COALESCE(:name, name),
     sort_order = COALESCE(:sort_order, sort_order),
     updated_at = now()
 WHERE id = :categoryId;
@@ -658,6 +688,7 @@ WHERE id = :categoryId;
 - `is_multilingual`은 수정 불가 (한 번 설정 후 변경 불가 -- 추후 지원 예정)
 - `slug` 수정 시 UNIQUE 제약 위반 검사 필요 (DB 레벨 + application 레벨)
 - `slug` 수정 시 해당 카테고리를 참조하는 `posts.category` 또는 `posts.sub_category` 값도 함께 업데이트 필요 (application-level, FK 없으므로)
+- `slug` 수정 시 기존 slug를 `prev_slug`에 자동 저장 (301 리다이렉트용. 상세: [`docs/redirect-specs.md`](redirect-specs.md))
 
 ---
 

@@ -65,6 +65,34 @@
 - [ ] `+ 새 카테고리 생성` 버튼 (기능 미연결)
 - [ ] pageSize 100 고정 (페이지네이션 미사용)
 
+### 301 Redirect — Slug 변경 시 이전 URL 리다이렉트
+
+> 상세 스펙: [`docs/redirect-specs.md`](redirect-specs.md)
+
+**DB 마이그레이션:**
+
+- [ ] `posts` 테이블: `prev_slug` (text nullable) 컬럼 추가 (M-08)
+- [ ] `categories` 테이블: `prev_slug` (text nullable) 컬럼 추가 (M-09)
+
+**Admin — API:**
+
+- [ ] `updatePost` Server Action: slug 변경 감지 시 기존 slug를 `prev_slug`에 자동 저장
+- [ ] `updateCategory` Server Action: slug 변경 감지 시 기존 slug를 `prev_slug`에 자동 저장
+
+**Admin — UI:**
+
+- [ ] 게시글 수정 페이지 (`/posts/[id]/edit`): slug 편집 가능 + slug 변경 시 경고 모달
+- [ ] 카테고리 수정 페이지 (`/categories/[id]/edit`): CM-7 slug 변경 경고 모달 (기존 스펙)
+
+**인프라 — CF Function + 빌드 파이프라인:**
+
+- [ ] CF Function 템플릿 작성 (`infra/cf-functions/viewer-request.js.template`) — 기존 URI→index.html 매핑 + 리다이렉트 매핑 로직
+- [ ] 빌드 스크립트: Supabase에서 prev_slug NOT NULL인 데이터 조회 → 리다이렉트 매핑 JSON 생성 → CF Function 코드에 인라인 삽입
+- [ ] GitHub Actions: CF Function 업데이트 Step 추가 (update-function + publish-function)
+- [ ] IAM 정책 업데이트: `cloudfront:DescribeFunction`, `cloudfront:UpdateFunction`, `cloudfront:PublishFunction` 권한 추가
+- [ ] GitHub Secrets 등록: `PROD_CF_FUNCTION_NAME`, `DEV_CF_FUNCTION_NAME`
+- [ ] Supabase 빌드 타임 접속 정보 GitHub Secrets 등록 (리다이렉트 매핑 조회용)
+
 ### Phase 2 (미구현)
 
 - [ ] Supabase Auth 로그인/로그아웃 (email/password)

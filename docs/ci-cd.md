@@ -1,6 +1,6 @@
 # CI/CD Pipeline — GitHub Actions
 
-> Date: 2026-03-02
+> Date: 2026-03-02 (2026-03-06 리다이렉트 매핑 + CF Function 업데이트 추가)
 > Status: Draft (PM 작성, 승인 후 se가 구현)
 
 ## 1. Overview
@@ -114,9 +114,11 @@ Job: deploy
   ├── Step 4: Install dependencies
   ├── Step 5: Set environment variables (branch-based)
   ├── Step 6: Build client
-  ├── Step 7: Configure AWS credentials
-  ├── Step 8: Deploy to S3
-  └── Step 9: Invalidate CloudFront cache
+  ├── Step 7: Generate redirect mappings + CF Function code    ← 리다이렉트
+  ├── Step 8: Configure AWS credentials
+  ├── Step 9: Deploy to S3
+  ├── Step 10: Update CloudFront Function                      ← 리다이렉트
+  └── Step 11: Invalidate CloudFront cache
 ```
 
 ### 5-3. 상세 설계
@@ -309,7 +311,74 @@ SSG 특성상 rollback은 단순하다:
 1. **Git revert + re-deploy**: 문제 커밋을 revert하고 push하면 자동으로 이전 상태로 재빌드.
 2. **S3 버전 관리**: S3 버킷에 버전 관리를 활성화하면 이전 파일 버전으로 복원 가능. (현재 미적용, 향후 검토)
 
-## 9. Checklist (구현 전 확인)
+## 9. 301 리다이렉트 매핑 + CF Function 업데이트
+
+> 상세 스펙: [`docs/redirect-specs.md`](redirect-specs.md)
+
+slug 변경 시 이전 URL → 새 URL 301 리다이렉트를 CloudFront Function에서 처리한다. 빌드 파이프라인에서 리다이렉트 매핑을 생성하고 CF Function 코드에 인라인 삽입한다.
+
+### 9-1. Step 7: Generate redirect mappings + CF Function code
+
+빌드 완료 후, S3 배포 전에 실행:
+
+1. Supabase에서 `prev_slug IS NOT NULL`인 posts, categories 조회
+2. 매핑 오브젝트 생성 (키 축약으로 크기 최소화)
+3. CF Function 템플릿(`infra/cf-functions/viewer-request.js.template`)에 매핑 데이터 인라인 삽입
+
+### 9-2. Step 10: Update CloudFront Function
+
+S3 배포 후, 캐시 무효화 전에 실행:
+
+```yaml
+- name: Update CloudFront Function
+  run: |
+    ETAG=$(aws cloudfront describe-function \
+      --name ${{ env.CF_FUNCTION_NAME }} \
+      --query 'ETag' --output text)
+    aws cloudfront update-function \
+      --name ${{ env.CF_FUNCTION_NAME }} \
+      --function-config '{"Comment":"viewer-request with redirects","Runtime":"cloudfront-js-2.0"}' \
+      --function-code fileb://infra/cf-functions/viewer-request.js \
+      --if-match $ETAG
+    ETAG=$(aws cloudfront describe-function \
+      --name ${{ env.CF_FUNCTION_NAME }} \
+      --query 'ETag' --output text)
+    aws cloudfront publish-function \
+      --name ${{ env.CF_FUNCTION_NAME }} \
+      --if-match $ETAG
+```
+
+### 9-3. 추가 IAM 권한
+
+```json
+{
+  "Sid": "CloudFrontFunctionUpdate",
+  "Effect": "Allow",
+  "Action": [
+    "cloudfront:DescribeFunction",
+    "cloudfront:UpdateFunction",
+    "cloudfront:PublishFunction"
+  ],
+  "Resource": "*"
+}
+```
+
+### 9-4. 추가 GitHub Secrets
+
+| Secret Name              | 설명                        |
+| ------------------------ | --------------------------- |
+| `PROD_CF_FUNCTION_NAME` | Production CF Function 이름  |
+| `DEV_CF_FUNCTION_NAME`  | Development CF Function 이름 |
+
+### 9-5. 환경 변수 분기 추가 (Step 5)
+
+```yaml
+# 기존 환경 변수 분기에 추가
+echo "CF_FUNCTION_NAME=${{ secrets.PROD_CF_FUNCTION_NAME }}" >> $GITHUB_ENV  # main
+echo "CF_FUNCTION_NAME=${{ secrets.DEV_CF_FUNCTION_NAME }}" >> $GITHUB_ENV   # develop
+```
+
+## 10. Checklist (구현 전 확인)
 
 - [ ] AWS IAM 사용자 생성 + 정책 연결 (섹션 3-4 참조)
 - [ ] GitHub Secrets 등록: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`
@@ -320,3 +389,8 @@ SSG 특성상 rollback은 단순하다:
 - [ ] `develop` 브랜치 생성 (현재 `main`만 존재하는 경우)
 - [ ] se 에이전트: `astro.config.mjs` SITE_URL 환경변수 대응 코드 변경
 - [ ] se 에이전트: `.github/workflows/deploy-client.yml` 파일 생성
+- [ ] GitHub Secrets 등록: `PROD_CF_FUNCTION_NAME`, `DEV_CF_FUNCTION_NAME` (리다이렉트)
+- [ ] IAM 정책 업데이트: CF Function 권한 추가 (섹션 9-3 참조)
+- [ ] CF Function 템플릿 파일 생성: `infra/cf-functions/viewer-request.js.template`
+- [ ] 리다이렉트 매핑 생성 빌드 스크립트 구현
+- [ ] Supabase 빌드 타임 접속 정보 GitHub Secrets 등록 (리다이렉트 매핑 조회용)

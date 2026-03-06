@@ -100,14 +100,15 @@ Supabase PostgreSQL `posts` 테이블 — slug(unique), category(enum), sub_cate
 
 ```
 docs/
-├── architecture.md   # 시스템 아키텍처, 배포 플로우, 외부 서비스
-├── ui-specs.md       # PC/Mobile 레이아웃 규칙, 컴포넌트 스펙, 반응형 전략
-├── database.md       # DB 스키마, 인덱스 권장사항
-├── seo-strategy.md   # SEO, JSON-LD, URL 구조, 이미지 최적화
-├── theme.md          # 컬러 팔레트, 시맨틱 토큰, 테마 사용 가이드
-├── ga4-tracking.md   # GA4 이벤트 트래킹 전략, 이벤트 스키마, 구현 가이드
-├── ci-cd.md          # GitHub Actions CI/CD 파이프라인 설계
-└── TODO.md           # 미구현 기능 목록
+├── architecture.md     # 시스템 아키텍처, 배포 플로우, 외부 서비스
+├── ui-specs.md         # PC/Mobile 레이아웃 규칙, 컴포넌트 스펙, 반응형 전략
+├── database.md         # DB 스키마, 인덱스 권장사항
+├── seo-strategy.md     # SEO, JSON-LD, URL 구조, 이미지 최적화
+├── theme.md            # 컬러 팔레트, 시맨틱 토큰, 테마 사용 가이드
+├── ga4-tracking.md     # GA4 이벤트 트래킹 전략, 이벤트 스키마, 구현 가이드
+├── ci-cd.md            # GitHub Actions CI/CD 파이프라인 설계
+├── redirect-specs.md   # 301 리다이렉트 전략 (slug 변경 시 이전 URL 리다이렉트)
+└── TODO.md             # 미구현 기능 목록
 ```
 
 Sub-agent 작업 시 반드시 관련 docs 파일을 참조할 것. 코드 변경이 docs와 불일치하면 qa가 REJECT.

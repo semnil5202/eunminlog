@@ -1,6 +1,6 @@
 # Database Schema (Supabase PostgreSQL)
 
-> Last updated: 2026-03-06
+> Last updated: 2026-03-06 (prev_slug 컬럼 추가)
 
 ---
 
@@ -17,6 +17,7 @@
 | `sort_order`      | integer (default 0)        | 같은 depth 내 정렬 순서                                        |
 | `is_multilingual` | boolean (default `true`)   | 다국어 경로 생성 여부 (소분류 단위)                            |
 | `created_at`      | timestamptz                | 생성일 (`now()`)                                               |
+| `prev_slug`       | text (nullable)            | 직전 slug. slug 변경 시 이전 값 저장. NULL이면 변경 이력 없음  |
 | `updated_at`      | timestamptz                | 수정일 (`now()`)                                               |
 
 **Constraints:**
@@ -25,6 +26,12 @@
 - `UNIQUE(slug)` — URL 매핑에 사용. 대분류/소분류 slug가 전역 고유해야 함
 - `FK(parent_id) REFERENCES categories(id) ON DELETE RESTRICT` — 하위 소분류가 존재하면 대분류 삭제 불가
 - `CHECK(parent_id IS NULL OR parent_id != id)` — 자기 참조 방지
+
+**prev_slug 운용 규칙:**
+
+- slug 변경 시 기존 slug를 `prev_slug`에 저장 (application-level)
+- 이력은 1개만 보관 (직전 slug만 저장, 누적하지 않음)
+- 301 리다이렉트 매핑 생성에 사용 (상세: [`docs/redirect-specs.md`](redirect-specs.md))
 
 **초기 데이터 (Seed):**
 
@@ -66,6 +73,7 @@
 | `price_prefix`    | text (nullable)         | 가격 접두어 (예: "메인메뉴 평균: ", "1인 코스: ")                                   |
 | `price`           | integer (nullable)      | 가격 (원). `price_prefix + price` 형태로 표시                                       |
 | `created_at`      | timestamptz             | 작성일 (`now()`)                                                                    |
+| `prev_slug`       | text (nullable)         | 직전 slug. slug 변경 시 이전 값 저장. NULL이면 변경 이력 없음                       |
 | `updated_at`      | timestamptz             | 수정일 (`now()`)                                                                    |
 
 **Constraints:**
@@ -73,6 +81,12 @@
 - `PK(id)`
 - `UNIQUE(slug)` — URL lookup
 - `CHECK(rating IS NULL OR (rating >= 1.0 AND rating <= 5.0))`
+
+**prev_slug 운용 규칙:**
+
+- slug 변경 시 기존 slug를 `prev_slug`에 저장 (application-level)
+- 이력은 1개만 보관 (직전 slug만 저장, 누적하지 않음)
+- 301 리다이렉트 매핑 생성에 사용 (상세: [`docs/redirect-specs.md`](redirect-specs.md))
 
 **category/sub_category와 categories 테이블의 관계:**
 
@@ -287,3 +301,5 @@ SELECT * FROM posts WHERE is_recommended = true ORDER BY created_at DESC;
 | M-05 | `posts.category` enum → text 변환                                | 미적용 | categories 테이블 도입에 따른 유연성 확보            |
 | M-06 | `categories` 테이블 생성 + seed 데이터                           | 미적용 | self-referencing parent_id, 초기 12개 카테고리       |
 | M-07 | `posts` 인덱스 재설계 (partial index 추가)                       | 미적용 | idx_posts_is_sponsored, idx_posts_is_recommended 등  |
+| M-08 | `posts.prev_slug` (text nullable) ADD                            | 미적용 | 301 리다이렉트용 직전 slug 저장                      |
+| M-09 | `categories.prev_slug` (text nullable) ADD                       | 미적용 | 301 리다이렉트용 직전 slug 저장                      |
