@@ -1,11 +1,12 @@
 'use client';
 
-import { Suspense, useCallback, useState } from 'react';
+import { Suspense, useCallback, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import SearchFilter from '@/shared/components/filter/SearchFilter';
+import Pagination from '@/shared/components/pagination/Pagination';
 import {
   Select,
   SelectContent,
@@ -44,6 +45,8 @@ const SORT_OPTIONS: { value: SortKey; label: string }[] = [
   { value: 'recommendations', label: '추천수 많은 순' },
   { value: 'comments', label: '댓글수 많은 순' },
 ];
+
+const PAGE_SIZE = 10;
 
 const MOCK_DATA: PostMetric[] = [
   {
@@ -161,47 +164,58 @@ function MetricsContent() {
   });
 
   const [appliedFilter, setAppliedFilter] = useState<FilterFormValues>(getValues());
-  const [sortBy, setSortBy] = useState<SortKey>(
-    (searchParams.get('sort') as SortKey) || 'views',
-  );
+  const [sortBy, setSortBy] = useState<SortKey>((searchParams.get('sort') as SortKey) || 'views');
+  const [page, setPage] = useState(Number(searchParams.get('page')) || 1);
 
-  const updateQueryParams = useCallback(
-    (filter: FilterFormValues, sort: SortKey) => {
-      const params = new URLSearchParams();
-      if (filter.from) params.set('from', filter.from);
-      if (filter.to) params.set('to', filter.to);
-      if (filter.query) params.set('q', filter.query);
-      if (sort !== 'views') params.set('sort', sort);
-      const qs = params.toString();
-      router.replace(qs ? `?${qs}` : '/', { scroll: false });
-    },
-    [router],
-  );
+  const buildQueryString = useCallback((filter: FilterFormValues, sort: SortKey, p: number) => {
+    const params = new URLSearchParams();
+    if (p > 1) params.set('page', String(p));
+    if (filter.from) params.set('from', filter.from);
+    if (filter.to) params.set('to', filter.to);
+    if (filter.query) params.set('q', filter.query);
+    if (sort !== 'views') params.set('sort', sort);
+    const qs = params.toString();
+    return qs ? `/?${qs}` : '/';
+  }, []);
 
   const handleSearch = () => {
     const current = getValues();
     setAppliedFilter(current);
-    updateQueryParams(current, sortBy);
+    setPage(1);
+    router.replace(buildQueryString(current, sortBy, 1), { scroll: false });
   };
 
   const handleSortChange = (value: string) => {
     const newSort = value as SortKey;
     setSortBy(newSort);
-    updateQueryParams(appliedFilter, newSort);
+    setPage(1);
+    router.replace(buildQueryString(appliedFilter, newSort, 1), { scroll: false });
   };
 
-  const filteredData = MOCK_DATA.filter((post) => {
-    if (appliedFilter.query) {
-      return post.title.toLowerCase().includes(appliedFilter.query.toLowerCase());
-    }
-    return true;
-  })
-    .filter((post) => {
-      if (appliedFilter.from && post.publishedAt < appliedFilter.from) return false;
-      if (appliedFilter.to && post.publishedAt > appliedFilter.to) return false;
-      return true;
-    })
-    .sort((a, b) => b[sortBy] - a[sortBy]);
+  const handlePageChange = (p: number) => {
+    setPage(p);
+    router.replace(buildQueryString(appliedFilter, sortBy, p), { scroll: false });
+  };
+
+  const filteredData = useMemo(
+    () =>
+      MOCK_DATA.filter((post) => {
+        if (appliedFilter.query) {
+          return post.title.toLowerCase().includes(appliedFilter.query.toLowerCase());
+        }
+        return true;
+      })
+        .filter((post) => {
+          if (appliedFilter.from && post.publishedAt < appliedFilter.from) return false;
+          if (appliedFilter.to && post.publishedAt > appliedFilter.to) return false;
+          return true;
+        })
+        .sort((a, b) => b[sortBy] - a[sortBy]),
+    [appliedFilter, sortBy],
+  );
+
+  const totalPages = Math.ceil(filteredData.length / PAGE_SIZE);
+  const pagedData = filteredData.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
     <div className="space-y-8">
@@ -210,13 +224,10 @@ function MetricsContent() {
         <p className="mt-1 text-sm text-muted-foreground">게시글별 핵심 지표를 조회합니다.</p>
       </div>
 
-      <SearchFilter
-        registerFrom={register('from')}
-        registerTo={register('to')}
-        registerQuery={register('query')}
-        onSearch={handleSearch}
-        searchPlaceholder="게시글 제목 검색"
-      />
+      <SearchFilter onSearch={handleSearch}>
+        <SearchFilter.DateRange registerFrom={register('from')} registerTo={register('to')} />
+        <SearchFilter.Query register={register('query')} placeholder="게시글 제목 검색" />
+      </SearchFilter>
 
       <div>
         <div className="mb-3 flex items-center justify-end">
@@ -246,14 +257,14 @@ function MetricsContent() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredData.length === 0 ? (
+              {pagedData.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
                     데이터가 없습니다.
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredData.map((post) => (
+                pagedData.map((post) => (
                   <TableRow key={post.id}>
                     <TableCell className="py-3 font-medium">{post.title}</TableCell>
                     <TableCell className="py-3 text-center">
@@ -272,6 +283,8 @@ function MetricsContent() {
             </TableBody>
           </Table>
         </div>
+
+        <Pagination page={page} totalPages={totalPages} onPageChange={handlePageChange} />
       </div>
     </div>
   );
