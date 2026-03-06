@@ -165,6 +165,7 @@ function NewPostContent() {
       ['title', !values.title.trim()],
       ['content', !values.content.trim()],
       ['thumbnail', !values.thumbnail],
+      ['thumbnailAlt', !values.thumbnailAlt.trim()],
       ['category', !values.category],
       ['subCategory', !values.subCategory],
     ];
@@ -248,6 +249,7 @@ function NewPostContent() {
           address: addr || undefined,
           confirmedTerms: [] as { original: string; confirmed: string }[],
           imageAlts: imageAlts.length > 0 ? imageAlts : undefined,
+          thumbnailAlt: getValues('thumbnailAlt') || undefined,
         };
         const results = await fetchTranslatePost(params);
         setLastConfirmedTerms([]);
@@ -352,6 +354,7 @@ function NewPostContent() {
       address: addr || undefined,
       confirmedTerms: lastConfirmedTerms,
       imageAlts: imageAlts.length > 0 ? imageAlts : undefined,
+      thumbnailAlt: getValues('thumbnailAlt') || undefined,
     });
     setTranslationResults((prev) => prev.map((r) => (r.locale === locale ? result : r)));
     return result;
@@ -407,7 +410,10 @@ function NewPostContent() {
               render={({ field }) => (
                 <ThumbnailUpload
                   thumbnail={field.value || null}
-                  onThumbnailChange={(url) => field.onChange(url ?? '')}
+                  onThumbnailChange={(url) => {
+                    field.onChange(url ?? '');
+                    if (!url) setValue('thumbnailAlt', '');
+                  }}
                 />
               )}
             />
@@ -613,6 +619,9 @@ function NewPostContent() {
         content={watch('content')}
         imageAlts={imageAlts}
         onComplete={setImageAlts}
+        thumbnail={watch('thumbnail') || null}
+        thumbnailAlt={watch('thumbnailAlt')}
+        onThumbnailAltChange={(alt) => setValue('thumbnailAlt', alt, { shouldValidate: !!errors.thumbnailAlt })}
       />
 
       <TranslationSheetContainer
@@ -626,6 +635,7 @@ function NewPostContent() {
         placeName={watch('placeName')}
         address={watch('address')}
         imageAlts={imageAlts}
+        thumbnailAlt={watch('thumbnailAlt') || undefined}
       />
 
       <TranslationPreviewSheet

@@ -32,6 +32,7 @@ type TranslationSheetContainerProps = {
   placeName: string;
   address: string;
   imageAlts?: ImageAlt[];
+  thumbnailAlt?: string;
 };
 
 export function TranslationSheetContainer({
@@ -45,6 +46,7 @@ export function TranslationSheetContainer({
   placeName,
   address,
   imageAlts,
+  thumbnailAlt,
 }: TranslationSheetContainerProps) {
   const [status, setStatus] = useState<TranslationStatus>('reviewing');
   const [confirmedTerms, setConfirmedTerms] = useState<Map<number, string>>(new Map());
@@ -76,6 +78,7 @@ export function TranslationSheetContainer({
         address,
         confirmedTerms: terms,
         imageAlts,
+        thumbnailAlt,
       });
 
       const failedLocales = results.filter((r) => r.failed);

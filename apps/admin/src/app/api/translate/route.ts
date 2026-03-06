@@ -40,10 +40,12 @@ function buildSystemPrompt(locale: TranslationLocale): string {
 5. 블로그의 친근한 어조를 유지하되, ${label}의 자연스러운 표현을 사용해주세요.
 6. 한국 고유 문화 용어는 의역하되 괄호 안에 원어를 병기할 수 있습니다.
 7. 이미지 alt 텍스트가 제공되면 각각 번역해주세요. 이미지 설명은 간결하고 SEO에 효과적인 표현으로 번역해주세요.
+8. 썸네일 alt 텍스트가 제공되면 번역해주세요. 간결하고 SEO에 효과적인 표현으로 번역해주세요.
 
-응답은 반드시 JSON 객체로 작성해주세요. 형식: {"title": "...", "content": "...", "description": "...", "place_name": "...", "address": "...", "image_alts": ["..."]}
+응답은 반드시 JSON 객체로 작성해주세요. 형식: {"title": "...", "content": "...", "description": "...", "place_name": "...", "address": "...", "image_alts": ["..."], "thumbnail_alt": "..."}
 place_name과 address는 입력에 포함된 경우에만 응답에 포함해주세요.
-image_alts는 입력에 포함된 경우에만 응답에 포함하며, 입력 순서와 동일한 순서로 번역해주세요.`;
+image_alts는 입력에 포함된 경우에만 응답에 포함하며, 입력 순서와 동일한 순서로 번역해주세요.
+thumbnail_alt는 입력에 포함된 경우에만 응답에 포함해주세요.`;
 }
 
 function parseJsonResponse(raw: string): unknown {
@@ -65,11 +67,12 @@ type TranslateBody = {
   address?: string;
   confirmedTerms: { original: string; confirmed: string }[];
   imageAlts?: { src: string; alt: string }[];
+  thumbnailAlt?: string;
 };
 
 export async function POST(request: Request) {
   const body = (await request.json()) as TranslateBody;
-  const { locale, title, content, description, placeName, address, confirmedTerms, imageAlts } = body;
+  const { locale, title, content, description, placeName, address, confirmedTerms, imageAlts, thumbnailAlt } = body;
 
   let userPrompt = `제목: ${title}\n\n본문:\n${content}\n\n3줄 요약:\n${description}`;
   if (placeName) userPrompt += `\n\n장소명: ${placeName}`;
@@ -87,6 +90,10 @@ export async function POST(request: Request) {
     imageAlts.forEach((item, i) => {
       userPrompt += `\n- 이미지 ${i + 1}: "${item.alt}"`;
     });
+  }
+
+  if (thumbnailAlt) {
+    userPrompt += `\n\n썸네일 alt 텍스트: "${thumbnailAlt}"`;
   }
 
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -122,5 +129,6 @@ export async function POST(request: Request) {
     place_name: (parsed.place_name as string) ?? '',
     address: (parsed.address as string) ?? '',
     image_alts: resultImageAlts,
+    thumbnail_alt: (parsed.thumbnail_alt as string) ?? '',
   });
 }

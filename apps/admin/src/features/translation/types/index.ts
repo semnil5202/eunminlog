@@ -18,6 +18,7 @@ export type TranslationResult = {
   place_name: string;
   address: string;
   image_alts: ImageAlt[];
+  thumbnail_alt: string;
   failed?: boolean;
 };
 

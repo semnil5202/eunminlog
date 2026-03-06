@@ -19,6 +19,9 @@ type ImageAltSheetProps = {
   content: string;
   imageAlts: ImageAlt[];
   onComplete: (alts: ImageAlt[]) => void;
+  thumbnail?: string | null;
+  thumbnailAlt?: string;
+  onThumbnailAltChange?: (alt: string) => void;
 };
 
 export function extractImageSrcs(html: string): string[] {
@@ -37,10 +40,14 @@ export function ImageAltSheet({
   content,
   imageAlts,
   onComplete,
+  thumbnail,
+  thumbnailAlt = '',
+  onThumbnailAltChange,
 }: ImageAltSheetProps) {
   const imageSrcs = useMemo(() => extractImageSrcs(content), [content]);
 
   const [alts, setAlts] = useState<Map<string, string>>(new Map());
+  const [localThumbnailAlt, setLocalThumbnailAlt] = useState(thumbnailAlt);
 
   useEffect(() => {
     if (!open) return;
@@ -49,7 +56,8 @@ export function ImageAltSheet({
       map.set(item.src, item.alt);
     }
     setAlts(map);
-  }, [open, imageAlts]);
+    setLocalThumbnailAlt(thumbnailAlt);
+  }, [open, imageAlts, thumbnailAlt]);
 
   const handleAltChange = (src: string, alt: string) => {
     setAlts((prev) => {
@@ -59,9 +67,16 @@ export function ImageAltSheet({
     });
   };
 
-  const allFilled = imageSrcs.length > 0 && imageSrcs.every((src) => (alts.get(src) ?? '').trim());
+  const hasThumbnail = !!thumbnail;
+  const thumbnailAltFilled = !hasThumbnail || localThumbnailAlt.trim().length > 0;
+  const contentAltsFilled = imageSrcs.every((src) => (alts.get(src) ?? '').trim());
+  const hasAnyItem = hasThumbnail || imageSrcs.length > 0;
+  const allFilled = hasAnyItem && thumbnailAltFilled && contentAltsFilled;
 
   const handleComplete = () => {
+    if (onThumbnailAltChange) {
+      onThumbnailAltChange(localThumbnailAlt.trim());
+    }
     const result: ImageAlt[] = imageSrcs.map((src) => ({
       src,
       alt: (alts.get(src) ?? '').trim(),
@@ -81,12 +96,32 @@ export function ImageAltSheet({
         </SheetHeader>
 
         <div className="flex-1 overflow-y-auto px-4 pb-4">
-          {imageSrcs.length === 0 ? (
+          {!hasAnyItem ? (
             <p className="py-12 text-center text-sm text-muted-foreground">
-              본문에 이미지가 없습니다.
+              이미지가 없습니다.
             </p>
           ) : (
             <div className="space-y-6">
+              {hasThumbnail && (
+                <div className="space-y-2">
+                  <div className="flex items-start gap-3">
+                    <span className="shrink-0 pt-1 text-sm font-medium text-muted-foreground">
+                      썸네일
+                    </span>
+                    <img
+                      src={thumbnail}
+                      alt=""
+                      className="h-20 w-28 shrink-0 rounded border object-cover"
+                    />
+                  </div>
+                  <Input
+                    value={localThumbnailAlt}
+                    onChange={(e) => setLocalThumbnailAlt(e.target.value)}
+                    placeholder="예: 강남 파스타 맛집 외관"
+                  />
+                </div>
+              )}
+
               {imageSrcs.map((src, i) => (
                 <div key={src} className="space-y-2">
                   <div className="flex items-start gap-3">
@@ -110,7 +145,7 @@ export function ImageAltSheet({
           )}
         </div>
 
-        {imageSrcs.length > 0 && (
+        {hasAnyItem && (
           <div className="border-t px-4 py-4">
             <button
               type="button"

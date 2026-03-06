@@ -73,6 +73,7 @@ export default function EditPostPage() {
       category: string;
       sub_category: string;
       thumbnail: string;
+      thumbnail_alt: string | null;
       is_multilingual: boolean;
       place_name: string | null;
       address: string | null;
@@ -140,6 +141,7 @@ function EditPostForm({
       category: string;
       sub_category: string;
       thumbnail: string;
+      thumbnail_alt: string | null;
       is_multilingual: boolean;
       place_name: string | null;
       address: string | null;
@@ -163,6 +165,7 @@ function EditPostForm({
       category: post.category,
       subCategory: post.sub_category,
       thumbnail: post.thumbnail,
+      thumbnailAlt: post.thumbnail_alt ?? '',
       slug: post.slug,
       description: post.description,
       placeName: post.place_name ?? '',
@@ -283,6 +286,7 @@ function EditPostForm({
       ['title', !values.title.trim()],
       ['content', !values.content.trim()],
       ['thumbnail', !values.thumbnail],
+      ['thumbnailAlt', !values.thumbnailAlt.trim()],
       ['category', !values.category],
       ['subCategory', !values.subCategory],
     ];
@@ -354,6 +358,7 @@ function EditPostForm({
       address: addr || undefined,
       confirmedTerms: [],
       imageAlts: imageAlts.length > 0 ? imageAlts : undefined,
+      thumbnailAlt: getValues('thumbnailAlt') || undefined,
     });
     setTranslationResults((prev) => prev.map((r) => (r.locale === locale ? result : r)));
     return result;
@@ -444,7 +449,10 @@ function EditPostForm({
               render={({ field }) => (
                 <ThumbnailUpload
                   thumbnail={field.value || null}
-                  onThumbnailChange={(url) => field.onChange(url ?? '')}
+                  onThumbnailChange={(url) => {
+                    field.onChange(url ?? '');
+                    if (!url) setValue('thumbnailAlt', '');
+                  }}
                 />
               )}
             />
@@ -625,6 +633,9 @@ function EditPostForm({
         content={watchedContent}
         imageAlts={imageAlts}
         onComplete={setImageAlts}
+        thumbnail={watch('thumbnail') || null}
+        thumbnailAlt={watch('thumbnailAlt')}
+        onThumbnailAltChange={(alt) => setValue('thumbnailAlt', alt, { shouldValidate: !!errors.thumbnailAlt })}
       />
 
       {needsTranslation && (

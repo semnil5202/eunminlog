@@ -41,6 +41,7 @@ type TranslateParams = {
   address?: string;
   confirmedTerms: { original: string; confirmed: string }[];
   imageAlts?: ImageAlt[];
+  thumbnailAlt?: string;
 };
 
 async function fetchTranslateSingle(
@@ -73,6 +74,7 @@ export async function fetchTranslatePost(params: TranslateParams): Promise<Trans
       place_name: '',
       address: '',
       image_alts: [] as TranslationResult['image_alts'],
+      thumbnail_alt: '',
       failed: true,
     } satisfies TranslationResult;
   });

@@ -81,6 +81,7 @@ export async function fetchPost(id: string) {
       address: string | null;
       price_prefix: string | null;
       price: number | null;
+      thumbnail_alt: string | null;
       prev_slug: string | null;
       created_at: string;
       updated_at: string;
@@ -93,6 +94,7 @@ export async function fetchPost(id: string) {
       place_name: t.place_name ?? '',
       address: t.address ?? '',
       image_alts: (t.image_alts ?? []) as ImageAlt[],
+      thumbnail_alt: t.thumbnail_alt ?? '',
     })) as TranslationResult[],
     imageAlts: (post.image_alts ?? []) as ImageAlt[],
   };
@@ -116,6 +118,7 @@ export async function createPost(params: {
       category: fv.category,
       sub_category: fv.subCategory,
       thumbnail: fv.thumbnail,
+      thumbnail_alt: fv.thumbnailAlt || null,
       is_multilingual: params.translations.length > 0,
       place_name: fv.placeName || null,
       address: fv.address || null,
@@ -142,6 +145,7 @@ export async function createPost(params: {
       place_name: t.place_name || null,
       address: t.address || null,
       image_alts: t.image_alts ?? [],
+      thumbnail_alt: t.thumbnail_alt || null,
     }));
 
     const { error: transError } = await supabaseServer
@@ -188,6 +192,7 @@ export async function updatePost(params: {
     category: fv.category,
     sub_category: fv.subCategory,
     thumbnail: fv.thumbnail,
+    thumbnail_alt: fv.thumbnailAlt || null,
     place_name: fv.placeName || null,
     address: fv.address || null,
     price_prefix: fv.pricePrefix || null,
@@ -224,6 +229,7 @@ export async function updatePost(params: {
           place_name: t.place_name || null,
           address: t.address || null,
           image_alts: t.image_alts ?? [],
+          thumbnail_alt: t.thumbnail_alt || null,
           updated_at: new Date().toISOString(),
         },
         { onConflict: 'post_id,locale' },

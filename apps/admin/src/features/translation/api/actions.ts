@@ -147,6 +147,7 @@ async function translateSingleLocale(
     place_name: (parsed.place_name as string) ?? '',
     address: (parsed.address as string) ?? '',
     image_alts: imageAlts,
+    thumbnail_alt: (parsed.thumbnail_alt as string) ?? '',
   };
 }
 
@@ -221,6 +222,7 @@ export async function translatePost(params: {
       place_name: '',
       address: '',
       image_alts: [],
+      thumbnail_alt: '',
       failed: true,
     };
   });
