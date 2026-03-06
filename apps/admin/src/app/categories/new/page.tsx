@@ -27,7 +27,7 @@ export default function NewCategoryPage() {
   const [subParent, setSubParent] = useState<Category | ''>('');
   const [subName, setSubName] = useState('');
   const [subSlug, setSubSlug] = useState('');
-  const [subMultilingual, setSubMultilingual] = useState(true);
+  const [subMultilingual, setSubMultilingual] = useState(false);
 
   return (
     <div className="space-y-8">
