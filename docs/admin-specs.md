@@ -132,7 +132,7 @@ RootLayout (app/layout.tsx)
 | `auth`            | 로그인/로그아웃, 세션 관리             | TBD (로그인 페이지)               | 미구현                                                                               |
 | `post-editor`     | Tiptap 에디터, 포스트 생성/편집 폼     | `/posts/new`, `/posts/[id]/edit`  | 에디터 + 폼 형식 + 메타 폼 + 썸네일 + 번역 연동 구현 완료 (저장/S3 업로드 미구현)    |
 | `post-management` | 포스트 목록, 삭제, 발행 상태 관리      | `/posts`                          | 목록 구현 완료 (삭제 미구현)                                                         |
-| `media`           | 이미지 업로드, Pre-signed URL          | 에디터 내 사용                    | 구현 완료 (S3 presigned URL + WebP 변환 + CDN URL)                                   |
+| `media`           | 이미지 업로드, Pre-signed URL          | 에디터 내 사용                    | 구현 완료 (S3 presigned URL + WebP 변환 + 워터마크 + 688px 리사이징 + CDN URL)       |
 | `translation`     | GPT-5 Nano 다국어 번역 (API 연동 완료) | 에디터 내 사용                    | 구현 완료 (고유명사 추출 + 번역 + 미리보기 + 실패 fallback + 재시도). DB 저장 미연동 |
 | `build-trigger`   | GitHub Actions 빌드 자동 트리거        | UI 없음 (Server Action 내부 호출) | 미구현                                                                               |
 
@@ -706,10 +706,11 @@ features/post-management/
 
 #### CDN URL
 
-업로드 완료 후 이미지 접근 URL:
+업로드 완료 후 이미지 접근 URL. CDN 도메인은 [`secrets-reference.md`](secrets-reference.md) 섹션 1-1을 참조.
 
 ```
-https://media.eunminlog.site/posts/{YYYY}/{MM}/{uuid}.{ext}
+{MEDIA_CDN_URL}/posts/{YYYY}/{MM}/{uuid}.webp
+{MEDIA_CDN_URL}/posts/{YYYY}/{MM}/{uuid}_688.webp
 ```
 
 #### Server Action vs CSR 구분

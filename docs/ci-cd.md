@@ -18,13 +18,11 @@ Push to main/develop
 
 ## 2. Environment Strategy
 
-| 항목       | Production                   | Development                  |
-| ---------- | ---------------------------- | ---------------------------- |
-| 브랜치     | `main`                       | `develop`                    |
-| S3 버킷    | `prod-eunminlog-static`      | `dev-eunminlog-static`       |
-| 도메인     | `https://www.eunminlog.site` | `https://dev.eunminlog.site` |
-| CloudFront | prod Distribution ID         | dev Distribution ID          |
-| SITE_URL   | `https://www.eunminlog.site` | `https://dev.eunminlog.site` |
+환경별 상세(S3 버킷명, 도메인, CloudFront Distribution ID 등)는 [`secrets-reference.md`](secrets-reference.md) 섹션 3을 참조한다.
+
+| 항목       | Production | Development |
+| ---------- | ---------- | ----------- |
+| 브랜치     | `main`     | `develop`   |
 
 ## 3. GitHub Secrets 목록
 
@@ -116,19 +114,7 @@ Job: deploy
 
 #### Step 5: 환경 변수 분기
 
-```yaml
-- name: Set environment variables
-  run: |
-    if [ "${{ github.ref_name }}" = "main" ]; then
-      echo "S3_BUCKET=prod-eunminlog-static" >> $GITHUB_ENV
-      echo "CLOUDFRONT_DISTRIBUTION_ID=${{ secrets.PROD_CLOUDFRONT_DISTRIBUTION_ID }}" >> $GITHUB_ENV
-      echo "SITE_URL=https://www.eunminlog.site" >> $GITHUB_ENV
-    else
-      echo "S3_BUCKET=dev-eunminlog-static" >> $GITHUB_ENV
-      echo "CLOUDFRONT_DISTRIBUTION_ID=${{ secrets.DEV_CLOUDFRONT_DISTRIBUTION_ID }}" >> $GITHUB_ENV
-      echo "SITE_URL=https://dev.eunminlog.site" >> $GITHUB_ENV
-    fi
-```
+`github.ref_name` 기준으로 prod/dev 환경 변수를 `$GITHUB_ENV`에 주입한다. 구체적인 값(S3 버킷명, CloudFront ID, 도메인 등)은 [`secrets-reference.md`](secrets-reference.md) 섹션 2, 3을 참조.
 
 #### Step 6: Build client
 
@@ -147,23 +133,31 @@ Job: deploy
 
 #### Step 7: Configure AWS credentials
 
-```yaml
-- uses: aws-actions/configure-aws-credentials@v4
-  with:
-    aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-    aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-    aws-region: ap-northeast-2
-```
+`aws-actions/configure-aws-credentials@v4`로 AWS 자격 증명 설정. 시크릿 키 목록은 [`secrets-reference.md`](secrets-reference.md) 섹션 2-1을 참조.
 
 #### Step 8: Deploy to S3
 
+파일 유형별 `Cache-Control` 분리 배포:
+
 ```yaml
-- name: Deploy to S3
-  run: aws s3 sync apps/client/dist/ s3://${{ env.S3_BUCKET }} --delete
+- name: Deploy to S3 (HTML — no-cache)
+  run: |
+    aws s3 sync apps/client/dist/ s3://${{ env.S3_BUCKET }} \
+      --exclude "*" --include "*.html" \
+      --cache-control "no-cache" \
+      --delete
+
+- name: Deploy to S3 (static assets — long cache)
+  run: |
+    aws s3 sync apps/client/dist/ s3://${{ env.S3_BUCKET }} \
+      --exclude "*.html" \
+      --cache-control "public, max-age=31536000, immutable" \
+      --delete
 ```
 
+- **HTML** (`no-cache`): 브라우저가 매번 서버에 재검증. SSG 빌드마다 내용이 바뀌므로 장기 캐시하면 안 됨.
+- **정적 에셋** (`max-age=1년, immutable`): Astro가 파일명에 해시를 포함하므로 내용 변경 시 URL이 바뀜. 장기 캐시 안전.
 - `--delete`: S3에 있지만 로컬 dist에 없는 파일 삭제. 이전 빌드의 잔여 파일 정리.
-- `dist/` 내부만 동기화 (전체 monorepo가 아님).
 
 #### Step 9: Invalidate CloudFront cache
 
@@ -182,41 +176,7 @@ Job: deploy
 
 ### 6-1. SITE_URL 환경변수 대응 (P1)
 
-현재 `packages/config/site.ts`에서 `SITE_URL`이 하드코딩되어 있다:
-
-```typescript
-// 현재 (하드코딩)
-export const SITE_URL = 'https://www.eunminlog.site';
-```
-
-CI/CD에서 환경별로 다른 도메인을 사용하려면 빌드 타임 환경변수를 지원해야 한다.
-
-**Astro의 환경변수 처리 방식**: Astro는 Vite 기반으로 빌드 타임에 `import.meta.env` 값을 인라인한다. 그러나 `packages/config/site.ts`는 Astro 앱이 아닌 공유 패키지이므로 `import.meta.env`를 직접 사용할 수 없다.
-
-**권장 방안**: `astro.config.mjs`에서 `process.env.SITE_URL`을 읽어 Astro의 `site` 옵션에 전달하고, `packages/config/site.ts`의 하드코딩 값은 기본값(fallback)으로 유지한다.
-
-```typescript
-// packages/config/site.ts — 변경 없음 (기본값 역할 유지)
-export const SITE_URL = 'https://www.eunminlog.site';
-```
-
-```javascript
-// apps/client/astro.config.mjs — 변경
-import { SITE_URL as DEFAULT_SITE_URL } from '@eunminlog/config/site';
-
-export default defineConfig({
-  site: process.env.SITE_URL || DEFAULT_SITE_URL,
-  // ...
-});
-```
-
-이렇게 하면:
-
-- 로컬 개발: 환경변수 없으면 기본값 `https://www.eunminlog.site` 사용
-- CI/CD prod: `SITE_URL=https://www.eunminlog.site` (기본값과 동일)
-- CI/CD dev: `SITE_URL=https://dev.eunminlog.site` 주입
-
-> **Note**: `packages/config/site.ts`를 import하는 다른 코드(Layout.astro 등)는 변경 불필요. Astro config의 `site` 값만 환경별로 달라지면 sitemap, canonical URL이 자동으로 맞춰진다.
+`astro.config.mjs`에서 `process.env.SITE_URL`을 읽어 Astro의 `site` 옵션에 전달. `packages/config/site.ts`의 하드코딩 값은 기본값(fallback)으로 유지. 구체적인 도메인은 [`secrets-reference.md`](secrets-reference.md) 섹션 3을 참조.
 
 ### 6-2. Workflow 파일 생성 (P0)
 
@@ -275,16 +235,7 @@ concurrency:
 
 #### Admin 측 환경변수 (Vercel)
 
-Admin(Next.js)이 Vercel에 배포되어 있으므로, Vercel 프로젝트 환경변수에 아래 값을 설정해야 한다:
-
-| 환경변수             | 설명                                    |
-| -------------------- | --------------------------------------- |
-| `GITHUB_PAT`         | Fine-grained PAT (`actions:write` 권한) |
-| `GITHUB_REPO_OWNER`  | 리포지토리 소유자                       |
-| `GITHUB_REPO_NAME`   | 리포지토리 이름                         |
-| `GITHUB_WORKFLOW_ID` | 워크플로우 파일명 (`deploy-client.yml`) |
-
-`VERCEL_ENV`는 Vercel이 자동 주입하므로 별도 설정 불필요.
+Admin(Next.js)이 Vercel에 배포되어 있으므로, Vercel 프로젝트 환경변수 설정이 필요하다. 키 목록은 [`secrets-reference.md`](secrets-reference.md) 섹션 1-2를 참조.
 
 ### Path Filter (적용 완료)
 
@@ -355,17 +306,13 @@ CF Function 관련 시크릿은 [`docs/secrets-reference.md`](secrets-reference.
 
 ### 9-5. 환경 변수 분기 추가 (Step 5)
 
-```yaml
-# 기존 환경 변수 분기에 추가
-echo "CF_FUNCTION_NAME=${{ secrets.PROD_CF_FUNCTION_NAME }}" >> $GITHUB_ENV  # main
-echo "CF_FUNCTION_NAME=${{ secrets.DEV_CF_FUNCTION_NAME }}" >> $GITHUB_ENV   # develop
-```
+기존 환경 변수 분기(Step 5)에 `CF_FUNCTION_NAME`을 추가한다. 시크릿 키는 [`secrets-reference.md`](secrets-reference.md) 섹션 2-2를 참조.
 
 ## 10. Checklist (구현 전 확인)
 
 - [ ] AWS IAM 사용자 생성 + 정책 연결 (섹션 3-4 참조)
 - [ ] GitHub Secrets 등록 — 키 목록은 [`docs/secrets-reference.md`](secrets-reference.md) 참조
-- [ ] S3 버킷 존재 확인: `prod-eunminlog-static`, `dev-eunminlog-static`
+- [ ] S3 버킷 존재 확인 (버킷명은 [`secrets-reference.md`](secrets-reference.md) 참조)
 - [ ] CloudFront OAC 설정 확인 (S3 퍼블릭 액세스 차단 상태에서 CF가 접근 가능한지)
 - [ ] CloudFront Function 연결 확인 (Viewer Request — URI를 index.html로 매핑)
 - [ ] `develop` 브랜치 생성 (현재 `main`만 존재하는 경우)
