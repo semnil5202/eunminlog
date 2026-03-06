@@ -71,7 +71,7 @@ function parseJsonResponse(raw: string): unknown {
   } catch {
     const match = raw.match(/\{[\s\S]*\}/);
     if (match) return JSON.parse(match[0]);
-    return null;
+    throw new Error('JSON 파싱에 실패했습니다.');
   }
 }
 
@@ -96,7 +96,6 @@ export async function extractFlaggedTerms(
   const raw = response.choices[0].message.content ?? '{"terms":[]}';
   console.error('[extractFlaggedTerms] raw:', raw);
   const parsed = parseJsonResponse(raw) as Record<string, unknown>;
-  if (!parsed) return [];
 
   const arr = Array.isArray(parsed) ? parsed : (parsed.terms ?? []);
   return (arr as Record<string, unknown>[]).map((item) => ({
@@ -120,26 +119,26 @@ async function translateSingleLocale(
 
   const raw = response.choices[0].message.content ?? '{}';
   console.error(`[translatePost:${locale}] raw:`, raw);
-  const parsed = parseJsonResponse(raw) as Record<string, string> | null;
+  const parsed = parseJsonResponse(raw) as Record<string, string>;
 
   return {
     locale,
-    title: parsed?.title ?? '',
-    content: parsed?.content ?? '',
-    description: parsed?.description ?? '',
-    place_name: parsed?.place_name ?? '',
-    address: parsed?.address ?? '',
+    title: parsed.title ?? '',
+    content: parsed.content ?? '',
+    description: parsed.description ?? '',
+    place_name: parsed.place_name ?? '',
+    address: parsed.address ?? '',
   };
 }
 
-export async function translatePost(params: {
+function buildTranslateUserPrompt(params: {
   title: string;
   content: string;
   description: string;
   placeName?: string;
   address?: string;
   confirmedTerms: { original: string; confirmed: string }[];
-}): Promise<TranslationResult[]> {
+}): string {
   let userPrompt = `제목: ${params.title}\n\n본문:\n${params.content}\n\n3줄 요약:\n${params.description}`;
   if (params.placeName) userPrompt += `\n\n장소명: ${params.placeName}`;
   if (params.address) userPrompt += `\n주소: ${params.address}`;
@@ -151,9 +150,48 @@ export async function translatePost(params: {
     }
   }
 
-  const results = await Promise.all(
+  return userPrompt;
+}
+
+export async function retrySingleLocale(
+  locale: TranslationLocale,
+  params: {
+    title: string;
+    content: string;
+    description: string;
+    placeName?: string;
+    address?: string;
+    confirmedTerms: { original: string; confirmed: string }[];
+  },
+): Promise<TranslationResult> {
+  const userPrompt = buildTranslateUserPrompt(params);
+  return translateSingleLocale(locale, userPrompt);
+}
+
+export async function translatePost(params: {
+  title: string;
+  content: string;
+  description: string;
+  placeName?: string;
+  address?: string;
+  confirmedTerms: { original: string; confirmed: string }[];
+}): Promise<TranslationResult[]> {
+  const userPrompt = buildTranslateUserPrompt(params);
+
+  const settled = await Promise.allSettled(
     TARGET_LOCALES.map((locale) => translateSingleLocale(locale, userPrompt)),
   );
 
-  return results;
+  return settled.map((result, i) => {
+    if (result.status === 'fulfilled') return result.value;
+    return {
+      locale: TARGET_LOCALES[i],
+      title: '',
+      content: '',
+      description: '',
+      place_name: '',
+      address: '',
+      failed: true,
+    };
+  });
 }

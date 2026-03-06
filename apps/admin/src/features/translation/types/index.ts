@@ -12,6 +12,7 @@ export type TranslationResult = {
   description: string;
   place_name: string;
   address: string;
+  failed?: boolean;
 };
 
 export type TranslationStatus =

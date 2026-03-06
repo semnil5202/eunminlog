@@ -10,6 +10,13 @@ import { Plus } from 'lucide-react';
 import SearchFilter from '@/shared/components/filter/SearchFilter';
 import { Button } from '@/components/ui/button';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   Table,
   TableBody,
   TableCell,
@@ -17,6 +24,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+
+type SortKey = 'publishedAt' | 'updatedAt';
+
+const SORT_OPTIONS: { value: SortKey; label: string }[] = [
+  { value: 'publishedAt', label: '최신 발행순' },
+  { value: 'updatedAt', label: '최신 수정순' },
+];
 
 type FilterFormValues = {
   from: string;
@@ -127,13 +141,17 @@ function PostsContent() {
   });
 
   const [appliedFilter, setAppliedFilter] = useState<FilterFormValues>(getValues());
+  const [sortBy, setSortBy] = useState<SortKey>(
+    (searchParams.get('sort') as SortKey) || 'publishedAt',
+  );
 
   const updateQueryParams = useCallback(
-    (filter: FilterFormValues) => {
+    (filter: FilterFormValues, sort: SortKey) => {
       const params = new URLSearchParams();
       if (filter.from) params.set('from', filter.from);
       if (filter.to) params.set('to', filter.to);
       if (filter.query) params.set('q', filter.query);
+      if (sort !== 'publishedAt') params.set('sort', sort);
       const qs = params.toString();
       router.replace(qs ? `/posts?${qs}` : '/posts', { scroll: false });
     },
@@ -143,7 +161,13 @@ function PostsContent() {
   const handleSearch = () => {
     const current = getValues();
     setAppliedFilter(current);
-    updateQueryParams(current);
+    updateQueryParams(current, sortBy);
+  };
+
+  const handleSortChange = (value: string) => {
+    const newSort = value as SortKey;
+    setSortBy(newSort);
+    updateQueryParams(appliedFilter, newSort);
   };
 
   const filteredData = MOCK_DATA.filter((post) => {
@@ -151,11 +175,13 @@ function PostsContent() {
       return post.title.toLowerCase().includes(appliedFilter.query.toLowerCase());
     }
     return true;
-  }).filter((post) => {
-    if (appliedFilter.from && post.publishedAt < appliedFilter.from) return false;
-    if (appliedFilter.to && post.publishedAt > appliedFilter.to) return false;
-    return true;
-  });
+  })
+    .filter((post) => {
+      if (appliedFilter.from && post.publishedAt < appliedFilter.from) return false;
+      if (appliedFilter.to && post.publishedAt > appliedFilter.to) return false;
+      return true;
+    })
+    .sort((a, b) => (a[sortBy] > b[sortBy] ? -1 : 1));
 
   return (
     <div className="space-y-8">
@@ -173,12 +199,24 @@ function PostsContent() {
       />
 
       <div>
-        <div className="mb-3 flex items-center justify-start">
+        <div className="mb-3 flex items-center justify-between">
           <Button asChild>
             <Link href="/posts/new">
               <Plus className="mr-1 h-4 w-4" />새 글 작성
             </Link>
           </Button>
+          <Select value={sortBy} onValueChange={handleSortChange}>
+            <SelectTrigger className="w-[150px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {SORT_OPTIONS.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="rounded-lg border">

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { LoaderIcon } from 'lucide-react';
 
 import {
   Sheet,
@@ -26,6 +27,7 @@ type TranslationPreviewSheetProps = {
   originalPlaceName?: string;
   originalAddress?: string;
   translations: TranslationResult[];
+  onRetryLocale?: (locale: TranslationLocale) => Promise<TranslationResult>;
 };
 
 export function TranslationPreviewSheet({
@@ -36,11 +38,23 @@ export function TranslationPreviewSheet({
   originalPlaceName,
   originalAddress,
   translations,
+  onRetryLocale,
 }: TranslationPreviewSheetProps) {
   const [selected, setSelected] = useState<FilterLocale>('en');
+  const [retrying, setRetrying] = useState(false);
 
   const selectedTranslation =
     selected !== 'ko' ? translations.find((tr) => tr.locale === selected) : null;
+
+  const handleRetry = async () => {
+    if (!onRetryLocale || selected === 'ko' || retrying) return;
+    setRetrying(true);
+    try {
+      await onRetryLocale(selected);
+    } finally {
+      setRetrying(false);
+    }
+  };
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -97,6 +111,21 @@ export function TranslationPreviewSheet({
                   />
                 </div>
               </>
+            ) : selectedTranslation?.failed ? (
+              <div className="flex flex-col items-center gap-3 py-12">
+                <p className="text-sm text-destructive">
+                  {LOCALE_FILTER_LABELS[selected]} 번역에 실패했습니다.
+                </p>
+                <button
+                  type="button"
+                  onClick={handleRetry}
+                  disabled={retrying}
+                  className="inline-flex items-center gap-1.5 h-9 border border-input px-4 text-sm shadow-xs transition-colors hover:bg-accent disabled:opacity-50"
+                >
+                  다시 시도
+                  {retrying && <LoaderIcon className="size-3 animate-spin" />}
+                </button>
+              </div>
             ) : selectedTranslation ? (
               <>
                 <div>

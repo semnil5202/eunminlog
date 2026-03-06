@@ -51,7 +51,7 @@ export default function SearchFilter({
             onKeyDown={handleKeyDown}
             className="w-full max-w-[330px]"
           />
-          <Button onClick={onSearch}>
+          <Button variant="outline" onClick={onSearch}>
             <Search className="mr-1 h-4 w-4" />
             검색
           </Button>

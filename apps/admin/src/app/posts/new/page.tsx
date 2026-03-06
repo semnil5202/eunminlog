@@ -24,12 +24,18 @@ import {
   TITLE_MAX_LENGTH,
   type PostFormValues,
 } from '@/features/post-editor/types/form';
-import { extractFlaggedTerms, translatePost } from '@/features/translation/api/actions';
+import {
+  extractFlaggedTerms,
+  translatePost,
+  retrySingleLocale,
+} from '@/features/translation/api/actions';
+import { LOCALE_FILTER_LABELS } from '@/features/translation/constants/locale';
 import { TranslationPreviewSheet } from '@/features/translation/components/TranslationPreviewSheet';
 import { TranslationSheetContainer } from '@/features/translation/containers/TranslationSheetContainer';
 import { LoaderIcon } from 'lucide-react';
+import { toast } from 'sonner';
 
-import type { Category, PostFormType, SubCategory } from '@/shared/types/post';
+import type { Category, PostFormType, SubCategory, TranslationLocale } from '@/shared/types/post';
 import type { FlaggedTerm, TranslationResult } from '@/features/translation/types';
 
 export default function NewPostPage() {
@@ -51,6 +57,10 @@ export default function NewPostPage() {
   const [flaggedTerms, setFlaggedTerms] = useState<FlaggedTerm[]>([]);
   const [translationResults, setTranslationResults] = useState<TranslationResult[]>([]);
   const [translationError, setTranslationError] = useState(false);
+  const [extractionFailed, setExtractionFailed] = useState(false);
+  const [lastConfirmedTerms, setLastConfirmedTerms] = useState<
+    { original: string; confirmed: string }[]
+  >([]);
 
   const formType = watch('formType');
   const title = watch('title');
@@ -124,7 +134,7 @@ export default function NewPostPage() {
       setValue('description', summary, { shouldValidate: true });
       setIsSummarized(true);
     } catch {
-      // TODO: 에러 처리 (toast 등)
+      toast.error('요약 생성에 실패했습니다. 다시 시도해주세요.');
     } finally {
       setIsSummarizing(false);
     }
@@ -132,6 +142,7 @@ export default function NewPostPage() {
 
   const handleTranslationStart = async () => {
     setIsExtracting(true);
+    setExtractionFailed(false);
 
     try {
       const { title: t, content: c, description: d, placeName: pn, address: addr } = getValues();
@@ -139,22 +150,33 @@ export default function NewPostPage() {
       const terms = await extractFlaggedTerms(c, pn || undefined, addr || undefined);
 
       if (terms.length === 0) {
-        const results = await translatePost({
+        const params = {
           title: t,
           content: c,
           description: d,
           placeName: pn || undefined,
           address: addr || undefined,
-          confirmedTerms: [],
-        });
+          confirmedTerms: [] as { original: string; confirmed: string }[],
+        };
+        const results = await translatePost(params);
+        setLastConfirmedTerms([]);
+
+        const failedLocales = results.filter((r) => r.failed);
+        for (const r of failedLocales) {
+          const label = LOCALE_FILTER_LABELS[r.locale];
+          toast.error(`${label} 번역에 실패했습니다. 번역본 확인에서 다시 시도해주세요.`);
+        }
+
         setTranslationResults(results);
         setIsTranslated(true);
+        setTimeout(() => setIsPreviewOpen(true), 800);
       } else {
         setFlaggedTerms(terms);
         setIsSheetOpen(true);
       }
     } catch {
-      // TODO: 에러 처리 (toast 등)
+      setExtractionFailed(true);
+      toast.error('번역 용어 추출에 실패했습니다. 다시 시도해주세요.');
     } finally {
       setIsExtracting(false);
     }
@@ -189,12 +211,30 @@ export default function NewPostPage() {
     // TODO: 작성 완료 처리
   };
 
-  const handleTranslationComplete = (results: TranslationResult[]) => {
+  const handleTranslationComplete = (
+    results: TranslationResult[],
+    confirmedTerms: { original: string; confirmed: string }[],
+  ) => {
     setTranslationResults(results);
+    setLastConfirmedTerms(confirmedTerms);
     setIsTranslated(true);
     setIsSheetOpen(false);
     setTranslationError(false);
     setTimeout(() => setIsPreviewOpen(true), 800);
+  };
+
+  const handleRetryLocale = async (locale: TranslationLocale) => {
+    const { title: t, content: c, description: d, placeName: pn, address: addr } = getValues();
+    const result = await retrySingleLocale(locale, {
+      title: t,
+      content: c,
+      description: d,
+      placeName: pn || undefined,
+      address: addr || undefined,
+      confirmedTerms: lastConfirmedTerms,
+    });
+    setTranslationResults((prev) => prev.map((r) => (r.locale === locale ? result : r)));
+    return result;
   };
 
   return (
@@ -353,7 +393,7 @@ export default function NewPostPage() {
                 onClick={handleTranslateClick}
                 className="inline-flex items-center gap-1.5 h-10 border border-input px-5 text-sm font-semibold shadow-xs transition-colors hover:bg-accent"
               >
-                번역본 생성하기
+                {extractionFailed ? '번역본 재생성하기' : '번역본 생성하기'}
                 {isExtracting && <LoaderIcon className="size-4 animate-spin" />}
               </button>
             )}
@@ -409,6 +449,7 @@ export default function NewPostPage() {
         originalPlaceName={watch('placeName') || undefined}
         originalAddress={watch('address') || undefined}
         translations={translationResults}
+        onRetryLocale={handleRetryLocale}
       />
     </>
   );

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { CheckIcon } from 'lucide-react';
+import { toast } from 'sonner';
 
 import {
   Sheet,
@@ -14,12 +15,16 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 import type { FlaggedTerm, TranslationResult, TranslationStatus } from '../types';
 import { translatePost } from '../api/actions';
+import { LOCALE_FILTER_LABELS } from '../constants/locale';
 import { TermReviewList } from '../components/TermReviewList';
 
 type TranslationSheetContainerProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onTranslationComplete: (results: TranslationResult[]) => void;
+  onTranslationComplete: (
+    results: TranslationResult[],
+    confirmedTerms: { original: string; confirmed: string }[],
+  ) => void;
   initialTerms: FlaggedTerm[];
   title: string;
   content: string;
@@ -69,9 +74,16 @@ export function TranslationSheetContainer({
         address,
         confirmedTerms: terms,
       });
+
+      const failedLocales = results.filter((r) => r.failed);
+      for (const r of failedLocales) {
+        const label = LOCALE_FILTER_LABELS[r.locale];
+        toast.error(`${label} 번역에 실패했습니다. 번역본 확인에서 다시 시도해주세요.`);
+      }
+
       setStatus('success');
       setTimeout(() => {
-        onTranslationComplete(results);
+        onTranslationComplete(results, terms);
       }, 800);
     } catch {
       setError('번역 중 오류가 발생했습니다.');
