@@ -58,7 +58,13 @@ const nearbyLocalized = await Promise.all(
 const subCategoryHref = getLocalePath(`/${post.category}/${post.sub_category}/`, locale);
 const publishDate = formatDate(post.created_at, locale);
 // TODO: 애드센스 되돌리기 — insertInArticleAds(post.content)
-const contentWithAds = post.content;
+const contentWithAlts = post.image_alts?.length
+  ? post.image_alts.reduce(
+      (html, { src, alt }) => html.replaceAll(`src="${src}"`, `src="${src}" alt="${alt.replace(/"/g, '&quot;')}"`),
+      post.content,
+    )
+  : post.content;
+const contentWithAds = contentWithAlts;
 const blogPosting = buildBlogPostingSchema(post, canonical);
 const reviewSchema = buildReviewSchema(post);
 const sponsoredLabel = t("post.sponsored", locale);
