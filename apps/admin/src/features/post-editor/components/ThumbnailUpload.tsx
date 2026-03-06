@@ -2,8 +2,9 @@
 
 import { type ChangeEvent, useRef } from 'react';
 
+import { useImageUpload } from '@/features/media/hooks/useImageUpload';
+
 import { ImageIcon } from './icons';
-import { toWebP } from '../lib/image';
 
 type ThumbnailUploadProps = {
   thumbnail: string | null;
@@ -12,6 +13,7 @@ type ThumbnailUploadProps = {
 
 export function ThumbnailUpload({ thumbnail, onThumbnailChange }: ThumbnailUploadProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { uploadImage, isUploading } = useImageUpload();
 
   const handleClick = () => {
     fileInputRef.current?.click();
@@ -21,16 +23,16 @@ export function ThumbnailUpload({ thumbnail, onThumbnailChange }: ThumbnailUploa
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const webpBlob = await toWebP(file);
-    const url = URL.createObjectURL(webpBlob);
-    onThumbnailChange(url);
+    try {
+      const cdnUrl = await uploadImage(file);
+      onThumbnailChange(cdnUrl);
+    } catch (err) {
+      console.error('썸네일 업로드 실패:', err);
+    }
     e.target.value = '';
   };
 
   const handleDelete = () => {
-    if (thumbnail) {
-      URL.revokeObjectURL(thumbnail);
-    }
     onThumbnailChange(null);
   };
 
@@ -51,10 +53,11 @@ export function ThumbnailUpload({ thumbnail, onThumbnailChange }: ThumbnailUploa
         <button
           type="button"
           onClick={handleClick}
-          className="flex aspect-[7/3] w-full cursor-pointer flex-col items-center justify-center gap-2 border border-input text-muted-foreground shadow-xs transition-colors hover:border-muted-foreground/50 hover:text-muted-foreground/70"
+          disabled={isUploading}
+          className="flex aspect-[7/3] w-full cursor-pointer flex-col items-center justify-center gap-2 border border-input text-muted-foreground shadow-xs transition-colors hover:border-muted-foreground/50 hover:text-muted-foreground/70 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <ImageIcon />
-          <span className="text-sm">썸네일 이미지 추가</span>
+          <span className="text-sm">{isUploading ? '업로드 중...' : '썸네일 이미지 추가'}</span>
         </button>
       )}
       <input

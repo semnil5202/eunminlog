@@ -5,13 +5,15 @@ import { type ChangeEvent, useRef } from 'react';
 import { NodeSelection } from '@tiptap/pm/state';
 
 import { cn } from '@/lib/utils';
+import { useImageUpload } from '@/features/media/hooks/useImageUpload';
+
 import { ImageIcon } from '../icons';
-import { toWebP } from '../../lib/image';
 
 import type { EditorProps } from './types';
 
 export function UploadImage({ editor }: EditorProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { uploadImages, isUploading } = useImageUpload();
 
   const handleClick = () => {
     fileInputRef.current?.click();
@@ -21,10 +23,13 @@ export function UploadImage({ editor }: EditorProps) {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    const urls: string[] = [];
-    for (const file of Array.from(files)) {
-      const webpBlob = await toWebP(file);
-      urls.push(URL.createObjectURL(webpBlob));
+    let urls: string[];
+    try {
+      urls = await uploadImages(Array.from(files));
+    } catch (err) {
+      console.error('이미지 업로드 실패:', err);
+      e.target.value = '';
+      return;
     }
 
     const { state } = editor;
@@ -163,8 +168,10 @@ export function UploadImage({ editor }: EditorProps) {
       <button
         type="button"
         onClick={handleClick}
+        disabled={isUploading}
         className={cn(
           'flex h-8 w-8 cursor-pointer items-center justify-center rounded text-foreground hover:bg-accent',
+          isUploading && 'cursor-not-allowed opacity-50',
         )}
       >
         <ImageIcon />
