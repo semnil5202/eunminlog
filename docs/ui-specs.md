@@ -6,6 +6,13 @@
 - **Brand Name**: 은민로그 (eunmin log)
 - **Language**: 한국어 기본, 다국어 지원 (GPT-5 Nano 번역): en, ja, zh-CN, zh-TW, id, vi, th
 
+### Logo Text
+
+- 한국어(`ko`): "은민로그" (`SITE_NAME_KO`)
+- 다국어(나머지 locale): "eunminlog" (`SITE_NAME_EN`)
+- 상수 위치: `packages/config/site.ts` (`SITE_NAME_KO`, `SITE_NAME_EN`)
+- PC/Mobile 헤더 모두 동일 분기 적용: `locale === DEFAULT_LOCALE ? SITE_NAME_KO : SITE_NAME_EN`
+
 ### Color System
 
 - **Primary**: Sage Green (`primary-50` ~ `primary-900`, base `#A6BAA1`)
@@ -249,13 +256,14 @@
 #### `PlaceInfoCard.astro`
 
 - **위치**: `features/post-detail/components/PlaceInfoCard.astro`
-- Props: `categoryLabel`, `subCategoryLabel`, `placeName`, `translatedPlaceName?`, `address`, `translatedAddress?`, `pricePrefix`, `price`, `description`, `translatedDescription?`, `locale`
+- Props: `categoryLabel`, `subCategoryLabel`, `placeName`, `translatedPlaceName?`, `address`, `translatedAddress?`, `pricePrefix?`, `price`, `description`, `translatedDescription?`, `locale`
 - Schema.org `LocalBusiness` 마이크로데이터 포함
 - `border-radius` 없음 (`bg-gray-50 border border-gray-200 p-5 mb-6`)
 - `<dl>` 기반 키-값 레이아웃 (`w-20` dt 라벨 폭): 카테고리, 장소, 주소, 가격대, 3줄 요약
 - 필드 라벨은 `t()` 함수로 다국어 처리 (`place.category`, `place.name`, `place.address`, `place.price`, `post.summary`)
 - 장소명/주소: 번역 텍스트 표시, `data-copy` 속성으로 한글 원문 복사, `data-toast`로 다국어 페이지에서 토스트 알림 (`place.copyToast`)
-- 3줄 요약: `description` prop을 개행 분할하여 `⋅` 접두사 리스트로 표시 (`post.summary` 라벨)
+- 가격 표시: `place.currency` i18n으로 통화 단위 다국어 처리 (`원`/`won`/`ウォン`/`韩元` 등). 비한국어 locale에서 `place.targetCurrency`가 있으면 Google 환율 변환 링크 표시 (외부 링크 아이콘, `https://www.google.com/search?q={price}+KRW+to+{targetCurrency}`)
+- 3줄 요약: `description` prop (`translatedDescription` 우선)을 개행 분할하여 `⋅` 접두사 리스트로 표시 (`post.summary` 라벨)
 - 상세 스펙: [`docs/place-i18n-specs.md`](place-i18n-specs.md)
 
 #### AI 번역 안내 문구
@@ -287,6 +295,29 @@
 - 검색 폼, 추천 키워드 chip, 결과 리스트, 빈 결과 UI, 클라이언트 검색 스크립트를 하나의 컴포넌트로 통합
 - `<script type="application/json">` 으로 검색 데이터 인라인 삽입
 - 클라이언트 JS가 PostCard DOM을 동적 생성 + In-feed Adsense를 index 1, 3에 삽입
+
+### Feature Components: Cookie Consent (`features/consent/`)
+
+#### `CookieConsentBanner.astro`
+
+- **위치**: `features/consent/components/CookieConsentBanner.astro`
+- Props: `locale`
+- `CONSENT_REQUIRED_LOCALES` (`en`, `ja`, `zh-CN`, `th`)에 해당하는 locale에서만 렌더링 (SSG 빌드 타임 결정)
+- Sticky Footer Banner (`fixed bottom-0`, `z-40`), slide-up/slide-down 애니메이션
+- 수락/거부 2-button (GDPR 요구사항: 동등한 시각적 비중)
+- 수락: `cookie_consent=true` (365일), 거부: `cookie_consent=false` (1일)
+- GA4 `cookie_consent` 이벤트 전송 (`action: accept/reject`, `content_locale`)
+- `Layout.astro`에 삽입 (`Footer` 아래, `Toast`/`ImageLightbox` 위)
+- 상세 스펙: [`docs/cookie-consent-specs.md`](cookie-consent-specs.md)
+
+### Shared Components: Layout
+
+#### `BloggerProfile.astro`
+
+- **위치**: `shared/components/layout/BloggerProfile.astro`
+- Props: `locale`
+- LeftSidebar 하단에 프로필 표시
+- `SITE_NAME_EN` 사용
 
 ### Shared Utilities
 

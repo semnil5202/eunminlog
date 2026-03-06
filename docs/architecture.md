@@ -94,11 +94,14 @@ src/
 │   │   └── lib/
 │   │       ├── ads.ts                      # insertInArticleAds() — H2 섹션 경계 광고 삽입
 │   │       └── schema.ts                   # buildBlogPostingSchema(), buildReviewSchema() JSON-LD
-│   └── search/                             # 검색 기능
-│       ├── components/
-│       │   └── SearchUI.astro              # 검색 폼 + 추천 키워드 + 결과 리스트 + 클라이언트 스크립트
-│       └── api/
-│           └── search-data.ts              # buildSearchData() — 검색용 JSON 데이터 변환
+│   ├── search/                             # 검색 기능
+│   │   ├── components/
+│   │   │   └── SearchUI.astro              # 검색 폼 + 추천 키워드 + 결과 리스트 + 클라이언트 스크립트
+│   │   └── api/
+│   │       └── search-data.ts              # buildSearchData() — 검색용 JSON 데이터 변환
+│   └── consent/                            # 쿠키 동의 배너 (GDPR/APPI/PIPL/PDPA)
+│       └── components/
+│           └── CookieConsentBanner.astro   # Sticky Footer 배너 (en/ja/zh-CN/th locale만 렌더링)
 ├── shared/
 │   ├── components/
 │   │   ├── ad/
@@ -114,6 +117,7 @@ src/
 │   │   │   ├── ThreeColumnLayout.astro     # 3-Column 그리드 레이아웃
 │   │   │   ├── SponsoredPostList.astro     # 협찬 포스트 리스트
 │   │   │   ├── SponsoredPostItem.astro     # 협찬 포스트 단일 아이템
+│   │   │   ├── BloggerProfile.astro        # 블로거 프로필 (LeftSidebar 하단)
 │   │   │   └── BaseHead.astro              # <head> 메타/SEO 공통 요소
 │   │   ├── navigation/
 │   │   │   ├── CategoryTree.astro          # 카테고리 트리 (getActiveSegments)
@@ -131,7 +135,10 @@ src/
 │   │       ├── StarRating.astro            # 별점 SVG (Schema.org Rating 포함)
 │   │       ├── SponsoredBadge.astro        # 협찬 라벨 뱃지
 │   │       └── Toast.astro                 # 전역 토스트 알림 (Layout에 1회 삽입)
+│   ├── constants/
+│   │   └── consent.ts                      # CONSENT_REQUIRED_LOCALES, CONSENT_COOKIE_NAME, CONSENT_COOKIE_MAX_AGE
 │   ├── lib/
+│   │   ├── consent.ts                      # isConsentRequired(), getConsentState(), setConsentCookie()
 │   │   ├── date.ts                         # formatDate(dateStr, locale)
 │   │   ├── navigation.ts                   # getActiveSegments(pathname, locale)
 │   │   └── i18n/

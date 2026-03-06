@@ -233,12 +233,15 @@ interface Props {
   translatedPlaceName?: string | null;
   address: string;
   translatedAddress?: string | null;
-  pricePrefix: string | null;
+  pricePrefix?: string | null;
   price: number | null;
   description: string;
   translatedDescription?: string | null;
   locale: Locale;
 }
+// 추가 구현: place.currency (통화 단위 i18n), place.targetCurrency (환율 변환 대상 통화)
+// 가격 표시: `${pricePrefix ?? ''}${price.toLocaleString()}${t("place.currency", locale)}`
+// 비한국어 locale + targetCurrency 존재 시 Google 환율 변환 링크 제공
 ```
 
 #### 필드 라벨 다국어 처리
@@ -484,6 +487,8 @@ placeName: localized.translated_place_name ?? post.place_name ?? null,
 | `place.name`      | 장소        | Place                                                                      | 場所                                                                   | 地点                                                 | 地點                                                 | Tempat                                                                                 | Địa điểm                                                                       | สถานที่                                                              |
 | `place.address`   | 주소        | Address                                                                    | 住所                                                                   | 地址                                                 | 地址                                                 | Alamat                                                                                 | Địa chỉ                                                                        | ที่อยู่                                                              |
 | `place.price`     | 가격대      | Price                                                                      | 価格帯                                                                 | 价格                                                 | 價格                                                 | Harga                                                                                  | Giá                                                                            | ราคา                                                                 |
+| `place.currency`  | 원          | won                                                                        | ウォン                                                                 | 韩元                                                 | 韓元                                                 | won                                                                                    | won                                                                            | วอน                                                                  |
+| `place.targetCurrency` | (빈 문자열) | USD                                                                   | JPY                                                                    | CNY                                                  | TWD                                                  | IDR                                                                                    | VND                                                                            | THB                                                                  |
 | `place.copyToast` | (빈 문자열) | Copied in original Korean for accurate location search. (+ 수동 복사 안내) | 正確な位置検索のため韓国語の原文でコピーされました。(+ 수동 복사 안내) | 为了准确搜索位置，已复制韩语原文。(+ 수동 복사 안내) | 為了準確搜尋位置，已複製韓語原文。(+ 수동 복사 안내) | Disalin dalam bahasa Korea asli untuk pencarian lokasi yang akurat. (+ 수동 복사 안내) | Đã sao chép bản gốc tiếng Hàn để tìm kiếm vị trí chính xác. (+ 수동 복사 안내) | คัดลอกต้นฉบับภาษาเกาหลีเพื่อค้นหาตำแหน่งได้แม่นยำ (+ 수동 복사 안내) |
 
 > **참고**: `place.copyToast` 메시지는 2줄 구성 (`\n` 구분). 1줄: 한국어 원문 복사 안내, 2줄: 해당 언어로 복사가 필요하면 수동 복사 안내. `place.price`는 "가격대"가 아닌 짧은 라벨("Price", "価格帯" 등)로 구현됨.
@@ -569,7 +574,7 @@ ALTER TABLE post_translations ADD COLUMN address text;
 | `features/post-feed/mock/translations.ts`             | mock 데이터에 place_name, address 추가                                                                     |
 | `features/post-detail/components/PlaceInfoCard.astro` | Props 추가, 번역 텍스트 표시, 장소명 복사 버튼 추가, 복사 스크립트 변경, 필드 라벨 다국어 처리             |
 | `layouts/PostLayout.astro`                            | PlaceInfoCard에 translatedPlaceName, translatedAddress props 전달                                          |
-| `shared/lib/i18n/translations.ts`                     | place.category, place.name, place.address, place.price, place.copyOriginal 키 추가                         |
+| `shared/lib/i18n/translations.ts`                     | place.category, place.name, place.address, place.price, place.currency, place.targetCurrency, place.copyToast 키 추가 |
 | `features/search/api/search-data.ts`                  | placeName, 추천 키워드에 번역 텍스트 사용                                                                  |
 | `pages/api/feed/[...path].json.ts`                    | FeedPostData.placeName에 번역 텍스트 사용                                                                  |
 | `features/post-feed/components/PostCard.astro`        | place_name 표시를 translated_place_name 우선으로 변경                                                      |

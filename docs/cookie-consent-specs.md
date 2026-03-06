@@ -1,7 +1,7 @@
 # Cookie Consent & AdSense NPA 연동 스펙
 
 > 작성일: 2026-03-06
-> 상태: Draft (PM 기획)
+> 상태: 구현 완료 (배너 UI + 쿠키 저장 + GA4 이벤트). AdSense NPA 연동은 AdSense 실제 연동 시점에 추가 작업 필요.
 > 관련 문서: [ui-specs.md](ui-specs.md), [ga4-tracking.md](ga4-tracking.md), [seo-strategy.md](seo-strategy.md), [theme.md](theme.md)
 
 ---
@@ -14,30 +14,30 @@
 
 ### 1.2 비즈니스 목표
 
-| 목표 | 설명 |
-| --- | --- |
-| 법규 준수 | GDPR(EU), APPI(일본), PIPL(중국), PDPA(태국) 등 주요 규제 대응 |
-| 광고 수익 최적화 | 동의한 사용자에게 개인화 광고를 노출하여 CPM/CTR 극대화 |
-| UX 최소 침해 | Sticky Footer Banner로 콘텐츠 가독성을 최대한 보존 |
-| 추적 가능성 | 수락/거부 비율을 GA4로 측정하여 배너 UX 개선에 활용 |
+| 목표             | 설명                                                           |
+| ---------------- | -------------------------------------------------------------- |
+| 법규 준수        | GDPR(EU), APPI(일본), PIPL(중국), PDPA(태국) 등 주요 규제 대응 |
+| 광고 수익 최적화 | 동의한 사용자에게 개인화 광고를 노출하여 CPM/CTR 극대화        |
+| UX 최소 침해     | Sticky Footer Banner로 콘텐츠 가독성을 최대한 보존             |
+| 추적 가능성      | 수락/거부 비율을 GA4로 측정하여 배너 UX 개선에 활용            |
 
 ### 1.3 법적 근거 요약
 
-| Locale | 법규 | 핵심 요구사항 |
-| --- | --- | --- |
-| `en` | GDPR (EU/UK) | 쿠키 사용 전 명시적 동의(opt-in) 필수. 거부 옵션 동등하게 제공 |
-| `ja` | APPI (일본) | 2022 개정법 기준 쿠키를 개인관련정보로 취급. 제3자 제공 시 동의 필요 |
-| `zh-CN` | PIPL (중국) | 개인정보 처리 시 고지 + 동의 필수. 쿠키 기반 추적 포함 |
-| `th` | PDPA (태국) | 쿠키를 포함한 개인데이터 수집 시 동의 필요 |
+| Locale  | 법규         | 핵심 요구사항                                                        |
+| ------- | ------------ | -------------------------------------------------------------------- |
+| `en`    | GDPR (EU/UK) | 쿠키 사용 전 명시적 동의(opt-in) 필수. 거부 옵션 동등하게 제공       |
+| `ja`    | APPI (일본)  | 2022 개정법 기준 쿠키를 개인관련정보로 취급. 제3자 제공 시 동의 필요 |
+| `zh-CN` | PIPL (중국)  | 개인정보 처리 시 고지 + 동의 필수. 쿠키 기반 추적 포함               |
+| `th`    | PDPA (태국)  | 쿠키를 포함한 개인데이터 수집 시 동의 필요                           |
 
 ### 1.4 제외 Locale 및 근거
 
-| Locale | 제외 사유 |
-| --- | --- |
-| `ko` | 한국은 쿠키 동의 배너를 적용하는 사이트가 거의 없음 (관습/관용의 영역) |
-| `id` | 인도네시아 PDP Law 시행 초기, 쿠키 동의 강제성 약함 |
-| `vi` | 베트남 개인정보보호법 시행 초기 단계 |
-| `zh-TW` | 대만 PDPA는 쿠키 동의 의무가 약함 |
+| Locale  | 제외 사유                                                              |
+| ------- | ---------------------------------------------------------------------- |
+| `ko`    | 한국은 쿠키 동의 배너를 적용하는 사이트가 거의 없음 (관습/관용의 영역) |
+| `id`    | 인도네시아 PDP Law 시행 초기, 쿠키 동의 강제성 약함                    |
+| `vi`    | 베트남 개인정보보호법 시행 초기 단계                                   |
+| `zh-TW` | 대만 PDPA는 쿠키 동의 의무가 약함                                      |
 
 ---
 
@@ -87,7 +87,7 @@ export function getConsentState(): ConsentState {
 }
 
 export function setConsentCookie(accepted: boolean): void {
-  const maxAge = 60 * 60 * 24 * 365; // 365일
+  const maxAge = accepted ? CONSENT_COOKIE_MAX_AGE : 60 * 60 * 24; // 수락: 365일, 거부: 1일
   document.cookie = `${CONSENT_COOKIE_NAME}=${accepted}; path=/; max-age=${maxAge}; SameSite=Lax; Secure`;
 }
 ```
@@ -117,32 +117,32 @@ export function setConsentCookie(accepted: boolean): void {
 
 #### Mobile (`lg` 미만)
 
-| 속성 | 값 |
-| --- | --- |
-| 위치 | `fixed bottom-0 left-0 right-0` |
-| 패딩 | `p-4` |
-| 배경 | `bg-gray-800` (background-inverse) |
-| 텍스트 | `text-gray-0` (label-inverse), `text-sm` |
-| 버튼 배치 | 텍스트 아래, `flex gap-3` 가로 배열 |
-| 버튼 크기 | 각각 `grow` (동일 너비) |
-| 수락 버튼 | `bg-primary-500 text-gray-0 py-2.5 text-sm font-medium` |
+| 속성      | 값                                                              |
+| --------- | --------------------------------------------------------------- |
+| 위치      | `fixed bottom-0 left-0 right-0`                                 |
+| 패딩      | `p-4`                                                           |
+| 배경      | `bg-gray-800` (background-inverse)                              |
+| 텍스트    | `text-gray-0` (label-inverse), `text-sm`                        |
+| 버튼 배치 | 텍스트 아래, `flex gap-3` 가로 배열                             |
+| 버튼 크기 | 각각 `grow` (동일 너비)                                         |
+| 수락 버튼 | `bg-primary-500 text-gray-0 py-2.5 text-sm font-medium`         |
 | 거부 버튼 | `border border-gray-400 text-gray-0 py-2.5 text-sm font-medium` |
-| 링크 | `text-primary-300 underline text-sm` |
-| 그림자 | `shadow-[0_-2px_10px_rgba(0,0,0,0.15)]` |
-| 최대 너비 | 없음 (전체 폭) |
+| 링크      | `text-primary-300 underline text-sm`                            |
+| 그림자    | `shadow-[0_-2px_10px_rgba(0,0,0,0.15)]`                         |
+| 최대 너비 | 없음 (전체 폭)                                                  |
 
 #### PC (`lg` 이상)
 
-| 속성 | 값 |
-| --- | --- |
-| 위치 | `fixed bottom-0 left-0 right-0` |
-| 내부 래퍼 | `max-w-screen-xl mx-auto px-6` |
-| 레이아웃 | `flex items-center justify-between gap-6` |
-| 패딩 | `py-4` |
-| 텍스트 | 좌측 영역, `text-sm` |
-| 버튼 배치 | 우측 영역, `flex gap-3 shrink-0` |
-| 버튼 크기 | `px-6 py-2.5` (고정 너비) |
-| 나머지 | Mobile과 동일 |
+| 속성      | 값                                        |
+| --------- | ----------------------------------------- |
+| 위치      | `fixed bottom-0 left-0 right-0`           |
+| 내부 래퍼 | `max-w-screen-xl mx-auto px-6`            |
+| 레이아웃  | `flex items-center justify-between gap-6` |
+| 패딩      | `py-4`                                    |
+| 텍스트    | 좌측 영역, `text-sm`                      |
+| 버튼 배치 | 우측 영역, `flex gap-3 shrink-0`          |
+| 버튼 크기 | `px-6 py-2.5` (고정 너비)                 |
+| 나머지    | Mobile과 동일                             |
 
 ### 3.4 애니메이션
 
@@ -152,12 +152,12 @@ export function setConsentCookie(accepted: boolean): void {
 
 ### 3.5 접근성
 
-| 속성 | 값 |
-| --- | --- |
-| `role` | `dialog` |
-| `aria-modal` | `false` (non-modal -- 콘텐츠 접근 차단하지 않음) |
-| `aria-label` | locale별 번역 (`consent.ariaLabel`) |
-| `aria-describedby` | 배너 설명 텍스트 요소 ID 참조 |
+| 속성               | 값                                               |
+| ------------------ | ------------------------------------------------ |
+| `role`             | `dialog`                                         |
+| `aria-modal`       | `false` (non-modal -- 콘텐츠 접근 차단하지 않음) |
+| `aria-label`       | locale별 번역 (`consent.ariaLabel`)              |
+| `aria-describedby` | 배너 설명 텍스트 요소 ID 참조                    |
 
 ---
 
@@ -193,7 +193,7 @@ export function setConsentCookie(accepted: boolean): void {
   |                 |           |     +-- GA4 이벤트 전송 (cookie_consent, action: accept)
   |                 |           |
   |                 |           +-- [거부 클릭]
-  |                 |                 +-- cookie_consent=false 저장 (365일)
+  |                 |                 +-- cookie_consent=false 저장 (1일)
   |                 |                 +-- NPA 유지
   |                 |                 +-- 배너 숨김 (slide-down)
   |                 |                 +-- GA4 이벤트 전송 (cookie_consent, action: reject)
@@ -279,6 +279,7 @@ apps/client/src/
 ```
 
 **배치 원칙**:
+
 - 배너 컴포넌트는 consent feature에 고유하므로 `features/consent/components/`에 위치한다.
 - 상수와 유틸리티는 `Layout.astro`와 AdSense 로드 스크립트에서도 참조하므로 `shared/`에 위치한다.
 
@@ -325,10 +326,10 @@ interface Props {
 
 `isConsentRequired(locale)`는 빌드 타임에 평가되므로, 동의가 필요하지 않은 locale의 페이지에는 배너 HTML 자체가 포함되지 않는다. 이는 불필요한 DOM과 스크립트를 제거하여 번들 크기와 파싱 비용을 절약한다.
 
-| Locale | 배너 HTML 포함 | NPA 판별 스크립트 포함 |
-| --- | --- | --- |
-| `ko`, `id`, `vi`, `zh-TW` | X | X |
-| `en`, `ja`, `zh-CN`, `th` | O | O |
+| Locale                    | 배너 HTML 포함 | NPA 판별 스크립트 포함 |
+| ------------------------- | -------------- | ---------------------- |
+| `ko`, `id`, `vi`, `zh-TW` | X              | X                      |
+| `en`, `ja`, `zh-CN`, `th` | O              | O                      |
 
 ---
 
@@ -338,10 +339,10 @@ interface Props {
 
 사용자가 쿠키 동의 배너에서 수락 또는 거부를 선택한 시점에 발생한다.
 
-| 파라미터 | 타입 | 예시 | 설명 |
-| --- | --- | --- | --- |
-| `action` | string | `"accept"` / `"reject"` | 사용자 선택 |
-| `content_locale` | string | `"en"` | 현재 페이지 locale |
+| 파라미터         | 타입   | 예시                    | 설명               |
+| ---------------- | ------ | ----------------------- | ------------------ |
+| `action`         | string | `"accept"` / `"reject"` | 사용자 선택        |
+| `content_locale` | string | `"en"`                  | 현재 페이지 locale |
 
 ### 6.2 구현
 
@@ -367,9 +368,9 @@ function handleConsent(accepted: boolean, locale: string): void {
 
 기존 `docs/ga4-tracking.md` Section 4의 커스텀 디멘션 테이블에 추가:
 
-| 디멘션 이름 | 범위 | 파라미터 키 | 설명 |
-| --- | --- | --- | --- |
-| Consent Action | Event | `action` | 쿠키 동의 수락/거부 |
+| 디멘션 이름    | 범위  | 파라미터 키 | 설명                |
+| -------------- | ----- | ----------- | ------------------- |
+| Consent Action | Event | `action`    | 쿠키 동의 수락/거부 |
 
 ### 6.4 gtag.ts 타입 확장
 
@@ -380,7 +381,13 @@ function handleConsent(accepted: boolean, locale: string): void {
 type GtagEvent = 'select_content' | 'search' | 'ad_impression' | 'ad_view' | 'ad_click';
 
 // 변경 후
-type GtagEvent = 'select_content' | 'search' | 'ad_impression' | 'ad_view' | 'ad_click' | 'cookie_consent';
+type GtagEvent =
+  | 'select_content'
+  | 'search'
+  | 'ad_impression'
+  | 'ad_view'
+  | 'ad_click'
+  | 'cookie_consent';
 ```
 
 단, `CookieConsentBanner.astro`의 인라인 스크립트는 Astro `<script>` 태그 내에서 직접 `window.gtag()`를 호출하므로, `trackEvent()` 래퍼를 import하지 않아도 된다. 타입 확장은 향후 다른 곳에서 `trackEvent('cookie_consent', ...)`를 호출할 가능성에 대비한 것이다.
@@ -393,80 +400,80 @@ type GtagEvent = 'select_content' | 'search' | 'ad_impression' | 'ad_view' | 'ad
 
 ### 7.1 번역 키 정의
 
-| 키 | 용도 |
-| --- | --- |
-| `consent.message` | 배너 본문 메시지 |
+| 키                  | 용도                         |
+| ------------------- | ---------------------------- |
+| `consent.message`   | 배너 본문 메시지             |
 | `consent.learnMore` | 개인정보처리방침 링크 텍스트 |
-| `consent.accept` | 수락 버튼 텍스트 |
-| `consent.reject` | 거부 버튼 텍스트 |
-| `consent.ariaLabel` | 배너 `aria-label` 값 |
+| `consent.accept`    | 수락 버튼 텍스트             |
+| `consent.reject`    | 거부 버튼 텍스트             |
+| `consent.ariaLabel` | 배너 `aria-label` 값         |
 
 ### 7.2 Locale별 번역
 
 #### `consent.message`
 
-| Locale | 값 |
-| --- | --- |
-| `ko` | `''` (미사용) |
-| `en` | `'We use cookies for personalized ads and analytics.'` |
-| `ja` | `'パーソナライズ広告とアクセス分析のためにCookieを使用しています。'` |
-| `zh-CN` | `'我们使用Cookie提供个性化广告和分析服务。'` |
-| `zh-TW` | `''` (미사용) |
-| `id` | `''` (미사용) |
-| `vi` | `''` (미사용) |
-| `th` | `'เราใช้คุกกี้เพื่อแสดงโฆษณาที่เหมาะกับคุณและวิเคราะห์การเข้าชม'` |
+| Locale  | 값                                                                   |
+| ------- | -------------------------------------------------------------------- |
+| `ko`    | `''` (미사용)                                                        |
+| `en`    | `'We use cookies for personalized ads and analytics.'`               |
+| `ja`    | `'パーソナライズ広告とアクセス分析のためにCookieを使用しています。'` |
+| `zh-CN` | `'我们使用Cookie提供个性化广告和分析服务。'`                         |
+| `zh-TW` | `''` (미사용)                                                        |
+| `id`    | `''` (미사용)                                                        |
+| `vi`    | `''` (미사용)                                                        |
+| `th`    | `'เราใช้คุกกี้เพื่อแสดงโฆษณาที่เหมาะกับคุณและวิเคราะห์การเข้าชม'`    |
 
 #### `consent.learnMore`
 
-| Locale | 값 |
-| --- | --- |
-| `ko` | `''` |
-| `en` | `'Learn more'` |
-| `ja` | `'詳しく見る'` |
-| `zh-CN` | `'了解详情'` |
-| `zh-TW` | `''` |
-| `id` | `''` |
-| `vi` | `''` |
-| `th` | `'เรียนรู้เพิ่มเติม'` |
+| Locale  | 값                    |
+| ------- | --------------------- |
+| `ko`    | `''`                  |
+| `en`    | `'Learn more'`        |
+| `ja`    | `'詳しく見る'`        |
+| `zh-CN` | `'了解详情'`          |
+| `zh-TW` | `''`                  |
+| `id`    | `''`                  |
+| `vi`    | `''`                  |
+| `th`    | `'เรียนรู้เพิ่มเติม'` |
 
 #### `consent.accept`
 
-| Locale | 값 |
-| --- | --- |
-| `ko` | `''` |
-| `en` | `'Accept'` |
-| `ja` | `'同意する'` |
-| `zh-CN` | `'接受'` |
-| `zh-TW` | `''` |
-| `id` | `''` |
-| `vi` | `''` |
-| `th` | `'ยอมรับ'` |
+| Locale  | 값           |
+| ------- | ------------ |
+| `ko`    | `''`         |
+| `en`    | `'Accept'`   |
+| `ja`    | `'同意する'` |
+| `zh-CN` | `'接受'`     |
+| `zh-TW` | `''`         |
+| `id`    | `''`         |
+| `vi`    | `''`         |
+| `th`    | `'ยอมรับ'`   |
 
 #### `consent.reject`
 
-| Locale | 값 |
-| --- | --- |
-| `ko` | `''` |
-| `en` | `'Reject'` |
-| `ja` | `'拒否する'` |
-| `zh-CN` | `'拒绝'` |
-| `zh-TW` | `''` |
-| `id` | `''` |
-| `vi` | `''` |
-| `th` | `'ปฏิเสธ'` |
+| Locale  | 값           |
+| ------- | ------------ |
+| `ko`    | `''`         |
+| `en`    | `'Reject'`   |
+| `ja`    | `'拒否する'` |
+| `zh-CN` | `'拒绝'`     |
+| `zh-TW` | `''`         |
+| `id`    | `''`         |
+| `vi`    | `''`         |
+| `th`    | `'ปฏิเสธ'`   |
 
 #### `consent.ariaLabel`
 
-| Locale | 값 |
-| --- | --- |
-| `ko` | `''` |
-| `en` | `'Cookie consent'` |
-| `ja` | `'Cookie同意'` |
-| `zh-CN` | `'Cookie同意'` |
-| `zh-TW` | `''` |
-| `id` | `''` |
-| `vi` | `''` |
-| `th` | `'ความยินยอมคุกกี้'` |
+| Locale  | 값                   |
+| ------- | -------------------- |
+| `ko`    | `''`                 |
+| `en`    | `'Cookie consent'`   |
+| `ja`    | `'Cookie同意'`       |
+| `zh-CN` | `'Cookie同意'`       |
+| `zh-TW` | `''`                 |
+| `id`    | `''`                 |
+| `vi`    | `''`                 |
+| `th`    | `'ความยินยอมคุกกี้'` |
 
 ---
 
@@ -474,43 +481,43 @@ type GtagEvent = 'select_content' | 'search' | 'ad_impression' | 'ad_view' | 'ad
 
 ### 8.1 신규 파일
 
-| 파일 | 역할 |
-| --- | --- |
-| `features/consent/components/CookieConsentBanner.astro` | 쿠키 동의 배너 UI + 클라이언트 스크립트 |
-| `shared/constants/consent.ts` | `CONSENT_REQUIRED_LOCALES`, `CONSENT_COOKIE_NAME`, `CONSENT_COOKIE_MAX_AGE` |
-| `shared/lib/consent.ts` | `isConsentRequired()`, `getConsentState()`, `setConsentCookie()` |
+| 파일                                                    | 역할                                                                        |
+| ------------------------------------------------------- | --------------------------------------------------------------------------- |
+| `features/consent/components/CookieConsentBanner.astro` | 쿠키 동의 배너 UI + 클라이언트 스크립트                                     |
+| `shared/constants/consent.ts`                           | `CONSENT_REQUIRED_LOCALES`, `CONSENT_COOKIE_NAME`, `CONSENT_COOKIE_MAX_AGE` |
+| `shared/lib/consent.ts`                                 | `isConsentRequired()`, `getConsentState()`, `setConsentCookie()`            |
 
 ### 8.2 수정 대상 파일
 
-| 파일 | 변경 내용 |
-| --- | --- |
-| `layouts/Layout.astro` | (1) `CookieConsentBanner` import + 렌더링 추가, (2) AdSense 실제 연동 시 NPA 판별 인라인 스크립트 추가 |
-| `shared/lib/i18n/translations.ts` | `consent.*` 번역 키 5개 추가 (8 locale) |
-| `shared/lib/analytics/gtag.ts` | `GtagEvent` 타입에 `'cookie_consent'` 추가 |
+| 파일                              | 변경 내용                                                                                              |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `layouts/Layout.astro`            | (1) `CookieConsentBanner` import + 렌더링 추가, (2) AdSense 실제 연동 시 NPA 판별 인라인 스크립트 추가 |
+| `shared/lib/i18n/translations.ts` | `consent.*` 번역 키 5개 추가 (8 locale)                                                                |
+| `shared/lib/analytics/gtag.ts`    | `GtagEvent` 타입에 `'cookie_consent'` 추가                                                             |
 
 ### 8.3 수정 불필요 파일
 
-| 파일 | 사유 |
-| --- | --- |
-| `shared/components/ad/FixedAdsense.astro` | AdSense 실제 연동은 별도 작업. 본 스펙은 쿠키 동의 + NPA 제어에만 관여 |
-| `shared/components/ad/InFeedAdsense.astro` | 동일 사유 |
-| `features/post-detail/lib/ads.ts` | 동일 사유. In-Article 광고 삽입 로직은 NPA/PA 구분과 무관 |
-| `features/privacy/content.ts` | 개인정보처리방침 페이지는 이미 쿠키/AdSense 관련 내용 포함. 배너에서 링크만 연결하면 됨 |
+| 파일                                       | 사유                                                                                    |
+| ------------------------------------------ | --------------------------------------------------------------------------------------- |
+| `shared/components/ad/FixedAdsense.astro`  | AdSense 실제 연동은 별도 작업. 본 스펙은 쿠키 동의 + NPA 제어에만 관여                  |
+| `shared/components/ad/InFeedAdsense.astro` | 동일 사유                                                                               |
+| `features/post-detail/lib/ads.ts`          | 동일 사유. In-Article 광고 삽입 로직은 NPA/PA 구분과 무관                               |
+| `features/privacy/content.ts`              | 개인정보처리방침 페이지는 이미 쿠키/AdSense 관련 내용 포함. 배너에서 링크만 연결하면 됨 |
 
 ---
 
 ## 9. 구현 순서 (권장)
 
-| 순서 | 작업 | 우선순위 | 관련 파일 | 비고 |
-| --- | --- | --- | --- | --- |
-| 1 | `shared/constants/consent.ts` 생성 | P0 | 신규 | 상수 정의 |
-| 2 | `shared/lib/consent.ts` 생성 | P0 | 신규 | 유틸리티 함수 |
-| 3 | `translations.ts`에 `consent.*` 키 추가 | P0 | 기존 수정 | 5키 x 8locale |
-| 4 | `CookieConsentBanner.astro` 생성 | P0 | 신규 | 배너 UI + 스크립트 |
-| 5 | `Layout.astro`에 배너 삽입 | P0 | 기존 수정 | import + 렌더링 |
-| 6 | `gtag.ts` 타입 확장 | P1 | 기존 수정 | `cookie_consent` 추가 |
-| 7 | Layout.astro NPA 판별 스크립트 추가 | P1 | 기존 수정 | AdSense 실제 연동 시점에 함께 작업 |
-| 8 | GA4 관리 콘솔에 커스텀 디멘션 등록 | P1 | GA4 설정 | `action` 디멘션 |
+| 순서 | 작업                                    | 우선순위 | 관련 파일 | 비고                               |
+| ---- | --------------------------------------- | -------- | --------- | ---------------------------------- |
+| 1    | `shared/constants/consent.ts` 생성      | P0       | 신규      | 상수 정의                          |
+| 2    | `shared/lib/consent.ts` 생성            | P0       | 신규      | 유틸리티 함수                      |
+| 3    | `translations.ts`에 `consent.*` 키 추가 | P0       | 기존 수정 | 5키 x 8locale                      |
+| 4    | `CookieConsentBanner.astro` 생성        | P0       | 신규      | 배너 UI + 스크립트                 |
+| 5    | `Layout.astro`에 배너 삽입              | P0       | 기존 수정 | import + 렌더링                    |
+| 6    | `gtag.ts` 타입 확장                     | P1       | 기존 수정 | `cookie_consent` 추가              |
+| 7    | Layout.astro NPA 판별 스크립트 추가     | P1       | 기존 수정 | AdSense 실제 연동 시점에 함께 작업 |
+| 8    | GA4 관리 콘솔에 커스텀 디멘션 등록      | P1       | GA4 설정  | `action` 디멘션                    |
 
 > 순서 7은 AdSense 실제 연동(`adsbygoogle.js` 로드) 작업과 동시에 진행한다. 현재 광고가 플레이스홀더 상태이므로, 배너 UI와 쿠키 저장 로직을 먼저 구현하고 AdSense 연동은 후속 작업으로 분리할 수 있다.
 
@@ -518,12 +525,19 @@ type GtagEvent = 'select_content' | 'search' | 'ad_impression' | 'ad_view' | 'ad
 
 ## 10. 성능 영향
 
-| 항목 | 영향 | 대응 |
-| --- | --- | --- |
-| HTML 크기 | 미미 (~500B) | SSG 빌드 타임에 consent 불필요 locale은 배너 HTML 미포함 |
-| JS 번들 | 매우 작음 (~300B) | 인라인 스크립트, 외부 라이브러리 없음 |
-| LCP/CLS | 영향 없음 | `position: fixed`로 레이아웃 시프트 없음. 콘텐츠 렌더링과 무관 |
-| 쿠키 크기 | ~20B | `cookie_consent=true` 또는 `false` 단일 값 |
+| 항목      | 영향              | 대응                                                           |
+| --------- | ----------------- | -------------------------------------------------------------- |
+| HTML 크기 | 미미 (~500B)      | SSG 빌드 타임에 consent 불필요 locale은 배너 HTML 미포함       |
+| JS 번들   | 매우 작음 (~300B) | 인라인 스크립트, 외부 라이브러리 없음                          |
+| LCP/CLS   | 영향 없음         | `position: fixed`로 레이아웃 시프트 없음. 콘텐츠 렌더링과 무관 |
+| 쿠키 크기 | ~20B              | `cookie_consent=true` 또는 `false` 단일 값                     |
+
+### 10.1 쿠키 만료 정책
+
+| 사용자 선택 | 쿠키 만료 | 설계 의도                                                                 |
+| ----------- | --------- | ------------------------------------------------------------------------- |
+| 수락        | 365일     | 장기간 개인화 광고 유지. 연 1회 재동의 유도                               |
+| 거부        | 1일       | 거부 의사를 단기간만 유지하여 다음 날 배너를 다시 표시. 광고 수익 최적화 |
 
 ---
 
