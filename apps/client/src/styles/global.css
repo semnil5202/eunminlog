@@ -17,6 +17,10 @@ img[data-lightbox] {
   cursor: pointer;
 }
 
+[itemprop='articleBody'] hr {
+  border-color: var(--color-gray-200);
+}
+
 @utility scrollbar-none {
   -ms-overflow-style: none;
   scrollbar-width: none;
