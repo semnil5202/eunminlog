@@ -56,6 +56,36 @@ export async function POST(request: Request) {
     return NextResponse.json({ draft: data });
   }
 
+  if (body.post_id) {
+    const { data: existing } = await supabaseServer
+      .from('post_drafts')
+      .select('id')
+      .eq('post_id', body.post_id)
+      .limit(1)
+      .maybeSingle();
+
+    if (existing) {
+      const { data, error } = await supabaseServer
+        .from('post_drafts')
+        .update({
+          title: body.title || '제목 없음',
+          form_data: body.form_data,
+          translation_data: body.translation_data ?? null,
+          image_alts: body.image_alts ?? [],
+          updated_at: now,
+        })
+        .eq('id', existing.id)
+        .select()
+        .single();
+
+      if (error) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
+
+      return NextResponse.json({ draft: data });
+    }
+  }
+
   const { count } = await supabaseServer
     .from('post_drafts')
     .select('id', { count: 'exact', head: true });

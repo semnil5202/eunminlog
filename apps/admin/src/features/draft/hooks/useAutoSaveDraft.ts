@@ -26,10 +26,21 @@ export function useAutoSaveDraft({
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const lastSnapshotRef = useRef<string>('');
+
+  const buildSnapshot = useCallback(() => {
+    const values = getValues();
+    const translationData = getTranslationData?.() ?? null;
+    const imageAlts = getImageAlts?.() ?? [];
+    return JSON.stringify({ values, translationData, imageAlts });
+  }, [getValues, getTranslationData, getImageAlts]);
 
   const save = useCallback(async () => {
     const values = getValues();
     if (!values.title.trim() && !values.content.trim()) return;
+
+    const snapshot = buildSnapshot();
+    if (snapshot === lastSnapshotRef.current) return;
 
     setIsSaving(true);
     try {
@@ -43,12 +54,13 @@ export function useAutoSaveDraft({
       });
       setDraftId(draft.id);
       setLastSavedAt(new Date());
+      lastSnapshotRef.current = snapshot;
     } catch {
       // 자동 저장 실패는 조용히 무시
     } finally {
       setIsSaving(false);
     }
-  }, [getValues, getTranslationData, getImageAlts, draftId, postId]);
+  }, [getValues, getTranslationData, getImageAlts, buildSnapshot, draftId, postId]);
 
   const saveManual = useCallback(async () => {
     setIsSaving(true);
@@ -64,11 +76,12 @@ export function useAutoSaveDraft({
       });
       setDraftId(draft.id);
       setLastSavedAt(new Date());
+      lastSnapshotRef.current = buildSnapshot();
       return draft;
     } finally {
       setIsSaving(false);
     }
-  }, [getValues, getTranslationData, getImageAlts, draftId, postId]);
+  }, [getValues, getTranslationData, getImageAlts, buildSnapshot, draftId, postId]);
 
   useEffect(() => {
     if (!enabled) return;
