@@ -27,5 +27,6 @@ export function getConsentState(): ConsentState {
 }
 
 export function setConsentCookie(accepted: boolean): void {
-  document.cookie = `${CONSENT_COOKIE_NAME}=${accepted}; path=/; max-age=${CONSENT_COOKIE_MAX_AGE}; SameSite=Lax; Secure`;
+  const maxAge = accepted ? CONSENT_COOKIE_MAX_AGE : 60 * 60 * 24;
+  document.cookie = `${CONSENT_COOKIE_NAME}=${accepted}; path=/; max-age=${maxAge}; SameSite=Lax; Secure`;
 }
