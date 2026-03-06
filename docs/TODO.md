@@ -137,6 +137,10 @@
 - [x] 이미지 워터마크 — Canvas API로 'eunminlog' 대각선 패턴 합성
 - [ ] S3 orphan 이미지 정리 — 게시글 미저장/삭제/수정 시 S3에 남는 미사용 이미지 처리 (S3 Lifecycle Policy 또는 별도 정리 스크립트)
 
+## Client — UI
+
+- [ ] Left Sidebar 프로필 영역 다듬기
+
 ## SEO — Sitemap
 
 - [ ] sitemap.xml 생성 (Astro SSG 빌드 타임)
