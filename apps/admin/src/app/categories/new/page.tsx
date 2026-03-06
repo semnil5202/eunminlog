@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { ChevronLeft } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -17,18 +18,66 @@ import {
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { SlugField } from '@/shared/components/slug/SlugField';
-import { CATEGORY_OPTIONS } from '@/features/post-editor/constants/category';
 
-import type { Category } from '@/shared/types/post';
+import {
+  createChildCategory,
+  createParentCategory,
+  fetchParentCategories,
+} from '@/features/category-management/api/actions';
 
 export default function NewCategoryPage() {
+  const router = useRouter();
+
+  const [parentOptions, setParentOptions] = useState<{ slug: string; name: string }[]>([]);
+
   const [categoryName, setCategoryName] = useState('');
   const [categorySlug, setCategorySlug] = useState('');
+  const [isCreatingParent, setIsCreatingParent] = useState(false);
 
-  const [subParent, setSubParent] = useState<Category | ''>('');
+  const [subParent, setSubParent] = useState('');
   const [subName, setSubName] = useState('');
   const [subSlug, setSubSlug] = useState('');
   const [subMultilingual, setSubMultilingual] = useState(false);
+  const [isCreatingChild, setIsCreatingChild] = useState(false);
+
+  useEffect(() => {
+    fetchParentCategories()
+      .then(setParentOptions)
+      .catch(() => toast.error('대분류 목록을 불러오지 못했습니다.'));
+  }, []);
+
+  const handleCreateParent = async () => {
+    if (!categoryName.trim() || !categorySlug.trim()) return;
+    setIsCreatingParent(true);
+    try {
+      await createParentCategory({ name: categoryName, slug: categorySlug });
+      toast.success('대분류 카테고리가 생성되었습니다.');
+      router.push('/categories');
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : '카테고리 생성에 실패했습니다.');
+    } finally {
+      setIsCreatingParent(false);
+    }
+  };
+
+  const handleCreateChild = async () => {
+    if (!subParent || !subName.trim() || !subSlug.trim()) return;
+    setIsCreatingChild(true);
+    try {
+      await createChildCategory({
+        parentSlug: subParent,
+        name: subName,
+        slug: subSlug,
+        isMultilingual: subMultilingual,
+      });
+      toast.success('소분류 카테고리가 생성되었습니다.');
+      router.push('/categories');
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : '카테고리 생성에 실패했습니다.');
+    } finally {
+      setIsCreatingChild(false);
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -78,7 +127,12 @@ export default function NewCategoryPage() {
         </div>
 
         <div className="flex justify-end">
-          <Button disabled={!categoryName.trim() || !categorySlug.trim()}>추가</Button>
+          <Button
+            disabled={!categoryName.trim() || !categorySlug.trim() || isCreatingParent}
+            onClick={handleCreateParent}
+          >
+            {isCreatingParent ? '생성 중...' : '추가'}
+          </Button>
         </div>
       </div>
 
@@ -92,14 +146,14 @@ export default function NewCategoryPage() {
             <label className="text-sm font-medium text-muted-foreground">
               대분류 <span className="text-primary-600">*</span>
             </label>
-            <Select value={subParent} onValueChange={(v) => setSubParent(v as Category)}>
+            <Select value={subParent} onValueChange={setSubParent}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="선택" />
               </SelectTrigger>
               <SelectContent>
-                {CATEGORY_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
+                {parentOptions.map((opt) => (
+                  <SelectItem key={opt.slug} value={opt.slug}>
+                    {opt.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -154,7 +208,12 @@ export default function NewCategoryPage() {
               다국어 지원
             </label>
           </div>
-          <Button disabled={!subParent || !subName.trim() || !subSlug.trim()}>추가</Button>
+          <Button
+            disabled={!subParent || !subName.trim() || !subSlug.trim() || isCreatingChild}
+            onClick={handleCreateChild}
+          >
+            {isCreatingChild ? '생성 중...' : '추가'}
+          </Button>
         </div>
       </div>
     </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useMemo, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 
 import Link from 'next/link';
@@ -30,45 +30,68 @@ import {
   TableRow,
 } from '@/components/ui/table';
 
-import type { Category, SubCategory } from '@/shared/types/post';
+import {
+  deleteCategories,
+  fetchCategories,
+  type CategoryWithCount,
+} from '@/features/category-management/api/actions';
 
 type QueryFormValues = {
   query: string;
 };
 
-type CategoryRow = {
-  category: Category;
-  label: string;
+type ParentRow = {
+  id: string;
+  slug: string;
+  name: string;
   postCount: number;
   createdAt: string;
 };
 
-type SubCategoryRow = {
-  category: Category;
-  subCategory: SubCategory;
-  subCategoryLabel: string;
+type ChildRow = {
+  id: string;
+  parentSlug: string;
+  slug: string;
+  name: string;
   postCount: number;
   isMultilingual: boolean;
   createdAt: string;
 };
 
-const MOCK_CATEGORIES: CategoryRow[] = [
-  { category: 'delicious', label: '맛집', postCount: 28, createdAt: '2026-01-05' },
-  { category: 'cafe', label: '카페', postCount: 11, createdAt: '2026-01-05' },
-  { category: 'travel', label: '여행', postCount: 18, createdAt: '2026-01-05' },
-];
+function buildRows(categories: CategoryWithCount[]) {
+  const parents: ParentRow[] = [];
+  const children: ChildRow[] = [];
+  const parentSlugMap = new Map<string, string>();
 
-const MOCK_SUB_CATEGORIES: SubCategoryRow[] = [
-  { category: 'delicious', subCategory: 'korean', subCategoryLabel: '한식', postCount: 12, isMultilingual: true, createdAt: '2026-01-10' },
-  { category: 'delicious', subCategory: 'western', subCategoryLabel: '양식', postCount: 8, isMultilingual: true, createdAt: '2026-01-10' },
-  { category: 'delicious', subCategory: 'japanese', subCategoryLabel: '일식', postCount: 5, isMultilingual: true, createdAt: '2026-01-10' },
-  { category: 'delicious', subCategory: 'pub', subCategoryLabel: '주점', postCount: 0, isMultilingual: false, createdAt: '2026-01-15' },
-  { category: 'cafe', subCategory: 'hotplace', subCategoryLabel: '핫플', postCount: 7, isMultilingual: true, createdAt: '2026-01-10' },
-  { category: 'cafe', subCategory: 'study', subCategoryLabel: '카공', postCount: 4, isMultilingual: true, createdAt: '2026-01-12' },
-  { category: 'travel', subCategory: 'domestic', subCategoryLabel: '국내', postCount: 10, isMultilingual: true, createdAt: '2026-01-10' },
-  { category: 'travel', subCategory: 'overseas', subCategoryLabel: '해외', postCount: 6, isMultilingual: true, createdAt: '2026-01-10' },
-  { category: 'travel', subCategory: 'accommodation', subCategoryLabel: '숙소', postCount: 0, isMultilingual: false, createdAt: '2026-01-20' },
-];
+  for (const c of categories) {
+    if (!c.parent_id) {
+      parentSlugMap.set(c.id, c.slug);
+      parents.push({
+        id: c.id,
+        slug: c.slug,
+        name: c.name,
+        postCount: c.post_count,
+        createdAt: c.created_at.slice(0, 10),
+      });
+    }
+  }
+
+  for (const c of categories) {
+    if (c.parent_id) {
+      children.push({
+        id: c.id,
+        parentSlug: parentSlugMap.get(c.parent_id) ?? '',
+        slug: c.slug,
+        name: c.name,
+        postCount: c.post_count,
+        isMultilingual: c.is_multilingual,
+        createdAt: c.created_at.slice(0, 10),
+      });
+    }
+  }
+
+  return { parents, children };
+}
 
 function truncateTitle(title: string, max = 30) {
   return title.length > max ? title.slice(0, max) + '...' : title;
@@ -93,14 +116,35 @@ function CategoriesContent() {
   });
 
   const [appliedQuery, setAppliedQuery] = useState(getValues().query);
-  const [selectedSlugs, setSelectedSlugs] = useState<Set<string>>(new Set());
-  const [deletedSlugs, setDeletedSlugs] = useState<Set<string>>(new Set());
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const [parents, setParents] = useState<ParentRow[]>([]);
+  const [children, setChildren] = useState<ChildRow[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const loadCategories = useCallback(async () => {
+    try {
+      const data = await fetchCategories();
+      const rows = buildRows(data);
+      setParents(rows.parents);
+      setChildren(rows.children);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : '카테고리 조회에 실패했습니다.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadCategories();
+  }, [loadCategories]);
 
   const handleSearch = () => {
     const current = getValues().query;
     setAppliedQuery(current);
-    setSelectedSlugs(new Set());
+    setSelectedIds(new Set());
     const params = new URLSearchParams();
     if (current) params.set('q', current);
     const qs = params.toString();
@@ -108,67 +152,76 @@ function CategoriesContent() {
   };
 
   const groupedData = useMemo(() => {
-    const groups: {
-      category: CategoryRow;
-      subCategories: SubCategoryRow[];
-    }[] = [];
+    const groups: { parent: ParentRow; children: ChildRow[] }[] = [];
 
-    for (const cat of MOCK_CATEGORIES) {
-      if (appliedQuery && !cat.label.includes(appliedQuery)) {
-        const subs = MOCK_SUB_CATEGORIES.filter(
-          (r) =>
-            r.category === cat.category &&
-            r.subCategoryLabel.includes(appliedQuery) &&
-            !deletedSlugs.has(r.subCategory),
+    for (const p of parents) {
+      if (appliedQuery && !p.name.includes(appliedQuery)) {
+        const subs = children.filter(
+          (c) => c.parentSlug === p.slug && c.name.includes(appliedQuery),
         );
-        if (subs.length > 0) groups.push({ category: cat, subCategories: subs });
+        if (subs.length > 0) groups.push({ parent: p, children: subs });
       } else {
-        const subs = MOCK_SUB_CATEGORIES.filter(
-          (r) => r.category === cat.category && !deletedSlugs.has(r.subCategory),
-        );
-        if (subs.length > 0) groups.push({ category: cat, subCategories: subs });
+        const subs = children.filter((c) => c.parentSlug === p.slug);
+        if (subs.length > 0) groups.push({ parent: p, children: subs });
       }
     }
 
     return groups;
-  }, [appliedQuery, deletedSlugs]);
+  }, [appliedQuery, parents, children]);
 
-  const selectableSubs = useMemo(
-    () => groupedData.flatMap((g) => g.subCategories).filter((s) => s.postCount === 0),
+  const selectableChildren = useMemo(
+    () => groupedData.flatMap((g) => g.children).filter((c) => c.postCount === 0),
     [groupedData],
   );
 
   const isAllSelected =
-    selectableSubs.length > 0 && selectableSubs.every((s) => selectedSlugs.has(s.subCategory));
+    selectableChildren.length > 0 && selectableChildren.every((c) => selectedIds.has(c.id));
 
   const toggleSelectAll = () => {
     if (isAllSelected) {
-      setSelectedSlugs(new Set());
+      setSelectedIds(new Set());
     } else {
-      setSelectedSlugs(new Set(selectableSubs.map((s) => s.subCategory)));
+      setSelectedIds(new Set(selectableChildren.map((c) => c.id)));
     }
   };
 
-  const toggleSelect = (slug: string) => {
-    setSelectedSlugs((prev) => {
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
       const next = new Set(prev);
-      if (next.has(slug)) next.delete(slug);
-      else next.add(slug);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   };
 
-  const selectedNames = MOCK_SUB_CATEGORIES.filter((s) => selectedSlugs.has(s.subCategory)).map(
-    (s) => truncateTitle(s.subCategoryLabel),
-  );
+  const selectedNames = children
+    .filter((c) => selectedIds.has(c.id))
+    .map((c) => truncateTitle(c.name));
 
-  const handleDelete = () => {
-    // TODO: deleteCategories(Array.from(selectedSlugs)) — DB 연동 시 활성화
-    setDeletedSlugs((prev) => new Set([...prev, ...selectedSlugs]));
-    toast.success(`${selectedSlugs.size}개의 카테고리가 삭제되었습니다.`);
-    setSelectedSlugs(new Set());
-    setIsDeleteDialogOpen(false);
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    try {
+      const result = await deleteCategories(Array.from(selectedIds));
+      if (result.success) {
+        toast.success(`${result.deletedCount}개의 카테고리가 삭제되었습니다.`);
+        setSelectedIds(new Set());
+        setIsDeleteDialogOpen(false);
+        await loadCategories();
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : '카테고리 삭제에 실패했습니다.');
+    } finally {
+      setIsDeleting(false);
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex h-40 items-center justify-center text-muted-foreground">
+        카테고리를 불러오는 중...
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -188,10 +241,10 @@ function CategoriesContent() {
               <Plus className="mr-1 h-4 w-4" />새 카테고리 생성
             </Link>
           </Button>
-          {selectedSlugs.size > 0 && (
+          {selectedIds.size > 0 && (
             <Button variant="destructive" onClick={() => setIsDeleteDialogOpen(true)}>
               <Trash2 className="mr-1 h-4 w-4" />
-              {selectedSlugs.size}개 삭제
+              {selectedIds.size}개 삭제
             </Button>
           )}
         </div>
@@ -204,7 +257,7 @@ function CategoriesContent() {
                   <Checkbox
                     checked={isAllSelected}
                     onCheckedChange={toggleSelectAll}
-                    disabled={selectableSubs.length === 0}
+                    disabled={selectableChildren.length === 0}
                   />
                 </TableHead>
                 <TableHead className="w-[18%] font-bold text-white">대분류 카테고리명</TableHead>
@@ -223,7 +276,7 @@ function CategoriesContent() {
                 </TableRow>
               ) : (
                 groupedData.flatMap((group) => [
-                  <TableRow key={group.category.category} className="bg-muted/50">
+                  <TableRow key={group.parent.id} className="bg-muted/50">
                     <TableCell className="px-4 py-3">
                       <Checkbox
                         disabled
@@ -232,25 +285,25 @@ function CategoriesContent() {
                     </TableCell>
                     <TableCell className="py-3 font-bold">
                       <Link
-                        href={`/categories/${group.category.category}/edit`}
+                        href={`/categories/${group.parent.id}/edit`}
                         className="text-blue-600 underline"
                       >
-                        {group.category.label}
+                        {group.parent.name}
                       </Link>
                     </TableCell>
                     <TableCell />
-                    <TableCell className="py-3 text-center">{group.category.postCount}</TableCell>
+                    <TableCell className="py-3 text-center">{group.parent.postCount}</TableCell>
                     <TableCell />
-                    <TableCell className="py-3 text-center">{group.category.createdAt}</TableCell>
+                    <TableCell className="py-3 text-center">{group.parent.createdAt}</TableCell>
                   </TableRow>,
-                  ...group.subCategories.map((sub) => {
-                    const canDelete = sub.postCount === 0;
+                  ...group.children.map((child) => {
+                    const canDelete = child.postCount === 0;
                     return (
-                      <TableRow key={`${group.category.category}-${sub.subCategory}`}>
+                      <TableRow key={child.id}>
                         <TableCell className="px-4 py-3">
                           <Checkbox
-                            checked={selectedSlugs.has(sub.subCategory)}
-                            onCheckedChange={() => toggleSelect(sub.subCategory)}
+                            checked={selectedIds.has(child.id)}
+                            onCheckedChange={() => toggleSelect(child.id)}
                             disabled={!canDelete}
                             title={canDelete ? undefined : '게시글이 포함되어 삭제할 수 없습니다'}
                           />
@@ -258,17 +311,17 @@ function CategoriesContent() {
                         <TableCell />
                         <TableCell className="py-3">
                           <Link
-                            href={`/categories/${sub.subCategory}/edit`}
+                            href={`/categories/${child.id}/edit`}
                             className="text-blue-600 underline"
                           >
-                            {sub.subCategoryLabel}
+                            {child.name}
                           </Link>
                         </TableCell>
-                        <TableCell className="py-3 text-center">{sub.postCount}</TableCell>
+                        <TableCell className="py-3 text-center">{child.postCount}</TableCell>
                         <TableCell className="py-3 text-center">
-                          {sub.isMultilingual ? '지원' : '미지원'}
+                          {child.isMultilingual ? '지원' : '미지원'}
                         </TableCell>
-                        <TableCell className="py-3 text-center">{sub.createdAt}</TableCell>
+                        <TableCell className="py-3 text-center">{child.createdAt}</TableCell>
                       </TableRow>
                     );
                   }),
@@ -285,7 +338,7 @@ function CategoriesContent() {
             <AlertDialogTitle>카테고리 삭제</AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="text-sm text-muted-foreground">
-                정말 총 {selectedSlugs.size}개의 카테고리를 삭제하시겠습니까?
+                정말 총 {selectedIds.size}개의 카테고리를 삭제하시겠습니까?
                 <ul className="mt-2 list-disc space-y-1 pl-5">
                   {selectedNames.slice(0, 10).map((name, i) => (
                     <li key={i}>{name}</li>
@@ -297,8 +350,12 @@ function CategoriesContent() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>취소</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" onClick={handleDelete}>
-              삭제
+            <AlertDialogAction
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? '삭제 중...' : '삭제'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

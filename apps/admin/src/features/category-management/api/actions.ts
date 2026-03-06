@@ -2,6 +2,206 @@
 
 import { supabaseServer } from '@/shared/lib/supabase-server';
 
+export type CategoryWithCount = {
+  id: string;
+  slug: string;
+  name: string;
+  parent_id: string | null;
+  sort_order: number;
+  is_multilingual: boolean;
+  created_at: string;
+  post_count: number;
+};
+
+export async function fetchCategories(): Promise<CategoryWithCount[]> {
+  const { data: categories, error: catError } = await supabaseServer
+    .from('categories')
+    .select('*')
+    .order('parent_id', { nullsFirst: true })
+    .order('sort_order');
+
+  if (catError) throw new Error(`카테고리 조회 실패: ${catError.message}`);
+  if (!categories) return [];
+
+  const { data: posts, error: postError } = await supabaseServer
+    .from('posts')
+    .select('category, sub_category');
+
+  if (postError) throw new Error(`게시글 집계 실패: ${postError.message}`);
+
+  const countMap = new Map<string, number>();
+  for (const post of posts ?? []) {
+    countMap.set(post.category, (countMap.get(post.category) ?? 0) + 1);
+    countMap.set(post.sub_category, (countMap.get(post.sub_category) ?? 0) + 1);
+  }
+
+  return categories.map((c) => ({
+    id: c.id,
+    slug: c.slug,
+    name: c.name,
+    parent_id: c.parent_id,
+    sort_order: c.sort_order,
+    is_multilingual: c.is_multilingual,
+    created_at: c.created_at,
+    post_count: countMap.get(c.slug) ?? 0,
+  }));
+}
+
+export async function fetchCategory(id: string) {
+  const { data, error } = await supabaseServer
+    .from('categories')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (error) throw new Error(`카테고리 조회 실패: ${error.message}`);
+
+  return data as {
+    id: string;
+    slug: string;
+    name: string;
+    parent_id: string | null;
+    sort_order: number;
+    is_multilingual: boolean;
+    created_at: string;
+  };
+}
+
+export async function fetchParentCategories() {
+  const { data, error } = await supabaseServer
+    .from('categories')
+    .select('id, slug, name')
+    .is('parent_id', null)
+    .order('sort_order');
+
+  if (error) throw new Error(`대분류 조회 실패: ${error.message}`);
+  return (data ?? []) as { id: string; slug: string; name: string }[];
+}
+
+export async function createParentCategory(params: { name: string; slug: string }) {
+  const { data: maxRow } = await supabaseServer
+    .from('categories')
+    .select('sort_order')
+    .is('parent_id', null)
+    .order('sort_order', { ascending: false })
+    .limit(1)
+    .single();
+
+  const nextSortOrder = (maxRow?.sort_order ?? -1) + 1;
+
+  const { data, error } = await supabaseServer
+    .from('categories')
+    .insert({
+      name: params.name,
+      slug: params.slug,
+      parent_id: null,
+      sort_order: nextSortOrder,
+      is_multilingual: true,
+    })
+    .select('id')
+    .single();
+
+  if (error) {
+    if (error.code === '23505') throw new Error('이미 사용 중인 슬러그입니다.');
+    throw new Error(`카테고리 생성 실패: ${error.message}`);
+  }
+
+  return { id: data!.id as string };
+}
+
+export async function createChildCategory(params: {
+  parentSlug: string;
+  name: string;
+  slug: string;
+  isMultilingual: boolean;
+}) {
+  const { data: parent, error: parentError } = await supabaseServer
+    .from('categories')
+    .select('id')
+    .eq('slug', params.parentSlug)
+    .single();
+
+  if (parentError || !parent) throw new Error('대분류를 찾을 수 없습니다.');
+
+  const { data: maxRow } = await supabaseServer
+    .from('categories')
+    .select('sort_order')
+    .eq('parent_id', parent.id)
+    .order('sort_order', { ascending: false })
+    .limit(1)
+    .single();
+
+  const nextSortOrder = (maxRow?.sort_order ?? -1) + 1;
+
+  const { data, error } = await supabaseServer
+    .from('categories')
+    .insert({
+      name: params.name,
+      slug: params.slug,
+      parent_id: parent.id,
+      sort_order: nextSortOrder,
+      is_multilingual: params.isMultilingual,
+    })
+    .select('id')
+    .single();
+
+  if (error) {
+    if (error.code === '23505') throw new Error('이미 사용 중인 슬러그입니다.');
+    throw new Error(`카테고리 생성 실패: ${error.message}`);
+  }
+
+  return { id: data!.id as string };
+}
+
+export async function updateCategory(params: {
+  id: string;
+  name: string;
+  slug: string;
+  parentId?: string;
+}) {
+  const { data: existing, error: fetchError } = await supabaseServer
+    .from('categories')
+    .select('slug, parent_id')
+    .eq('id', params.id)
+    .single();
+
+  if (fetchError) throw new Error(`카테고리 조회 실패: ${fetchError.message}`);
+
+  const updateData: Record<string, unknown> = {
+    name: params.name,
+    slug: params.slug,
+    updated_at: new Date().toISOString(),
+  };
+
+  if (existing.slug !== params.slug) {
+    updateData.prev_slug = existing.slug;
+  }
+
+  if (params.parentId) {
+    updateData.parent_id = params.parentId;
+  }
+
+  const { error: updateError } = await supabaseServer
+    .from('categories')
+    .update(updateData)
+    .eq('id', params.id);
+
+  if (updateError) {
+    if (updateError.code === '23505') throw new Error('이미 사용 중인 슬러그입니다.');
+    throw new Error(`카테고리 수정 실패: ${updateError.message}`);
+  }
+
+  if (existing.slug !== params.slug) {
+    const isParent = existing.parent_id === null;
+    const column = isParent ? 'category' : 'sub_category';
+
+    await supabaseServer
+      .from('posts')
+      .update({ [column]: params.slug, updated_at: new Date().toISOString() })
+      .eq(column, existing.slug);
+  }
+}
+
 export async function deleteCategories(ids: string[]) {
   if (ids.length === 0) return { success: false, deletedCount: 0 };
 

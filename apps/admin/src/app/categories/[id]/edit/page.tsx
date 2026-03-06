@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { ChevronLeft } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -27,102 +27,49 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { SlugField } from '@/shared/components/slug/SlugField';
-import { CATEGORY_OPTIONS } from '@/features/post-editor/constants/category';
 
-import type { Category } from '@/shared/types/post';
+import {
+  fetchCategory,
+  fetchParentCategories,
+  updateCategory,
+} from '@/features/category-management/api/actions';
 
-type MockCategory = {
+type CategoryData = {
   id: string;
-  type: 'parent' | 'child';
-  name: string;
   slug: string;
-  parentCategory?: Category;
-  isMultilingual?: boolean;
+  name: string;
+  parent_id: string | null;
+  is_multilingual: boolean;
 };
 
-const MOCK_CATEGORY_DB: Record<string, MockCategory> = {
-  delicious: { id: 'delicious', type: 'parent', name: '맛집', slug: 'delicious' },
-  cafe: { id: 'cafe', type: 'parent', name: '카페', slug: 'cafe' },
-  travel: { id: 'travel', type: 'parent', name: '여행', slug: 'travel' },
-  korean: {
-    id: 'korean',
-    type: 'child',
-    name: '한식',
-    slug: 'korean',
-    parentCategory: 'delicious',
-    isMultilingual: true,
-  },
-  western: {
-    id: 'western',
-    type: 'child',
-    name: '양식',
-    slug: 'western',
-    parentCategory: 'delicious',
-    isMultilingual: true,
-  },
-  japanese: {
-    id: 'japanese',
-    type: 'child',
-    name: '일식',
-    slug: 'japanese',
-    parentCategory: 'delicious',
-    isMultilingual: true,
-  },
-  pub: {
-    id: 'pub',
-    type: 'child',
-    name: '주점',
-    slug: 'pub',
-    parentCategory: 'delicious',
-    isMultilingual: false,
-  },
-  hotplace: {
-    id: 'hotplace',
-    type: 'child',
-    name: '핫플',
-    slug: 'hotplace',
-    parentCategory: 'cafe',
-    isMultilingual: true,
-  },
-  study: {
-    id: 'study',
-    type: 'child',
-    name: '카공',
-    slug: 'study',
-    parentCategory: 'cafe',
-    isMultilingual: true,
-  },
-  domestic: {
-    id: 'domestic',
-    type: 'child',
-    name: '국내',
-    slug: 'domestic',
-    parentCategory: 'travel',
-    isMultilingual: true,
-  },
-  overseas: {
-    id: 'overseas',
-    type: 'child',
-    name: '해외',
-    slug: 'overseas',
-    parentCategory: 'travel',
-    isMultilingual: true,
-  },
-  accommodation: {
-    id: 'accommodation',
-    type: 'child',
-    name: '숙소',
-    slug: 'accommodation',
-    parentCategory: 'travel',
-    isMultilingual: false,
-  },
+type ParentOption = {
+  id: string;
+  slug: string;
+  name: string;
 };
 
 export default function EditCategoryPage() {
   const { id } = useParams<{ id: string }>();
-  const mockData = MOCK_CATEGORY_DB[id];
+  const [data, setData] = useState<CategoryData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
 
-  if (!mockData) {
+  useEffect(() => {
+    fetchCategory(id)
+      .then((cat) => setData(cat))
+      .catch(() => setNotFound(true))
+      .finally(() => setIsLoading(false));
+  }, [id]);
+
+  if (isLoading) {
+    return (
+      <div className="flex h-40 items-center justify-center text-muted-foreground">
+        카테고리를 불러오는 중...
+      </div>
+    );
+  }
+
+  if (notFound || !data) {
     return (
       <div className="space-y-4">
         <Link
@@ -136,17 +83,19 @@ export default function EditCategoryPage() {
     );
   }
 
-  return mockData.type === 'parent' ? (
-    <ParentCategoryEdit data={mockData} />
+  return data.parent_id === null ? (
+    <ParentCategoryEdit data={data} />
   ) : (
-    <ChildCategoryEdit data={mockData} />
+    <ChildCategoryEdit data={data} />
   );
 }
 
-function ParentCategoryEdit({ data }: { data: MockCategory }) {
+function ParentCategoryEdit({ data }: { data: CategoryData }) {
+  const router = useRouter();
   const [name, setName] = useState(data.name);
   const [slug, setSlug] = useState(data.slug);
   const [dialogType, setDialogType] = useState<'slug' | 'name' | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleSubmit = () => {
     if (!name.trim() || !slug.trim()) return;
@@ -163,10 +112,18 @@ function ParentCategoryEdit({ data }: { data: MockCategory }) {
     }
   };
 
-  const handleConfirm = () => {
-    setDialogType(null);
-    // TODO: updateCategory Server Action 호출
-    toast.success('카테고리가 수정되었습니다.');
+  const handleConfirm = async () => {
+    setIsSaving(true);
+    try {
+      await updateCategory({ id: data.id, name, slug });
+      setDialogType(null);
+      toast.success('카테고리가 수정되었습니다.');
+      router.push('/categories');
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : '카테고리 수정에 실패했습니다.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -207,6 +164,8 @@ function ParentCategoryEdit({ data }: { data: MockCategory }) {
             value={slug}
             onChange={setSlug}
             placeholder="예: delicious"
+            table="categories"
+            excludeId={data.id}
           />
         </div>
 
@@ -227,7 +186,9 @@ function ParentCategoryEdit({ data }: { data: MockCategory }) {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>취소</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirm}>확인</AlertDialogAction>
+            <AlertDialogAction onClick={handleConfirm} disabled={isSaving}>
+              {isSaving ? '수정 중...' : '확인'}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -242,7 +203,9 @@ function ParentCategoryEdit({ data }: { data: MockCategory }) {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>취소</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirm}>확인</AlertDialogAction>
+            <AlertDialogAction onClick={handleConfirm} disabled={isSaving}>
+              {isSaving ? '수정 중...' : '확인'}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -250,17 +213,26 @@ function ParentCategoryEdit({ data }: { data: MockCategory }) {
   );
 }
 
-function ChildCategoryEdit({ data }: { data: MockCategory }) {
-  const [parent, setParent] = useState<Category>(data.parentCategory!);
+function ChildCategoryEdit({ data }: { data: CategoryData }) {
+  const router = useRouter();
+  const [parentId, setParentId] = useState(data.parent_id!);
   const [name, setName] = useState(data.name);
   const [slug, setSlug] = useState(data.slug);
   const [dialogType, setDialogType] = useState<'slug' | 'name' | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [parentOptions, setParentOptions] = useState<ParentOption[]>([]);
+
+  useEffect(() => {
+    fetchParentCategories()
+      .then(setParentOptions)
+      .catch(() => toast.error('대분류 목록을 불러오지 못했습니다.'));
+  }, []);
 
   const handleSubmit = () => {
-    if (!parent || !name.trim() || !slug.trim()) return;
+    if (!parentId || !name.trim() || !slug.trim()) return;
 
     const slugChanged = slug !== data.slug;
-    const nameChanged = name !== data.name || parent !== data.parentCategory;
+    const nameChanged = name !== data.name || parentId !== data.parent_id;
 
     if (slugChanged) {
       setDialogType('slug');
@@ -271,10 +243,18 @@ function ChildCategoryEdit({ data }: { data: MockCategory }) {
     }
   };
 
-  const handleConfirm = () => {
-    setDialogType(null);
-    // TODO: updateCategory Server Action 호출
-    toast.success('카테고리가 수정되었습니다.');
+  const handleConfirm = async () => {
+    setIsSaving(true);
+    try {
+      await updateCategory({ id: data.id, name, slug, parentId });
+      setDialogType(null);
+      toast.success('카테고리가 수정되었습니다.');
+      router.push('/categories');
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : '카테고리 수정에 실패했습니다.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -298,14 +278,14 @@ function ChildCategoryEdit({ data }: { data: MockCategory }) {
             <label className="text-sm font-medium text-muted-foreground">
               대분류 <span className="text-primary-600">*</span>
             </label>
-            <Select value={parent} onValueChange={(v) => setParent(v as Category)}>
+            <Select value={parentId} onValueChange={setParentId}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="선택" />
               </SelectTrigger>
               <SelectContent>
-                {CATEGORY_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
+                {parentOptions.map((opt) => (
+                  <SelectItem key={opt.id} value={opt.id}>
+                    {opt.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -332,6 +312,8 @@ function ChildCategoryEdit({ data }: { data: MockCategory }) {
             value={slug}
             onChange={setSlug}
             placeholder="예: korean"
+            table="categories"
+            excludeId={data.id}
           />
         </div>
 
@@ -341,7 +323,7 @@ function ChildCategoryEdit({ data }: { data: MockCategory }) {
               type="checkbox"
               id="multilingual-check"
               className="size-4 accent-primary-600"
-              checked={data.isMultilingual ?? false}
+              checked={data.is_multilingual}
               disabled
             />
             <label
@@ -351,7 +333,7 @@ function ChildCategoryEdit({ data }: { data: MockCategory }) {
               다국어 지원
             </label>
           </div>
-          <Button disabled={!parent || !name.trim() || !slug.trim()} onClick={handleSubmit}>
+          <Button disabled={!parentId || !name.trim() || !slug.trim()} onClick={handleSubmit}>
             수정
           </Button>
         </div>
@@ -367,7 +349,9 @@ function ChildCategoryEdit({ data }: { data: MockCategory }) {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>취소</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirm}>확인</AlertDialogAction>
+            <AlertDialogAction onClick={handleConfirm} disabled={isSaving}>
+              {isSaving ? '수정 중...' : '확인'}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -382,7 +366,9 @@ function ChildCategoryEdit({ data }: { data: MockCategory }) {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>취소</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirm}>확인</AlertDialogAction>
+            <AlertDialogAction onClick={handleConfirm} disabled={isSaving}>
+              {isSaving ? '수정 중...' : '확인'}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
