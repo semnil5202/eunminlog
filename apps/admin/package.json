@@ -15,6 +15,7 @@
     "@aws-sdk/s3-request-presigner": "^3.1001.0",
     "@eunminlog/config": "workspace:*",
     "@hookform/resolvers": "^5.2.2",
+    "@supabase/ssr": "^0.9.0",
     "@supabase/supabase-js": "^2.98.0",
     "@tailwindcss/postcss": "^4.1.18",
     "@tiptap/core": "^3.20.0",

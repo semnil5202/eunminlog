@@ -2,12 +2,21 @@
 
 import type { ReactNode } from 'react';
 
+import { usePathname } from 'next/navigation';
 import { Menu } from 'lucide-react';
 
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import AppSidebar from '@/shared/components/layout/AppSidebar';
 
+const NO_SIDEBAR_PATHS = ['/login'];
+
 export function SidebarLayout({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
+
+  if (NO_SIDEBAR_PATHS.includes(pathname)) {
+    return <>{children}</>;
+  }
+
   return (
     <SidebarProvider>
       <AppSidebar />

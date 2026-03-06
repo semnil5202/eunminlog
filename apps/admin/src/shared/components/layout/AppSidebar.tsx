@@ -3,8 +3,10 @@
 import type { ComponentType } from 'react';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { BarChart3, ChevronDown, FileEdit, HandCoins, LogOut } from 'lucide-react';
+
+import { getSupabase } from '@/shared/lib/supabase';
 import {
   Sidebar,
   SidebarContent,
@@ -61,6 +63,13 @@ const NAV_ITEMS: NavGroup[] = [
 
 export default function AppSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    const supabase = getSupabase();
+    await supabase.auth.signOut();
+    router.replace('/login');
+  };
 
   return (
     <Sidebar>
@@ -120,6 +129,7 @@ export default function AppSidebar() {
       <SidebarFooter className="px-4 py-4">
         <button
           type="button"
+          onClick={handleLogout}
           className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
         >
           <LogOut className="h-4 w-4" />
