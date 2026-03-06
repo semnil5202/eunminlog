@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useCallback, useMemo, useState } from 'react';
+import { Suspense, useCallback, useState } from 'react';
 import { useForm } from 'react-hook-form';
 
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -31,104 +31,10 @@ type FilterFormValues = {
   query: string;
 };
 
-type PostMetric = {
-  id: number;
-  title: string;
-  views: number;
-  recommendations: number;
-  comments: number;
-  publishedAt: string;
-};
-
 const SORT_OPTIONS: { value: SortKey; label: string }[] = [
   { value: 'views', label: '조회수 많은 순' },
   { value: 'recommendations', label: '추천수 많은 순' },
   { value: 'comments', label: '댓글수 많은 순' },
-];
-
-const PAGE_SIZE = 10;
-
-const MOCK_DATA: PostMetric[] = [
-  {
-    id: 1,
-    title: '강남역 숨은 파스타 맛집 베스트 5',
-    views: 2341,
-    recommendations: 112,
-    comments: 45,
-    publishedAt: '2026-02-28',
-  },
-  {
-    id: 2,
-    title: '제주도 3박 4일 여행 코스 추천',
-    views: 1892,
-    recommendations: 89,
-    comments: 34,
-    publishedAt: '2026-02-25',
-  },
-  {
-    id: 3,
-    title: '홍대 감성 카페 투어',
-    views: 1567,
-    recommendations: 76,
-    comments: 28,
-    publishedAt: '2026-02-22',
-  },
-  {
-    id: 4,
-    title: '을지로 힙한 술집 모음',
-    views: 1234,
-    recommendations: 54,
-    comments: 19,
-    publishedAt: '2026-02-20',
-  },
-  {
-    id: 5,
-    title: '부산 해운대 맛집 리스트',
-    views: 987,
-    recommendations: 43,
-    comments: 15,
-    publishedAt: '2026-02-18',
-  },
-  {
-    id: 6,
-    title: '성수동 브런치 카페 TOP 7',
-    views: 876,
-    recommendations: 38,
-    comments: 12,
-    publishedAt: '2026-02-15',
-  },
-  {
-    id: 7,
-    title: '경주 당일치기 여행 코스',
-    views: 765,
-    recommendations: 31,
-    comments: 9,
-    publishedAt: '2026-02-12',
-  },
-  {
-    id: 8,
-    title: '이태원 이색 레스토랑 추천',
-    views: 654,
-    recommendations: 27,
-    comments: 7,
-    publishedAt: '2026-02-10',
-  },
-  {
-    id: 9,
-    title: '양양 서핑 스팟 & 카페',
-    views: 543,
-    recommendations: 22,
-    comments: 5,
-    publishedAt: '2026-02-08',
-  },
-  {
-    id: 10,
-    title: '전주 한옥마을 먹거리 투어',
-    views: 432,
-    recommendations: 18,
-    comments: 3,
-    publishedAt: '2026-02-05',
-  },
 ];
 
 function getDefaultDateRange() {
@@ -163,7 +69,6 @@ function MetricsContent() {
     },
   });
 
-  const [appliedFilter, setAppliedFilter] = useState<FilterFormValues>(getValues());
   const [sortBy, setSortBy] = useState<SortKey>((searchParams.get('sort') as SortKey) || 'views');
   const [page, setPage] = useState(Number(searchParams.get('page')) || 1);
 
@@ -180,7 +85,6 @@ function MetricsContent() {
 
   const handleSearch = () => {
     const current = getValues();
-    setAppliedFilter(current);
     setPage(1);
     router.replace(buildQueryString(current, sortBy, 1), { scroll: false });
   };
@@ -189,33 +93,16 @@ function MetricsContent() {
     const newSort = value as SortKey;
     setSortBy(newSort);
     setPage(1);
-    router.replace(buildQueryString(appliedFilter, newSort, 1), { scroll: false });
+    router.replace(buildQueryString(getValues(), newSort, 1), { scroll: false });
   };
 
   const handlePageChange = (p: number) => {
     setPage(p);
-    router.replace(buildQueryString(appliedFilter, sortBy, p), { scroll: false });
+    router.replace(buildQueryString(getValues(), sortBy, p), { scroll: false });
   };
 
-  const filteredData = useMemo(
-    () =>
-      MOCK_DATA.filter((post) => {
-        if (appliedFilter.query) {
-          return post.title.toLowerCase().includes(appliedFilter.query.toLowerCase());
-        }
-        return true;
-      })
-        .filter((post) => {
-          if (appliedFilter.from && post.publishedAt < appliedFilter.from) return false;
-          if (appliedFilter.to && post.publishedAt > appliedFilter.to) return false;
-          return true;
-        })
-        .sort((a, b) => b[sortBy] - a[sortBy]),
-    [appliedFilter, sortBy],
-  );
-
-  const totalPages = Math.ceil(filteredData.length / PAGE_SIZE);
-  const pagedData = filteredData.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  // TODO: GA4 연동 후 실제 데이터로 교체
+  const totalPages = 0;
 
   return (
     <div className="space-y-8">
@@ -257,29 +144,11 @@ function MetricsContent() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {pagedData.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
-                    데이터가 없습니다.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                pagedData.map((post) => (
-                  <TableRow key={post.id}>
-                    <TableCell className="py-3 font-medium">{post.title}</TableCell>
-                    <TableCell className="py-3 text-center">
-                      {post.views.toLocaleString()}
-                    </TableCell>
-                    <TableCell className="py-3 text-center">
-                      {post.recommendations.toLocaleString()}
-                    </TableCell>
-                    <TableCell className="py-3 text-center">
-                      {post.comments.toLocaleString()}
-                    </TableCell>
-                    <TableCell className="py-3 text-center">{post.publishedAt}</TableCell>
-                  </TableRow>
-                ))
-              )}
+              <TableRow>
+                <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                  GA4 연동 후 데이터가 표시됩니다.
+                </TableCell>
+              </TableRow>
             </TableBody>
           </Table>
         </div>

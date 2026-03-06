@@ -78,6 +78,45 @@ export async function fetchParentCategories() {
   return (data ?? []) as { id: string; slug: string; name: string }[];
 }
 
+export type CategoryOption = { value: string; label: string };
+
+export async function fetchCategoryOptions(): Promise<{
+  parents: CategoryOption[];
+  subMap: Record<string, CategoryOption[]>;
+}> {
+  const { data, error } = await supabaseServer
+    .from('categories')
+    .select('id, slug, name, parent_id')
+    .order('sort_order');
+
+  if (error) throw new Error(`카테고리 옵션 조회 실패: ${error.message}`);
+
+  const rows = data ?? [];
+  const idToSlug = new Map<string, string>();
+  for (const c of rows) idToSlug.set(c.id, c.slug);
+
+  const parents: CategoryOption[] = [];
+  const subMap: Record<string, CategoryOption[]> = {};
+
+  for (const c of rows) {
+    if (!c.parent_id) {
+      parents.push({ value: c.slug, label: c.name });
+      subMap[c.slug] = [];
+    }
+  }
+
+  for (const c of rows) {
+    if (c.parent_id) {
+      const parentSlug = idToSlug.get(c.parent_id);
+      if (parentSlug && subMap[parentSlug]) {
+        subMap[parentSlug].push({ value: c.slug, label: c.name });
+      }
+    }
+  }
+
+  return { parents, subMap };
+}
+
 export async function createParentCategory(params: { name: string; slug: string }) {
   const { data: maxRow } = await supabaseServer
     .from('categories')

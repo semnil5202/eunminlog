@@ -38,11 +38,15 @@ import { AiGenerateButton } from '@/shared/components/ui/AiGenerateButton';
 import { fetchDraft } from '@/features/draft/api';
 import { useAutoSaveDraft } from '@/features/draft/hooks/useAutoSaveDraft';
 import { createPost } from '@/features/post-management/api/actions';
+import {
+  fetchCategoryOptions,
+  type CategoryOption,
+} from '@/features/category-management/api/actions';
 import { ImageAltSheet, extractImageSrcs } from '@/features/post-editor/components/ImageAltSheet';
 import { ImageIcon, LoaderIcon, Save, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 
-import type { Category, PostFormType, SubCategory, TranslationLocale } from '@/shared/types/post';
+import type { PostFormType, TranslationLocale } from '@/shared/types/post';
 import type { FlaggedTerm, ImageAlt, TranslationResult } from '@/features/translation/types';
 
 export default function NewPostPage() {
@@ -64,6 +68,16 @@ function NewPostContent() {
     });
 
   const { errors } = formState;
+
+  const [categoryOptions, setCategoryOptions] = useState<CategoryOption[]>([]);
+  const [subCategoryMap, setSubCategoryMap] = useState<Record<string, CategoryOption[]>>({});
+
+  useEffect(() => {
+    fetchCategoryOptions().then(({ parents, subMap }) => {
+      setCategoryOptions(parents);
+      setSubCategoryMap(subMap);
+    });
+  }, []);
 
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [isSummarized, setIsSummarized] = useState(false);
@@ -180,7 +194,7 @@ function NewPostContent() {
     trigger();
   };
 
-  const handleCategoryChange = (value: Category) => {
+  const handleCategoryChange = (value: string) => {
     setValue('category', value, { shouldValidate: true });
     setValue('subCategory', '', { shouldValidate: true });
     setIsTranslated(false);
@@ -445,12 +459,14 @@ function NewPostContent() {
             카테고리 <span className="text-primary-600">*</span>
           </label>
           <CategorySelector
-            category={(category || '') as Category | ''}
-            subCategory={(subCategory || '') as SubCategory | ''}
+            category={category || ''}
+            subCategory={subCategory || ''}
             onCategoryChange={handleCategoryChange}
             onSubCategoryChange={(value) =>
               setValue('subCategory', value, { shouldValidate: true })
             }
+            categoryOptions={categoryOptions}
+            subCategoryMap={subCategoryMap}
           />
           {(errors.category || errors.subCategory) && (
             <p className="mt-1 text-[14px] text-red-500">

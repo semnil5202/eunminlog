@@ -5,15 +5,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { CATEGORY_OPTIONS, SUB_CATEGORY_MAP } from '../constants/category';
 
-import type { Category, SubCategory } from '@/shared/types/post';
+type CategoryOption = { value: string; label: string };
 
 type CategorySelectorProps = {
-  category: Category | '';
-  subCategory: SubCategory | '';
-  onCategoryChange: (value: Category) => void;
-  onSubCategoryChange: (value: SubCategory) => void;
+  category: string;
+  subCategory: string;
+  onCategoryChange: (value: string) => void;
+  onSubCategoryChange: (value: string) => void;
+  categoryOptions: CategoryOption[];
+  subCategoryMap: Record<string, CategoryOption[]>;
 };
 
 export function CategorySelector({
@@ -21,17 +22,19 @@ export function CategorySelector({
   subCategory,
   onCategoryChange,
   onSubCategoryChange,
+  categoryOptions,
+  subCategoryMap,
 }: CategorySelectorProps) {
-  const subCategoryOptions = category ? SUB_CATEGORY_MAP[category] : [];
+  const subCategoryOptions = category ? (subCategoryMap[category] ?? []) : [];
 
   return (
     <div className="flex gap-3">
-      <Select value={category} onValueChange={(value) => onCategoryChange(value as Category)}>
+      <Select value={category} onValueChange={onCategoryChange}>
         <SelectTrigger className="w-full">
           <SelectValue placeholder="대분류" />
         </SelectTrigger>
         <SelectContent>
-          {CATEGORY_OPTIONS.map((opt) => (
+          {categoryOptions.map((opt) => (
             <SelectItem key={opt.value} value={opt.value}>
               {opt.label}
             </SelectItem>
@@ -41,7 +44,7 @@ export function CategorySelector({
 
       <Select
         value={subCategory}
-        onValueChange={(value) => onSubCategoryChange(value as SubCategory)}
+        onValueChange={onSubCategoryChange}
         disabled={!category}
       >
         <SelectTrigger className="w-full">
