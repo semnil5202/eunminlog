@@ -1,3 +1,5 @@
+import { LoaderIcon, Sparkles } from 'lucide-react';
+
 import { Separator } from '@/components/ui/separator';
 
 import type { FlaggedTerm } from '../types';
@@ -39,9 +41,14 @@ export function TermReviewList({
         type="button"
         onClick={onTranslateRequest}
         disabled={!allConfirmed || isTranslating}
-        className="mt-2 h-10 w-full bg-primary-600 text-sm font-bold text-white shadow-xs transition-colors hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
+        className="mt-2 inline-flex h-10 w-full items-center justify-center gap-1.5 bg-primary-600 text-sm font-bold text-white shadow-xs transition-colors hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
       >
-        {isTranslating ? '번역 중...' : '번역 요청'}
+        {isTranslating ? (
+          <LoaderIcon className="size-4 animate-spin" />
+        ) : (
+          <Sparkles className="size-4" />
+        )}
+        {isTranslating ? '번역 중...' : 'AI 번역 요청'}
       </button>
     </div>
   );

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { LoaderIcon } from 'lucide-react';
+import { LoaderIcon, Sparkles } from 'lucide-react';
 
 import {
   Sheet,
@@ -138,8 +138,12 @@ export function TranslationEditSheet({
               onClick={() => handleRetranslate(locale)}
               className="inline-flex items-center gap-1 bg-primary-600 px-3 py-1 text-[14px] font-medium text-white transition-colors hover:bg-primary-700 disabled:opacity-50"
             >
+              {isRetranslating ? (
+                <Sparkles className="size-3 animate-spin" />
+              ) : (
+                <Sparkles className="size-3" />
+              )}
               AI 번역 요청
-              {isRetranslating && <LoaderIcon className="size-3 animate-spin" />}
             </button>
           )}
         </div>
@@ -276,8 +280,12 @@ export function TranslationEditSheet({
                 onClick={handleBulkRetranslate}
                 className="inline-flex items-center gap-1.5 h-10 border border-input px-5 text-sm font-semibold shadow-xs transition-colors hover:bg-accent disabled:opacity-50"
               >
-                모든 언어 번역 요청
-                {bulkRetranslating && <LoaderIcon className="size-4 animate-spin" />}
+                {bulkRetranslating ? (
+                  <LoaderIcon className="size-4 animate-spin" />
+                ) : (
+                  <Sparkles className="size-4" />
+                )}
+                AI 모든 언어 번역 요청
               </button>
             )}
             <Button disabled={!allDirtyTranslated} onClick={handleComplete}>

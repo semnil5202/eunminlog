@@ -3,8 +3,8 @@ import type { SVGProps } from 'react';
 export function TableIcon({ className, ...props }: SVGProps<SVGSVGElement>) {
   return (
     <svg
-      width="16"
-      height="16"
+      width="18"
+      height="18"
       viewBox="0 0 16 16"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"

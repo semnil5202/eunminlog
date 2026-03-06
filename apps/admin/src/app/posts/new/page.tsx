@@ -34,7 +34,7 @@ import { TranslationPreviewSheet } from '@/features/translation/components/Trans
 import { TranslationSheetContainer } from '@/features/translation/containers/TranslationSheetContainer';
 import { SlugField } from '@/shared/components/slug/SlugField';
 import { AiGenerateButton } from '@/shared/components/ui/AiGenerateButton';
-import { LoaderIcon } from 'lucide-react';
+import { LoaderIcon, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 
 import type { Category, PostFormType, SubCategory, TranslationLocale } from '@/shared/types/post';
@@ -408,8 +408,12 @@ export default function NewPostPage() {
                 onClick={handleTranslateClick}
                 className="inline-flex items-center gap-1.5 h-10 border border-input px-5 text-sm font-semibold shadow-xs transition-colors hover:bg-accent"
               >
-                {extractionFailed ? '번역본 재생성하기' : '번역본 생성하기'}
-                {isExtracting && <LoaderIcon className="size-4 animate-spin" />}
+                {isExtracting ? (
+                  <LoaderIcon className="size-4 animate-spin" />
+                ) : (
+                  <Sparkles className="size-4" />
+                )}
+                {extractionFailed ? 'AI 번역본 재생성하기' : 'AI 번역본 생성하기'}
               </button>
             )}
             {needsTranslation && !isTranslated && flaggedTerms.length > 0 && (
