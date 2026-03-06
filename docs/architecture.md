@@ -82,7 +82,8 @@ src/
 │   │   │   └── SponsoredCard.astro         # 협찬 포스트 카드
 │   │   ├── api/
 │   │   │   ├── posts.ts                    # 포스트 데이터 fetch (빌드 타임, Supabase)
-│   │   │   └── translations.ts             # 번역 데이터 fetch (빌드 타임, Supabase)
+│   │   │   ├── translations.ts             # 번역 데이터 fetch (빌드 타임, Supabase)
+│   │   │   └── categories.ts              # 카테고리 데이터 fetch (빌드 타임, Supabase categories 테이블)
 │   │   └── mock/                            # (레거시 — 현재 미사용, Supabase 직접 연동)
 │   ├── post-detail/                        # 포스트 상세 페이지
 │   │   ├── components/
@@ -144,7 +145,7 @@ src/
 │   │       ├── categories.ts               # getCategoryLabel()
 │   │       └── translations.ts             # t() 번역 함수
 │   └── types/
-│       ├── category.ts                     # CategorySlug, CATEGORY_SLUGS
+│       ├── category.ts                     # CategorySlug, CategoryNode (동적 카테고리 타입)
 │       ├── common.ts                       # Locale, LOCALES, DEFAULT_LOCALE
 │       ├── post.ts                         # LocalizedPost
 │       └── seo.ts                          # BlogPostingSchema, ReviewSchema

@@ -1,8 +1,8 @@
 # Admin App Specification
 
 > Date: 2026-03-04
-> Last Updated: 2026-03-06
-> Status: Phase 1~3 완료 (에디터 + 폼 + 번역 + S3 업로드 + 저장/편집 + 이탈 방지), Phase 5-2 카테고리 관리 완료, GPT-5 Nano API 실제 연동 완료, 게시글 목록 페이지 구현 완료. 다음: GitHub Actions 빌드 트리거
+> Last Updated: 2026-03-07
+> Status: Phase 1~5 완료 (에디터 + 폼 + 번역 + S3 업로드 + 저장/편집 + 이탈 방지 + 카테고리 관리 + 게시글 목록 + 빌드 트리거). GPT-5 Nano API 실제 연동 완료 (요약 프롬프트 띄어쓰기/완성형 문장 규칙 추가). 이미지 캐러셀 + 밑줄 기본 스타일 적용
 
 ## 1. Overview
 

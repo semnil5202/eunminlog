@@ -1,5 +1,9 @@
 # Product Manager Agent Memory
 
+## Pending Actions
+
+- **secrets-reference.md 실제 값 등록 필요**: `docs/secrets-reference.md`에 DB 스키마, SQL 쿼리, IAM 정책, API 설정 등의 구조/스펙이 이전되었으나, 실제 민감한 값(API 키, 시크릿, 비밀번호, Distribution ID 등)은 아직 채워지지 않았다. 운영 환경 배포 전까지 반드시 실제 시크릿 값을 등록해야 한다. (2026-03-07 기록)
+
 ## Project Context
 
 - **Project**: eunminlog (couple blog platform)
@@ -31,40 +35,15 @@
 - Global UI pattern: Layout.astro contains 1x Toast + 1x ImageLightbox + 1x CookieConsentBanner (shared/components/ui/ + features/consent/)
 - Logo text: `SITE_NAME_KO`("은민로그") for ko, `SITE_NAME_EN`("eunminlog") for others (packages/config/site.ts)
 
-## Admin Phase Status (as of 2026-03-06)
+## Admin Phase Status (as of 2026-03-07)
 
-- Phase 1 completed: Supabase client, types, HTTPS dev server (--experimental-https), sidebar, metrics page (mock, RHF), SearchFilter (RHF register props), shadcn components, ESLint config
-- Phase 3 (major progress): Tiptap editor + form type + meta form + translation integration
-  - Form type: `PostFormType = 'visit' | 'product-review'` -- UI-only concept (not stored in DB)
-  - Layout order: 폼형식 -> 썸네일 -> 본문(title+editor) -> 카테고리 -> [visit전용필드] -> 3줄요약 -> 액션버튼
-  - New components: CategorySelector, ThumbnailUpload (WebP convert), VisitFields (place/address/price)
-  - 3줄 요약: generateSummary Server Action (GPT-5 Nano API 연동 완료), textarea + AI button
-  - Toolbar now includes TextAlign (Left/Center/Right/Justify) + 13 SVG icons
-  - Translation: extractFlaggedTerms + translatePost + retrySingleLocale Server Actions, TranslationSheetContainer (0.8s auto-close), TranslationPreviewSheet (8 locale filter tabs, default en, failed locale retry button)
-  - GPT-5 Nano API fully integrated (mock removed): summary, term extraction, translation all use real API
-  - Translation performance: 7 locales parallel via Promise.allSettled, partial failure allowed, description included in translation, address locale-specific formatting
-  - Failure fallback: toast.error on summary/extraction/translation failure, "번역본 재생성하기" button text change on extraction failure, per-locale retry in preview sheet
-  - Form validation: react-hook-form + Zod (mode: 'onSubmit'). Buttons always enabled, click triggers Zod validation -> focus + error message. Korean error messages in Zod schema.
-  - Label style: all labels `text-base font-bold` black + required `*` primary-600
-  - Loading spinners: LoaderIcon animate-spin on summary/translation buttons
-  - Translation UX: "용어 검토 계속하기" button for sheet re-open. "번역본 생성하기" always enabled (no description.trim() disabled), validates via Zod on click
-- Post list page (`/posts`): SearchFilter (RHF) + table (title/published/modified) + sort dropdown (newest published/newest modified) + "새 글 작성" button. Sidebar routing updated: "게시글 작성/수정/삭제" -> `/posts`
-- Category management page (`/categories`): SearchFilter.Query only, grouped parent-child table, "새 카테고리 생성" button, no pagination (pageSize 100)
-- Image insert: CustomResizableImage (DOM NodeView, 4-corner resize handles, width % storage), UploadImage toolbar (blob URL temp)
-- Tiptap HTML output uses inline styles -- critical Client impact: `insertInArticleAds()` needs `<h2>` regex migration
-- Price field: price_prefix (text, optional) + price (number, required for visit). Display: "${prefix}${price.toLocaleString()}원"
-- Admin toast: sonner library (`<Toaster position="top-right" richColors />` in layout.tsx)
-- Admin button: cursor-pointer default, search button variant="outline"
-- Remaining: S3 upload, save action, edit page, delete, Placeholder ext, toggles (sponsored/recommended/multilingual), rating, slug auto-gen, translation DB save
-- Pending DB migrations: M-03~M-07 (price fields, category enum->text, categories table, index redesign). See docs/database.md Section 7
-- Phase 5-1 completed: SearchFilter compound component refactoring (DateRange + Query sub-components) + Pagination shared component (max 9 pages, ellipsis group navigation, URL page query)
-- Phase 5-2 completed: Category management page (`/categories`) -- group table (category/sub rows), SearchFilter.Query only, mock data, pageSize 100 (no pagination)
-- Phase 5-3 completed: Applied Pagination to `/posts` + `/` pages (pageSize 10)
-- admin-specs.md Section 4-7: category-management feature spec (CM-1~CM-10), Section 4-2-A: 게시글 수정 상세 스펙, Section 5-4: SearchFilter compound pattern, Section 5-5: Pagination spec
-- Category edit: slug 수정 허용 (기존 불가→허용), is_multilingual 수정 불가, slug 변경시 경고 모달, 이름만 변경시 확인 모달
-- Post edit: 다국어 게시글은 dirty 감지 → 번역 재생성 필수 → 수정 완료 버튼 번역 후 활성화
-- Edit entry points: 테이블 row의 이름/제목을 `text-blue-600 underline` 하이퍼링크로 표시
-- api-specs.md: getCategory(7.3) 추가, updateCategory(7.4) slug 수정 허용으로 변경
+- All phases (1~5) completed. DB migrations M-01~M-10 all applied.
+- Summary prompt updated: spacing + complete sentence rules (2026-03-07)
+- Underline: browser default `<u>` style (custom removed)
+- Image carousel: Admin `data-type="image-carousel"` → Client PostLayout JS transforms to carousel
+- Client categories: dynamic from Supabase `categories` table (hardcoded CATEGORY_SLUGS/SUB_CATEGORY_MAP removed)
+- Client image alt injection: `image_alts` JSONB → PostLayout `<img>` alt attribute injection (translated alt preferred)
+- AdSense placeholders: all 5 spots commented out, restoration guide at `docs/ADSENSE-TODO.md`
 
 ## Client PlaceInfoCard Changes (2026-03-05, updated 2026-03-06)
 

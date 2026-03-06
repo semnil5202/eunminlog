@@ -77,6 +77,8 @@
 - [x] 카테고리 생성 (`/categories/new`) — 대분류/소분류 생성 + 슬러그 유효성 검사
 - [x] 카테고리 수정 (`/categories/[id]`) — 이름/슬러그 수정 + posts 동기화
 - [x] 카테고리 삭제 — 다중 선택 삭제, 게시글 포함 시 차단, 소분류 있는 대분류 차단
+- [x] 카테고리 생성 페이지 유효성 검사 toast에서 인라인 에러 메시지로 변경 (대분류/소분류 모두)
+- [x] 버튼 스타일 통일 (edit 페이지 submit 버튼)
 
 ### 301 Redirect — Slug 변경 시 이전 URL 리다이렉트 (완료)
 
@@ -94,6 +96,10 @@
 - [ ] IAM 정책 업데이트: `cloudfront:DescribeFunction`, `cloudfront:UpdateFunction`, `cloudfront:PublishFunction` 권한 추가
 - [ ] GitHub Secrets 등록: `PROD_CF_FUNCTION_NAME`, `DEV_CF_FUNCTION_NAME`
 - [ ] Supabase 빌드 타임 접속 정보 GitHub Secrets 등록 (리다이렉트 매핑 조회용)
+
+### 문서 정비 (완료)
+
+- [x] docs 민감 정보(DB 스키마, SQL, IAM 정책, API 설정) `secrets-reference.md`로 이전 — 각 docs 파일에서 링크로 대체
 
 ### Admin 미완료
 
@@ -124,7 +130,20 @@
 
 - [ ] **Underline 클래스 호환성** — Tailwind purge safelist에 `underline` 추가 권장
 - [ ] **리사이즈된 이미지의 반응형 대응** — 모바일 최소 너비 설정 검토
-- [ ] **연속 이미지 갤러리 CSS snap 변환**
+- [x] **연속 이미지 갤러리 CSS snap 변환** — Admin `data-type="image-carousel"` HTML을 Client PostLayout에서 carousel viewport/slide로 변환 (JS 초기화 + CSS)
+
+## Client — 최근 완료 (2026-03-07)
+
+- [x] **HR 스타일 수정** — `global.css`에 `[itemprop='articleBody'] hr` 스타일 추가 (`border-color: var(--color-gray-200)`)
+- [x] **이미지 alt 태그 Client 주입** — `image_alts` JSONB를 DB에서 가져와 PostLayout에서 content HTML `<img>`에 alt 속성 주입. 다국어 번역된 alt 우선 사용
+- [x] **카테고리 DB 연동** — `CATEGORY_SLUGS`/`SUB_CATEGORY_MAP` 하드코딩 제거. Supabase `categories` 테이블에서 동적으로 가져오도록 변경 (`features/post-feed/api/categories.ts`)
+- [x] **검색 페이지 max-width** — `SearchUI.astro` 루트 div에 `w-full max-w-[688px]` 적용
+- [x] **애드센스 가짜 지면 주석 처리** — 5곳 주석 처리. 복원 가이드: [`docs/ADSENSE-TODO.md`](ADSENSE-TODO.md)
+
+## Admin — 최근 완료 (2026-03-07)
+
+- [x] **3줄 요약 프롬프트 개선** — 띄어쓰기 규칙 + 완성형 문장 마무리 규칙 추가
+- [x] **밑줄 스타일 제거** — Tiptap CustomUnderline에서 커스텀 스타일 제거, 브라우저 기본 `<u>` 사용
 
 ## SEO
 
