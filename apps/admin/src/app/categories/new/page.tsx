@@ -102,6 +102,11 @@ export default function NewCategoryPage() {
           subMultilingual && Object.keys(subTranslations).length > 0 ? subTranslations : undefined,
       });
       toast.success('소분류 카테고리가 생성되었습니다.');
+      setSubParent('');
+      setSubName('');
+      setSubSlug('');
+      setSubMultilingual(false);
+      setSubTranslations({});
     } catch (e) {
       toast.error(e instanceof Error ? e.message : '카테고리 생성에 실패했습니다.');
     } finally {
