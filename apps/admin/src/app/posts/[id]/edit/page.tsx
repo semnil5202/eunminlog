@@ -1,13 +1,16 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
-import { ChevronLeft } from 'lucide-react';
+import { useParams, useSearchParams } from 'next/navigation';
+import { ChevronLeft, LoaderIcon, Save } from 'lucide-react';
 import { toast } from 'sonner';
+
+import { fetchDraft } from '@/features/draft/api';
+import { useAutoSaveDraft } from '@/features/draft/hooks/useAutoSaveDraft';
 
 import {
   AlertDialog,
@@ -78,6 +81,7 @@ const MOCK_TRANSLATIONS: TranslationResult[] = [
 
 export default function EditPostPage() {
   const { id } = useParams<{ id: string }>();
+  const searchParams = useSearchParams();
 
   // TODO: getPost(id) Server Action 호출로 교체
   const post = { ...MOCK_POST, id };
@@ -101,7 +105,7 @@ export default function EditPostPage() {
     [post.id],
   );
 
-  const { register, control, watch, setValue, getValues, trigger, setFocus, formState } =
+  const { register, control, watch, setValue, getValues, reset, trigger, setFocus, formState } =
     useForm<PostFormValues>({
       resolver: zodResolver(postFormSchema),
       defaultValues: initialValues,
@@ -109,6 +113,21 @@ export default function EditPostPage() {
     });
 
   const { errors } = formState;
+
+  const { lastSavedAt, isSaving, saveManual, loadDraftId } = useAutoSaveDraft({
+    getValues,
+    postId: id,
+  });
+
+  useEffect(() => {
+    const draftParam = searchParams.get('draft');
+    if (!draftParam) return;
+
+    fetchDraft(draftParam).then((draft) => {
+      reset(draft.form_data);
+      loadDraftId(draft.id);
+    });
+  }, [searchParams, reset, loadDraftId]);
 
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [isSummarized, setIsSummarized] = useState(false);
@@ -426,7 +445,25 @@ export default function EditPostPage() {
         </div>
 
         <div className="mt-10">
+          {lastSavedAt && (
+            <p className="mb-2 text-end text-xs text-muted-foreground">
+              마지막 임시저장: {lastSavedAt.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
+            </p>
+          )}
           <div className="flex items-center justify-end gap-3">
+            <button
+              type="button"
+              onClick={saveManual}
+              disabled={isSaving}
+              className="inline-flex items-center gap-1.5 h-10 border border-input px-5 text-sm font-semibold shadow-xs transition-colors hover:bg-accent disabled:opacity-50"
+            >
+              {isSaving ? (
+                <LoaderIcon className="size-4 animate-spin" />
+              ) : (
+                <Save className="size-4" />
+              )}
+              임시저장
+            </button>
             {needsTranslation && (
               <button
                 type="button"

@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useSearchParams } from 'next/navigation';
 
 import {
   Select,
@@ -34,14 +35,25 @@ import { TranslationPreviewSheet } from '@/features/translation/components/Trans
 import { TranslationSheetContainer } from '@/features/translation/containers/TranslationSheetContainer';
 import { SlugField } from '@/shared/components/slug/SlugField';
 import { AiGenerateButton } from '@/shared/components/ui/AiGenerateButton';
-import { LoaderIcon, Sparkles } from 'lucide-react';
+import { fetchDraft } from '@/features/draft/api';
+import { useAutoSaveDraft } from '@/features/draft/hooks/useAutoSaveDraft';
+import { LoaderIcon, Save, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 
 import type { Category, PostFormType, SubCategory, TranslationLocale } from '@/shared/types/post';
 import type { FlaggedTerm, TranslationResult } from '@/features/translation/types';
 
 export default function NewPostPage() {
-  const { register, control, watch, setValue, getValues, trigger, setFocus, formState } =
+  return (
+    <Suspense>
+      <NewPostContent />
+    </Suspense>
+  );
+}
+
+function NewPostContent() {
+  const searchParams = useSearchParams();
+  const { register, control, watch, setValue, getValues, reset, trigger, setFocus, formState } =
     useForm<PostFormValues>({
       resolver: zodResolver(postFormSchema),
       defaultValues: POST_FORM_DEFAULTS,
@@ -49,6 +61,20 @@ export default function NewPostPage() {
     });
 
   const { errors } = formState;
+
+  const { lastSavedAt, isSaving, saveManual, loadDraftId } = useAutoSaveDraft({
+    getValues,
+  });
+
+  useEffect(() => {
+    const draftParam = searchParams.get('draft');
+    if (!draftParam) return;
+
+    fetchDraft(draftParam).then((draft) => {
+      reset(draft.form_data);
+      loadDraftId(draft.id);
+    });
+  }, [searchParams, reset, loadDraftId]);
 
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [isSummarized, setIsSummarized] = useState(false);
@@ -406,7 +432,25 @@ export default function NewPostPage() {
         </div>
 
         <div className="mt-10">
+          {lastSavedAt && (
+            <p className="mb-2 text-end text-xs text-muted-foreground">
+              마지막 임시저장: {lastSavedAt.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
+            </p>
+          )}
           <div className="flex items-center justify-end gap-3">
+            <button
+              type="button"
+              onClick={saveManual}
+              disabled={isSaving}
+              className="inline-flex items-center gap-1.5 h-10 border border-input px-5 text-sm font-semibold shadow-xs transition-colors hover:bg-accent disabled:opacity-50"
+            >
+              {isSaving ? (
+                <LoaderIcon className="size-4 animate-spin" />
+              ) : (
+                <Save className="size-4" />
+              )}
+              임시저장
+            </button>
             {needsTranslation && !isTranslated && flaggedTerms.length === 0 && (
               <button
                 type="button"

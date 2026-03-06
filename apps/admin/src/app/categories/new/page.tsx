@@ -70,6 +70,7 @@ export default function NewCategoryPage() {
             value={categorySlug}
             onChange={setCategorySlug}
             placeholder="예: delicious"
+            table="categories"
           />
           <p className="text-xs text-muted-foreground">
             * 슬러그는 SEO에 직접 반영되는 요소입니다. 신중하게 선택해주세요.
@@ -125,6 +126,7 @@ export default function NewCategoryPage() {
             value={subSlug}
             onChange={setSubSlug}
             placeholder="예: korean"
+            table="categories"
           />
           <p className="text-xs text-muted-foreground">
             * 슬러그는 SEO에 직접 반영되는 요소입니다. 신중하게 선택해주세요.

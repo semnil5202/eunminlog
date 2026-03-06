@@ -5,11 +5,23 @@ import { useForm } from 'react-hook-form';
 
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Plus } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 import SearchFilter from '@/shared/components/filter/SearchFilter';
 import Pagination from '@/shared/components/pagination/Pagination';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import {
   Select,
   SelectContent,
@@ -86,6 +98,10 @@ function getDefaultDateRange() {
   };
 }
 
+function truncateTitle(title: string, max = 30) {
+  return title.length > max ? title.slice(0, max) + '...' : title;
+}
+
 export default function PostsPage() {
   return (
     <Suspense>
@@ -113,6 +129,9 @@ function PostsContent() {
     (searchParams.get('sort') as SortKey) || 'publishedAt',
   );
   const [page, setPage] = useState(Number(searchParams.get('page')) || 1);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [deletedIds, setDeletedIds] = useState<Set<number>>(new Set());
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const buildQueryString = useCallback((filter: FilterFormValues, sort: SortKey, p: number) => {
     const params = new URLSearchParams();
@@ -129,6 +148,7 @@ function PostsContent() {
     const current = getValues();
     setAppliedFilter(current);
     setPage(1);
+    setSelectedIds(new Set());
     router.replace(buildQueryString(current, sortBy, 1), { scroll: false });
   };
 
@@ -136,33 +156,67 @@ function PostsContent() {
     const newSort = value as SortKey;
     setSortBy(newSort);
     setPage(1);
+    setSelectedIds(new Set());
     router.replace(buildQueryString(appliedFilter, newSort, 1), { scroll: false });
   };
 
   const handlePageChange = (p: number) => {
     setPage(p);
+    setSelectedIds(new Set());
     router.replace(buildQueryString(appliedFilter, sortBy, p), { scroll: false });
   };
 
   const filteredData = useMemo(
     () =>
-      MOCK_DATA.filter((post) => {
-        if (appliedFilter.query) {
-          return post.title.toLowerCase().includes(appliedFilter.query.toLowerCase());
-        }
-        return true;
-      })
+      MOCK_DATA.filter((post) => !deletedIds.has(post.id))
+        .filter((post) => {
+          if (appliedFilter.query) {
+            return post.title.toLowerCase().includes(appliedFilter.query.toLowerCase());
+          }
+          return true;
+        })
         .filter((post) => {
           if (appliedFilter.from && post.publishedAt < appliedFilter.from) return false;
           if (appliedFilter.to && post.publishedAt > appliedFilter.to) return false;
           return true;
         })
         .sort((a, b) => (a[sortBy] > b[sortBy] ? -1 : 1)),
-    [appliedFilter, sortBy],
+    [appliedFilter, sortBy, deletedIds],
   );
 
   const totalPages = Math.ceil(filteredData.length / PAGE_SIZE);
   const pagedData = filteredData.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  const isAllSelected = pagedData.length > 0 && pagedData.every((p) => selectedIds.has(p.id));
+
+  const toggleSelectAll = () => {
+    if (isAllSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(pagedData.map((p) => p.id)));
+    }
+  };
+
+  const toggleSelect = (id: number) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const selectedTitles = filteredData
+    .filter((p) => selectedIds.has(p.id))
+    .map((p) => truncateTitle(p.title));
+
+  const handleDelete = () => {
+    // TODO: deletePosts(Array.from(selectedIds).map(String)) — DB 연동 시 활성화
+    setDeletedIds((prev) => new Set([...prev, ...selectedIds]));
+    toast.success(`${selectedIds.size}개의 게시글이 삭제되었습니다.`);
+    setSelectedIds(new Set());
+    setIsDeleteDialogOpen(false);
+  };
 
   return (
     <div className="space-y-8">
@@ -178,11 +232,19 @@ function PostsContent() {
 
       <div>
         <div className="mb-3 flex items-center justify-between">
-          <Button asChild>
-            <Link href="/posts/new">
-              <Plus className="mr-1 h-4 w-4" />새 글 작성
-            </Link>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button asChild>
+              <Link href="/posts/new">
+                <Plus className="mr-1 h-4 w-4" />새 글 작성
+              </Link>
+            </Button>
+            {selectedIds.size > 0 && (
+              <Button variant="destructive" onClick={() => setIsDeleteDialogOpen(true)}>
+                <Trash2 className="mr-1 h-4 w-4" />
+                {selectedIds.size}개 삭제
+              </Button>
+            )}
+          </div>
           <Select value={sortBy} onValueChange={handleSortChange}>
             <SelectTrigger className="w-[150px]">
               <SelectValue />
@@ -201,7 +263,14 @@ function PostsContent() {
           <Table>
             <TableHeader>
               <TableRow className="bg-primary-600 hover:bg-primary-600">
-                <TableHead className="w-[60%] font-bold text-white">게시글 제목</TableHead>
+                <TableHead className="w-[52px] px-4">
+                  <Checkbox
+                    checked={isAllSelected}
+                    onCheckedChange={toggleSelectAll}
+                    disabled={pagedData.length === 0}
+                  />
+                </TableHead>
+                <TableHead className="w-[55%] font-bold text-white">게시글 제목</TableHead>
                 <TableHead className="text-center font-bold text-white">발행일</TableHead>
                 <TableHead className="text-center font-bold text-white">마지막 수정일</TableHead>
               </TableRow>
@@ -209,13 +278,19 @@ function PostsContent() {
             <TableBody>
               {pagedData.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={3} className="h-24 text-center text-muted-foreground">
+                  <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
                     데이터가 없습니다.
                   </TableCell>
                 </TableRow>
               ) : (
                 pagedData.map((post) => (
                   <TableRow key={post.id}>
+                    <TableCell className="px-4 py-3">
+                      <Checkbox
+                        checked={selectedIds.has(post.id)}
+                        onCheckedChange={() => toggleSelect(post.id)}
+                      />
+                    </TableCell>
                     <TableCell className="py-3 font-medium">
                       <Link href={`/posts/${post.id}/edit`} className="text-blue-600 underline">
                         {post.title}
@@ -232,6 +307,31 @@ function PostsContent() {
 
         <Pagination page={page} totalPages={totalPages} onPageChange={handlePageChange} />
       </div>
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>게시글 삭제</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="text-sm text-muted-foreground">
+                정말 총 {selectedIds.size}개의 게시글을 삭제하시겠습니까?
+                <ul className="mt-2 list-disc space-y-1 pl-5">
+                  {selectedTitles.slice(0, 10).map((title, i) => (
+                    <li key={i}>{title}</li>
+                  ))}
+                  {selectedTitles.length > 10 && <li>... 외 {selectedTitles.length - 10}개</li>}
+                </ul>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>취소</AlertDialogCancel>
+            <AlertDialogAction variant="destructive" onClick={handleDelete}>
+              삭제
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

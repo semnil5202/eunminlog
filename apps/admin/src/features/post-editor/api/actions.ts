@@ -1,6 +1,7 @@
 'use server';
 
 import { openai } from '@/shared/lib/openai';
+import { supabaseServer } from '@/shared/lib/supabase-server';
 
 const SUMMARY_SYSTEM_PROMPT = `당신은 한국어 블로그 포스트 요약 전문가입니다.
 주어진 블로그 제목과 본문을 읽고, 정확히 3줄로 요약해주세요.
@@ -20,9 +21,11 @@ const SLUG_SYSTEM_PROMPT = `당신은 URL slug 생성 전문가입니다.
 
 규칙:
 - 소문자 영문, 숫자, 하이픈(-)만 사용
-- 2~4단어, 최대 40자
-- SEO 친화적이고 의미가 명확한 slug
-- 한국어 의미를 잘 반영하되, 직역보다 자연스러운 영어 표현 선호
+- 한국어 제목의 각 단어를 충실히 영어로 번역하고, 띄어쓰기를 하이픈(-)으로 연결
+- 제목의 의미를 생략하거나 요약하지 말 것. 원문의 모든 핵심 단어를 포함
+- 최대 60자
+- 예시: "강남역 숨은 파스타 맛집 베스트 5" → "gangnam-station-hidden-pasta-restaurant-best-5"
+- 3개 후보는 번역 표현만 다르게 (동의어, 어순 변형 등)
 
 응답은 반드시 JSON 객체로 작성해주세요. 형식: {"slugs": ["slug-1", "slug-2", "slug-3"]}`;
 
@@ -44,6 +47,21 @@ export async function generateSlugSuggestions(text: string): Promise<string[]> {
   }
 
   return parsed.slugs.slice(0, 3);
+}
+
+export async function checkSlugDuplicate(
+  slug: string,
+  table: 'posts' | 'categories',
+  excludeId?: string,
+): Promise<boolean> {
+  let query = supabaseServer.from(table).select('id', { count: 'exact', head: true }).eq('slug', slug);
+
+  if (excludeId) {
+    query = query.neq('id', excludeId);
+  }
+
+  const { count } = await query;
+  return (count ?? 0) > 0;
 }
 
 export async function generateSummary(title: string, content: string): Promise<string> {
