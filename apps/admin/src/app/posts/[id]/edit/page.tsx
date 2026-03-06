@@ -606,7 +606,7 @@ function EditPostForm({
               type="button"
               onClick={handleSubmitClick}
               disabled={submitDisabled}
-              className="h-10 bg-primary-600 px-5 text-sm font-bold text-white shadow-xs transition-colors hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
+              className="h-10 bg-primary px-5 text-sm font-medium text-primary-foreground shadow-xs transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
             >
               수정 완료
             </button>

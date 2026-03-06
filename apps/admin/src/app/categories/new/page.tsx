@@ -52,7 +52,14 @@ export default function NewCategoryPage() {
   }, []);
 
   const handleCreateParent = async () => {
-    if (!categoryName.trim() || !categorySlug.trim()) return;
+    if (!categoryName.trim()) {
+      toast.error('카테고리명을 입력해주세요.');
+      return;
+    }
+    if (!categorySlug.trim()) {
+      toast.error('슬러그를 입력해주세요.');
+      return;
+    }
     setIsCreatingParent(true);
     try {
       await createParentCategory({ name: categoryName, slug: categorySlug });
@@ -165,10 +172,7 @@ export default function NewCategoryPage() {
         </div>
 
         <div className="flex justify-end">
-          <Button
-            disabled={!categoryName.trim() || !categorySlug.trim() || isCreatingParent}
-            onClick={handleCreateParent}
-          >
+          <Button disabled={isCreatingParent} onClick={handleCreateParent}>
             {isCreatingParent ? '생성 중...' : '추가'}
           </Button>
         </div>
