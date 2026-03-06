@@ -110,11 +110,7 @@ const CustomLink = Link.configure({
   validate: (url) => /^https?:\/\//.test(url),
 });
 
-const CustomUnderline = Underline.configure({
-  HTMLAttributes: {
-    class: 'underline',
-  },
-});
+const CustomUnderline = Underline.configure({});
 
 const CustomTextAlign = TextAlign.configure({
   types: ['heading', 'paragraph'],

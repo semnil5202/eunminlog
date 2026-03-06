@@ -155,10 +155,6 @@
   list-style-type: lower-roman !important;
 }
 
-.ProseMirror u {
-  text-underline-offset: 4px;
-}
-
 .ProseMirror img {
   max-width: 100%;
   height: auto;
