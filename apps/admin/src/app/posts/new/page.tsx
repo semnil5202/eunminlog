@@ -17,7 +17,7 @@ import { ThumbnailUpload } from '@/features/post-editor/components/ThumbnailUplo
 import { VisitFields } from '@/features/post-editor/components/VisitFields';
 import { TiptapEditorContainer } from '@/features/post-editor/containers/TiptapEditorContainer';
 import { FORM_TYPE_OPTIONS } from '@/features/post-editor/constants/category';
-import { generateSummary } from '@/features/post-editor/api/actions';
+import { streamSummary } from '@/features/post-editor/api/client';
 import {
   postFormSchema,
   POST_FORM_DEFAULTS,
@@ -25,10 +25,10 @@ import {
   type PostFormValues,
 } from '@/features/post-editor/types/form';
 import {
-  extractFlaggedTerms,
-  translatePost,
-  retrySingleLocale,
-} from '@/features/translation/api/actions';
+  fetchExtractTerms,
+  fetchTranslatePost,
+  fetchRetrySingleLocale,
+} from '@/features/translation/api/client';
 import { LOCALE_FILTER_LABELS } from '@/features/translation/constants/locale';
 import { TranslationPreviewSheet } from '@/features/translation/components/TranslationPreviewSheet';
 import { TranslationSheetContainer } from '@/features/translation/containers/TranslationSheetContainer';
@@ -132,7 +132,9 @@ export default function NewPostPage() {
 
     try {
       const { title: t, content: c } = getValues();
-      const summary = await generateSummary(t, c);
+      const summary = await streamSummary(t, c, (partial) => {
+        setValue('description', partial);
+      });
       setValue('description', summary, { shouldValidate: true });
       setIsSummarized(true);
     } catch {
@@ -149,7 +151,7 @@ export default function NewPostPage() {
     try {
       const { title: t, content: c, description: d, placeName: pn, address: addr } = getValues();
 
-      const terms = await extractFlaggedTerms(c, pn || undefined, addr || undefined);
+      const terms = await fetchExtractTerms(c, pn || undefined, addr || undefined);
 
       if (terms.length === 0) {
         const params = {
@@ -160,7 +162,7 @@ export default function NewPostPage() {
           address: addr || undefined,
           confirmedTerms: [] as { original: string; confirmed: string }[],
         };
-        const results = await translatePost(params);
+        const results = await fetchTranslatePost(params);
         setLastConfirmedTerms([]);
 
         const failedLocales = results.filter((r) => r.failed);
@@ -227,7 +229,7 @@ export default function NewPostPage() {
 
   const handleRetryLocale = async (locale: TranslationLocale) => {
     const { title: t, content: c, description: d, placeName: pn, address: addr } = getValues();
-    const result = await retrySingleLocale(locale, {
+    const result = await fetchRetrySingleLocale(locale, {
       title: t,
       content: c,
       description: d,
@@ -341,6 +343,9 @@ export default function NewPostPage() {
           {errors.slug && (
             <p className="mt-1 text-[14px] text-red-500">{errors.slug.message}</p>
           )}
+          <p className="mt-1 text-xs text-muted-foreground">
+            * 슬러그는 SEO에 직접 반영되는 요소입니다. 신중하게 선택해주세요.
+          </p>
         </div>
 
         <div id="field-category" className="mt-8">

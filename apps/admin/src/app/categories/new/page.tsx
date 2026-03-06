@@ -71,6 +71,9 @@ export default function NewCategoryPage() {
             onChange={setCategorySlug}
             placeholder="예: delicious"
           />
+          <p className="text-xs text-muted-foreground">
+            * 슬러그는 SEO에 직접 반영되는 요소입니다. 신중하게 선택해주세요.
+          </p>
         </div>
 
         <div className="flex justify-end">
@@ -123,6 +126,9 @@ export default function NewCategoryPage() {
             onChange={setSubSlug}
             placeholder="예: korean"
           />
+          <p className="text-xs text-muted-foreground">
+            * 슬러그는 SEO에 직접 반영되는 요소입니다. 신중하게 선택해주세요.
+          </p>
         </div>
 
         <div className="flex items-center justify-between">
