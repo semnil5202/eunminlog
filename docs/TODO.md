@@ -105,6 +105,7 @@
 ### Admin 미완료
 
 - [ ] 핵심 지표 대시보드 DB 연동 — GA4 연동 후 MOCK 데이터 교체
+- [ ] 파비콘 적용
 
 ## Client: Tiptap HTML Viewer 대응
 
@@ -160,6 +161,7 @@
 ## Client — UI
 
 - [ ] Left Sidebar 프로필 영역 다듬기
+- [ ] 파비콘 적용
 
 ## SEO — Sitemap
 
