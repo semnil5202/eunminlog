@@ -18,7 +18,12 @@
 - [x] ESLint 설정 (.cjs, shadcn 생성 파일 예외)
 - [x] placeholder 페이지: `/dashboard`, `/posts/new`, `/posts/[id]/edit`
 
-### Phase 3 — Tiptap 에디터 + 폼 (부분 완료)
+### Phase 2 (완료)
+
+- [x] Supabase Auth 로그인/로그아웃 (email/password)
+- [x] 인증 가드 (비인증 시 로그인 리다이렉트)
+
+### Phase 3 — Tiptap 에디터 + 폼 (완료)
 
 - [x] Tiptap 에디터 기본 구현 — Extension 설정, 툴바 (Bold/Italic/Underline/Link/List/TextAlign/Undo/Redo), HTML 인라인 스타일 출력
 - [x] 에디터 페이지 (`/posts/new`) — 폼 형식 + 메타 폼 + Tiptap 에디터 + 번역 연동
@@ -26,74 +31,60 @@
 - [x] ProseMirror CSS — focus outline, link hover, ordered list nesting (decimal/lower-alpha/lower-roman)
 - [x] 폼 형식 (Form Type) — `visit` (체험 방문) / `product-review` (제품 리뷰) select. 체험 방문 선택 시 장소/주소/가격대 필드 표시
 - [x] 카테고리/서브카테고리 select — `CategorySelector` 컴포넌트, 동적 서브카테고리 매핑
-- [x] 썸네일 업로드 — `ThumbnailUpload` 컴포넌트 (WebP 변환, blob URL 미리보기, 삭제)
+- [x] 썸네일 업로드 — `ThumbnailUpload` 컴포넌트 (WebP 변환, S3 CDN URL)
 - [x] 체험 방문 전용 필드 — `VisitFields` 컴포넌트 (장소명, 주소, 가격대: 만원 단위)
-- [x] 3줄 요약 — textarea + "요약 생성" AI 버튼 (Server Action `generateSummary` — GPT-5 Nano API 연동 완료)
-- [x] 이미지 삽입 UI — CustomResizableImage 확장 (4코너 리사이즈, width % 저장), UploadImage 툴바 버튼 (blob URL 임시 사용)
-- [x] 번역 기능 연동 — 에디터 페이지에서 "번역본 생성" 버튼 → 고유명사 추출 → 번역 실행 → "번역본 확인하기" Sheet
-- [x] 폼 검증 — react-hook-form + Zod, 버튼 클릭 시 검증 + focus + 에러 메시지 (공통 필드 + visit 전용 필드 + 번역 완료 조건)
-- [x] Label 스타일 통일 — 모든 label 검은색 `text-base font-bold` + 필수값 `*` primary-600
-- [x] Loading spinner — 요약 생성/번역본 생성하기 버튼에 `LoaderIcon animate-spin` 적용
-- [x] 번역 Sheet UX — 번역 완료 시 0.8초 후 자동 닫힘, Sheet 닫은 후 "용어 검토 계속하기" 재오픈, 3줄 요약 비어있으면 번역 비활성화
-- [x] 번역본 확인 Sheet — 언어 필터 탭 (8개 locale), 기본값 영어, 제목/장소/주소/본문 label 표시
-- [x] 폼 유효성 검사 (Zod schema + react-hook-form) — mode: 'onSubmit', 한국어 에러 메시지, focus 연동
-- [x] 이미지 S3 업로드 연동 — blob URL → S3 presigned URL 방식으로 전환 (Phase 4 Media Upload 섹션 연동)
-- [x] 미저장 변경사항 이탈 방지 — `beforeunload` 이벤트로 새로고침/뒤로가기 시 브라우저 확인 대화상자 (작성/수정 페이지)
-- [x] 뒤로가기 `<a>` 태그 — 작성/수정 페이지 뒤로가기 아이콘을 `<a href>` 네이티브 네비게이션으로 변경 (beforeunload 트리거)
-- [x] 번역 버튼 다국어 조건 — 소분류의 `is_multilingual`이 true일 때만 "AI 번역본 생성하기" 버튼 표시
+- [x] 3줄 요약 — textarea + "요약 생성" AI 버튼 (GPT-5 Nano API 연동 완료)
+- [x] 이미지 삽입 UI — CustomResizableImage 확장 (4코너 리사이즈, width % 저장), S3 presigned URL 업로드
+- [x] 번역 기능 연동 — "번역본 생성" 버튼 → 고유명사 추출 → 번역 실행 → "번역본 확인하기" Sheet
+- [x] 폼 검증 — react-hook-form + Zod, 버튼 클릭 시 검증 + focus + 에러 메시지
+- [x] 미저장 변경사항 이탈 방지 — `beforeunload` + `<a>` 네이티브 네비게이션
+- [x] 번역 버튼 다국어 조건 — 소분류의 `is_multilingual`이 true일 때만 표시
 - [x] 이미지 alt 텍스트 관리 — ImageAltSheet UI, DB `image_alts` JSONB, 번역 파이프라인 연동
-- [x] 업로드 이미지 워터마크 — Canvas API로 'eunminlog' 옅은 대각선 패턴 자동 합성
-- [x] 하단 버튼 순서 — alt 입력 → AI 번역 → 임시저장 → 작성완료 (우측 정렬)
-- [x] AI 번역 시 이미지 alt 미입력 유효성 검사
-- [x] 번역 프롬프트 img 태그 속성값 보존 규칙 추가
-- [ ] 이미지 크롭 기능 (react-image-crop 활용 검토)
-- [ ] 드래그앤드롭/붙여넣기 이미지 처리 (Tiptap Drop/Paste 핸들러)
+- [x] 업로드 이미지 워터마크 — Canvas API로 'eunminlog' 대각선 패턴 합성
 - [x] 포스트 저장 (Server Action → Supabase `posts` INSERT)
 - [x] 포스트 편집 페이지 (`/posts/[id]/edit`) — 기존 데이터 로드 + 에디터 반영
-- [ ] Placeholder Extension 적용 (빈 에디터 가이드 텍스트)
-- [ ] is_sponsored / is_recommended / is_multilingual 토글
-- [ ] rating 입력 (1.0-5.0, 0.5 단위)
-- [ ] slug 자동 생성 + 수동 편집
+- [x] slug 자동 생성 + 수동 편집
 
-### Phase 5-1 — SearchFilter 리팩토링 + Pagination 공유 컴포넌트
+### Phase 3-1 — 번역 (완료)
 
-- [ ] SearchFilter 컴파운드 컴포넌트 리팩토링 — `SearchFilter.DateRange` + `SearchFilter.Query` 서브 컴포넌트 분리
-- [ ] 기존 페이지 (`/`, `/posts`) SearchFilter 사용처 컴파운드 패턴으로 전환
-- [ ] Pagination 공유 컴포넌트 (`shared/components/pagination/Pagination.tsx`) — `< 1 2 3 ... >` 형태, 최대 9개 표시, `...` 클릭 시 다음 그룹, URL `page` 쿼리 연동
-- [ ] `/posts` 게시글 목록에 Pagination 적용 (pageSize 10, 테이블 하단)
-- [ ] `/` 핵심 지표에 Pagination 적용 (pageSize 10, 테이블 하단)
+- [x] 고유명사 추출 Server Action (`extractFlaggedTerms`) — 본문에서 고유명사 식별 + 번역 가이드 제공
+- [x] 번역 실행 Server Action (`translatePost`) — 확인된 고유명사를 반영하여 다국어 번역
+- [x] 고유명사 검토 Sheet (`TranslationSheetContainer`) — 고유명사 리스트 검토/수정 UI + 번역 실행
+- [x] 번역 미리보기 Sheet (`TranslationPreviewSheet`) — 번역 결과 확인 UI (언어 필터 8개, 기본 영어, 장소/주소 포함)
+- [x] 번역 결과 저장 (Server Action → Supabase `post_translations` UPSERT)
+- [x] 번역 상태 관리 (locale별 진행/완료/실패 UI) — 실패 locale별 toast 알림 + "다시 시도" 버튼
+- [x] 개별 locale 재번역 — `retrySingleLocale` Server Action
+
+### Phase 4+ (완료)
+
+- [x] GPT-5 Nano API 연동 — 번역+요약+용어 추출 실제 API 호출
+- [x] 미디어 업로드 (S3 Pre-signed URL)
+- [x] 게시글 목록 페이지 (`/posts`) — SearchFilter + 테이블 + 정렬 + Pagination
+- [x] 게시글 삭제 (확인 다이얼로그 포함)
+- [x] GitHub Actions 빌드 자동 트리거 — 게시글 작성/수정, 카테고리 생성/수정/삭제 시 `workflow_dispatch` 자동 호출
+
+### Phase 5-1 — SearchFilter + Pagination (완료)
+
+- [x] SearchFilter 컴파운드 컴포넌트 — `SearchFilter.DateRange` + `SearchFilter.Query` 서브 컴포넌트
+- [x] Pagination 공유 컴포넌트 (`shared/components/pagination/Pagination.tsx`)
+- [x] `/posts` 게시글 목록에 Pagination 적용
+- [x] `/` 핵심 지표에 Pagination 적용
 
 ### Phase 5-2 — 카테고리 관리 페이지 (완료)
 
-- [x] 사이드바 "카테고리 생성/수정/삭제" `href: null` → `/categories` 활성화
-- [x] 카테고리 관리 페이지 (`/categories`) — `app/categories/page.tsx`
-- [x] SearchFilter.Query만 사용하는 검색 필터 (기간 필터 제외)
-- [x] 대분류-소분류 그룹 테이블 (대분류명 | 소분류명 | 포함된 글 | 다국어 지원 여부 | 생성일)
-- [x] DB 동적 카테고리 조회 (`fetchCategoryOptions`) — mock 데이터 제거
+- [x] 카테고리 관리 페이지 (`/categories`) — 대분류-소분류 그룹 테이블
+- [x] DB 동적 카테고리 조회 (`fetchCategoryOptions`)
 - [x] 카테고리 생성 (`/categories/new`) — 대분류/소분류 생성 + 슬러그 유효성 검사
-- [x] 카테고리 수정 (`/categories/[id]`) — 이름/슬러그 수정 + 기존 slug 변경 시 posts 동기화
-- [x] 카테고리 삭제 — 다중 선택 삭제, 게시글 포함 시 삭제 차단, 소분류 있는 대분류 삭제 차단
-- [x] 대분류만 있는 카테고리도 테이블 표시 + 삭제 가능
-- [x] pageSize 100 고정 (페이지네이션 미사용)
+- [x] 카테고리 수정 (`/categories/[id]`) — 이름/슬러그 수정 + posts 동기화
+- [x] 카테고리 삭제 — 다중 선택 삭제, 게시글 포함 시 차단, 소분류 있는 대분류 차단
 
-### 301 Redirect — Slug 변경 시 이전 URL 리다이렉트
+### 301 Redirect — Slug 변경 시 이전 URL 리다이렉트 (완료)
 
 > 상세 스펙: [`docs/redirect-specs.md`](redirect-specs.md)
 
-**DB 마이그레이션:**
-
-- [ ] `posts` 테이블: `prev_slug` (text nullable) 컬럼 추가 (M-08)
-- [ ] `categories` 테이블: `prev_slug` (text nullable) 컬럼 추가 (M-09)
-
-**Admin — API:**
-
-- [ ] `updatePost` Server Action: slug 변경 감지 시 기존 slug를 `prev_slug`에 자동 저장
-- [ ] `updateCategory` Server Action: slug 변경 감지 시 기존 slug를 `prev_slug`에 자동 저장
-
-**Admin — UI:**
-
-- [ ] 게시글 수정 페이지 (`/posts/[id]/edit`): slug 편집 가능 + slug 변경 시 경고 모달
-- [ ] 카테고리 수정 페이지 (`/categories/[id]/edit`): CM-7 slug 변경 경고 모달 (기존 스펙)
+- [x] DB: `posts`, `categories` 테이블 `prev_slug` 컬럼 추가
+- [x] Admin: `updatePost`, `updateCategory` slug 변경 감지 시 `prev_slug` 자동 저장
+- [x] Admin: slug 변경 시 경고 모달
 
 **인프라 — CF Function + 빌드 파이프라인:**
 
@@ -104,262 +95,52 @@
 - [ ] GitHub Secrets 등록: `PROD_CF_FUNCTION_NAME`, `DEV_CF_FUNCTION_NAME`
 - [ ] Supabase 빌드 타임 접속 정보 GitHub Secrets 등록 (리다이렉트 매핑 조회용)
 
-### Phase 2 (완료)
+### Admin 미완료
 
-- [x] Supabase Auth 로그인/로그아웃 (email/password)
-- [x] 인증 가드 (비인증 시 로그인 리다이렉트)
-
-### Phase 3-1 — 번역 (API 연동 완료, DB 저장 미구현)
-
-- [x] 고유명사 추출 Server Action (`extractFlaggedTerms`) — 본문에서 고유명사 식별 + 번역 가이드 제공
-- [x] 번역 실행 Server Action (`translatePost`) — 확인된 고유명사를 반영하여 다국어 번역
-- [x] 고유명사 검토 Sheet (`TranslationSheetContainer`) — 고유명사 리스트 검토/수정 UI + 번역 실행
-- [x] 번역 미리보기 Sheet (`TranslationPreviewSheet`) — 번역 결과 확인 UI (언어 필터 8개, 기본 영어, 장소/주소 포함)
-- [x] 에디터 페이지 연동 — "번역본 생성하기" / "용어 검토 계속하기" / "번역본 확인하기" 버튼
-- [x] 번역 Sheet UX — 번역 완료 0.8초 자동 닫힘, Sheet 닫은 후 "용어 검토 계속하기" 재오픈
-- [x] GPT 프롬프트 설계서 작성 (`docs/gpt-prompts.md`) — 요약 생성, 용어 추출, 본문 번역 3가지 프롬프트
-- [x] 번역 결과 저장 (Server Action → Supabase `post_translations` UPSERT)
-- [x] 번역 상태 관리 (locale별 진행/완료/실패 UI) — 실패 locale별 toast 알림 + TranslationPreviewSheet "다시 시도" 버튼
-- [x] 개별 locale 재번역 — `retrySingleLocale` Server Action
-
-### Phase 4+ (부분 완료)
-
-- [x] GPT-5 Nano API 연동 — 번역+요약+용어 추출 실제 API 호출 전환 완료 (`shared/lib/openai.ts`, `OPENAI_API_KEY` env)
-- [x] 미디어 업로드 (S3 Pre-signed URL) — 아래 Media Upload 섹션과 연동
-- [x] 게시글 목록 페이지 (`/posts`) — SearchFilter (RHF) + 테이블 (제목/발행일/수정일) + 정렬 드롭다운 + "새 글 작성" 버튼
-- [x] 게시글 삭제 (확인 다이얼로그 포함)
-- [ ] GitHub Actions 빌드 자동 트리거 — 아래 세부 항목 참조
-
-### build-trigger — GitHub Actions 자동 트리거
-
-> 상세 스펙: [`docs/admin-specs.md`](admin-specs.md) Section 4-6
-
-**인프라 설정:**
-
-- [ ] GitHub PAT 생성 (Fine-grained, `actions:write` 권한, eunminlog 리포지토리만)
-- [ ] Vercel 환경변수 등록: `GITHUB_PAT`, `GITHUB_REPO_OWNER`, `GITHUB_REPO_NAME`, `GITHUB_WORKFLOW_ID`
-- [ ] `deploy-client.yml`에 `workflow_dispatch` 트리거 추가
-
-**Admin 구현:**
-
-- [ ] `features/build-trigger/api/actions.ts` — `triggerClientBuild()` Server Action 구현 (환경 자동 판별, Silent 에러 처리)
-- [ ] `features/post-management/api/actions.ts` — `createPost` 성공 후 `triggerClientBuild()` 호출 추가
-- [ ] `features/post-management/api/actions.ts` — `updatePost` 성공 후 `triggerClientBuild()` 호출 추가
-- [ ] `features/category-management/api/actions.ts` — `createParentCategory` 성공 후 `triggerClientBuild()` 호출 추가
-- [ ] `features/category-management/api/actions.ts` — `createChildCategory` 성공 후 `triggerClientBuild()` 호출 추가
-- [ ] `features/category-management/api/actions.ts` — `updateCategory` 성공 후 `triggerClientBuild()` 호출 추가
-- [ ] `features/category-management/api/actions.ts` — `deleteCategories` 성공 후 `triggerClientBuild()` 호출 추가
-- [ ] is_multilingual 토글 — 아래 i18n 섹션과 연동
-- [ ] 핵심 지표 대시보드 DB 연동 — GA4 연동 후 MOCK 데이터 교체 (옵션 A: GA4 이벤트 기반, 옵션 B: posts 테이블에 view_count/recommendation_count/comment_count 컬럼 추가)
+- [ ] 핵심 지표 대시보드 DB 연동 — GA4 연동 후 MOCK 데이터 교체
 
 ## Client: Tiptap HTML Viewer 대응
 
 > Admin Tiptap 에디터가 출력하는 HTML을 Client(Astro SSG)에서 올바르게 렌더링하기 위한 작업 목록.
 > 에디터 출력 포맷 상세: [`docs/admin-specs.md`](admin-specs.md) Section 4-2.
 
-### 현재 상태 분석
-
-Client `PostLayout.astro`는 `prose prose-gray prose-lg` (Tailwind Typography)로 본문을 렌더링한다. Tiptap HTML은 인라인 스타일을 포함하므로, Tailwind Typography 스타일과 인라인 스타일이 공존하게 된다. 인라인 스타일은 CSS specificity에서 우선하므로 대부분의 heading/list/link 스타일은 에디터 출력 그대로 표시된다. 그러나 아래 항목들은 추가 대응이 필요하다.
-
 ### P0 (필수)
 
 - [ ] **`insertInArticleAds()` Markdown → HTML 마이그레이션** (Critical)
   - **현재**: `features/post-detail/lib/ads.ts`에서 `markdown.split(/(?=^## )/m)`으로 Markdown `## ` 헤딩 기준 분할
   - **문제**: Tiptap 출력은 `<h2 style="...">` HTML 태그이므로 기존 정규식 매칭이 실패
-  - **해결**: 정규식을 `(?=<h2[\s>])` 패턴으로 변경하여 `<h2>` 또는 `<h2 style="...">`을 매칭
-  - 기존 Markdown 포스트가 있다면 하위 호환도 고려 (Markdown `## `과 HTML `<h2>` 둘 다 매칭하는 union 정규식, 또는 마이그레이션 완료 후 Markdown 패턴 제거)
-
-- [ ] **Ordered List 중첩 레벨 CSS**
-  - 에디터 내부에서는 `.ProseMirror > ol` 셀렉터로 처리하지만, Client에는 ProseMirror 래퍼가 없음
-  - `[itemprop='articleBody']` 또는 `.prose` 컨테이너 기준으로 동일한 CSS 적용 필요
-  - `global.css` 또는 `PostLayout.astro` 스코프에 추가:
-    ```css
-    [itemprop='articleBody'] > ol {
-      list-style-type: decimal;
-    }
-    [itemprop='articleBody'] ol ol,
-    [itemprop='articleBody'] ul ol {
-      list-style-type: lower-alpha;
-    }
-    [itemprop='articleBody'] ol ol ol,
-    [itemprop='articleBody'] ul ol ol {
-      list-style-type: lower-roman;
-    }
-    ```
+  - **해결**: 정규식을 `(?=<h2[\s>])` 패턴으로 변경
 
 - [ ] **Link `target="_blank"` 처리**
   - Tiptap 출력 `<a>` 태그에 `target="_blank"`가 없음
-  - 외부 링크 클릭 시 현재 페이지를 벗어나는 문제 발생
-  - 해결 방안 (택 1):
-    - **(A) 빌드 타임 변환**: `PostLayout.astro` frontmatter에서 `content` HTML을 파싱하여 `<a>` 태그에 `target="_blank" rel="noopener noreferrer"` 추가
-    - **(B) 클라이언트 JS**: `[itemprop='articleBody'] a` 셀렉터로 이벤트 위임하여 `target="_blank"` 동적 설정
-    - **권장**: (A) 빌드 타임 변환 -- SSG 특성상 한 번만 처리하면 됨, JS 불필요
-
-- [ ] **본문 컨테이너 max-width 확인**
-  - 에디터 `max-w-[688px]`과 Client 뷰어 너비가 일치해야 인라인 스타일(특히 heading font-size)이 의도된 비율로 표시됨
-  - 현재 `PostLayout.astro` main은 3-column grid의 `1fr`이므로, 게시글 본문 `<article>` 또는 `.prose` 컨테이너에 `max-w-[688px]` 제한이 필요한지 검토
+  - 빌드 타임에 `content` HTML 파싱하여 외부 링크에 `target="_blank" rel="noopener noreferrer"` 추가
 
 ### P1 (중요)
 
-- [ ] **Link hover 색상**
-  - 현재 `PostLayout.astro`에 `hover:prose-a:underline`이 있으나, Tiptap 링크는 이미 `text-decoration: underline` 인라인 스타일 포함
-  - hover 시 색상 변경이 필요하면 `[itemprop='articleBody'] a:hover { color: var(--color-primary-strong); }` 추가
-  - 단, Tiptap 인라인 스타일 `color: #5e83fe`와 Tailwind Typography `prose-a:text-primary-600`이 충돌 -- 인라인 스타일이 우선하므로, hover 색상은 `!important` 또는 별도 CSS 변수 필요
-
 - [ ] **Tailwind Typography vs 인라인 스타일 충돌 정리**
-  - Tiptap 출력에는 heading/link/list에 인라인 스타일이 포함되어 Tailwind Typography 스타일을 덮어씀
-  - 공존 시 의도치 않은 이중 마진/패딩이 발생할 수 있음
-  - 검토 필요 항목:
-    - `prose-headings:font-bold` vs 인라인 `font-weight: 600` (공존 가능, 인라인 우선)
-    - `prose-a:text-primary-600 prose-a:no-underline` vs 인라인 `color: #5e83fe; text-decoration: underline` (인라인 우선)
-    - `prose-blockquote:border-primary-400` vs 인라인 `border-left: 3px solid #ddd` (인라인 우선)
-  - **결론**: Tiptap HTML을 사용하는 새 포스트에서는 인라인 스타일이 우선 적용되므로 대부분 문제 없음. 단, 기존 Markdown 포스트와의 스타일 일관성이 깨질 수 있으므로 마이그레이션 계획 필요.
-
 - [ ] **반응형 Typography (모바일 heading 크기)**
-  - Tiptap heading 인라인 스타일이 고정 px 값 사용 (h2: 22px, h3: 20px 등)
-  - 모바일 화면에서 너무 크거나 작을 수 있음
-  - CSS `@media` 쿼리로 `[itemprop='articleBody'] h2` 등의 `font-size`를 오버라이드 (`!important` 필요)
-  - 또는 에디터 측에서 인라인 스타일 대신 CSS 클래스 기반으로 전환하는 것을 검토 (장기)
 
 ### P2 (선택)
 
-- [ ] **Underline 클래스 호환성**
-  - Tiptap 출력: `<u class="underline">` -- Tailwind 환경에서 `.underline { text-decoration-line: underline; }` 자동 적용
-  - Client Astro는 Tailwind 사용 중이므로 별도 작업 불필요
-  - 단, Tailwind purge 대상에서 `underline` 클래스가 미사용으로 제거될 가능성 확인 필요 (HTML 콘텐츠는 빌드 타임 동적 생성이므로 Tailwind content 경로에 포함되지 않을 수 있음 -- `safelist`에 `underline` 추가 권장)
-
-- [ ] **이미지 인라인 스타일 렌더링 (width % 기반)**
-  - Tiptap 출력: `<img style="width: X%; height: auto;" src="..." />` -- Client 본문 컨테이너 너비 대비 동일 비율 렌더링
-  - `[itemprop='articleBody'] img` 기본 스타일 (`max-width: 100%; height: auto;`) 확인 필요
-
-- [ ] **리사이즈된 이미지의 반응형 대응**
-  - 모바일에서 작은 퍼센트 이미지(`width: 30%` 등)가 너무 작아질 수 있음
-  - CSS `@media` 쿼리로 모바일 최소 너비 설정 또는 `width: 100% !important` 오버라이드 검토
-
+- [ ] **Underline 클래스 호환성** — Tailwind purge safelist에 `underline` 추가 권장
+- [ ] **리사이즈된 이미지의 반응형 대응** — 모바일 최소 너비 설정 검토
 - [ ] **연속 이미지 갤러리 CSS snap 변환**
-  - Tiptap 에디터에서 연속 `<img>` 삽입 시, Client에서 `scroll-snap-type: x mandatory` 갤러리로 자동 변환
-  - 빌드 타임 또는 클라이언트 JS로 연속 `<img>` 감지 + 래퍼 `<div>` 생성
-  - 갤러리 내 이미지 `width: X%` 인라인 스타일 오버라이드 필요 (`width: 100%`)
-
-## Client: 가격 표시 포맷
-
-- [x] PlaceInfoCard 가격: `price_prefix` + `price` (원 단위) 조합으로 표시 (구현 완료)
-- [x] `price_min`/`price_max` → `price_prefix`/`price` 단일 필드로 변경 (구현 완료)
-- [x] 통화 단위 i18n: `place.currency` 키 추가 (원/won/ウォン/韩元 등)
-- [x] 환율 링크: 비한국어 locale에서 `place.targetCurrency` 존재 시 Google 환율 변환 링크 표시
-
-## Client: 로고 다국어 분기
-
-- [x] `packages/config/site.ts`에 `SITE_NAME_KO`("은민로그"), `SITE_NAME_EN`("eunminlog") 상수 정의
-- [x] PCHeader, MobileHeader: `locale === DEFAULT_LOCALE ? SITE_NAME_KO : SITE_NAME_EN` 분기 적용
-
-## DB 마이그레이션 (Supabase 콘솔 실행 필요)
-
-> 아래 마이그레이션은 Admin/Client 코드와 `docs/database.md`에는 반영 완료되었으나, Supabase DB에 아직 실행하지 않은 항목.
-
-- [ ] `posts` 테이블: `price_prefix` (text nullable), `price` (integer nullable) 컬럼 추가 + 기존 `price_min`, `price_max` 컬럼 삭제
-- [ ] `post_translations` 테이블: `place_name` (text nullable), `address` (text nullable) 컬럼 추가
-- [ ] `posts` 테이블: `image_alts` (jsonb, default `'[]'`) 컬럼 추가
-- [ ] `post_translations` 테이블: `image_alts` (jsonb, default `'[]'`) 컬럼 추가
 
 ## SEO
 
-- [ ] `Layout.astro`의 `TEMP_NOINDEX = true` → `false`로 변경하여 `index, follow` 복원 (실제 콘텐츠 준비 완료 후)
-- [ ] GSC URL 검사 도구로 주요 페이지 재색인 요청 (noindex 해제 후 색인 가속)
-
-## Media
-
-- [ ] 이미지 여러 개일 때 가로 스크롤 (이미지 갤러리/캐러셀)
-- [x] 이미지 클릭 시 확대 (Lightbox) — 전역 `ImageLightbox` 컴포넌트, Layout에 1회 삽입, scale 애니메이션
-- [ ] 동영상 mp4 최적화 재생
-- [ ] 이미지 최적화 — srcset/`<picture>`, Astro `<Image>` 컴포넌트 검토
-- [ ] Google Embed Map 적용 (장소 정보 카드 연동)
+- [ ] `Layout.astro`의 `TEMP_NOINDEX = true` → `false`로 변경 (실제 콘텐츠 준비 완료 후)
+- [ ] GSC URL 검사 도구로 주요 페이지 재색인 요청 (noindex 해제 후)
 
 ## Media Upload
 
-- [x] 미디어 업로드 및 Pre-signed URL 로직 (Node.js/TypeScript)
-  - `media-eunminlog` 버킷에 이미지를 안전하게 업로드하기 위한 로직 구현
-  - **Server-side (Pre-signed URL 생성)**:
-    - AWS SDK(v3)를 사용하여 클라이언트가 S3에 파일을 직접 업로드할 수 있는 임시 URL 생성
-    - 파일 이름 중복 방지를 위한 랜덤 스트링(UUID 등) 처리
-    - 허용할 파일 형식(jpg, png, webp 등) 유효성 검사
-  - **Client-side (이미지 전송)**:
-    - Pre-signed URL로 파일을 `PUT` 방식으로 전송하는 업로드 컴포넌트
-  - **보안 고려사항**:
-    - 모든 S3 버킷은 퍼블릭 액세스 차단, CloudFront OAC를 통해서만 접근 가능
-    - `ACL` 설정 무시, 오직 정책(Policy) 기반으로 동작
-  - 미디어 서버(`media.eunminlog.site`)는 Root Object 미설정 — 개별 파일 경로로 직접 접근
-- [x] 이미지 워터마크 — `toWebP()` 에서 Canvas API로 'eunminlog' 대각선 반복 패턴 합성 (rgba 15%, 30도, 본문+썸네일 자동)
+- [x] 미디어 업로드 및 Pre-signed URL 로직 (S3 presigned URL + WebP 변환 + CDN URL)
+- [x] 이미지 워터마크 — Canvas API로 'eunminlog' 대각선 패턴 합성
 - [ ] S3 orphan 이미지 정리 — 게시글 미저장/삭제/수정 시 S3에 남는 미사용 이미지 처리 (S3 Lifecycle Policy 또는 별도 정리 스크립트)
 
-## i18n (다국어 조건부 처리)
+## SEO — Sitemap
 
-### 장소명/주소 다국어 번역
-
-> 상세 스펙: [`docs/place-i18n-specs.md`](place-i18n-specs.md)
-
-- [ ] DB: post_translations에 place_name, address 컬럼 추가 (Supabase ALTER)
-- [x] Client: PostTranslation, LocalizedPost 타입에 place_name, address / translated_place_name, translated_address 추가
-- [x] Client: getLocalizedPost()에서 translated_place_name, translated_address 매핑
-- [x] Client: mock 번역 데이터에 place_name, address 추가 → Supabase 실제 API로 전환 완료
-- [x] Client: translations.ts에 place.\* 번역 키 추가 (category, name, address, price, copyToast)
-- [x] Client: PlaceInfoCard — 번역 표시, 장소명 복사 버튼 추가, 필드 라벨 다국어 처리, 복사 스크립트 변경, rating 제거, description(3줄 요약) 추가
-- [x] Client: PostLayout — PlaceInfoCard에 translatedPlaceName, translatedAddress props 전달
-- [x] Client: PostCard, SponsoredCard — translated_place_name 우선 표시
-- [x] Client: search-data.ts — 번역 장소명으로 검색/추천 키워드
-- [x] Client: feed JSON API — 번역 장소명 사용
-- [x] Admin: GPT-5 Nano 번역 파이프라인에 place_name, address 포함 (description도 번역 대상, locale별 address 표기 방식 적용)
-
-### 다국어 조건부 처리
-
-- [ ] Admin: 포스트 작성/편집 폼에 "다국어 콘텐츠 제공" 토글 UI 추가 (기본값 `true`)
-- [x] Admin: 번역 버튼 조건부 표시 — 소분류 `is_multilingual === false`이면 번역 UI 숨김 (작성/수정 페이지)
-- [ ] DB: `posts` 테이블에 `is_multilingual` 컬럼 추가 (boolean, default `true`) — Supabase 마이그레이션
-- [ ] DB: 기존 포스트 `is_multilingual = true` 일괄 설정 (데이터 마이그레이션)
-- [ ] Client: LanguageSelector 비활성화 — `is_multilingual === false` 포스트에서 비한국어 locale 버튼 disabled 처리 (CSS-only 툴팁)
-- [ ] Client: Locale 네비게이션 필터링 — multilingual 포스트 0개인 카테고리/서브카테고리를 다국어 페이지 사이드바/헤더에서 숨김
-- [ ] Client: Locale 경로 조건부 생성 — multilingual 포스트 0개인 카테고리/서브카테고리의 locale 경로를 getStaticPaths에서 제외
-- [ ] Client: 빈 피드 empty state — 카테고리/서브카테고리 인덱스에서 피드가 비어있을 때 "콘텐츠 준비 중" 메시지 표시
-- [ ] Client: `/not-available/` 페이지 삭제 (LanguageSelector 비활성화로 대체)
-
-## Cookie Consent
-
-> 상세 스펙: [`docs/cookie-consent-specs.md`](cookie-consent-specs.md)
-
-- [x] `shared/constants/consent.ts` — `CONSENT_REQUIRED_LOCALES`, `CONSENT_COOKIE_NAME`, `CONSENT_COOKIE_MAX_AGE`
-- [x] `shared/lib/consent.ts` — `isConsentRequired()`, `getConsentState()`, `setConsentCookie()` (수락 365일, 거부 1일)
-- [x] `translations.ts`에 `consent.*` 키 5개 추가 (8 locale)
-- [x] `CookieConsentBanner.astro` — Sticky Footer 배너 (en/ja/zh-CN/th만 렌더링, slide-up/slide-down 애니메이션)
-- [x] `Layout.astro`에 배너 삽입 (Footer 아래, Toast/ImageLightbox 위)
-- [x] `gtag.ts` 타입에 `cookie_consent` 추가
-- [x] GA4 `cookie_consent` 이벤트 전송 (`action: accept/reject`, `content_locale`)
-- [ ] Layout.astro NPA 판별 인라인 스크립트 추가 (AdSense 실제 연동 시점에 함께 작업)
-- [ ] GA4 쿠키 동의 연동 — 수락 시 `gtag('consent', 'update', { analytics_storage: 'granted', ad_storage: 'granted' })`, 거부 시 `denied` 처리
-- [ ] GA4 관리 콘솔에 Consent Action 커스텀 디멘션 등록
+- [ ] sitemap.xml 생성 (Astro SSG 빌드 타임)
 
 ## Ads
 
 - [ ] 애드센스 광고 호출 스크립트 추가 (플레이스홀더 → 실제 광고 코드 교체)
-
-## Analytics (GA4)
-
-- [x] `shared/lib/analytics/gtag.ts` — gtag 타입 래퍼 생성 (스펙: [`docs/ga4-tracking.md`](ga4-tracking.md))
-- [x] `window.gtag` 타입 선언 추가 (`env.d.ts`)
-- [x] Enhanced Page View — `Layout.astro`에 `gaPageParams` prop 추가 + 각 페이지에서 전달
-- [x] Post Card Click — `PostCard.astro`, `SponsoredCard.astro`에 data 속성 + 이벤트 위임
-- [x] AdSense Tracking — 광고 컴포넌트 data 속성 + IntersectionObserver impression/view/click
-- [x] 무한스크롤 동적 카드/광고 트래킹 연동
-- [x] GA4 관리 콘솔 커스텀 디멘션 등록 (배포 후 데이터 수집 시작되면 등록)
-  - 경로: GA4 관리 > 속성 설정 > 데이터 표시 > 맞춤 정의 > 맞춤 측정기준 만들기
-  - | 측정기준 이름        | 범위   | 이벤트 매개변수        |
-    | -------------------- | ------ | ---------------------- |
-    | Page Type            | 이벤트 | `page_type`            |
-    | Content Slug         | 이벤트 | `content_slug`         |
-    | Content Category     | 이벤트 | `content_category`     |
-    | Content Sub Category | 이벤트 | `content_sub_category` |
-    | Content Locale       | 이벤트 | `content_locale`       |
-    | Is Sponsored         | 이벤트 | `is_sponsored`         |
-    | Search Term          | 이벤트 | `search_term`          |
-    | Ad Slot              | 이벤트 | `ad_slot`              |
-    | Ad Format            | 이벤트 | `ad_format`            |
-    | Ad Position          | 이벤트 | `ad_position`          |
