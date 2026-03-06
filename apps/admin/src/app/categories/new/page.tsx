@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { ChevronLeft } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -26,8 +25,6 @@ import {
 } from '@/features/category-management/api/actions';
 
 export default function NewCategoryPage() {
-  const router = useRouter();
-
   const [parentOptions, setParentOptions] = useState<{ slug: string; name: string }[]>([]);
 
   const [categoryName, setCategoryName] = useState('');
@@ -52,7 +49,6 @@ export default function NewCategoryPage() {
     try {
       await createParentCategory({ name: categoryName, slug: categorySlug });
       toast.success('대분류 카테고리가 생성되었습니다.');
-      router.push('/categories');
     } catch (e) {
       toast.error(e instanceof Error ? e.message : '카테고리 생성에 실패했습니다.');
     } finally {
@@ -71,7 +67,6 @@ export default function NewCategoryPage() {
         isMultilingual: subMultilingual,
       });
       toast.success('소분류 카테고리가 생성되었습니다.');
-      router.push('/categories');
     } catch (e) {
       toast.error(e instanceof Error ? e.message : '카테고리 생성에 실패했습니다.');
     } finally {
