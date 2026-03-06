@@ -35,16 +35,22 @@ jobs:
             echo "S3_BUCKET=prod-eunminlog-static" >> $GITHUB_ENV
             echo "CLOUDFRONT_DISTRIBUTION_ID=${{ secrets.PROD_CLOUDFRONT_DISTRIBUTION_ID }}" >> $GITHUB_ENV
             echo "PUBLIC_STAGE=production" >> $GITHUB_ENV
+            echo "SUPABASE_URL=${{ secrets.PROD_SUPABASE_URL }}" >> $GITHUB_ENV
+            echo "SUPABASE_SERVICE_ROLE_KEY=${{ secrets.PROD_SUPABASE_SERVICE_ROLE_KEY }}" >> $GITHUB_ENV
           else
             echo "S3_BUCKET=dev-eunminlog-static" >> $GITHUB_ENV
             echo "CLOUDFRONT_DISTRIBUTION_ID=${{ secrets.DEV_CLOUDFRONT_DISTRIBUTION_ID }}" >> $GITHUB_ENV
             echo "PUBLIC_STAGE=development" >> $GITHUB_ENV
+            echo "SUPABASE_URL=${{ secrets.DEV_SUPABASE_URL }}" >> $GITHUB_ENV
+            echo "SUPABASE_SERVICE_ROLE_KEY=${{ secrets.DEV_SUPABASE_SERVICE_ROLE_KEY }}" >> $GITHUB_ENV
           fi
 
       - name: Build client
         run: pnpm --filter @eunminlog/client build
         env:
           PUBLIC_STAGE: ${{ env.PUBLIC_STAGE }}
+          SUPABASE_URL: ${{ env.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ env.SUPABASE_SERVICE_ROLE_KEY }}
 
       - uses: aws-actions/configure-aws-credentials@v4
         with:

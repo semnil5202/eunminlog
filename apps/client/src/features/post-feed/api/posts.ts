@@ -1,209 +1,317 @@
-/** 빌드 타임 포스트 쿼리 API. Mock 데이터 기반이며 Supabase 마이그레이션 시 함수 시그니처는 유지한다. */
+/** 빌드 타임 포스트 쿼리 API. Supabase PostgreSQL 기반. */
 
 import type { Post } from '@/shared/types/post';
 import type { CategorySlug } from '@/shared/types/category';
-import { MOCK_POSTS } from '@/features/post-feed/mock/posts';
+import { supabase } from '@/shared/lib/supabase';
 
-/** Stable newest-first sort. Operates on a shallow copy to avoid mutation. */
-const sortByDateDesc = (posts: Post[]): Post[] =>
-  [...posts].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+const POST_COLUMNS =
+  'id, slug, title, description, content, category, sub_category, thumbnail, is_sponsored, is_recommended, is_multilingual, rating, place_name, address, price_prefix, price, created_at, updated_at';
 
-/** Returns all posts sorted newest-first. */
-export const getAllPosts = async (): Promise<Post[]> => sortByDateDesc(MOCK_POSTS);
+export const getAllPosts = async (): Promise<Post[]> => {
+  const { data, error } = await supabase
+    .from('posts')
+    .select(POST_COLUMNS)
+    .order('created_at', { ascending: false });
 
-/** Returns all posts in a top-level category, sorted newest-first. */
-export const getPostsByCategory = async (category: CategorySlug): Promise<Post[]> => {
-  const filtered = MOCK_POSTS.filter((p) => p.category === category);
-  return sortByDateDesc(filtered);
+  if (error) throw new Error(`getAllPosts failed: ${error.message}`);
+  return data as Post[];
 };
 
-/** Returns posts in a specific sub-category, sorted newest-first. */
+export const getPostsByCategory = async (category: CategorySlug): Promise<Post[]> => {
+  const { data, error } = await supabase
+    .from('posts')
+    .select(POST_COLUMNS)
+    .eq('category', category)
+    .order('created_at', { ascending: false });
+
+  if (error) throw new Error(`getPostsByCategory failed: ${error.message}`);
+  return data as Post[];
+};
+
 export const getPostsBySubCategory = async (
   category: CategorySlug,
   subCategory: string,
 ): Promise<Post[]> => {
-  const filtered = MOCK_POSTS.filter(
-    (p) => p.category === category && p.sub_category === subCategory,
-  );
-  return sortByDateDesc(filtered);
+  const { data, error } = await supabase
+    .from('posts')
+    .select(POST_COLUMNS)
+    .eq('category', category)
+    .eq('sub_category', subCategory)
+    .order('created_at', { ascending: false });
+
+  if (error) throw new Error(`getPostsBySubCategory failed: ${error.message}`);
+  return data as Post[];
 };
 
-/**
- * Looks up a single post by its URL slug.
- * Returns `undefined` when no match is found (caller decides how to 404).
- */
-export const getPostBySlug = async (slug: string): Promise<Post | undefined> =>
-  MOCK_POSTS.find((p) => p.slug === slug);
+export const getPostBySlug = async (slug: string): Promise<Post | undefined> => {
+  const { data, error } = await supabase
+    .from('posts')
+    .select(POST_COLUMNS)
+    .eq('slug', slug)
+    .maybeSingle();
 
-/**
- * Returns sponsored posts sorted newest-first (Right Sidebar / In-Feed Ad).
- *
- * @param category     Optional top-level category filter.
- * @param subCategory  Optional sub-category filter (requires category).
- */
+  if (error) throw new Error(`getPostBySlug failed: ${error.message}`);
+  return (data as Post) ?? undefined;
+};
+
 export const getSponsoredPosts = async (
   category?: CategorySlug,
   subCategory?: string,
 ): Promise<Post[]> => {
-  let filtered = MOCK_POSTS.filter((p) => p.is_recommended);
-  if (category) filtered = filtered.filter((p) => p.category === category);
-  if (category && subCategory) filtered = filtered.filter((p) => p.sub_category === subCategory);
-  return sortByDateDesc(filtered);
+  let query = supabase
+    .from('posts')
+    .select(POST_COLUMNS)
+    .eq('is_recommended', true);
+
+  if (category) query = query.eq('category', category);
+  if (category && subCategory) query = query.eq('sub_category', subCategory);
+
+  const { data, error } = await query.order('created_at', { ascending: false });
+
+  if (error) throw new Error(`getSponsoredPosts failed: ${error.message}`);
+  return data as Post[];
 };
 
-/**
- * Returns sponsored multilingual posts sorted newest-first (Right Sidebar on locale pages).
- *
- * @param category     Optional top-level category filter.
- * @param subCategory  Optional sub-category filter (requires category).
- */
 export const getMultilingualSponsoredPosts = async (
   category?: CategorySlug,
   subCategory?: string,
 ): Promise<Post[]> => {
-  let filtered = MOCK_POSTS.filter((p) => p.is_recommended && p.is_multilingual);
-  if (category) filtered = filtered.filter((p) => p.category === category);
-  if (category && subCategory) filtered = filtered.filter((p) => p.sub_category === subCategory);
-  return sortByDateDesc(filtered);
+  let query = supabase
+    .from('posts')
+    .select(POST_COLUMNS)
+    .eq('is_recommended', true)
+    .eq('is_multilingual', true);
+
+  if (category) query = query.eq('category', category);
+  if (category && subCategory) query = query.eq('sub_category', subCategory);
+
+  const { data, error } = await query.order('created_at', { ascending: false });
+
+  if (error) throw new Error(`getMultilingualSponsoredPosts failed: ${error.message}`);
+  return data as Post[];
 };
 
-/** Returns the total number of published posts. */
-export const getPostCount = async (): Promise<number> => MOCK_POSTS.length;
+export const getPostCount = async (): Promise<number> => {
+  const { count, error } = await supabase
+    .from('posts')
+    .select('*', { count: 'exact', head: true });
 
-/** Returns all posts that support multilingual content. */
-export const getMultilingualPosts = async (): Promise<Post[]> =>
-  sortByDateDesc(MOCK_POSTS.filter((p) => p.is_multilingual));
+  if (error) throw new Error(`getPostCount failed: ${error.message}`);
+  return count ?? 0;
+};
 
-/**
- * Returns a page of multilingual posts across all categories.
- *
- * @param page    1-based page number.
- * @param perPage Posts per page. Defaults to 9.
- */
+export const getMultilingualPosts = async (): Promise<Post[]> => {
+  const { data, error } = await supabase
+    .from('posts')
+    .select(POST_COLUMNS)
+    .eq('is_multilingual', true)
+    .order('created_at', { ascending: false });
+
+  if (error) throw new Error(`getMultilingualPosts failed: ${error.message}`);
+  return data as Post[];
+};
+
 export const getPaginatedMultilingualPosts = async (
   page: number,
   perPage = 9,
 ): Promise<{ posts: Post[]; totalPages: number }> => {
-  const sorted = sortByDateDesc(MOCK_POSTS.filter((p) => p.is_multilingual));
-  const totalPages = Math.ceil(sorted.length / perPage);
   const from = (page - 1) * perPage;
-  const posts = sorted.slice(from, from + perPage);
-  return { posts, totalPages };
+
+  const { count, error: countError } = await supabase
+    .from('posts')
+    .select('*', { count: 'exact', head: true })
+    .eq('is_multilingual', true);
+
+  if (countError) throw new Error(`getPaginatedMultilingualPosts count failed: ${countError.message}`);
+
+  const { data, error } = await supabase
+    .from('posts')
+    .select(POST_COLUMNS)
+    .eq('is_multilingual', true)
+    .order('created_at', { ascending: false })
+    .range(from, from + perPage - 1);
+
+  if (error) throw new Error(`getPaginatedMultilingualPosts failed: ${error.message}`);
+
+  return {
+    posts: data as Post[],
+    totalPages: Math.ceil((count ?? 0) / perPage),
+  };
 };
 
-/**
- * Returns a page of multilingual posts within a top-level category.
- *
- * @param page    1-based page number.
- * @param perPage Posts per page. Defaults to 9.
- */
 export const getPaginatedMultilingualPostsByCategory = async (
   category: CategorySlug,
   page: number,
   perPage = 9,
 ): Promise<{ posts: Post[]; totalPages: number }> => {
-  const sorted = sortByDateDesc(
-    MOCK_POSTS.filter((p) => p.category === category && p.is_multilingual),
-  );
-  const totalPages = Math.ceil(sorted.length / perPage);
   const from = (page - 1) * perPage;
-  const posts = sorted.slice(from, from + perPage);
-  return { posts, totalPages };
+
+  const { count, error: countError } = await supabase
+    .from('posts')
+    .select('*', { count: 'exact', head: true })
+    .eq('is_multilingual', true)
+    .eq('category', category);
+
+  if (countError) throw new Error(`getPaginatedMultilingualPostsByCategory count failed: ${countError.message}`);
+
+  const { data, error } = await supabase
+    .from('posts')
+    .select(POST_COLUMNS)
+    .eq('is_multilingual', true)
+    .eq('category', category)
+    .order('created_at', { ascending: false })
+    .range(from, from + perPage - 1);
+
+  if (error) throw new Error(`getPaginatedMultilingualPostsByCategory failed: ${error.message}`);
+
+  return {
+    posts: data as Post[],
+    totalPages: Math.ceil((count ?? 0) / perPage),
+  };
 };
 
-/**
- * Returns a page of multilingual posts within a specific sub-category.
- *
- * @param page    1-based page number.
- * @param perPage Posts per page. Defaults to 9.
- */
 export const getPaginatedMultilingualPostsBySubCategory = async (
   category: CategorySlug,
   subCategory: string,
   page: number,
   perPage = 9,
 ): Promise<{ posts: Post[]; totalPages: number }> => {
-  const sorted = sortByDateDesc(
-    MOCK_POSTS.filter(
-      (p) => p.category === category && p.sub_category === subCategory && p.is_multilingual,
-    ),
-  );
-  const totalPages = Math.ceil(sorted.length / perPage);
   const from = (page - 1) * perPage;
-  const posts = sorted.slice(from, from + perPage);
-  return { posts, totalPages };
+
+  const { count, error: countError } = await supabase
+    .from('posts')
+    .select('*', { count: 'exact', head: true })
+    .eq('is_multilingual', true)
+    .eq('category', category)
+    .eq('sub_category', subCategory);
+
+  if (countError) throw new Error(`getPaginatedMultilingualPostsBySubCategory count failed: ${countError.message}`);
+
+  const { data, error } = await supabase
+    .from('posts')
+    .select(POST_COLUMNS)
+    .eq('is_multilingual', true)
+    .eq('category', category)
+    .eq('sub_category', subCategory)
+    .order('created_at', { ascending: false })
+    .range(from, from + perPage - 1);
+
+  if (error) throw new Error(`getPaginatedMultilingualPostsBySubCategory failed: ${error.message}`);
+
+  return {
+    posts: data as Post[],
+    totalPages: Math.ceil((count ?? 0) / perPage),
+  };
 };
 
-/**
- * Returns a page of posts across all categories.
- *
- * @param page    1-based page number.
- * @param perPage Posts per page. Defaults to 9 (matches 3-column grid).
- */
 export const getPaginatedPosts = async (
   page: number,
   perPage = 9,
 ): Promise<{ posts: Post[]; totalPages: number }> => {
-  const sorted = sortByDateDesc(MOCK_POSTS);
-  const totalPages = Math.ceil(sorted.length / perPage);
   const from = (page - 1) * perPage;
-  const posts = sorted.slice(from, from + perPage);
-  return { posts, totalPages };
+
+  const { count, error: countError } = await supabase
+    .from('posts')
+    .select('*', { count: 'exact', head: true });
+
+  if (countError) throw new Error(`getPaginatedPosts count failed: ${countError.message}`);
+
+  const { data, error } = await supabase
+    .from('posts')
+    .select(POST_COLUMNS)
+    .order('created_at', { ascending: false })
+    .range(from, from + perPage - 1);
+
+  if (error) throw new Error(`getPaginatedPosts failed: ${error.message}`);
+
+  return {
+    posts: data as Post[],
+    totalPages: Math.ceil((count ?? 0) / perPage),
+  };
 };
 
-/**
- * Returns a page of posts within a top-level category.
- *
- * @param page    1-based page number.
- * @param perPage Posts per page. Defaults to 9.
- */
 export const getPaginatedPostsByCategory = async (
   category: CategorySlug,
   page: number,
   perPage = 9,
 ): Promise<{ posts: Post[]; totalPages: number }> => {
-  const sorted = sortByDateDesc(MOCK_POSTS.filter((p) => p.category === category));
-  const totalPages = Math.ceil(sorted.length / perPage);
   const from = (page - 1) * perPage;
-  const posts = sorted.slice(from, from + perPage);
-  return { posts, totalPages };
+
+  const { count, error: countError } = await supabase
+    .from('posts')
+    .select('*', { count: 'exact', head: true })
+    .eq('category', category);
+
+  if (countError) throw new Error(`getPaginatedPostsByCategory count failed: ${countError.message}`);
+
+  const { data, error } = await supabase
+    .from('posts')
+    .select(POST_COLUMNS)
+    .eq('category', category)
+    .order('created_at', { ascending: false })
+    .range(from, from + perPage - 1);
+
+  if (error) throw new Error(`getPaginatedPostsByCategory failed: ${error.message}`);
+
+  return {
+    posts: data as Post[],
+    totalPages: Math.ceil((count ?? 0) / perPage),
+  };
 };
 
-/**
- * Returns a page of posts within a specific sub-category.
- *
- * @param page    1-based page number.
- * @param perPage Posts per page. Defaults to 9.
- */
 export const getPaginatedPostsBySubCategory = async (
   category: CategorySlug,
   subCategory: string,
   page: number,
   perPage = 9,
 ): Promise<{ posts: Post[]; totalPages: number }> => {
-  const sorted = sortByDateDesc(
-    MOCK_POSTS.filter((p) => p.category === category && p.sub_category === subCategory),
-  );
-  const totalPages = Math.ceil(sorted.length / perPage);
   const from = (page - 1) * perPage;
-  const posts = sorted.slice(from, from + perPage);
-  return { posts, totalPages };
+
+  const { count, error: countError } = await supabase
+    .from('posts')
+    .select('*', { count: 'exact', head: true })
+    .eq('category', category)
+    .eq('sub_category', subCategory);
+
+  if (countError) throw new Error(`getPaginatedPostsBySubCategory count failed: ${countError.message}`);
+
+  const { data, error } = await supabase
+    .from('posts')
+    .select(POST_COLUMNS)
+    .eq('category', category)
+    .eq('sub_category', subCategory)
+    .order('created_at', { ascending: false })
+    .range(from, from + perPage - 1);
+
+  if (error) throw new Error(`getPaginatedPostsBySubCategory failed: ${error.message}`);
+
+  return {
+    posts: data as Post[],
+    totalPages: Math.ceil((count ?? 0) / perPage),
+  };
 };
 
-/** Returns CategorySlug values that have at least one multilingual post. */
 export const getMultilingualCategories = async (): Promise<CategorySlug[]> => {
-  const multilingualPosts = MOCK_POSTS.filter((p) => p.is_multilingual);
-  const categorySet = new Set(multilingualPosts.map((p) => p.category));
+  const { data, error } = await supabase
+    .from('posts')
+    .select('category')
+    .eq('is_multilingual', true);
+
+  if (error) throw new Error(`getMultilingualCategories failed: ${error.message}`);
+
+  const categorySet = new Set((data as { category: string }[]).map((p) => p.category));
   return Array.from(categorySet) as CategorySlug[];
 };
 
-/**
- * Returns sub-category slugs within a category that have at least one multilingual post.
- *
- * @param category Top-level category to filter by.
- */
 export const getMultilingualSubCategories = async (category: CategorySlug): Promise<string[]> => {
-  const multilingualPosts = MOCK_POSTS.filter((p) => p.is_multilingual && p.category === category);
-  const subCategorySet = new Set(multilingualPosts.map((p) => p.sub_category));
+  const { data, error } = await supabase
+    .from('posts')
+    .select('sub_category')
+    .eq('is_multilingual', true)
+    .eq('category', category);
+
+  if (error) throw new Error(`getMultilingualSubCategories failed: ${error.message}`);
+
+  const subCategorySet = new Set((data as { sub_category: string }[]).map((p) => p.sub_category));
   return Array.from(subCategorySet);
 };
