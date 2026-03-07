@@ -496,7 +496,7 @@ placeName: localized.translated_place_name ?? post.place_name ?? null,
 
 ## 7. Admin 앱 변경
 
-### 7-1. GPT 번역 파이프라인 (GPT-5 Nano 예정)
+### 7-1. GPT 번역 파이프라인 (GPT-5 Mini 예정)
 
 > Admin의 번역 기능은 아직 미구현 상태 (Phase 4+). 구현 시 아래 스펙을 반영한다.
 
@@ -580,7 +580,7 @@ SQL은 [`secrets-reference.md` 섹션 8-6](secrets-reference.md#8-6-마이그레
 
 | 항목                                | 변경 내용                                     | 시점                         |
 | ----------------------------------- | --------------------------------------------- | ---------------------------- |
-| GPT 번역 프롬프트 (GPT-5 Nano 예정) | place_name, address 포함                      | Phase 4+ (번역 기능 구현 시) |
+| GPT 번역 프롬프트 (GPT-5 Mini 예정) | place_name, address 포함                      | Phase 4+ (번역 기능 구현 시) |
 | 포스트 저장 Server Action           | 번역 결과에 place_name, address 포함하여 저장 | Phase 4+                     |
 
 ### 9-4. DB 변경
@@ -606,7 +606,7 @@ SQL은 [`secrets-reference.md` 섹션 8-6](secrets-reference.md#8-6-마이그레
 | 9    | Client: search-data.ts — 번역 장소명 사용                                        | P1       | #2, #3           |
 | 10   | Client: feed JSON API — 번역 장소명 사용                                         | P1       | #2, #3           |
 | 11   | docs: database.md 업데이트                                                       | P0       | #1               |
-| 12   | Admin: GPT-5 Nano 번역 파이프라인에 place_name, address 포함                     | P1       | Phase 4+ 구현 시 |
+| 12   | Admin: GPT-5 Mini 번역 파이프라인에 place_name, address 포함                     | P1       | Phase 4+ 구현 시 |
 
 > **참고**: #1(DB 변경)은 Supabase 콘솔에서 직접 실행. #2~#10은 SE가 한 PR로 구현 가능. #12는 Admin 번역 기능 구현 시점에 반영.
 

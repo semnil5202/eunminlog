@@ -33,7 +33,7 @@
 - [x] 카테고리/서브카테고리 select — `CategorySelector` 컴포넌트, 동적 서브카테고리 매핑
 - [x] 썸네일 업로드 — `ThumbnailUpload` 컴포넌트 (WebP 변환, S3 CDN URL)
 - [x] 체험 방문 전용 필드 — `VisitFields` 컴포넌트 (장소명, 주소, 가격대: 만원 단위)
-- [x] 3줄 요약 — textarea + "요약 생성" AI 버튼 (GPT-5 Nano API 연동 완료)
+- [x] 3줄 요약 — textarea + "요약 생성" AI 버튼 (GPT-5 Mini API 연동 완료)
 - [x] 이미지 삽입 UI — CustomResizableImage 확장 (4코너 리사이즈, width % 저장), S3 presigned URL 업로드
 - [x] 번역 기능 연동 — "번역본 생성" 버튼 → 고유명사 추출 → 번역 실행 → "번역본 확인하기" Sheet
 - [x] 폼 검증 — react-hook-form + Zod, 버튼 클릭 시 검증 + focus + 에러 메시지
@@ -58,7 +58,7 @@
 
 ### Phase 4+ (완료)
 
-- [x] GPT-5 Nano API 연동 — 번역+요약+용어 추출 실제 API 호출
+- [x] GPT API 연동 — 번역+요약+용어 추출+슬러그+카테고리 번역 실제 API 호출 (GPT-5 Mini)
 - [x] 미디어 업로드 (S3 Pre-signed URL)
 - [x] 게시글 목록 페이지 (`/posts`) — SearchFilter + 테이블 + 정렬 + Pagination
 - [x] 게시글 삭제 (확인 다이얼로그 포함)

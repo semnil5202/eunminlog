@@ -4,7 +4,7 @@
 
 - **Project Name**: EUNMIN-LOG
 - **Brand Name**: 은민로그 (eunmin log)
-- **Language**: 한국어 기본, 다국어 지원 (GPT-5 Nano 번역): en, ja, zh-CN, zh-TW, id, vi, th
+- **Language**: 한국어 기본, 다국어 지원 (GPT-5 Mini 번역): en, ja, zh-CN, zh-TW, id, vi, th
 
 ### Logo Text
 
