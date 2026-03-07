@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 
 import './globals.css';
@@ -12,6 +12,12 @@ export const metadata: Metadata = {
   title: `${SITE_NAME_EN} admin`,
   description: `${SITE_NAME_EN} 관리자 페이지`,
   robots: 'noindex, nofollow',
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
