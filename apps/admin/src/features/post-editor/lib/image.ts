@@ -48,11 +48,22 @@ export function toWebP(file: File, options: ToWebPOptions = {}): Promise<Blob> {
       ctx.drawImage(img, 0, 0, w, h);
       drawWatermark(ctx, w, h);
       canvas.toBlob(
-        (blob) => (blob ? resolve(blob) : reject(new Error('toBlob failed'))),
+        (blob) => {
+          if (blob) {
+            resolve(blob);
+          } else {
+            canvas.toBlob(
+              (fallback) =>
+                fallback ? resolve(fallback) : reject(new Error('toBlob failed')),
+              'image/jpeg',
+              quality,
+            );
+          }
+          URL.revokeObjectURL(img.src);
+        },
         'image/webp',
         quality,
       );
-      URL.revokeObjectURL(img.src);
     };
     img.onerror = reject;
     img.src = URL.createObjectURL(file);

@@ -13,7 +13,7 @@ async function uploadBlob(presignedUrl: string, blob: Blob) {
   const res = await fetch(presignedUrl, {
     method: 'PUT',
     body: blob,
-    headers: { 'Content-Type': 'image/webp' },
+    headers: { 'Content-Type': blob.type || 'image/webp' },
   });
   if (!res.ok) throw new Error('S3 업로드에 실패했습니다.');
 }
@@ -23,16 +23,24 @@ export function useImageUpload() {
 
   const uploadImage = async (file: File): Promise<string> => {
     const originalBlob = await toWebP(file);
-    const { presignedUrl, cdnUrl, key } = await getPresignedUrl(file.type, originalBlob.size);
+    const blobType = originalBlob.type || 'image/webp';
+    const { presignedUrl, cdnUrl, key } = await getPresignedUrl(
+      file.type,
+      originalBlob.size,
+      undefined,
+      blobType,
+    );
 
     await uploadBlob(presignedUrl, originalBlob);
 
     const resizedBlob = await toWebP(file, { maxWidth: RESIZED_MAX_WIDTH });
-    const resizedKey = key.replace(/\.webp$/, `${RESIZED_SUFFIX}.webp`);
+    const ext = blobType === 'image/jpeg' ? 'jpg' : 'webp';
+    const resizedKey = key.replace(/\.(webp|jpg)$/, `${RESIZED_SUFFIX}.${ext}`);
     const { presignedUrl: resizedUrl } = await getPresignedUrl(
       file.type,
       resizedBlob.size,
       resizedKey,
+      blobType,
     );
     await uploadBlob(resizedUrl, resizedBlob);
 
