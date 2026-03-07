@@ -38,6 +38,8 @@ const { locale, path, showLabel = false, isMultilingual = true } = Astro.props;
       stroke-linejoin="round"
       aria-hidden="true"
     >
+      <title>{t("a11y.language", locale)}</title>
+      <desc>{t("a11y.language", locale)}</desc>
       <circle cx="12" cy="12" r="10" />
       <line x1="2" y1="12" x2="22" y2="12" />
       <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
@@ -56,6 +58,8 @@ const { locale, path, showLabel = false, isMultilingual = true } = Astro.props;
           stroke-linejoin="round"
           aria-hidden="true"
         >
+          <title>{t("a11y.expand", locale)}</title>
+          <desc>{t("a11y.expand", locale)}</desc>
           <polyline points="6 9 12 15 18 9" />
         </svg>
       </>

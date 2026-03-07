@@ -85,6 +85,8 @@ const { activeCategory } = getActiveSegments(Astro.url.pathname, locale);
           stroke-linejoin="round"
           aria-hidden="true"
         >
+          <title>{t("a11y.search", locale)}</title>
+          <desc>{t("a11y.search", locale)}</desc>
           <circle cx="11" cy="11" r="8" />
           <line x1="21" y1="21" x2="16.65" y2="16.65" />
         </svg>
