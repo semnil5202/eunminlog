@@ -245,14 +245,14 @@ function CategoriesContent() {
 
       <div>
         <div className="mb-3 flex items-center gap-2">
-          <Button asChild>
+          <Button asChild className="max-md:h-9 max-md:px-3 max-md:text-xs">
             <Link href="/categories/new">
-              <Plus className="mr-1 h-4 w-4" />새 카테고리 생성
+              <Plus className="mr-1 h-4 w-4 max-md:h-3.5 max-md:w-3.5" />새 카테고리 생성
             </Link>
           </Button>
           {selectedIds.size > 0 && (
-            <Button variant="destructive" onClick={() => setIsDeleteDialogOpen(true)}>
-              <Trash2 className="mr-1 h-4 w-4" />
+            <Button variant="destructive" onClick={() => setIsDeleteDialogOpen(true)} className="max-md:h-8 max-md:px-3 max-md:text-xs">
+              <Trash2 className="mr-1 h-4 w-4 max-md:h-3.5 max-md:w-3.5" />
               {selectedIds.size}개 삭제
             </Button>
           )}

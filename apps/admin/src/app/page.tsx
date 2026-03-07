@@ -119,7 +119,7 @@ function MetricsContent() {
       <div>
         <div className="mb-3 flex items-center justify-end">
           <Select value={sortBy} onValueChange={handleSortChange}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-[180px] max-md:h-8 max-md:w-[150px] max-md:text-xs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
