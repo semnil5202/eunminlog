@@ -23,7 +23,7 @@ const currentYear = new Date().getFullYear();
     </small>
 
     <nav
-      aria-label="Footer navigation"
+      aria-label={t("a11y.footerNav", locale)}
       class="flex items-center gap-3 order-1 sm:order-2"
     >
       <a
@@ -36,7 +36,7 @@ const currentYear = new Date().getFullYear();
       <a
         href={getLocalePath("/sitemap.xml", locale)}
         class="text-[12px] text-gray-500 hover:text-primary-500 transition-colors duration-150"
-        aria-label="XML Sitemap"
+        aria-label={t("a11y.sitemap", locale)}
       >
         {t("footer.sitemap", locale)}
       </a>

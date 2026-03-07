@@ -13,7 +13,7 @@ interface Props {
 const { locale } = Astro.props;
 ---
 
-<section class="border border-gray-200 p-4" aria-label="Blogger profile">
+<section class="border border-gray-200 p-4" aria-label={t("a11y.bloggerProfile", locale)}>
   <div class="flex flex-col items-center gap-4">
     <div class="w-20 h-20 rounded-full overflow-hidden bg-gray-100 shrink-0">
       <img

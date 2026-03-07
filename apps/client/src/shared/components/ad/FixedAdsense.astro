@@ -5,18 +5,22 @@
  * sidebar: 우측 사이드바 (300×250)
  */
 
+import type { Locale } from "@/shared/types/common";
+import { t } from "@/shared/lib/i18n/translations";
+
 interface Props {
   variant: 'post-top' | 'sidebar';
+  locale: Locale;
 }
 
-const { variant } = Astro.props;
+const { variant, locale } = Astro.props;
 ---
 
 {variant === 'post-top' && (
   <div
     class="bg-gray-100 flex items-center justify-center mb-6 mx-auto w-[300px] h-[50px] lg:w-[468px] lg:h-[60px]"
     role="complementary"
-    aria-label="Advertisement"
+    aria-label={t("a11y.advertisement", locale)}
     data-ad-slot="post_top"
     data-ad-format="fixed"
     data-ad-position="post_top"
@@ -29,7 +33,7 @@ const { variant } = Astro.props;
   <div
     class="w-[300px] h-[250px] bg-gray-100 flex items-center justify-center"
     role="complementary"
-    aria-label="Advertisement"
+    aria-label={t("a11y.advertisement", locale)}
     data-ad-slot="sidebar"
     data-ad-format="fixed"
     data-ad-position="right_sidebar"

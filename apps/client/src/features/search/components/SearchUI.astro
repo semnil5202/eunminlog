@@ -28,6 +28,8 @@ const {
   sponsoredLabel,
   locale,
 } = Astro.props;
+
+const advertisementLabel = t("a11y.advertisement", locale);
 ---
 
 <div class="w-full max-w-[688px]">
@@ -127,7 +129,7 @@ const {
   set:html={JSON.stringify(searchData)}
 />
 
-<script define:vars={{ sponsoredLabel, resultsText }}>
+<script define:vars={{ sponsoredLabel, resultsText, advertisementLabel }}>
   const dataEl = document.getElementById('search-data');
   const form = document.getElementById('search-form');
   const input = document.getElementById('search-input');
@@ -158,7 +160,7 @@ const {
     searchAdCounter++;
     const wrapper = document.createElement('div');
     wrapper.setAttribute('role', 'complementary');
-    wrapper.setAttribute('aria-label', 'Advertisement');
+    wrapper.setAttribute('aria-label', advertisementLabel);
     wrapper.dataset.adSlot = `search_in_feed_${searchAdCounter}`;
     wrapper.dataset.adFormat = 'in_feed';
     wrapper.dataset.adPosition = `search_feed_${searchAdCounter}`;

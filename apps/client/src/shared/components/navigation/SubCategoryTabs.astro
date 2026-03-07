@@ -4,6 +4,7 @@
 import type { CategorySlug } from "@/shared/types/category";
 import { getSubCategoryLabel } from "@/shared/lib/i18n/categories";
 import { getLocalePath } from "@/shared/lib/i18n/locales";
+import { t } from "@/shared/lib/i18n/translations";
 import type { Locale } from "@/shared/types/common";
 import { DEFAULT_LOCALE } from "@/shared/types/common";
 import { getMultilingualSubCategories } from "@/features/post-feed/api/posts";
@@ -23,7 +24,7 @@ const multilingualSubs = locale !== DEFAULT_LOCALE ? await getMultilingualSubCat
 const subCategories = multilingualSubs ? allSubCategories.filter((s) => multilingualSubs.includes(s)) : allSubCategories;
 ---
 
-<nav aria-label="Sub-category navigation" class="block lg:hidden -mx-4 mb-4 border-b border-gray-200">
+<nav aria-label={t("a11y.subCategoryNav", locale)} class="block lg:hidden -mx-4 mb-4 border-b border-gray-200">
   <div class="flex items-center gap-1 overflow-x-auto scrollbar-none whitespace-nowrap px-4 pb-3" style="mask-image:linear-gradient(to right,black calc(100% - 24px),transparent);-webkit-mask-image:linear-gradient(to right,black calc(100% - 24px),transparent)">
     {subCategories.map((sub, index) => {
       const isActive = activeSubCategory === sub;

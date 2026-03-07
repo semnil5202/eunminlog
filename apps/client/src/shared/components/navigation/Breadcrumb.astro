@@ -3,6 +3,7 @@
 import type { BreadcrumbItem } from "@/shared/types/seo";
 import type { Locale } from "@/shared/types/common";
 import { getLocalePath } from "@/shared/lib/i18n/locales";
+import { t } from "@/shared/lib/i18n/translations";
 
 interface Props {
   items: BreadcrumbItem[];
@@ -12,7 +13,7 @@ interface Props {
 const { items, locale } = Astro.props;
 ---
 
-<nav aria-label="breadcrumb" class="w-full">
+<nav aria-label={t("a11y.breadcrumb", locale)} class="w-full">
   <ol
     class="flex flex-wrap items-center gap-x-1 gap-y-1 text-sm text-gray-500"
     itemscope

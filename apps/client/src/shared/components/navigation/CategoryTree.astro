@@ -3,6 +3,7 @@
 
 import { getCategoryTree } from "@/shared/lib/i18n/categories";
 import { getLocalePath } from "@/shared/lib/i18n/locales";
+import { t } from "@/shared/lib/i18n/translations";
 import type { Locale } from "@/shared/types/common";
 import { DEFAULT_LOCALE } from "@/shared/types/common";
 import { getActiveSegments } from "@/shared/lib/navigation";
@@ -35,7 +36,7 @@ if (locale !== DEFAULT_LOCALE) {
 const { activeCategory, activeSubCategory } = getActiveSegments(Astro.url.pathname, locale);
 ---
 
-<nav aria-label="Category navigation" class={className}>
+<nav aria-label={t("a11y.categoryNav", locale)} class={className}>
   <ul class="space-y-4" role="list">
     {
       categories.map((category) => (

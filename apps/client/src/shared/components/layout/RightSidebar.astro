@@ -4,6 +4,7 @@
 import SponsoredPostList from "@/shared/components/layout/SponsoredPostList.astro";
 import FixedAdsense from "@/shared/components/ad/FixedAdsense.astro";
 import type { Locale } from "@/shared/types/common";
+import { t } from "@/shared/lib/i18n/translations";
 import type { LocalizedPost } from "@/shared/types/post";
 
 interface Props {
@@ -17,7 +18,7 @@ const { locale, sponsoredPosts = [], currentSlug } = Astro.props;
 
 <aside
   class="hidden lg:block w-[300px] shrink-0"
-  aria-label="Advertisement and sponsored posts"
+  aria-label={t("a11y.sponsoredSidebar", locale)}
 >
   <div class="sticky top-20 max-h-[calc(100vh-5rem)] overflow-y-auto scrollbar-none pt-2 pb-6 space-y-8">
 

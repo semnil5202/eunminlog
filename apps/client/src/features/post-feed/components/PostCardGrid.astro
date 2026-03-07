@@ -2,6 +2,7 @@
 /** 포스트 피드를 단일 컬럼 리스트로 렌더링한다. 2번째, 5번째 슬롯에 인피드 광고 삽입. */
 import type { LocalizedPost } from "@/shared/types/post";
 import type { Locale } from "@/shared/types/common";
+import { t } from "@/shared/lib/i18n/translations";
 import PostCard from "./PostCard.astro";
 import SponsoredCard from "./SponsoredCard.astro";
 import PostCardSkeleton from "./PostCardSkeleton.astro";
@@ -43,6 +44,7 @@ for (let i = 0; i < posts.length; i++) {
   data-next-page="2"
   data-has-next={String(hasNextPage)}
   data-sponsored-label={sponsoredLabel}
+  data-ad-label={t("a11y.advertisement", locale)}
 >
   {feedItems.map((item) => {
     if (item.type === "ad") {
@@ -87,13 +89,14 @@ for (let i = 0; i < posts.length; i++) {
       let loading = false;
       let dynamicAdCounter = 2;
       const sponsoredLabel = feed.dataset.sponsoredLabel || "";
+      const adLabel = feed.dataset.adLabel || "Advertisement";
 
       const createAdSlot = (): HTMLDivElement => {
         dynamicAdCounter++;
         const wrapper = document.createElement("div");
         wrapper.className = "w-full max-w-[640px] lg:max-w-none aspect-7/3 bg-gray-100 flex items-center justify-center";
         wrapper.setAttribute("role", "complementary");
-        wrapper.setAttribute("aria-label", "Advertisement");
+        wrapper.setAttribute("aria-label", adLabel);
         wrapper.dataset.adSlot = `in_feed_${dynamicAdCounter}`;
         wrapper.dataset.adFormat = "in_feed";
         wrapper.dataset.adPosition = `feed_index_${dynamicAdCounter}`;

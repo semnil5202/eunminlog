@@ -1,13 +1,17 @@
 ---
 /** 인피드 광고 플레이스홀더. class prop으로 높이·grid span 등을 오버라이드한다. */
 
+import type { Locale } from "@/shared/types/common";
+import { t } from "@/shared/lib/i18n/translations";
+
 interface Props {
   class?: string;
   slotId?: string;
   position?: string;
+  locale: Locale;
 }
 
-const { class: className, slotId = "in_feed", position = "feed" } = Astro.props;
+const { class: className, slotId = "in_feed", position = "feed", locale } = Astro.props;
 ---
 
 <div
@@ -16,7 +20,7 @@ const { class: className, slotId = "in_feed", position = "feed" } = Astro.props;
     className,
   ]}
   role="complementary"
-  aria-label="Advertisement"
+  aria-label={t("a11y.advertisement", locale)}
   data-ad-slot={slotId}
   data-ad-format="in_feed"
   data-ad-position={position}

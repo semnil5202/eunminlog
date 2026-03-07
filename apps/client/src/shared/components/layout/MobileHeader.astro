@@ -41,7 +41,7 @@ const { activeCategory } = getActiveSegments(Astro.url.pathname, locale);
       {locale === DEFAULT_LOCALE ? SITE_NAME_KO : SITE_NAME_EN}
     </a>
 
-    <nav aria-label="Main navigation" class="flex-1 flex items-center gap-1 overflow-x-auto scrollbar-none whitespace-nowrap min-w-0" style="mask-image:linear-gradient(to right,black calc(100% - 24px),transparent);-webkit-mask-image:linear-gradient(to right,black calc(100% - 24px),transparent)">
+    <nav aria-label={t("a11y.mainNav", locale)} class="flex-1 flex items-center gap-1 overflow-x-auto scrollbar-none whitespace-nowrap min-w-0" style="mask-image:linear-gradient(to right,black calc(100% - 24px),transparent);-webkit-mask-image:linear-gradient(to right,black calc(100% - 24px),transparent)">
       {
         categories.map((category, index) => (
           <>
