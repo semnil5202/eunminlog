@@ -115,13 +115,19 @@ function useSheetSwipe(
         overlayRef.current.style.opacity = '0';
       }
       setTimeout(() => {
+        el.style.animation = 'none';
+        if (overlayRef.current) overlayRef.current.style.animation = 'none';
         onClose?.();
-        el.style.transform = '';
-        el.style.transition = '';
-        if (overlayRef.current) {
-          overlayRef.current.style.opacity = '';
-          overlayRef.current.style.transition = '';
-        }
+        requestAnimationFrame(() => {
+          el.style.transform = '';
+          el.style.transition = '';
+          el.style.animation = '';
+          if (overlayRef.current) {
+            overlayRef.current.style.opacity = '';
+            overlayRef.current.style.transition = '';
+            overlayRef.current.style.animation = '';
+          }
+        });
       }, 200);
     } else {
       el.style.transition = 'transform 200ms ease-out';
