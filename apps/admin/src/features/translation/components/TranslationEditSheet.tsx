@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import type { TranslationLocale } from '@/shared/types/post';
 import type { ImageAlt, TranslationResult } from '../types';
 import { LOCALE_FILTER_LABELS } from '../constants/locale';
+import { buildTranslateSystemPrompt } from '@/shared/constants/prompts';
 
 type TranslationField = 'title' | 'content' | 'description' | 'place_name' | 'address';
 
@@ -51,10 +52,12 @@ type TranslationEditSheetProps = {
 
 export type { TranslationField };
 
-function CopyButton({ text }: { text: string }) {
+function PromptCopyButton({ html, locale }: { html: string; locale: TranslationLocale }) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
+    const prompt = buildTranslateSystemPrompt(locale);
+    const text = `[시스템 프롬프트]\n${prompt}\n\n[HTML 본문]\n${html}`;
     await navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
@@ -72,7 +75,7 @@ function CopyButton({ text }: { text: string }) {
         </>
       ) : (
         <>
-          <ClipboardCopyIcon className="size-3" /> 복사
+          <ClipboardCopyIcon className="size-3" /> 프롬프트 및 HTML 복사
         </>
       )}
     </button>
@@ -179,7 +182,9 @@ export function TranslationEditSheet({
             )}
           </div>
           <div className="flex items-center gap-2">
-            <CopyButton text={value} />
+            {field === 'content' && (
+              <PromptCopyButton html={value} locale={locale} />
+            )}
             {showRetranslateBtn && (
               <button
                 type="button"
@@ -243,78 +248,63 @@ export function TranslationEditSheet({
             {selected === 'ko' ? (
               <>
                 <div className="pb-5">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <label className="text-sm font-semibold text-muted-foreground">제목</label>
-                      {dirtyFields.has('title') && (
-                        <span className="rounded bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-700">
-                          수정됨
-                        </span>
-                      )}
-                    </div>
-                    <CopyButton text={originalTitle} />
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-semibold text-muted-foreground">제목</label>
+                    {dirtyFields.has('title') && (
+                      <span className="rounded bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-700">
+                        수정됨
+                      </span>
+                    )}
                   </div>
                   <p className="mt-1 text-lg font-bold">{originalTitle}</p>
                 </div>
                 {originalPlaceName && (
                   <div className="py-5">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <label className="text-sm font-semibold text-muted-foreground">장소</label>
-                        {dirtyFields.has('place_name') && (
-                          <span className="rounded bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-700">
-                            수정됨
-                          </span>
-                        )}
-                      </div>
-                      <CopyButton text={originalPlaceName} />
+                    <div className="flex items-center gap-2">
+                      <label className="text-sm font-semibold text-muted-foreground">장소</label>
+                      {dirtyFields.has('place_name') && (
+                        <span className="rounded bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-700">
+                          수정됨
+                        </span>
+                      )}
                     </div>
                     <p className="mt-1 text-sm">{originalPlaceName}</p>
                   </div>
                 )}
                 {originalAddress && (
                   <div className="py-5">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <label className="text-sm font-semibold text-muted-foreground">주소</label>
-                        {dirtyFields.has('address') && (
-                          <span className="rounded bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-700">
-                            수정됨
-                          </span>
-                        )}
-                      </div>
-                      <CopyButton text={originalAddress} />
+                    <div className="flex items-center gap-2">
+                      <label className="text-sm font-semibold text-muted-foreground">주소</label>
+                      {dirtyFields.has('address') && (
+                        <span className="rounded bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-700">
+                          수정됨
+                        </span>
+                      )}
                     </div>
                     <p className="mt-1 text-sm">{originalAddress}</p>
                   </div>
                 )}
                 <div className="py-5">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <label className="text-sm font-semibold text-muted-foreground">
-                        3줄 요약
-                      </label>
-                      {dirtyFields.has('description') && (
-                        <span className="rounded bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-700">
-                          수정됨
-                        </span>
-                      )}
-                    </div>
-                    <CopyButton text={originalDescription} />
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-semibold text-muted-foreground">
+                      3줄 요약
+                    </label>
+                    {dirtyFields.has('description') && (
+                      <span className="rounded bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-700">
+                        수정됨
+                      </span>
+                    )}
                   </div>
                   <p className="mt-1 whitespace-pre-wrap text-sm">{originalDescription}</p>
                 </div>
                 <div className="py-5">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <label className="text-sm font-semibold text-muted-foreground">본문</label>
-                      {dirtyFields.has('content') && (
-                        <span className="rounded bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-700">
-                          수정됨
-                        </span>
-                      )}
-                    </div>
-                    <CopyButton text={originalContent} />
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-semibold text-muted-foreground">본문</label>
+                    {dirtyFields.has('content') && (
+                      <span className="rounded bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-700">
+                        수정됨
+                      </span>
+                    )}
                   </div>
                   <div
                     className="prose prose-sm mt-1 max-w-none"

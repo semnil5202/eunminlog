@@ -122,6 +122,9 @@
   body {
     @apply bg-background text-foreground;
   }
+  button:not(:disabled) {
+    cursor: pointer;
+  }
   input:focus-visible,
   textarea:focus-visible,
   [data-slot='select-trigger']:focus-visible {

@@ -14,6 +14,7 @@ import {
 import type { TranslationLocale } from '@/shared/types/post';
 import type { ImageAlt, TranslationResult } from '../types';
 import { LOCALE_FILTER_LABELS } from '../constants/locale';
+import { buildTranslateSystemPrompt } from '@/shared/constants/prompts';
 
 type FilterLocale = 'ko' | TranslationLocale;
 
@@ -33,10 +34,12 @@ type TranslationPreviewSheetProps = {
   onRetryAll?: () => Promise<void>;
 };
 
-function CopyButton({ text }: { text: string }) {
+function PromptCopyButton({ html, locale }: { html: string; locale: TranslationLocale }) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
+    const prompt = buildTranslateSystemPrompt(locale);
+    const text = `[시스템 프롬프트]\n${prompt}\n\n[HTML 본문]\n${html}`;
     await navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
@@ -54,7 +57,7 @@ function CopyButton({ text }: { text: string }) {
         </>
       ) : (
         <>
-          <ClipboardCopyIcon className="size-3" /> 복사
+          <ClipboardCopyIcon className="size-3" /> 프롬프트 및 HTML 복사
         </>
       )}
     </button>
@@ -133,35 +136,23 @@ export function TranslationPreviewSheet({
             {selected === 'ko' ? (
               <>
                 <div className="pb-5">
-                  <div className="flex items-center justify-between">
-                    <label className="text-sm font-semibold text-muted-foreground">제목</label>
-                    <CopyButton text={originalTitle} />
-                  </div>
+                  <label className="text-sm font-semibold text-muted-foreground">제목</label>
                   <p className="mt-1 text-lg font-bold">{originalTitle}</p>
                 </div>
                 {originalPlaceName && (
                   <div className="py-5">
-                    <div className="flex items-center justify-between">
-                      <label className="text-sm font-semibold text-muted-foreground">장소</label>
-                      <CopyButton text={originalPlaceName} />
-                    </div>
+                    <label className="text-sm font-semibold text-muted-foreground">장소</label>
                     <p className="mt-1 text-sm">{originalPlaceName}</p>
                   </div>
                 )}
                 {originalAddress && (
                   <div className="py-5">
-                    <div className="flex items-center justify-between">
-                      <label className="text-sm font-semibold text-muted-foreground">주소</label>
-                      <CopyButton text={originalAddress} />
-                    </div>
+                    <label className="text-sm font-semibold text-muted-foreground">주소</label>
                     <p className="mt-1 text-sm">{originalAddress}</p>
                   </div>
                 )}
                 <div className="py-5">
-                  <div className="flex items-center justify-between">
-                    <label className="text-sm font-semibold text-muted-foreground">본문</label>
-                    <CopyButton text={originalContent} />
-                  </div>
+                  <label className="text-sm font-semibold text-muted-foreground">본문</label>
                   <div
                     className="prose prose-sm mt-1 max-w-none"
                     dangerouslySetInnerHTML={{ __html: originalContent }}
@@ -199,34 +190,25 @@ export function TranslationPreviewSheet({
             ) : selectedTranslation ? (
               <>
                 <div className="pb-5">
-                  <div className="flex items-center justify-between">
-                    <label className="text-sm font-semibold text-muted-foreground">제목</label>
-                    <CopyButton text={selectedTranslation.title} />
-                  </div>
+                  <label className="text-sm font-semibold text-muted-foreground">제목</label>
                   <p className="mt-1 text-lg font-bold">{selectedTranslation.title}</p>
                 </div>
                 {selectedTranslation.place_name && (
                   <div className="py-5">
-                    <div className="flex items-center justify-between">
-                      <label className="text-sm font-semibold text-muted-foreground">장소</label>
-                      <CopyButton text={selectedTranslation.place_name} />
-                    </div>
+                    <label className="text-sm font-semibold text-muted-foreground">장소</label>
                     <p className="mt-1 text-sm">{selectedTranslation.place_name}</p>
                   </div>
                 )}
                 {selectedTranslation.address && (
                   <div className="py-5">
-                    <div className="flex items-center justify-between">
-                      <label className="text-sm font-semibold text-muted-foreground">주소</label>
-                      <CopyButton text={selectedTranslation.address} />
-                    </div>
+                    <label className="text-sm font-semibold text-muted-foreground">주소</label>
                     <p className="mt-1 text-sm">{selectedTranslation.address}</p>
                   </div>
                 )}
                 <div className="py-5">
                   <div className="flex items-center justify-between">
                     <label className="text-sm font-semibold text-muted-foreground">본문</label>
-                    <CopyButton text={selectedTranslation.content} />
+                    <PromptCopyButton html={selectedTranslation.content} locale={selected as TranslationLocale} />
                   </div>
                   <div
                     className="prose prose-sm mt-1 max-w-none"
