@@ -4,7 +4,7 @@ function drawWatermark(ctx: CanvasRenderingContext2D, width: number, height: num
 
   ctx.save();
   ctx.font = `${fontSize}px sans-serif`;
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
   ctx.rotate((-30 * Math.PI) / 180);
 
   const diagonal = Math.sqrt(width * width + height * height);
