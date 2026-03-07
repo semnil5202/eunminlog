@@ -691,6 +691,8 @@ function EditPostForm({
           originalDescription={description}
           originalPlaceName={watchedPlaceName || undefined}
           originalAddress={watchedAddress || undefined}
+          originalImageAlts={imageAlts.length > 0 ? imageAlts : undefined}
+          originalThumbnailAlt={watch('thumbnailAlt') || undefined}
           translations={translationResults}
           dirtyFields={dirtyTranslationFields}
           onRetranslateLocale={handleRetranslateLocale}

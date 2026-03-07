@@ -13,7 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 
 import type { TranslationLocale } from '@/shared/types/post';
-import type { TranslationResult } from '../types';
+import type { ImageAlt, TranslationResult } from '../types';
 import { LOCALE_FILTER_LABELS } from '../constants/locale';
 
 type TranslationField = 'title' | 'content' | 'description' | 'place_name' | 'address';
@@ -40,6 +40,8 @@ type TranslationEditSheetProps = {
   originalDescription: string;
   originalPlaceName?: string;
   originalAddress?: string;
+  originalImageAlts?: ImageAlt[];
+  originalThumbnailAlt?: string;
   translations: TranslationResult[];
   dirtyFields: Set<TranslationField>;
   onRetranslateLocale: (locale: TranslationLocale) => Promise<TranslationResult>;
@@ -85,6 +87,8 @@ export function TranslationEditSheet({
   originalDescription,
   originalPlaceName,
   originalAddress,
+  originalImageAlts,
+  originalThumbnailAlt,
   translations,
   dirtyFields,
   onRetranslateLocale,
@@ -300,7 +304,7 @@ export function TranslationEditSheet({
                   </div>
                   <p className="mt-1 whitespace-pre-wrap text-sm">{originalDescription}</p>
                 </div>
-                <div className="pt-5">
+                <div className="py-5">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <label className="text-sm font-semibold text-muted-foreground">본문</label>
@@ -317,6 +321,28 @@ export function TranslationEditSheet({
                     dangerouslySetInnerHTML={{ __html: originalContent }}
                   />
                 </div>
+                {(originalThumbnailAlt || (originalImageAlts && originalImageAlts.length > 0)) && (
+                  <div className="pt-5">
+                    <label className="text-sm font-semibold text-muted-foreground">이미지 Alt</label>
+                    <div className="mt-2 space-y-3">
+                      {originalThumbnailAlt && (
+                        <div className="flex items-start gap-3">
+                          <span className="shrink-0 rounded bg-gray-100 px-1.5 py-0.5 text-xs font-medium text-gray-600">썸네일</span>
+                          <p className="text-sm">{originalThumbnailAlt}</p>
+                        </div>
+                      )}
+                      {originalImageAlts?.map((item, i) => (
+                        <div key={item.src} className="flex items-start gap-3">
+                          <span className="shrink-0 rounded bg-gray-100 px-1.5 py-0.5 text-xs font-medium text-gray-600">이미지 {i + 1}</span>
+                          <div className="min-w-0">
+                            <img src={item.src} alt="" className="mb-1 h-12 w-auto object-cover" />
+                            <p className="text-sm">{item.alt}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </>
             ) : selectedTranslation ? (
               <>
@@ -339,6 +365,28 @@ export function TranslationEditSheet({
                   selected as TranslationLocale,
                 )}
                 {renderField('content', selectedTranslation.content, selected as TranslationLocale)}
+                {(selectedTranslation.thumbnail_alt || selectedTranslation.image_alts.length > 0) && (
+                  <div className="pt-5">
+                    <label className="text-sm font-semibold text-muted-foreground">이미지 Alt</label>
+                    <div className="mt-2 space-y-3">
+                      {selectedTranslation.thumbnail_alt && (
+                        <div className="flex items-start gap-3">
+                          <span className="shrink-0 rounded bg-gray-100 px-1.5 py-0.5 text-xs font-medium text-gray-600">썸네일</span>
+                          <p className="text-sm">{selectedTranslation.thumbnail_alt}</p>
+                        </div>
+                      )}
+                      {selectedTranslation.image_alts.map((item, i) => (
+                        <div key={item.src} className="flex items-start gap-3">
+                          <span className="shrink-0 rounded bg-gray-100 px-1.5 py-0.5 text-xs font-medium text-gray-600">이미지 {i + 1}</span>
+                          <div className="min-w-0">
+                            <img src={item.src} alt="" className="mb-1 h-12 w-auto object-cover" />
+                            <p className="text-sm">{item.alt}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </>
             ) : (
               <p className="text-sm text-muted-foreground">번역 데이터가 없습니다.</p>

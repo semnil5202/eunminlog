@@ -690,6 +690,8 @@ function NewPostContent() {
         originalContent={watch('content')}
         originalPlaceName={watch('placeName') || undefined}
         originalAddress={watch('address') || undefined}
+        originalImageAlts={imageAlts.length > 0 ? imageAlts : undefined}
+        originalThumbnailAlt={watch('thumbnailAlt') || undefined}
         translations={translationResults}
         onRetryLocale={handleRetryLocale}
         onRetryAll={handleRetryAll}
