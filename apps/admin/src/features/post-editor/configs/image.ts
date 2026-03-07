@@ -46,10 +46,10 @@ export const CustomResizableImage = Image.extend({
       if (!editable) return { dom: $container };
 
       const dotPositions = [
-        { top: '-4px', left: '-4px', cursor: 'nw-resize' },
-        { top: '-4px', right: '-4px', cursor: 'ne-resize' },
-        { bottom: '-4px', left: '-4px', cursor: 'sw-resize' },
-        { bottom: '-4px', right: '-4px', cursor: 'se-resize' },
+        { top: '-6px', left: '-6px', cursor: 'nw-resize' },
+        { top: '-6px', right: '-6px', cursor: 'ne-resize' },
+        { bottom: '-6px', left: '-6px', cursor: 'sw-resize' },
+        { bottom: '-6px', right: '-6px', cursor: 'se-resize' },
       ];
 
       const dots: HTMLElement[] = [];
@@ -60,10 +60,10 @@ export const CustomResizableImage = Image.extend({
           'style',
           [
             'position: absolute',
-            'width: 9px',
-            'height: 9px',
+            'width: 14px',
+            'height: 14px',
             'background: #4a90d9',
-            'border: 1px solid white',
+            'border: 2px solid white',
             'border-radius: 50%',
             'display: none',
             `cursor: ${pos.cursor}`,
@@ -83,7 +83,7 @@ export const CustomResizableImage = Image.extend({
 
       const showHandles = () => {
         isSelected = true;
-        $container.style.border = '1px dashed #4a90d9';
+        $container.style.border = '2px dashed #4a90d9';
         $container.style.boxSizing = 'border-box';
         dots.forEach((dot) => {
           dot.style.display = 'block';
@@ -131,7 +131,7 @@ export const CustomResizableImage = Image.extend({
         let startWidth = 0;
         const isLeft = index === 0 || index === 2;
 
-        const onMouseMove = (e: MouseEvent) => {
+        const onPointerMove = (e: PointerEvent) => {
           const editorWidth = document.querySelector('.ProseMirror')?.clientWidth ?? 400;
           const deltaX = isLeft ? startX - e.clientX : e.clientX - startX;
           const newWidth = Math.min(Math.max(startWidth + deltaX, 50), editorWidth);
@@ -140,20 +140,22 @@ export const CustomResizableImage = Image.extend({
           $img.style.width = '100%';
         };
 
-        const onMouseUp = () => {
-          document.removeEventListener('mousemove', onMouseMove);
-          document.removeEventListener('mouseup', onMouseUp);
+        const onPointerUp = () => {
+          document.removeEventListener('pointermove', onPointerMove);
+          document.removeEventListener('pointerup', onPointerUp);
           updateNodeAttrs();
         };
 
-        dot.addEventListener('mousedown', (e) => {
+        dot.addEventListener('pointerdown', (e) => {
           e.preventDefault();
           e.stopPropagation();
           startX = e.clientX;
           startWidth = $container.offsetWidth;
-          document.addEventListener('mousemove', onMouseMove);
-          document.addEventListener('mouseup', onMouseUp);
+          document.addEventListener('pointermove', onPointerMove);
+          document.addEventListener('pointerup', onPointerUp);
         });
+
+        dot.style.touchAction = 'none';
       });
 
       return {

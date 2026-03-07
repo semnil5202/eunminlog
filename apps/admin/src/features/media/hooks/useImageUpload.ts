@@ -6,6 +6,7 @@ import { toWebP } from '@/features/post-editor/lib/image';
 
 import { getPresignedUrl } from '../api/actions';
 
+const ORIGINAL_MAX_WIDTH = 2048;
 const RESIZED_SUFFIX = '_688';
 const RESIZED_MAX_WIDTH = 688;
 
@@ -22,7 +23,7 @@ export function useImageUpload() {
   const [isUploading, setIsUploading] = useState(false);
 
   const uploadImage = async (file: File): Promise<string> => {
-    const originalBlob = await toWebP(file);
+    const originalBlob = await toWebP(file, { maxWidth: ORIGINAL_MAX_WIDTH });
     const blobType = originalBlob.type || 'image/webp';
     const { presignedUrl, cdnUrl, key } = await getPresignedUrl(
       file.type,
