@@ -603,15 +603,15 @@ Supabase Auth 클라이언트 SDK 사용 (Server Action 아님).
 
 ## 구현 우선순위
 
-| 순서 | API                                                                                   | Phase | 상태      |
-| ---- | ------------------------------------------------------------------------------------- | ----- | --------- |
-| 1    | `createPost`, `updatePost`, `getPost`                                                 | 3     | 미구현    |
-| 2    | `signIn`, `signOut`, `getSession`                                                     | 2     | 미구현    |
-| 3    | `getPresignedUrl`                                                                     | 4     | 미구현    |
-| 4    | `generateSummary`, `extractFlaggedTerms`, `generateSlugSuggestions`                   | 3     | 구현 완료 |
-| 5    | `translatePost`, `retrySingleLocale`                                                  | 3     | 구현 완료 |
-| 6    | `saveTranslations`                                                                    | 4     | 미구현    |
-| 7    | `listPosts`, `deletePost`                                                             | 4     | 미구현    |
-| 8    | `triggerBuild`                                                                        | 4     | 미구현    |
-| 9    | `getPostMetrics` (GA4 연동)                                                           | 4     | mock      |
+| 순서 | API                                                                                                                | Phase | 상태      |
+| ---- | ------------------------------------------------------------------------------------------------------------------ | ----- | --------- |
+| 1    | `createPost`, `updatePost`, `getPost`                                                                              | 3     | 미구현    |
+| 2    | `signIn`, `signOut`, `getSession`                                                                                  | 2     | 미구현    |
+| 3    | `getPresignedUrl`                                                                                                  | 4     | 미구현    |
+| 4    | `generateSummary`, `extractFlaggedTerms`, `generateSlugSuggestions`                                                | 3     | 구현 완료 |
+| 5    | `translatePost`, `retrySingleLocale`                                                                               | 3     | 구현 완료 |
+| 6    | `saveTranslations`                                                                                                 | 4     | 미구현    |
+| 7    | `listPosts`, `deletePost`                                                                                          | 4     | 미구현    |
+| 8    | `triggerBuild`                                                                                                     | 4     | 미구현    |
+| 9    | `getPostMetrics` (GA4 연동)                                                                                        | 4     | mock      |
 | 10   | `listCategories`, `createParentCategory`, `createChildCategory`, `getCategory`, `updateCategory`, `deleteCategory` | 5     | 구현 완료 |

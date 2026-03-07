@@ -47,9 +47,13 @@ function CopyButton({ text }: { text: string }) {
       className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
     >
       {copied ? (
-        <><CheckIcon className="size-3" /> 복사됨</>
+        <>
+          <CheckIcon className="size-3" /> 복사됨
+        </>
       ) : (
-        <><ClipboardCopyIcon className="size-3" /> 복사</>
+        <>
+          <ClipboardCopyIcon className="size-3" /> 복사
+        </>
       )}
     </button>
   );
@@ -218,8 +222,8 @@ export function TranslationPreviewSheet({
                   disabled={retrying || retryingAll}
                   className="inline-flex items-center gap-1.5 h-9 bg-gray-900 px-4 text-sm font-semibold text-white transition-colors hover:bg-gray-800 disabled:opacity-50"
                 >
-                  <RefreshCwIcon className={`size-3.5 ${retrying ? 'animate-spin' : ''}`} />
-                  이 언어만 AI 재번역
+                  <RefreshCwIcon className={`size-3.5 ${retrying ? 'animate-spin' : ''}`} />이
+                  언어만 AI 재번역
                 </button>
               )}
               {onRetryAll && (

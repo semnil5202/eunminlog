@@ -32,7 +32,10 @@ export type SearchBuildResult = {
  * @param posts - locale이 적용된 포스트 목록
  * @param locale - 현재 페이지 locale
  */
-export const buildSearchData = async (posts: LocalizedPost[], locale: Locale): Promise<SearchBuildResult> => {
+export const buildSearchData = async (
+  posts: LocalizedPost[],
+  locale: Locale,
+): Promise<SearchBuildResult> => {
   const searchData: SearchItem[] = await Promise.all(
     posts.map(async (p) => ({
       slug: p.slug,

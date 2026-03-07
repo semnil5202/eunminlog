@@ -21,7 +21,12 @@ export type CategoryTreeNode = {
   slug: string;
   name: string;
   translations: Record<string, string>;
-  subCategories: { slug: string; name: string; isMultilingual: boolean; translations: Record<string, string> }[];
+  subCategories: {
+    slug: string;
+    name: string;
+    isMultilingual: boolean;
+    translations: Record<string, string>;
+  }[];
 };
 
 export const fetchCategoryTree = async (): Promise<CategoryTreeNode[]> => {
@@ -30,13 +35,12 @@ export const fetchCategoryTree = async (): Promise<CategoryTreeNode[]> => {
       .from('categories')
       .select('id, slug, name, parent_id, sort_order, is_multilingual')
       .order('sort_order'),
-    supabase
-      .from('category_translations')
-      .select('category_id, locale, name'),
+    supabase.from('category_translations').select('category_id, locale, name'),
   ]);
 
   if (catResult.error) throw new Error(`fetchCategoryTree failed: ${catResult.error.message}`);
-  if (transResult.error) throw new Error(`fetchCategoryTranslations failed: ${transResult.error.message}`);
+  if (transResult.error)
+    throw new Error(`fetchCategoryTranslations failed: ${transResult.error.message}`);
 
   const rows = (catResult.data ?? []) as CategoryRow[];
   const transRows = (transResult.data ?? []) as CategoryTranslationRow[];

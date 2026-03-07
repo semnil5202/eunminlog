@@ -237,7 +237,9 @@ export default function NewCategoryPage() {
 
         {parentMultilingual && (
           <div className="space-y-4">
-            <label className="text-sm font-bold">다국어 카테고리명 <span className="text-primary-600">*</span></label>
+            <label className="text-sm font-bold">
+              다국어 카테고리명 <span className="text-primary-600">*</span>
+            </label>
             <div className="grid grid-cols-2 gap-4">
               {LOCALES.map((locale) => (
                 <div key={locale} className="space-y-1.5">
@@ -378,7 +380,9 @@ export default function NewCategoryPage() {
 
         {subMultilingual && (
           <div className="space-y-4">
-            <label className="text-sm font-bold">다국어 카테고리명 <span className="text-primary-600">*</span></label>
+            <label className="text-sm font-bold">
+              다국어 카테고리명 <span className="text-primary-600">*</span>
+            </label>
             <div className="grid grid-cols-2 gap-4">
               {LOCALES.map((locale) => (
                 <div key={locale} className="space-y-1.5">

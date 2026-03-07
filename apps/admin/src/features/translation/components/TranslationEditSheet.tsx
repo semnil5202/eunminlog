@@ -65,9 +65,13 @@ function CopyButton({ text }: { text: string }) {
       className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
     >
       {copied ? (
-        <><CheckIcon className="size-3" /> 복사됨</>
+        <>
+          <CheckIcon className="size-3" /> 복사됨
+        </>
       ) : (
-        <><ClipboardCopyIcon className="size-3" /> 복사</>
+        <>
+          <ClipboardCopyIcon className="size-3" /> 복사
+        </>
       )}
     </button>
   );
@@ -283,7 +287,9 @@ export function TranslationEditSheet({
                 <div className="py-5">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <label className="text-sm font-semibold text-muted-foreground">3줄 요약</label>
+                      <label className="text-sm font-semibold text-muted-foreground">
+                        3줄 요약
+                      </label>
                       {dirtyFields.has('description') && (
                         <span className="rounded bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-700">
                           수정됨
@@ -347,7 +353,9 @@ export function TranslationEditSheet({
                 disabled={retranslating[selected] || bulkRetranslating || retryingAll}
                 className="inline-flex items-center gap-1.5 h-9 bg-gray-900 px-4 text-sm font-semibold text-white transition-colors hover:bg-gray-800 disabled:opacity-50"
               >
-                <RefreshCwIcon className={`size-3.5 ${retranslating[selected] ? 'animate-spin' : ''}`} />
+                <RefreshCwIcon
+                  className={`size-3.5 ${retranslating[selected] ? 'animate-spin' : ''}`}
+                />
                 이 언어만 AI 재번역
               </button>
               <button

@@ -8,10 +8,7 @@ import { cn } from '@/lib/utils';
 
 const SheetSwipeContext = createContext<((open: boolean) => void) | undefined>(undefined);
 
-function Sheet({
-  onOpenChange,
-  ...props
-}: ComponentProps<typeof SheetPrimitive.Root>) {
+function Sheet({ onOpenChange, ...props }: ComponentProps<typeof SheetPrimitive.Root>) {
   return (
     <SheetSwipeContext value={onOpenChange}>
       <SheetPrimitive.Root data-slot="sheet" onOpenChange={onOpenChange} {...props} />

@@ -20,9 +20,9 @@ Push to main/develop
 
 환경별 상세(S3 버킷명, 도메인, CloudFront Distribution ID 등)는 [`secrets-reference.md`](secrets-reference.md) 섹션 3을 참조한다.
 
-| 항목       | Production | Development |
-| ---------- | ---------- | ----------- |
-| 브랜치     | `main`     | `develop`   |
+| 항목   | Production | Development |
+| ------ | ---------- | ----------- |
+| 브랜치 | `main`     | `develop`   |
 
 ## 3. GitHub Secrets 목록
 

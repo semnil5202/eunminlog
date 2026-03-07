@@ -251,7 +251,11 @@ function CategoriesContent() {
             </Link>
           </Button>
           {selectedIds.size > 0 && (
-            <Button variant="destructive" onClick={() => setIsDeleteDialogOpen(true)} className="max-md:h-8 max-md:px-3 max-md:text-xs">
+            <Button
+              variant="destructive"
+              onClick={() => setIsDeleteDialogOpen(true)}
+              className="max-md:h-8 max-md:px-3 max-md:text-xs"
+            >
               <Trash2 className="mr-1 h-4 w-4 max-md:h-3.5 max-md:w-3.5" />
               {selectedIds.size}개 삭제
             </Button>

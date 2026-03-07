@@ -3,7 +3,6 @@
 import { supabaseServer } from '@/shared/lib/supabase-server';
 import { triggerClientBuild } from '@/features/build-trigger/api/actions';
 
-
 export type CategoryWithCount = {
   id: string;
   slug: string;
@@ -164,7 +163,6 @@ export async function createParentCategory(params: {
 
   return { id: data!.id as string };
 }
-
 
 async function saveCategoryTranslations(categoryId: string, translations: Record<string, string>) {
   const rows = Object.entries(translations).map(([locale, name]) => ({
