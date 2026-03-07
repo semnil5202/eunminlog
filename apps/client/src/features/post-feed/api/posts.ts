@@ -5,7 +5,7 @@ import type { CategorySlug } from '@/shared/types/category';
 import { supabase } from '@/shared/lib/supabase';
 
 const POST_COLUMNS =
-  'id, slug, title, description, content, category, sub_category, thumbnail, thumbnail_alt, is_sponsored, is_recommended, is_multilingual, rating, place_name, address, price_prefix, price, image_alts, created_at, updated_at';
+  'id, slug, title, description, content, category, sub_category, thumbnail, thumbnail_alt, is_sponsored, is_recommended, is_multilingual, rating, place_name, address, price_prefix, price, product_name, purchase_source, purchase_link, image_alts, created_at, updated_at';
 
 export const getAllPosts = async (): Promise<Post[]> => {
   const { data, error } = await supabase
