@@ -26,6 +26,20 @@ img[data-lightbox] {
   border-color: var(--color-gray-200);
 }
 
+[itemprop='articleBody'] > ol {
+  list-style-type: decimal;
+}
+
+[itemprop='articleBody'] ol ol,
+[itemprop='articleBody'] ul ol {
+  list-style-type: lower-alpha;
+}
+
+[itemprop='articleBody'] ol ol ol,
+[itemprop='articleBody'] ul ol ol {
+  list-style-type: lower-roman;
+}
+
 [data-type='image-carousel'] {
   position: relative;
   margin: 16px 0;
