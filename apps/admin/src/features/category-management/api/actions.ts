@@ -119,7 +119,12 @@ export async function fetchCategoryOptions(): Promise<{
   return { parents, subMap };
 }
 
-export async function createParentCategory(params: { name: string; slug: string }) {
+export async function createParentCategory(params: {
+  name: string;
+  slug: string;
+  isMultilingual: boolean;
+  translations?: Record<string, string>;
+}) {
   const { data: maxRow } = await supabaseServer
     .from('categories')
     .select('sort_order')
@@ -137,7 +142,7 @@ export async function createParentCategory(params: { name: string; slug: string 
       slug: params.slug,
       parent_id: null,
       sort_order: nextSortOrder,
-      is_multilingual: true,
+      is_multilingual: params.isMultilingual,
     })
     .select('id')
     .single();
@@ -145,6 +150,10 @@ export async function createParentCategory(params: { name: string; slug: string 
   if (error) {
     if (error.code === '23505') throw new Error('이미 사용 중인 슬러그입니다.');
     throw new Error(`카테고리 생성 실패: ${error.message}`);
+  }
+
+  if (params.isMultilingual && params.translations && Object.keys(params.translations).length > 0) {
+    await saveCategoryTranslations(data!.id, params.translations);
   }
 
   try {

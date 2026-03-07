@@ -35,6 +35,9 @@ export default function NewCategoryPage() {
 
   const [categoryName, setCategoryName] = useState('');
   const [categorySlug, setCategorySlug] = useState('');
+  const [parentMultilingual, setParentMultilingual] = useState(false);
+  const [parentTranslations, setParentTranslations] = useState<Record<string, string>>({});
+  const [isParentTranslating, setIsParentTranslating] = useState(false);
   const [isCreatingParent, setIsCreatingParent] = useState(false);
   const [parentErrors, setParentErrors] = useState<Record<string, string>>({});
 
@@ -57,6 +60,10 @@ export default function NewCategoryPage() {
     const errors: Record<string, string> = {};
     if (!categoryName.trim()) errors.name = '카테고리명을 입력해주세요.';
     if (!categorySlug.trim()) errors.slug = '슬러그를 입력해주세요.';
+    if (parentMultilingual) {
+      const missing = LOCALES.filter((l) => !parentTranslations[l]?.trim());
+      if (missing.length > 0) errors.translations = '모든 다국어 카테고리명을 입력해주세요.';
+    }
     if (Object.keys(errors).length > 0) {
       setParentErrors(errors);
       return;
@@ -64,16 +71,39 @@ export default function NewCategoryPage() {
     setParentErrors({});
     setIsCreatingParent(true);
     try {
-      await createParentCategory({ name: categoryName, slug: categorySlug });
+      await createParentCategory({
+        name: categoryName,
+        slug: categorySlug,
+        isMultilingual: parentMultilingual,
+        translations:
+          parentMultilingual && Object.keys(parentTranslations).length > 0
+            ? parentTranslations
+            : undefined,
+      });
       toast.success('대분류 카테고리가 생성되었습니다.');
       setCategoryName('');
       setCategorySlug('');
+      setParentMultilingual(false);
+      setParentTranslations({});
       const updated = await fetchParentCategories();
       setParentOptions(updated);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : '카테고리 생성에 실패했습니다.');
     } finally {
       setIsCreatingParent(false);
+    }
+  };
+
+  const handleParentTranslate = async () => {
+    if (!categoryName.trim()) return;
+    setIsParentTranslating(true);
+    try {
+      const result = await translateCategoryName(categoryName);
+      setParentTranslations(result);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : '번역에 실패했습니다.');
+    } finally {
+      setIsParentTranslating(false);
     }
   };
 
@@ -182,7 +212,70 @@ export default function NewCategoryPage() {
           </p>
         </div>
 
-        <div className="flex justify-end">
+        <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            id="parent-multilingual-check"
+            className="size-4 cursor-pointer accent-primary-600"
+            checked={parentMultilingual}
+            onChange={(e) => {
+              setParentMultilingual(e.target.checked);
+              if (e.target.checked) {
+                toast.info(
+                  '한 번 설정하면 현재는 변경이 불가합니다. 추후 변경 기능이 지원될 예정입니다.',
+                );
+              }
+            }}
+          />
+          <label
+            htmlFor="parent-multilingual-check"
+            className="cursor-pointer text-sm font-medium text-muted-foreground"
+          >
+            다국어 지원
+          </label>
+        </div>
+
+        {parentMultilingual && (
+          <div className="space-y-4">
+            <label className="text-sm font-bold">다국어 카테고리명 <span className="text-primary-600">*</span></label>
+            <div className="grid grid-cols-2 gap-4">
+              {LOCALES.map((locale) => (
+                <div key={locale} className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">
+                    {locale} ({LOCALE_LABELS[locale]}) <span className="text-primary-600">*</span>
+                  </label>
+                  <Input
+                    placeholder={LOCALE_LABELS[locale]}
+                    value={parentTranslations[locale] ?? ''}
+                    onChange={(e) =>
+                      setParentTranslations((prev) => ({ ...prev, [locale]: e.target.value }))
+                    }
+                  />
+                </div>
+              ))}
+            </div>
+            {parentErrors.translations && (
+              <p className="text-xs text-red-500">{parentErrors.translations}</p>
+            )}
+          </div>
+        )}
+
+        <div className="flex justify-end gap-2">
+          {parentMultilingual && (
+            <button
+              type="button"
+              onClick={handleParentTranslate}
+              disabled={!categoryName.trim() || isParentTranslating}
+              className="inline-flex items-center gap-1.5 h-9 rounded-md border border-input px-4 text-sm font-medium shadow-xs transition-colors hover:bg-accent disabled:opacity-50"
+            >
+              {isParentTranslating ? (
+                <LoaderIcon className="size-4 animate-spin" />
+              ) : (
+                <Sparkles className="size-4" />
+              )}
+              AI 카테고리 번역
+            </button>
+          )}
           <Button disabled={isCreatingParent} onClick={handleCreateParent}>
             {isCreatingParent ? '생성 중...' : '추가'}
           </Button>
@@ -280,12 +373,12 @@ export default function NewCategoryPage() {
 
         {subMultilingual && (
           <div className="space-y-4">
-            <label className="text-sm font-bold">다국어 카테고리명</label>
+            <label className="text-sm font-bold">다국어 카테고리명 <span className="text-primary-600">*</span></label>
             <div className="grid grid-cols-2 gap-4">
               {LOCALES.map((locale) => (
                 <div key={locale} className="space-y-1.5">
                   <label className="text-xs font-medium text-muted-foreground">
-                    {locale} ({LOCALE_LABELS[locale]})
+                    {locale} ({LOCALE_LABELS[locale]}) <span className="text-primary-600">*</span>
                   </label>
                   <Input
                     placeholder={LOCALE_LABELS[locale]}
