@@ -8,6 +8,7 @@ export function FontStyles({ editor }: EditorProps) {
     <div className="flex items-center gap-0.5">
       <button
         type="button"
+        tabIndex={-1}
         onClick={() => editor.chain().focus().toggleBold().run()}
         disabled={!editor.can().chain().focus().toggleBold().run()}
         className={cn(
@@ -19,6 +20,7 @@ export function FontStyles({ editor }: EditorProps) {
       </button>
       <button
         type="button"
+        tabIndex={-1}
         onClick={() => editor.chain().focus().toggleItalic().run()}
         disabled={!editor.can().chain().focus().toggleItalic().run()}
         className={cn(
@@ -30,6 +32,7 @@ export function FontStyles({ editor }: EditorProps) {
       </button>
       <button
         type="button"
+        tabIndex={-1}
         onClick={() => editor.chain().focus().toggleUnderline().run()}
         disabled={!editor.can().chain().focus().toggleUnderline().run()}
         className={cn(

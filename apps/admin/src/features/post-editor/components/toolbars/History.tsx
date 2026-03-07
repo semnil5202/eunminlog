@@ -11,6 +11,7 @@ export function History({ editor }: EditorProps) {
     <div className="flex items-center gap-0.5">
       <button
         type="button"
+        tabIndex={-1}
         onClick={() => editor.chain().focus().undo().run()}
         disabled={!canUndo}
         className={cn(
@@ -22,6 +23,7 @@ export function History({ editor }: EditorProps) {
       </button>
       <button
         type="button"
+        tabIndex={-1}
         onClick={() => editor.chain().focus().redo().run()}
         disabled={!canRedo}
         className={cn(

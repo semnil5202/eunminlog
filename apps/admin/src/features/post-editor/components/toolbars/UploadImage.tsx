@@ -167,6 +167,7 @@ export function UploadImage({ editor }: EditorProps) {
     <>
       <button
         type="button"
+        tabIndex={-1}
         onClick={handleClick}
         disabled={isUploading}
         className={cn(

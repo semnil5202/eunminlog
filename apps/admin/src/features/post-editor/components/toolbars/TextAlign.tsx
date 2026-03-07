@@ -17,6 +17,7 @@ export function TextAlign({ editor }: EditorProps) {
         <button
           key={value}
           type="button"
+          tabIndex={-1}
           onClick={() => editor.chain().focus().setTextAlign(value).run()}
           className={cn(
             'flex h-8 w-8 cursor-pointer items-center justify-center rounded text-foreground hover:bg-accent',

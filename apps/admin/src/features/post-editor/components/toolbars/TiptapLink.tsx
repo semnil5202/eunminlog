@@ -75,6 +75,7 @@ export function TiptapLink({ editor }: EditorProps) {
       <button
         ref={buttonRef}
         type="button"
+        tabIndex={-1}
         onClick={handleOpen}
         className={cn(
           'flex h-8 w-8 cursor-pointer items-center justify-center rounded text-foreground hover:bg-accent',

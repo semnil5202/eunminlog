@@ -40,6 +40,7 @@ export function TableToolbar({ editor }: EditorProps) {
       <button
         ref={buttonRef}
         type="button"
+        tabIndex={-1}
         onClick={() =>
           editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
         }
