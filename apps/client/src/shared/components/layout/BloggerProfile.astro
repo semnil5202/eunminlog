@@ -4,7 +4,6 @@
 import { t } from "@/shared/lib/i18n/translations";
 import { getLocalePath } from "@/shared/lib/i18n/locales";
 import type { Locale } from "@/shared/types/common";
-import { SITE_NAME_EN } from "@eunminlog/config/site";
 
 interface Props {
   locale: Locale;
@@ -17,8 +16,8 @@ const { locale } = Astro.props;
   <div class="flex flex-col items-center gap-4">
     <div class="w-20 h-20 rounded-full overflow-hidden bg-gray-100 shrink-0">
       <img
-        src="/images/profile.webp"
-        alt={SITE_NAME_EN}
+        src="https://media.eunminlog.site/static/profile.webp"
+        alt={t("profile.alt", locale)}
         width={80}
         height={80}
         loading="eager"
