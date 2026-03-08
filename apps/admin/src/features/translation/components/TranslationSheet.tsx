@@ -552,13 +552,35 @@ export function TranslationSheet({
         </div>
 
         {selected !== 'ko' && (
-          <div className="flex items-center justify-end gap-3 border-t px-4 py-4">
-            {dirtyFields.size > 0 && !allDirtyTranslated && (
+          <div className="grid grid-cols-2 gap-2 border-t px-4 py-4">
+            <button
+              type="button"
+              onClick={handleRetryLocale}
+              disabled={retrying || isBulkRunning}
+              className="inline-flex items-center justify-center gap-1.5 h-10 border border-input px-5 text-sm font-semibold shadow-xs transition-colors hover:bg-accent disabled:opacity-50"
+            >
+              <RefreshCwIcon className={`size-3.5 ${retrying ? 'animate-spin' : ''}`} />
+              이 언어만 AI 재번역
+            </button>
+            {onRetryAll ? (
+              <button
+                type="button"
+                onClick={handleRetryAll}
+                disabled={isBulkRunning}
+                className="inline-flex items-center justify-center gap-1.5 h-10 border border-input px-5 text-sm font-semibold shadow-xs transition-colors hover:bg-accent disabled:opacity-50"
+              >
+                <RefreshCwIcon className={`size-3.5 ${retryingAll ? 'animate-spin' : ''}`} />
+                전체 언어 AI 재번역
+              </button>
+            ) : (
+              <div />
+            )}
+            {dirtyFields.size > 0 && !allDirtyTranslated ? (
               <button
                 type="button"
                 disabled={bulkRetranslating}
                 onClick={handleBulkRetranslate}
-                className="inline-flex items-center gap-1.5 h-10 border border-input px-5 text-sm font-semibold shadow-xs transition-colors hover:bg-accent disabled:opacity-50"
+                className="inline-flex items-center justify-center gap-1.5 h-10 border border-input px-5 text-sm font-semibold shadow-xs transition-colors hover:bg-accent disabled:opacity-50"
               >
                 {bulkRetranslating ? (
                   <LoaderIcon className="size-4 animate-spin" />
@@ -567,31 +589,15 @@ export function TranslationSheet({
                 )}
                 모든 언어 수정 부분 AI 번역 요청
               </button>
+            ) : (
+              <div />
             )}
-            <button
-              type="button"
-              onClick={handleRetryLocale}
-              disabled={retrying || isBulkRunning}
-              className="inline-flex items-center gap-1.5 h-10 border border-input px-5 text-sm font-semibold shadow-xs transition-colors hover:bg-accent disabled:opacity-50"
-            >
-              <RefreshCwIcon className={`size-3.5 ${retrying ? 'animate-spin' : ''}`} />
-              이 언어만 AI 재번역
-            </button>
-            {onRetryAll && (
-              <button
-                type="button"
-                onClick={handleRetryAll}
-                disabled={isBulkRunning}
-                className="inline-flex items-center gap-1.5 h-10 border border-input px-5 text-sm font-semibold shadow-xs transition-colors hover:bg-accent disabled:opacity-50"
-              >
-                <RefreshCwIcon className={`size-3.5 ${retryingAll ? 'animate-spin' : ''}`} />
-                전체 언어 AI 재번역
-              </button>
-            )}
-            {dirtyFields.size > 0 && (
+            {dirtyFields.size > 0 ? (
               <Button disabled={!allDirtyTranslated} onClick={handleComplete}>
                 번역 수정 완료
               </Button>
+            ) : (
+              <div />
             )}
           </div>
         )}
