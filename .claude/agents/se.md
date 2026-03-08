@@ -93,7 +93,8 @@ For every implementation task:
 2. **Plan** the layer separation: identify which Service, Repository, and View components are involved.
 3. **Implement** following all standards above.
 4. **Verify** your own output: check for injection vectors, re-render risks, missing image dimensions, exposed PII, and missing indexes.
-5. **Document** any trade-offs made and why.
+5. **Docs 확인** — CLAUDE.md의 "Docs 동기화 규칙"에 따라 변경 사항이 관련 docs 파일에 반영되어야 하는지 확인한다. 업데이트가 필요하면 pm 에이전트에게 위임한다. (`pm`에게 변경된 코드 파일 목록 + 변경 내용 요약 + 업데이트 필요한 docs 파일을 전달.)
+6. **Document** any trade-offs made and why.
 
 ## Output Standards
 

@@ -113,6 +113,21 @@ docs/
 
 Sub-agent 작업 시 반드시 관련 docs 파일을 참조할 것. 코드 변경이 docs와 불일치하면 qa가 REJECT.
 
+### Docs 동기화 규칙
+
+코드 변경 완료 후 **반드시** 관련 docs 파일을 확인하고 업데이트한다.
+
+- **UI/컴포넌트 변경** → `docs/ui-specs.md`, 관련 feature specs (`docs/place-i18n-specs.md` 등)
+- **DB 스키마 변경** → `docs/database.md`
+- **SEO/메타데이터 변경** → `docs/seo-strategy.md`
+- **GA4 이벤트 변경** → `docs/ga4-tracking.md`
+- **배포/CI 변경** → `docs/ci-cd.md`
+- **URL 구조 변경** → `docs/redirect-specs.md`
+- **테마/컬러 변경** → `docs/theme.md`
+- **시크릿/환경변수 추가** → `docs/secrets-reference.md`에 값 기록, 코드/docs에서는 링크 참조만 (`[secrets-reference.md](secrets-reference.md) 섹션 N 참조`)
+
+se 에이전트는 코드 구현 완료 후 docs 업데이트가 필요한지 확인하고, 필요하면 pm 에이전트에게 업데이트를 위임한다.
+
 ## Comment Policy
 
 코드 주석은 최소한으로 유지한다. 자명한 코드에 주석을 달지 않는다.
