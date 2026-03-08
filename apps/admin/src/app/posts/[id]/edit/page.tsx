@@ -48,11 +48,9 @@ import {
   type PostFormValues,
 } from '@/features/post-editor/types/form';
 import { fetchRetrySingleLocale, fetchTranslatePost } from '@/features/translation/api/client';
-import {
-  TranslationEditSheet,
-  type TranslationField,
-} from '@/features/translation/components/TranslationEditSheet';
-import { ImageAltSheet } from '@/features/post-editor/components/ImageAltSheet';
+import { TranslationSheet } from '@/features/translation/components/TranslationSheet';
+import { useTranslationDirtyFields } from '@/features/translation/hooks/useTranslationDirtyFields';
+import { ImageAltSheet, extractImageSrcs } from '@/features/post-editor/components/ImageAltSheet';
 import { SlugField } from '@/shared/components/slug/SlugField';
 import { AiGenerateButton } from '@/shared/components/ui/AiGenerateButton';
 
@@ -216,6 +214,7 @@ function EditPostForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imageAlts, setImageAlts] = useState<ImageAlt[]>(postData.imageAlts ?? []);
   const [isAltSheetOpen, setIsAltSheetOpen] = useState(false);
+  const [imageAltError, setImageAltError] = useState(false);
 
   const getTranslationData = useCallback(() => {
     if (translationResults.length === 0) return null;
@@ -257,18 +256,38 @@ function EditPostForm({
   const watchedAddress = watch('address');
   const watchedPricePrefix = watch('pricePrefix');
   const watchedPrice = watch('price');
+  const watchedProductName = watch('productName');
+  const watchedPurchaseSource = watch('purchaseSource');
+  const watchedThumbnailAlt = watch('thumbnailAlt');
 
   const isMultilingual = post.is_multilingual;
 
-  const dirtyTranslationFields = useMemo(() => {
-    const fields = new Set<TranslationField>();
-    if (title !== initialValues.title) fields.add('title');
-    if (watchedContent !== initialValues.content) fields.add('content');
-    if (description !== initialValues.description) fields.add('description');
-    if (watchedPlaceName !== initialValues.placeName) fields.add('place_name');
-    if (watchedAddress !== initialValues.address) fields.add('address');
-    return fields;
-  }, [title, watchedContent, description, watchedPlaceName, watchedAddress, initialValues]);
+  const dirtyTranslationFields = useTranslationDirtyFields(
+    {
+      title: initialValues.title,
+      content: initialValues.content,
+      description: initialValues.description,
+      placeName: initialValues.placeName,
+      address: initialValues.address,
+      productName: initialValues.productName,
+      purchaseSource: initialValues.purchaseSource,
+      pricePrefix: initialValues.pricePrefix,
+      imageAlts: postData.imageAlts ?? [],
+      thumbnailAlt: initialValues.thumbnailAlt,
+    },
+    {
+      title,
+      content: watchedContent,
+      description,
+      placeName: watchedPlaceName,
+      address: watchedAddress,
+      productName: watchedProductName,
+      purchaseSource: watchedPurchaseSource,
+      pricePrefix: watchedPricePrefix,
+      imageAlts,
+      thumbnailAlt: watchedThumbnailAlt,
+    },
+  );
 
   const isDirty =
     dirtyTranslationFields.size > 0 ||
@@ -372,7 +391,7 @@ function EditPostForm({
     }
   };
 
-  const handleRetranslateLocale = async (locale: TranslationLocale): Promise<TranslationResult> => {
+  const handleRetranslateLocale = async (locale: TranslationLocale, signal?: AbortSignal): Promise<TranslationResult> => {
     const values = getValues();
     const { title: t, content: c, description: d, placeName: pn, address: addr } = values;
     const result = await fetchRetrySingleLocale(locale, {
@@ -387,12 +406,12 @@ function EditPostForm({
       confirmedTerms: [],
       imageAlts: imageAlts.length > 0 ? imageAlts : undefined,
       thumbnailAlt: getValues('thumbnailAlt') || undefined,
-    });
+    }, signal);
     setTranslationResults((prev) => prev.map((r) => (r.locale === locale ? result : r)));
     return result;
   };
 
-  const handleRetryAll = async () => {
+  const handleRetryAll = async (signal?: AbortSignal) => {
     const values = getValues();
     const { title: t, content: c, description: d, placeName: pn, address: addr } = values;
     const results = await fetchTranslatePost({
@@ -407,12 +426,27 @@ function EditPostForm({
       confirmedTerms: [],
       imageAlts: imageAlts.length > 0 ? imageAlts : undefined,
       thumbnailAlt: getValues('thumbnailAlt') || undefined,
-    });
+    }, signal);
     setTranslationResults(results);
   };
 
   const handleTranslationEditComplete = () => {
     setTranslationEditCompleted(true);
+  };
+
+  const handleEditSheetOpen = () => {
+    setImageAltError(false);
+    const thumbnailAltFilled = !getValues('thumbnail') || getValues('thumbnailAlt').trim();
+    const srcs = extractImageSrcs(getValues('content'));
+    const contentAltsFilled = srcs.every((src) => {
+      const found = imageAlts.find((a) => a.src === src);
+      return found && found.alt.trim();
+    });
+    if (!thumbnailAltFilled || !contentAltsFilled) {
+      setImageAltError(true);
+      return;
+    }
+    setIsEditSheetOpen(true);
   };
 
   const handleSubmitClick = async () => {
@@ -639,7 +673,7 @@ function EditPostForm({
             {needsTranslation && (
               <button
                 type="button"
-                onClick={() => setIsEditSheetOpen(true)}
+                onClick={handleEditSheetOpen}
                 className="inline-flex items-center justify-center gap-1.5 h-10 border border-input px-5 text-sm font-semibold shadow-xs transition-colors hover:bg-accent"
               >
                 <Languages className="size-4" />
@@ -674,6 +708,11 @@ function EditPostForm({
               수정된 번역 영역의 번역 요청이 먼저 필요합니다.
             </p>
           )}
+          {imageAltError && (
+            <p className="mt-2 text-end text-[14px] text-red-500">
+              이미지 alt 입력이 먼저 필요합니다.
+            </p>
+          )}
         </div>
       </div>
 
@@ -691,7 +730,7 @@ function EditPostForm({
       />
 
       {needsTranslation && (
-        <TranslationEditSheet
+        <TranslationSheet
           open={isEditSheetOpen}
           onOpenChange={setIsEditSheetOpen}
           originalTitle={title}
@@ -699,16 +738,17 @@ function EditPostForm({
           originalDescription={description}
           originalPlaceName={watchedPlaceName || undefined}
           originalAddress={watchedAddress || undefined}
-          originalProductName={watch('productName') || undefined}
-          originalPurchaseSource={watch('purchaseSource') || undefined}
-          originalPricePrefix={watch('pricePrefix') || undefined}
+          originalProductName={watchedProductName || undefined}
+          originalPurchaseSource={watchedPurchaseSource || undefined}
+          originalPricePrefix={watchedPricePrefix || undefined}
           originalImageAlts={imageAlts.length > 0 ? imageAlts : undefined}
-          originalThumbnailAlt={watch('thumbnailAlt') || undefined}
+          originalThumbnailAlt={watchedThumbnailAlt || undefined}
+          originalThumbnail={watch('thumbnail')}
           translations={translationResults}
           dirtyFields={dirtyTranslationFields}
-          onRetranslateLocale={handleRetranslateLocale}
+          onRetryLocale={handleRetranslateLocale}
           onRetryAll={handleRetryAll}
-          onTranslationEditComplete={handleTranslationEditComplete}
+          onEditComplete={handleTranslationEditComplete}
         />
       )}
 

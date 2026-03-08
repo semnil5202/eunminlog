@@ -32,7 +32,8 @@ import {
   fetchRetrySingleLocale,
 } from '@/features/translation/api/client';
 import { LOCALE_FILTER_LABELS } from '@/features/translation/constants/locale';
-import { TranslationPreviewSheet } from '@/features/translation/components/TranslationPreviewSheet';
+import { TranslationSheet } from '@/features/translation/components/TranslationSheet';
+import { useTranslationDirtyFields } from '@/features/translation/hooks/useTranslationDirtyFields';
 import { TranslationSheetContainer } from '@/features/translation/containers/TranslationSheetContainer';
 import { SlugField } from '@/shared/components/slug/SlugField';
 import { AiGenerateButton } from '@/shared/components/ui/AiGenerateButton';
@@ -104,6 +105,37 @@ function NewPostContent() {
   const [imageAlts, setImageAlts] = useState<ImageAlt[]>([]);
   const [isAltSheetOpen, setIsAltSheetOpen] = useState(false);
   const [imageAltError, setImageAltError] = useState(false);
+  const [translationSnapshot, setTranslationSnapshot] = useState<{
+    title: string;
+    content: string;
+    description: string;
+    placeName: string;
+    address: string;
+    productName: string;
+    purchaseSource: string;
+    pricePrefix: string;
+    imageAlts: ImageAlt[];
+    thumbnailAlt: string;
+  } | null>(null);
+
+  const captureSnapshot = useCallback(
+    (currentImageAlts: ImageAlt[]) => {
+      const values = getValues();
+      setTranslationSnapshot({
+        title: values.title,
+        content: values.content,
+        description: values.description,
+        placeName: values.placeName,
+        address: values.address,
+        productName: values.productName,
+        purchaseSource: values.purchaseSource,
+        pricePrefix: values.pricePrefix,
+        imageAlts: [...currentImageAlts],
+        thumbnailAlt: values.thumbnailAlt,
+      });
+    },
+    [getValues],
+  );
 
   const getTranslationData = useCallback(() => {
     if (translationResults.length === 0) return null;
@@ -152,6 +184,42 @@ function NewPostContent() {
   const description = watch('description');
   const category = watch('category');
   const subCategory = watch('subCategory');
+  const watchedContent = watch('content');
+  const watchedPlaceName = watch('placeName');
+  const watchedAddress = watch('address');
+  const watchedProductName = watch('productName');
+  const watchedPurchaseSource = watch('purchaseSource');
+  const watchedPricePrefix = watch('pricePrefix');
+  const watchedThumbnailAlt = watch('thumbnailAlt');
+
+  const previewDirtyFields = useTranslationDirtyFields(
+    translationSnapshot
+      ? {
+          title: translationSnapshot.title,
+          content: translationSnapshot.content,
+          description: translationSnapshot.description,
+          placeName: translationSnapshot.placeName,
+          address: translationSnapshot.address,
+          productName: translationSnapshot.productName,
+          purchaseSource: translationSnapshot.purchaseSource,
+          pricePrefix: translationSnapshot.pricePrefix,
+          imageAlts: translationSnapshot.imageAlts,
+          thumbnailAlt: translationSnapshot.thumbnailAlt,
+        }
+      : null,
+    {
+      title,
+      content: watchedContent,
+      description,
+      placeName: watchedPlaceName,
+      address: watchedAddress,
+      productName: watchedProductName,
+      purchaseSource: watchedPurchaseSource,
+      pricePrefix: watchedPricePrefix,
+      imageAlts,
+      thumbnailAlt: watchedThumbnailAlt,
+    },
+  );
 
   const isMultilingual =
     !!(category && subCategory) &&
@@ -286,6 +354,7 @@ function NewPostContent() {
 
         setTranslationResults(results);
         setIsTranslated(true);
+        captureSnapshot(imageAlts);
         setTimeout(() => setIsPreviewOpen(true), 800);
       } else {
         setFlaggedTerms(terms);
@@ -321,6 +390,21 @@ function NewPostContent() {
     }
 
     handleTranslationStart();
+  };
+
+  const handlePreviewClick = () => {
+    setImageAltError(false);
+    const thumbnailAltFilled = !getValues('thumbnail') || getValues('thumbnailAlt').trim();
+    const srcs = extractImageSrcs(getValues('content'));
+    const contentAltsFilled = srcs.every((src) => {
+      const found = imageAlts.find((a) => a.src === src);
+      return found && found.alt.trim();
+    });
+    if (!thumbnailAltFilled || !contentAltsFilled) {
+      setImageAltError(true);
+      return;
+    }
+    setIsPreviewOpen(true);
   };
 
   const handleSubmitClick = async () => {
@@ -364,10 +448,11 @@ function NewPostContent() {
     setIsTranslated(true);
     setIsSheetOpen(false);
     setTranslationError(false);
+    captureSnapshot(imageAlts);
     setTimeout(() => setIsPreviewOpen(true), 800);
   };
 
-  const handleRetryLocale = async (locale: TranslationLocale) => {
+  const handleRetryLocale = async (locale: TranslationLocale, signal?: AbortSignal) => {
     const values = getValues();
     const { title: t, content: c, description: d, placeName: pn, address: addr } = values;
     const result = await fetchRetrySingleLocale(locale, {
@@ -382,12 +467,12 @@ function NewPostContent() {
       confirmedTerms: lastConfirmedTerms,
       imageAlts: imageAlts.length > 0 ? imageAlts : undefined,
       thumbnailAlt: getValues('thumbnailAlt') || undefined,
-    });
+    }, signal);
     setTranslationResults((prev) => prev.map((r) => (r.locale === locale ? result : r)));
     return result;
   };
 
-  const handleRetryAll = async () => {
+  const handleRetryAll = async (signal?: AbortSignal) => {
     const values = getValues();
     const { title: t, content: c, description: d, placeName: pn, address: addr } = values;
     const results = await fetchTranslatePost({
@@ -402,8 +487,9 @@ function NewPostContent() {
       confirmedTerms: lastConfirmedTerms,
       imageAlts: imageAlts.length > 0 ? imageAlts : undefined,
       thumbnailAlt: getValues('thumbnailAlt') || undefined,
-    });
+    }, signal);
     setTranslationResults(results);
+    captureSnapshot(imageAlts);
   };
 
   return (
@@ -623,7 +709,7 @@ function NewPostContent() {
             {isTranslated && (
               <button
                 type="button"
-                onClick={() => setIsPreviewOpen(true)}
+                onClick={handlePreviewClick}
                 className="inline-flex items-center justify-center gap-1.5 h-10 border border-input px-5 text-sm font-semibold shadow-xs transition-colors hover:bg-accent"
               >
                 <Languages className="size-4" />
@@ -698,20 +784,22 @@ function NewPostContent() {
         thumbnailAlt={watch('thumbnailAlt') || undefined}
       />
 
-      <TranslationPreviewSheet
+      <TranslationSheet
         open={isPreviewOpen}
         onOpenChange={setIsPreviewOpen}
         originalTitle={title}
-        originalContent={watch('content')}
-        originalPlaceName={watch('placeName') || undefined}
-        originalAddress={watch('address') || undefined}
-        originalProductName={watch('productName') || undefined}
-        originalPurchaseSource={watch('purchaseSource') || undefined}
-        originalPricePrefix={watch('pricePrefix') || undefined}
+        originalContent={watchedContent}
+        originalDescription={description}
+        originalPlaceName={watchedPlaceName || undefined}
+        originalAddress={watchedAddress || undefined}
+        originalProductName={watchedProductName || undefined}
+        originalPurchaseSource={watchedPurchaseSource || undefined}
+        originalPricePrefix={watchedPricePrefix || undefined}
         originalImageAlts={imageAlts.length > 0 ? imageAlts : undefined}
-        originalThumbnailAlt={watch('thumbnailAlt') || undefined}
+        originalThumbnailAlt={watchedThumbnailAlt || undefined}
         originalThumbnail={watch('thumbnail')}
         translations={translationResults}
+        dirtyFields={previewDirtyFields}
         onRetryLocale={handleRetryLocale}
         onRetryAll={handleRetryAll}
       />
