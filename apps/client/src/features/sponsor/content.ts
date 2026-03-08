@@ -118,10 +118,10 @@ const SPONSOR: Record<Locale, SponsorContent> = {
       heading: '숫자로 보는 은민로그',
       // TODO: 실제 GA4 데이터로 교체
       items: [
-        { value: '10,000+', label: '월간 방문자' },
+        { value: '-', label: '월간 방문자' },
         { value: '8', label: '지원 언어' },
-        { value: '50+', label: '게시된 리뷰' },
-        { value: '3', label: '콘텐츠 카테고리' },
+        { value: '-', label: '게시된 리뷰' },
+        { value: '-', label: '콘텐츠 카테고리' },
       ],
       note: '* Google Analytics 기반',
     },
@@ -217,10 +217,10 @@ const SPONSOR: Record<Locale, SponsorContent> = {
       heading: `${SITE_NAME_EN} in Numbers`,
       // TODO: Replace with actual GA4 data
       items: [
-        { value: '10,000+', label: 'Monthly Visitors' },
+        { value: '-', label: 'Monthly Visitors' },
         { value: '8', label: 'Languages' },
-        { value: '50+', label: 'Published Reviews' },
-        { value: '3', label: 'Content Categories' },
+        { value: '-', label: 'Published Reviews' },
+        { value: '-', label: 'Content Categories' },
       ],
       note: '* Based on Google Analytics',
     },
@@ -318,10 +318,10 @@ const SPONSOR: Record<Locale, SponsorContent> = {
       heading: `数字で見る${SITE_NAME_EN}`,
       // TODO: 実際のGA4データに置き換え
       items: [
-        { value: '10,000+', label: '月間訪問者' },
+        { value: '-', label: '月間訪問者' },
         { value: '8', label: '対応言語' },
-        { value: '50+', label: '公開レビュー' },
-        { value: '3', label: 'コンテンツカテゴリ' },
+        { value: '-', label: '公開レビュー' },
+        { value: '-', label: 'コンテンツカテゴリ' },
       ],
       note: '* Google Analyticsに基づく',
     },
@@ -413,10 +413,10 @@ const SPONSOR: Record<Locale, SponsorContent> = {
       heading: `数字看${SITE_NAME_EN}`,
       // TODO: 替换为实际GA4数据
       items: [
-        { value: '10,000+', label: '月访问量' },
+        { value: '-', label: '月访问量' },
         { value: '8', label: '支持语言' },
-        { value: '50+', label: '已发布评价' },
-        { value: '3', label: '内容类别' },
+        { value: '-', label: '已发布评价' },
+        { value: '-', label: '内容类别' },
       ],
       note: '* 基于Google Analytics',
     },
@@ -507,10 +507,10 @@ const SPONSOR: Record<Locale, SponsorContent> = {
       heading: `數字看${SITE_NAME_EN}`,
       // TODO: 替換為實際GA4數據
       items: [
-        { value: '10,000+', label: '月訪問量' },
+        { value: '-', label: '月訪問量' },
         { value: '8', label: '支援語言' },
-        { value: '50+', label: '已發布評價' },
-        { value: '3', label: '內容類別' },
+        { value: '-', label: '已發布評價' },
+        { value: '-', label: '內容類別' },
       ],
       note: '* 基於Google Analytics',
     },
@@ -605,10 +605,10 @@ const SPONSOR: Record<Locale, SponsorContent> = {
       heading: `${SITE_NAME_EN} dalam Angka`,
       // TODO: Ganti dengan data GA4 aktual
       items: [
-        { value: '10.000+', label: 'Pengunjung Bulanan' },
+        { value: '-', label: 'Pengunjung Bulanan' },
         { value: '8', label: 'Bahasa' },
-        { value: '50+', label: 'Ulasan Dipublikasi' },
-        { value: '3', label: 'Kategori Konten' },
+        { value: '-', label: 'Ulasan Dipublikasi' },
+        { value: '-', label: 'Kategori Konten' },
       ],
       note: '* Berdasarkan Google Analytics',
     },
@@ -707,10 +707,10 @@ const SPONSOR: Record<Locale, SponsorContent> = {
       heading: `${SITE_NAME_EN} Qua Những Con Số`,
       // TODO: Thay thế bằng dữ liệu GA4 thực tế
       items: [
-        { value: '10.000+', label: 'Lượt Truy Cập/Tháng' },
+        { value: '-', label: 'Lượt Truy Cập/Tháng' },
         { value: '8', label: 'Ngôn Ngữ' },
-        { value: '50+', label: 'Bài Đánh Giá' },
-        { value: '3', label: 'Danh Mục' },
+        { value: '-', label: 'Bài Đánh Giá' },
+        { value: '-', label: 'Danh Mục' },
       ],
       note: '* Dựa trên Google Analytics',
     },
@@ -809,10 +809,10 @@ const SPONSOR: Record<Locale, SponsorContent> = {
       heading: `${SITE_NAME_EN} ในตัวเลข`,
       // TODO: แทนที่ด้วยข้อมูล GA4 จริง
       items: [
-        { value: '10,000+', label: 'ผู้เยี่ยมชมรายเดือน' },
+        { value: '-', label: 'ผู้เยี่ยมชมรายเดือน' },
         { value: '8', label: 'ภาษา' },
-        { value: '50+', label: 'รีวิวที่เผยแพร่' },
-        { value: '3', label: 'หมวดหมู่เนื้อหา' },
+        { value: '-', label: 'รีวิวที่เผยแพร่' },
+        { value: '-', label: 'หมวดหมู่เนื้อหา' },
       ],
       note: '* อ้างอิงจาก Google Analytics',
     },
