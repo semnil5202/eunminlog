@@ -2,6 +2,14 @@ import { useMemo } from 'react';
 
 import type { ImageAlt } from '../types';
 
+function stripImages(html: string): string {
+  if (typeof window === 'undefined') return html;
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+  doc.querySelectorAll('img').forEach((img) => img.remove());
+  return doc.body.innerHTML;
+}
+
 type ReferenceValues = {
   title: string;
   content: string;
@@ -41,7 +49,10 @@ export function useTranslationDirtyFields(
 
     const dirty = new Set<string>();
     if (currentValues.title !== referenceValues.title) dirty.add('title');
-    if (currentValues.content !== referenceValues.content) dirty.add('content');
+    if (currentValues.content !== referenceValues.content) {
+      const textChanged = stripImages(currentValues.content) !== stripImages(referenceValues.content);
+      dirty.add(textChanged ? 'content' : 'content_image_only');
+    }
     if (currentValues.description !== referenceValues.description) dirty.add('description');
     if (currentValues.placeName !== referenceValues.placeName) dirty.add('place_name');
     if (currentValues.address !== referenceValues.address) dirty.add('address');

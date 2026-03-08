@@ -110,8 +110,9 @@ export function TranslationSheet({
   const selectedTranslation =
     selected !== 'ko' ? translations.find((tr) => tr.locale === selected) : null;
 
+  const translatableDirtyFields = new Set([...dirtyFields].filter((f) => f !== 'content_image_only'));
   const allDirtyTranslated =
-    dirtyFields.size === 0 ||
+    translatableDirtyFields.size === 0 ||
     TARGET_LOCALES.every((l) => retranslatedLocales.has(l) || manuallyEditedLocales.has(l));
 
   const handleRetryLocale = async () => {
@@ -219,7 +220,9 @@ export function TranslationSheet({
   };
 
   const renderEditField = (field: TranslatableField, value: string, locale: TranslationLocale) => {
-    const isDirty = dirtyFields.has(field);
+    const isContentImageOnly = field === 'content' && dirtyFields.has('content_image_only');
+    const isDirty = dirtyFields.has(field) || isContentImageOnly;
+    const needsRetranslation = isDirty && !isContentImageOnly;
     const isLocaleRetranslated = retranslatedLocales.has(locale);
     const isRetranslating = retranslating[locale] || bulkRetranslating;
 
@@ -258,7 +261,7 @@ export function TranslationSheet({
                 />
               </label>
             )}
-            {field !== 'content' && isDirty && !showTranslated && (
+            {field !== 'content' && needsRetranslation && !showTranslated && (
               <button
                 type="button"
                 disabled={isRetranslating}
@@ -269,7 +272,7 @@ export function TranslationSheet({
                 AI 번역 요청
               </button>
             )}
-            {field === 'content' && isDirty && !showTranslated && !isDirectEditing && (
+            {field === 'content' && needsRetranslation && !showTranslated && !isDirectEditing && (
               <button
                 type="button"
                 disabled={isRetranslating}
@@ -371,7 +374,7 @@ export function TranslationSheet({
       <div className="py-5">
         <div className="flex items-center gap-2">
           <label className="text-sm font-semibold text-muted-foreground">본문</label>
-          {dirtyFields.has('content') && <DirtyBadge />}
+          {(dirtyFields.has('content') || dirtyFields.has('content_image_only')) && <DirtyBadge />}
         </div>
         <div
           className="prose prose-sm mt-1 max-w-none"
@@ -575,7 +578,7 @@ export function TranslationSheet({
             ) : (
               <div />
             )}
-            {dirtyFields.size > 0 && !allDirtyTranslated ? (
+            {translatableDirtyFields.size > 0 && !allDirtyTranslated ? (
               <button
                 type="button"
                 disabled={bulkRetranslating}

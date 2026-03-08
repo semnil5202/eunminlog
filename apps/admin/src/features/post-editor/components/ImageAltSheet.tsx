@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useState } from 'react';
 
 import {
   Sheet,
@@ -44,20 +44,25 @@ export function ImageAltSheet({
   thumbnailAlt = '',
   onThumbnailAltChange,
 }: ImageAltSheetProps) {
-  const imageSrcs = useMemo(() => extractImageSrcs(content), [content]);
-
+  const [snapshotSrcs, setSnapshotSrcs] = useState<string[]>([]);
   const [alts, setAlts] = useState<Map<string, string>>(new Map());
   const [localThumbnailAlt, setLocalThumbnailAlt] = useState(thumbnailAlt);
+  const [prevOpen, setPrevOpen] = useState(false);
 
-  useEffect(() => {
-    if (!open) return;
+  if (open && !prevOpen) {
+    setSnapshotSrcs(extractImageSrcs(content));
     const map = new Map<string, string>();
     for (const item of imageAlts) {
       map.set(item.src, item.alt);
     }
     setAlts(map);
     setLocalThumbnailAlt(thumbnailAlt);
-  }, [open, imageAlts, thumbnailAlt]);
+  }
+  if (open !== prevOpen) {
+    setPrevOpen(open);
+  }
+
+  const imageSrcs = snapshotSrcs;
 
   const handleAltChange = (src: string, alt: string) => {
     setAlts((prev) => {
@@ -73,7 +78,7 @@ export function ImageAltSheet({
   const hasAnyItem = hasThumbnail || imageSrcs.length > 0;
   const allFilled = hasAnyItem && thumbnailAltFilled && contentAltsFilled;
 
-  const handleComplete = () => {
+  const syncToParent = () => {
     if (onThumbnailAltChange) {
       onThumbnailAltChange(localThumbnailAlt.trim());
     }
@@ -82,11 +87,22 @@ export function ImageAltSheet({
       alt: (alts.get(src) ?? '').trim(),
     }));
     onComplete(result);
+  };
+
+  const handleComplete = () => {
+    syncToParent();
     onOpenChange(false);
   };
 
+  const handleOpenChange = (next: boolean) => {
+    if (!next) {
+      syncToParent();
+    }
+    onOpenChange(next);
+  };
+
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetContent side="right" className="flex w-full flex-col sm:max-w-[688px]">
         <SheetHeader>
           <SheetTitle className="text-lg">이미지 alt 입력</SheetTitle>
