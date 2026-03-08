@@ -103,8 +103,8 @@ export function ImageAltSheet({
               {hasThumbnail && (
                 <div className="space-y-2">
                   <div className="flex items-start gap-3">
-                    <span className="shrink-0 pt-1 text-sm font-medium text-muted-foreground">
-                      1.
+                    <span className="shrink-0 rounded bg-gray-100 px-1.5 py-0.5 text-xs font-medium text-gray-600">
+                      썸네일
                     </span>
                     <img
                       src={thumbnail}
@@ -123,8 +123,8 @@ export function ImageAltSheet({
               {imageSrcs.map((src, i) => (
                 <div key={src} className="space-y-2">
                   <div className="flex items-start gap-3">
-                    <span className="shrink-0 pt-1 text-sm font-medium text-muted-foreground">
-                      {hasThumbnail ? i + 2 : i + 1}.
+                    <span className="shrink-0 rounded bg-gray-100 px-1.5 py-0.5 text-xs font-medium text-gray-600">
+                      이미지 {i + 1}
                     </span>
                     <img
                       src={src}

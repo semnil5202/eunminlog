@@ -77,9 +77,10 @@ export function buildTranslateSystemPrompt(locale: TranslationLocale): string {
 6. 확정 번역 용어가 제공됩니다. 영어(en) 번역 시에는 확정된 번역을 그대로 사용하세요. 다른 언어에서는 확정 용어를 참고하되, 해당 언어에 자연스러운 표현으로 번역해주세요. 원어(영어)를 그대로 유지하는 것이 자연스러운 경우(단위, 고유명사 등)에는 원어(영어)를 유지해도 됩니다.
 7. 장소명(place_name)과 주소(address)가 제공되면 ${placeRule}해주세요.
 8. 3줄 요약(description)은 plain text입니다. 줄바꿈(\\n)을 유지하고 텍스트만 번역해주세요.
+9. 제품명(product_name), 구매처(purchase_source), 가격설명(price_prefix)이 제공되면 해당 언어에 맞게 자연스럽게 번역하세요.
 
 응답은 반드시 순수 JSON 객체여야 합니다.
-형식: {"title": "...", "content": "...", "description": "...", "place_name": "...", "address": "...", "image_alts": ["..."], "thumbnail_alt": "..."}`;
+형식: {"title": "...", "content": "...", "description": "...", "place_name": "...", "address": "...", "product_name": "...", "purchase_source": "...", "price_prefix": "...", "image_alts": ["..."], "thumbnail_alt": "..."}`;
 }
 
 /** 카테고리 생성 — 카테고리명 다국어 번역 */

@@ -79,6 +79,9 @@ export type TranslateParams = {
   description: string;
   placeName?: string;
   address?: string;
+  productName?: string;
+  purchaseSource?: string;
+  pricePrefix?: string;
   confirmedTerms: { original: string; confirmed: string }[];
   imageAlts?: ImageAlt[];
   thumbnailAlt?: string;
@@ -94,6 +97,9 @@ async function fetchTranslateSingle(
     description,
     placeName,
     address,
+    productName,
+    purchaseSource,
+    pricePrefix,
     confirmedTerms,
     imageAlts,
     thumbnailAlt,
@@ -104,6 +110,9 @@ async function fetchTranslateSingle(
   let userPrompt = `제목: ${title}\n\n본문:\n${contentWithPlaceholders}\n\n3줄 요약:\n${description}`;
   if (placeName) userPrompt += `\n\n장소명: ${placeName}`;
   if (address) userPrompt += `\n주소: ${address}`;
+  if (productName) userPrompt += `\n\n제품명: ${productName}`;
+  if (purchaseSource) userPrompt += `\n구매처: ${purchaseSource}`;
+  if (pricePrefix) userPrompt += `\n가격설명: ${pricePrefix}`;
 
   if (confirmedTerms.length > 0) {
     userPrompt += '\n\n확정 번역 용어:';
@@ -154,6 +163,8 @@ async function fetchTranslateSingle(
     place_name: (parsed.place_name as string) ?? '',
     address: (parsed.address as string) ?? '',
     product_name: (parsed.product_name as string) ?? '',
+    purchase_source: (parsed.purchase_source as string) ?? '',
+    price_prefix: (parsed.price_prefix as string) ?? '',
     image_alts: resultImageAlts,
     thumbnail_alt: (parsed.thumbnail_alt as string) ?? '',
   };
@@ -174,6 +185,8 @@ export async function fetchTranslatePost(params: TranslateParams): Promise<Trans
       place_name: '',
       address: '',
       product_name: '',
+      purchase_source: '',
+      price_prefix: '',
       image_alts: [] as TranslationResult['image_alts'],
       thumbnail_alt: '',
       failed: true,

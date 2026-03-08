@@ -41,6 +41,8 @@ export const getLocalizedPost = async (post: Post, locale: Locale): Promise<Loca
       translated_place_name: translation.place_name,
       translated_address: translation.address,
       translated_product_name: translation.product_name,
+      translated_purchase_source: translation.purchase_source,
+      translated_price_prefix: translation.price_prefix,
       thumbnail_alt: translation.thumbnail_alt || post.thumbnail_alt,
       image_alts: translation.image_alts?.length ? translation.image_alts : post.image_alts,
       locale,
@@ -52,6 +54,8 @@ export const getLocalizedPost = async (post: Post, locale: Locale): Promise<Loca
     translated_place_name: null,
     translated_address: null,
     translated_product_name: null,
+    translated_purchase_source: null,
+    translated_price_prefix: null,
     image_alts: post.image_alts ?? [],
     locale,
   };

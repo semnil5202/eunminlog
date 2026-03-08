@@ -10,8 +10,10 @@ interface Props {
   productName: string;
   translatedProductName?: string | null;
   purchaseSource: string;
+  translatedPurchaseSource?: string | null;
   purchaseLink: string;
   pricePrefix?: string | null;
+  translatedPricePrefix?: string | null;
   price: number | null;
   description: string;
   locale: Locale;
@@ -23,16 +25,20 @@ const {
   productName,
   translatedProductName,
   purchaseSource,
+  translatedPurchaseSource,
   purchaseLink,
   pricePrefix,
+  translatedPricePrefix,
   price,
   description,
   locale,
 } = Astro.props;
 
 const currencyUnit = t("place.currency", locale);
+const displayPricePrefix = translatedPricePrefix ?? pricePrefix;
+const displayPurchaseSource = translatedPurchaseSource ?? purchaseSource;
 const priceLabel = price != null
-  ? `${pricePrefix ?? ''}${price.toLocaleString()}${currencyUnit}`
+  ? `${displayPricePrefix ?? ''}${price.toLocaleString()}${currencyUnit}`
   : null;
 const targetCurrency = t("place.targetCurrency", locale);
 const exchangeUrl = price != null && targetCurrency
@@ -63,7 +69,7 @@ const summaryLines = description ? description.split('\n').filter(Boolean) : [];
       <div class="flex items-baseline gap-3">
         <dt class="shrink-0 w-20 text-gray-500 font-medium">{t("product.source", locale)}</dt>
         <dd class="flex items-baseline gap-1.5">
-          <span class="text-gray-900">{purchaseSource}</span>
+          <span class="text-gray-900">{displayPurchaseSource}</span>
           {purchaseLink && (
             <a
               href={purchaseLink}

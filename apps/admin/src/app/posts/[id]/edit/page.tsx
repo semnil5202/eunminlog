@@ -373,13 +373,17 @@ function EditPostForm({
   };
 
   const handleRetranslateLocale = async (locale: TranslationLocale): Promise<TranslationResult> => {
-    const { title: t, content: c, description: d, placeName: pn, address: addr } = getValues();
+    const values = getValues();
+    const { title: t, content: c, description: d, placeName: pn, address: addr } = values;
     const result = await fetchRetrySingleLocale(locale, {
       title: t,
       content: c,
       description: d,
       placeName: pn || undefined,
       address: addr || undefined,
+      productName: values.productName || undefined,
+      purchaseSource: values.purchaseSource || undefined,
+      pricePrefix: values.pricePrefix || undefined,
       confirmedTerms: [],
       imageAlts: imageAlts.length > 0 ? imageAlts : undefined,
       thumbnailAlt: getValues('thumbnailAlt') || undefined,
@@ -389,13 +393,17 @@ function EditPostForm({
   };
 
   const handleRetryAll = async () => {
-    const { title: t, content: c, description: d, placeName: pn, address: addr } = getValues();
+    const values = getValues();
+    const { title: t, content: c, description: d, placeName: pn, address: addr } = values;
     const results = await fetchTranslatePost({
       title: t,
       content: c,
       description: d,
       placeName: pn || undefined,
       address: addr || undefined,
+      productName: values.productName || undefined,
+      purchaseSource: values.purchaseSource || undefined,
+      pricePrefix: values.pricePrefix || undefined,
       confirmedTerms: [],
       imageAlts: imageAlts.length > 0 ? imageAlts : undefined,
       thumbnailAlt: getValues('thumbnailAlt') || undefined,
@@ -691,6 +699,9 @@ function EditPostForm({
           originalDescription={description}
           originalPlaceName={watchedPlaceName || undefined}
           originalAddress={watchedAddress || undefined}
+          originalProductName={watch('productName') || undefined}
+          originalPurchaseSource={watch('purchaseSource') || undefined}
+          originalPricePrefix={watch('pricePrefix') || undefined}
           originalImageAlts={imageAlts.length > 0 ? imageAlts : undefined}
           originalThumbnailAlt={watch('thumbnailAlt') || undefined}
           translations={translationResults}

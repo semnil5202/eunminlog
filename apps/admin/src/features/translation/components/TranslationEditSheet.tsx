@@ -40,6 +40,9 @@ type TranslationEditSheetProps = {
   originalDescription: string;
   originalPlaceName?: string;
   originalAddress?: string;
+  originalProductName?: string;
+  originalPurchaseSource?: string;
+  originalPricePrefix?: string;
   originalImageAlts?: ImageAlt[];
   originalThumbnailAlt?: string;
   translations: TranslationResult[];
@@ -59,6 +62,9 @@ export function TranslationEditSheet({
   originalDescription,
   originalPlaceName,
   originalAddress,
+  originalProductName,
+  originalPurchaseSource,
+  originalPricePrefix,
   originalImageAlts,
   originalThumbnailAlt,
   translations,
@@ -250,6 +256,24 @@ export function TranslationEditSheet({
                     <p className="mt-1 text-sm">{originalAddress}</p>
                   </div>
                 )}
+                {originalProductName && (
+                  <div className="py-5">
+                    <label className="text-sm font-semibold text-muted-foreground">제품명</label>
+                    <p className="mt-1 text-sm">{originalProductName}</p>
+                  </div>
+                )}
+                {originalPurchaseSource && (
+                  <div className="py-5">
+                    <label className="text-sm font-semibold text-muted-foreground">구매처</label>
+                    <p className="mt-1 text-sm">{originalPurchaseSource}</p>
+                  </div>
+                )}
+                {originalPricePrefix && (
+                  <div className="py-5">
+                    <label className="text-sm font-semibold text-muted-foreground">가격설명</label>
+                    <p className="mt-1 text-sm">{originalPricePrefix}</p>
+                  </div>
+                )}
                 <div className="py-5">
                   <div className="flex items-center gap-2">
                     <label className="text-sm font-semibold text-muted-foreground">
@@ -315,6 +339,24 @@ export function TranslationEditSheet({
                     selectedTranslation.address,
                     selected as TranslationLocale,
                   )}
+                {selectedTranslation.product_name && (
+                  <div className="py-5">
+                    <label className="text-sm font-semibold text-muted-foreground">제품명</label>
+                    <p className="mt-1 text-sm">{selectedTranslation.product_name}</p>
+                  </div>
+                )}
+                {selectedTranslation.purchase_source && (
+                  <div className="py-5">
+                    <label className="text-sm font-semibold text-muted-foreground">구매처</label>
+                    <p className="mt-1 text-sm">{selectedTranslation.purchase_source}</p>
+                  </div>
+                )}
+                {selectedTranslation.price_prefix && (
+                  <div className="py-5">
+                    <label className="text-sm font-semibold text-muted-foreground">가격설명</label>
+                    <p className="mt-1 text-sm">{selectedTranslation.price_prefix}</p>
+                  </div>
+                )}
                 {renderField(
                   'description',
                   selectedTranslation.description,

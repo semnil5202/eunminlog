@@ -255,7 +255,8 @@ function NewPostContent() {
     setExtractionFailed(false);
 
     try {
-      const { title: t, content: c, description: d, placeName: pn, address: addr } = getValues();
+      const values = getValues();
+      const { title: t, content: c, description: d, placeName: pn, address: addr } = values;
 
       const altTexts = imageAlts.length > 0 ? imageAlts.map((a) => a.alt) : undefined;
       const terms = await fetchExtractTerms(c, pn || undefined, addr || undefined, altTexts);
@@ -267,6 +268,9 @@ function NewPostContent() {
           description: d,
           placeName: pn || undefined,
           address: addr || undefined,
+          productName: values.productName || undefined,
+          purchaseSource: values.purchaseSource || undefined,
+          pricePrefix: values.pricePrefix || undefined,
           confirmedTerms: [] as { original: string; confirmed: string }[],
           imageAlts: imageAlts.length > 0 ? imageAlts : undefined,
           thumbnailAlt: getValues('thumbnailAlt') || undefined,
@@ -364,13 +368,17 @@ function NewPostContent() {
   };
 
   const handleRetryLocale = async (locale: TranslationLocale) => {
-    const { title: t, content: c, description: d, placeName: pn, address: addr } = getValues();
+    const values = getValues();
+    const { title: t, content: c, description: d, placeName: pn, address: addr } = values;
     const result = await fetchRetrySingleLocale(locale, {
       title: t,
       content: c,
       description: d,
       placeName: pn || undefined,
       address: addr || undefined,
+      productName: values.productName || undefined,
+      purchaseSource: values.purchaseSource || undefined,
+      pricePrefix: values.pricePrefix || undefined,
       confirmedTerms: lastConfirmedTerms,
       imageAlts: imageAlts.length > 0 ? imageAlts : undefined,
       thumbnailAlt: getValues('thumbnailAlt') || undefined,
@@ -380,13 +388,17 @@ function NewPostContent() {
   };
 
   const handleRetryAll = async () => {
-    const { title: t, content: c, description: d, placeName: pn, address: addr } = getValues();
+    const values = getValues();
+    const { title: t, content: c, description: d, placeName: pn, address: addr } = values;
     const results = await fetchTranslatePost({
       title: t,
       content: c,
       description: d,
       placeName: pn || undefined,
       address: addr || undefined,
+      productName: values.productName || undefined,
+      purchaseSource: values.purchaseSource || undefined,
+      pricePrefix: values.pricePrefix || undefined,
       confirmedTerms: lastConfirmedTerms,
       imageAlts: imageAlts.length > 0 ? imageAlts : undefined,
       thumbnailAlt: getValues('thumbnailAlt') || undefined,
@@ -679,6 +691,9 @@ function NewPostContent() {
         description={description}
         placeName={watch('placeName')}
         address={watch('address')}
+        productName={watch('productName') || undefined}
+        purchaseSource={watch('purchaseSource') || undefined}
+        pricePrefix={watch('pricePrefix') || undefined}
         imageAlts={imageAlts}
         thumbnailAlt={watch('thumbnailAlt') || undefined}
       />
@@ -690,6 +705,9 @@ function NewPostContent() {
         originalContent={watch('content')}
         originalPlaceName={watch('placeName') || undefined}
         originalAddress={watch('address') || undefined}
+        originalProductName={watch('productName') || undefined}
+        originalPurchaseSource={watch('purchaseSource') || undefined}
+        originalPricePrefix={watch('pricePrefix') || undefined}
         originalImageAlts={imageAlts.length > 0 ? imageAlts : undefined}
         originalThumbnailAlt={watch('thumbnailAlt') || undefined}
         translations={translationResults}

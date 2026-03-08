@@ -39,6 +39,8 @@ export type PostTranslation = {
   place_name: string | null;
   address: string | null;
   product_name: string | null;
+  purchase_source: string | null;
+  price_prefix: string | null;
   thumbnail_alt: string | null;
   image_alts: ImageAlt[];
   created_at: string;
@@ -53,5 +55,7 @@ export type LocalizedPost = {
   translated_place_name: string | null;
   translated_address: string | null;
   translated_product_name: string | null;
+  translated_purchase_source: string | null;
+  translated_price_prefix: string | null;
   image_alts: ImageAlt[];
 } & Omit<Post, 'title' | 'description' | 'content' | 'image_alts'>;

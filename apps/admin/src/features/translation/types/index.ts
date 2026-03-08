@@ -18,6 +18,8 @@ export type TranslationResult = {
   place_name: string;
   address: string;
   product_name: string;
+  purchase_source: string;
+  price_prefix: string;
   image_alts: ImageAlt[];
   thumbnail_alt: string;
   failed?: boolean;

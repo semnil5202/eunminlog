@@ -17,8 +17,8 @@ const [{ posts: rawPosts, totalPages }, sponsored] = await Promise.all([
   getSponsoredPosts(),
 ]);
 
-const posts: LocalizedPost[] = rawPosts.map((p) => ({ ...p, translated_place_name: null, translated_address: null, locale }));
-const sponsoredLocalized: LocalizedPost[] = sponsored.map((p) => ({ ...p, translated_place_name: null, translated_address: null, locale }));
+const posts: LocalizedPost[] = rawPosts.map((p) => ({ ...p, translated_place_name: null, translated_address: null, translated_product_name: null, translated_purchase_source: null, translated_price_prefix: null, locale }));
+const sponsoredLocalized: LocalizedPost[] = sponsored.map((p) => ({ ...p, translated_place_name: null, translated_address: null, translated_product_name: null, translated_purchase_source: null, translated_price_prefix: null, locale }));
 
 const breadcrumbItems = [{ name: "홈", url: "/" }];
 

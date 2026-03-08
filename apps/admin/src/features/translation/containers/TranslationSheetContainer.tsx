@@ -31,6 +31,9 @@ type TranslationSheetContainerProps = {
   description: string;
   placeName: string;
   address: string;
+  productName?: string;
+  purchaseSource?: string;
+  pricePrefix?: string;
   imageAlts?: ImageAlt[];
   thumbnailAlt?: string;
 };
@@ -45,6 +48,9 @@ export function TranslationSheetContainer({
   description,
   placeName,
   address,
+  productName,
+  purchaseSource,
+  pricePrefix,
   imageAlts,
   thumbnailAlt,
 }: TranslationSheetContainerProps) {
@@ -76,6 +82,9 @@ export function TranslationSheetContainer({
         description,
         placeName,
         address,
+        productName,
+        purchaseSource,
+        pricePrefix,
         confirmedTerms: terms,
         imageAlts,
         thumbnailAlt,
