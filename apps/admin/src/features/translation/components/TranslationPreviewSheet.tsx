@@ -31,6 +31,7 @@ type TranslationPreviewSheetProps = {
   originalPricePrefix?: string;
   originalImageAlts?: ImageAlt[];
   originalThumbnailAlt?: string;
+  originalThumbnail?: string | null;
   translations: TranslationResult[];
   onRetryLocale?: (locale: TranslationLocale) => Promise<TranslationResult>;
   onRetryAll?: () => Promise<void>;
@@ -48,6 +49,7 @@ export function TranslationPreviewSheet({
   originalPricePrefix,
   originalImageAlts,
   originalThumbnailAlt,
+  originalThumbnail,
   translations,
   onRetryLocale,
   onRetryAll,
@@ -158,7 +160,10 @@ export function TranslationPreviewSheet({
                       {originalThumbnailAlt && (
                         <div className="flex items-start gap-3">
                           <span className="shrink-0 rounded bg-gray-100 px-1.5 py-0.5 text-xs font-medium text-gray-600">썸네일</span>
-                          <p className="text-sm">{originalThumbnailAlt}</p>
+                          <div className="min-w-0">
+                            {originalThumbnail && <img src={originalThumbnail} alt="" className="mb-1 h-12 w-auto object-cover" />}
+                            <p className="text-sm">{originalThumbnailAlt}</p>
+                          </div>
                         </div>
                       )}
                       {originalImageAlts?.map((item, i) => (
@@ -230,7 +235,10 @@ export function TranslationPreviewSheet({
                       {selectedTranslation.thumbnail_alt && (
                         <div className="flex items-start gap-3">
                           <span className="shrink-0 rounded bg-gray-100 px-1.5 py-0.5 text-xs font-medium text-gray-600">썸네일</span>
-                          <p className="text-sm">{selectedTranslation.thumbnail_alt}</p>
+                          <div className="min-w-0">
+                            {originalThumbnail && <img src={originalThumbnail} alt="" className="mb-1 h-12 w-auto object-cover" />}
+                            <p className="text-sm">{selectedTranslation.thumbnail_alt}</p>
+                          </div>
                         </div>
                       )}
                       {selectedTranslation.image_alts.map((item, i) => (

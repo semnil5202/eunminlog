@@ -710,6 +710,7 @@ function NewPostContent() {
         originalPricePrefix={watch('pricePrefix') || undefined}
         originalImageAlts={imageAlts.length > 0 ? imageAlts : undefined}
         originalThumbnailAlt={watch('thumbnailAlt') || undefined}
+        originalThumbnail={watch('thumbnail')}
         translations={translationResults}
         onRetryLocale={handleRetryLocale}
         onRetryAll={handleRetryAll}
