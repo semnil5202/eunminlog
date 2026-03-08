@@ -263,9 +263,15 @@ interface Props {
 - 번역이 있으면 번역 텍스트 표시
 - 번역이 없으면 한글 원문 표시 (기존 동작)
 
-#### 복사 버튼 동작 변경
+#### 장소명 지도 링크 + 주소 복사 버튼
 
-**장소명 복사 버튼**: 장소명 행에도 복사 버튼을 추가한다.
+**장소명 지도 링크**: 장소명 행에 외부 링크 아이콘을 표시하고, 클릭 시 지도 검색 페이지로 이동한다.
+
+- 한국어: 네이버 지도 (`https://map.naver.com/v5/search/{placeName}`)
+- 다국어: 구글 지도 (`https://www.google.com/maps/search/{placeName}`)
+- 검색 정확도를 위해 원본 한국어 `placeName`으로 검색 (번역된 장소명 사용 X)
+- i18n 키: `a11y.mapSearch` (8개 locale)
+- 아이콘: 가격대 환율 링크와 동일한 외부 이동 화살표 SVG
 
 ```html
 <!-- 장소명 행 -->
@@ -275,20 +281,20 @@ interface Props {
     <span class="text-gray-900 font-semibold" itemprop="name">
       {translatedPlaceName ?? placeName}
     </span>
-    <button
-      type="button"
-      class="copy-place-name shrink-0 translate-y-px text-gray-400 hover:text-gray-600 transition-colors"
-      data-copy={placeName}
-      data-toast={locale !== 'ko' ? t("place.copyToast", locale) : undefined}
-      aria-label={t("place.name", locale) + " copy"}
+    <a
+      href={mapUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      class="shrink-0 translate-y-px text-gray-400 hover:text-gray-600 transition-colors"
+      aria-label={t("a11y.mapSearch", locale)}
     >
-      <!-- copy SVG icon -->
-    </button>
+      <!-- external link SVG icon (arrow) -->
+    </a>
   </dd>
 </div>
 ```
 
-**주소 복사 버튼**: 기존 `.copy-address` 버튼의 `data-address` 값을 항상 한글 원문으로 설정한다.
+**주소 복사 버튼**: `data-copy` 속성으로 한글 원문을 복사한다.
 
 ```html
 <!-- 주소 행 -->
@@ -560,9 +566,9 @@ SQL은 [`secrets-reference.md` 섹션 8-6](secrets-reference.md#8-6-마이그레
 | `shared/types/post.ts`                                | PostTranslation에 place_name, address 추가. LocalizedPost에 translated_place_name, translated_address 추가            |
 | `features/post-feed/api/translations.ts`              | getLocalizedPost()에서 translated_place_name, translated_address 매핑                                                 |
 | `features/post-feed/mock/translations.ts`             | mock 데이터에 place_name, address 추가                                                                                |
-| `features/post-detail/components/PlaceInfoCard.astro` | Props 추가, 번역 텍스트 표시, 장소명 복사 버튼 추가, 복사 스크립트 변경, 필드 라벨 다국어 처리                        |
+| `features/post-detail/components/PlaceInfoCard.astro` | Props 추가, 번역 텍스트 표시, 장소명 지도 링크 (ko: 네이버, 다국어: 구글), 주소 복사, 필드 라벨 다국어 처리          |
 | `layouts/PostLayout.astro`                            | PlaceInfoCard에 translatedPlaceName, translatedAddress props 전달                                                     |
-| `shared/lib/i18n/translations.ts`                     | place.category, place.name, place.address, place.price, place.currency, place.targetCurrency, place.copyToast 키 추가 |
+| `shared/lib/i18n/translations.ts`                     | place.category, place.name, place.address, place.price, place.currency, place.targetCurrency, place.copyToast, a11y.mapSearch 키 추가 |
 | `features/search/api/search-data.ts`                  | placeName, 추천 키워드에 번역 텍스트 사용                                                                             |
 | `pages/api/feed/[...path].json.ts`                    | FeedPostData.placeName에 번역 텍스트 사용                                                                             |
 | `features/post-feed/components/PostCard.astro`        | place_name 표시를 translated_place_name 우선으로 변경                                                                 |
@@ -640,13 +646,13 @@ SQL은 [`secrets-reference.md` 섹션 8-6](secrets-reference.md#8-6-마이그레
 
 ## 12. 검증 체크리스트
 
-- [ ] 한국어 상세 페이지: 장소명/주소 한글 표시, 복사 시 한글 복사, 토스트 미표시
-- [ ] 다국어 상세 페이지: 장소명/주소 번역 표시, 복사 시 한글 원문 복사, 토스트 표시 (해당 locale 언어)
-- [ ] 번역 없는 다국어 페이지: 장소명/주소 한글 원문 폴백, 복사 시 한글 복사, 토스트 표시
+- [ ] 한국어 상세 페이지: 장소명/주소 한글 표시, 장소명 클릭 시 네이버 지도 이동, 주소 복사 시 한글 복사, 토스트 미표시
+- [ ] 다국어 상세 페이지: 장소명/주소 번역 표시, 장소명 클릭 시 구글 지도 이동, 주소 복사 시 한글 원문 복사, 토스트 표시 (해당 locale 언어)
+- [ ] 번역 없는 다국어 페이지: 장소명/주소 한글 원문 폴백, 장소명 클릭 시 구글 지도 이동, 주소 복사 시 한글 복사, 토스트 표시
+- [ ] 장소명 지도 링크: 원본 한국어 placeName으로 검색하여 정확도 확보
 - [ ] JSON-LD: `itemReviewed.name`과 `address`가 한글 원문인지 확인
 - [ ] 검색 페이지: 다국어 검색에서 번역된 장소명으로 검색 가능
 - [ ] 피드 카드: 다국어 피드에서 번역된 장소명 표시
 - [ ] PlaceInfoCard 필드 라벨: 각 locale에서 올바른 언어로 표시
-- [ ] 장소명 복사 버튼: 클릭 시 한글 원문 복사 + 체크마크 피드백 + 토스트
 - [ ] 주소 복사 버튼: 기존 동작 유지 + 토스트 추가 (다국어만)
 - [ ] `<dt>` 너비가 모든 locale 라벨을 수용하는지 확인

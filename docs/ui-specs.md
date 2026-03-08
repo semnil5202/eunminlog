@@ -261,7 +261,8 @@
 - `border-radius` 없음 (`bg-gray-50 border border-gray-200 p-5 mb-6`)
 - `<dl>` 기반 키-값 레이아웃 (`w-20` dt 라벨 폭): 카테고리, 장소, 주소, 가격대, 3줄 요약
 - 필드 라벨은 `t()` 함수로 다국어 처리 (`place.category`, `place.name`, `place.address`, `place.price`, `post.summary`)
-- 장소명/주소: 번역 텍스트 표시, `data-copy` 속성으로 한글 원문 복사, `data-toast`로 다국어 페이지에서 토스트 알림 (`place.copyToast`)
+- 장소명: 번역 텍스트 표시, 외부 링크 아이콘으로 지도 검색 페이지 이동 (한국어: 네이버 지도 `map.naver.com/v5/search/{placeName}`, 다국어: 구글 지도 `google.com/maps/search/{placeName}`). 검색 정확도를 위해 원본 한국어 `placeName`으로 검색. i18n 키: `a11y.mapSearch`
+- 주소: 번역 텍스트 표시, `data-copy` 속성으로 한글 원문 복사, `data-toast`로 다국어 페이지에서 토스트 알림 (`place.copyToast`)
 - 가격 표시: `place.currency` i18n으로 통화 단위 다국어 처리 (`원`/`won`/`ウォン`/`韩元` 등). 비한국어 locale에서 `place.targetCurrency`가 있으면 Google 환율 변환 링크 표시 (외부 링크 아이콘, `https://www.google.com/search?q={price}+KRW+to+{targetCurrency}`)
 - 3줄 요약: `description` prop (`translatedDescription` 우선)을 개행 분할하여 `⋅` 접두사 리스트로 표시 (`post.summary` 라벨)
 - 상세 스펙: [`docs/place-i18n-specs.md`](place-i18n-specs.md)
