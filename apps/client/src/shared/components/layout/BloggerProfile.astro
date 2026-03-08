@@ -10,6 +10,8 @@ interface Props {
 }
 
 const { locale } = Astro.props;
+const cjkLocales: Locale[] = ['ja', 'zh-CN', 'zh-TW'];
+const bioBreakClass = cjkLocales.includes(locale) ? 'break-all' : 'break-keep';
 ---
 
 <section class="border border-gray-200 p-4" aria-label={t("a11y.bloggerProfile", locale)}>
@@ -26,7 +28,7 @@ const { locale } = Astro.props;
       />
     </div>
 
-    <p class="text-sm text-gray-600 text-center leading-snug line-clamp-2">
+    <p class:list={["text-sm text-gray-600 text-center leading-snug", bioBreakClass]}>
       {t("profile.bio", locale)}
     </p>
 
