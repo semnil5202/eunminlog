@@ -90,6 +90,7 @@ export type TranslateParams = {
 async function fetchTranslateSingle(
   locale: TranslationLocale,
   params: TranslateParams,
+  signal?: AbortSignal,
 ): Promise<TranslationResult> {
   const {
     title,
@@ -132,15 +133,18 @@ async function fetchTranslateSingle(
     userPrompt += `\n\n썸네일 alt 텍스트: "${thumbnailAlt}"`;
   }
 
-  const stream = await openai.chat.completions.create({
-    model: 'gpt-5-mini',
-    response_format: { type: 'json_object' },
-    stream: true,
-    messages: [
-      { role: 'system', content: buildTranslateSystemPrompt(locale) },
-      { role: 'user', content: userPrompt },
-    ],
-  });
+  const stream = await openai.chat.completions.create(
+    {
+      model: 'gpt-5-mini',
+      response_format: { type: 'json_object' },
+      stream: true,
+      messages: [
+        { role: 'system', content: buildTranslateSystemPrompt(locale) },
+        { role: 'user', content: userPrompt },
+      ],
+    },
+    { signal },
+  );
 
   let fullText = '';
   for await (const chunk of stream) {
@@ -170,9 +174,12 @@ async function fetchTranslateSingle(
   };
 }
 
-export async function fetchTranslatePost(params: TranslateParams): Promise<TranslationResult[]> {
+export async function fetchTranslatePost(
+  params: TranslateParams,
+  signal?: AbortSignal,
+): Promise<TranslationResult[]> {
   const settled = await Promise.allSettled(
-    TARGET_LOCALES.map((locale) => fetchTranslateSingle(locale, params)),
+    TARGET_LOCALES.map((locale) => fetchTranslateSingle(locale, params, signal)),
   );
 
   return settled.map((result, i) => {
@@ -197,6 +204,7 @@ export async function fetchTranslatePost(params: TranslateParams): Promise<Trans
 export async function fetchRetrySingleLocale(
   locale: TranslationLocale,
   params: TranslateParams,
+  signal?: AbortSignal,
 ): Promise<TranslationResult> {
-  return fetchTranslateSingle(locale, params);
+  return fetchTranslateSingle(locale, params, signal);
 }
