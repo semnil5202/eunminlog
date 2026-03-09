@@ -256,14 +256,14 @@
 #### `PlaceInfoCard.astro`
 
 - **위치**: `features/post-detail/components/PlaceInfoCard.astro`
-- Props: `categoryLabel`, `subCategoryLabel`, `placeName`, `translatedPlaceName?`, `address`, `translatedAddress?`, `pricePrefix?`, `price`, `description`, `translatedDescription?`, `locale`
+- Props: `categoryLabel`, `subCategoryLabel`, `placeName`, `translatedPlaceName?`, `address`, `translatedAddress?`, `pricePrefix?`, `translatedPricePrefix?`, `price`, `description`, `translatedDescription?`, `locale`
 - Schema.org `LocalBusiness` 마이크로데이터 포함
 - `border-radius` 없음 (`bg-gray-50 border border-gray-200 p-5 mb-6`)
 - `<dl>` 기반 키-값 레이아웃 (`w-20` dt 라벨 폭): 카테고리, 장소, 주소, 가격대, 3줄 요약
 - 필드 라벨은 `t()` 함수로 다국어 처리 (`place.category`, `place.name`, `place.address`, `place.price`, `post.summary`)
 - 장소명: 번역 텍스트 표시, 외부 링크 아이콘으로 지도 검색 페이지 이동 (한국어: 네이버 지도 `map.naver.com/v5/search/{placeName}`, 다국어: 구글 지도 `google.com/maps/search/{placeName}`). 검색 정확도를 위해 원본 한국어 `placeName`으로 검색. i18n 키: `a11y.mapSearch`
 - 주소: 번역 텍스트 표시, `data-copy` 속성으로 한글 원문 복사, `data-toast`로 다국어 페이지에서 토스트 알림 (`place.copyToast`)
-- 가격 표시: `place.currency` i18n으로 통화 단위 다국어 처리 (`원`/`won`/`ウォン`/`韩元` 등). 비한국어 locale에서 `place.targetCurrency`가 있으면 Google 환율 변환 링크 표시 (외부 링크 아이콘, `https://www.google.com/search?q={price}+KRW+to+{targetCurrency}`)
+- 가격 표시: `translatedPricePrefix` 우선, 없으면 `pricePrefix` 폴백. `place.currency` i18n으로 통화 단위 다국어 처리 (`원`/`won`/`ウォン`/`韩元` 등). 비한국어 locale에서 `place.targetCurrency`가 있으면 Google 환율 변환 링크 표시 (외부 링크 아이콘, `https://www.google.com/search?q={price}+KRW+to+{targetCurrency}`)
 - 3줄 요약: `description` prop (`translatedDescription` 우선)을 개행 분할하여 `⋅` 접두사 리스트로 표시 (`post.summary` 라벨)
 - 상세 스펙: [`docs/place-i18n-specs.md`](place-i18n-specs.md)
 
@@ -282,6 +282,19 @@
 - dt 라벨 폭: 제품 섹션 내부 `w-16` (64px), 카테고리/요약 `w-20` (80px)
 - 필드 라벨 i18n: `place.category`, `product.name`, `product.source`, `place.price`, `post.summary`
 - 3줄 요약: `description`을 개행 분할하여 `⋅` 접두사 리스트로 표시
+
+#### 이미지 캐러셀
+
+Admin에서 `data-type="image-carousel"`로 마크업된 연속 이미지를 Client에서 CSS snap 캐러셀로 변환하는 기능.
+
+- **CSS 정의**: `global.css`의 `[data-type='image-carousel']` 셀렉터
+- 뷰포트: `flex` + `overflow-x: auto` + `scroll-snap-type: x mandatory`, 스크롤바 숨김
+- 슬라이드: `flex: 0 0 90%` + `scroll-snap-align: start`
+- 화살표 (prev/next): `position: absolute` 중앙 정렬, 반투명 배경 + 흰색 아이콘
+- **화살표 표시 전략 (반응형)**:
+  - PC (`hover: hover`): 기본 숨김, 캐러셀 hover 시 `display: flex`로 표시
+  - 모바일 (`hover: none`): 화살표 항상 표시 -- 첫 터치가 hover 상태 전환에 소비되어 라이트박스가 즉시 열리지 않는 문제를 방지하기 위함
+  - `@media (hover: hover)` 미디어 쿼리로 분기
 
 #### 링크 북마크 카드
 
