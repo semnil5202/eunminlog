@@ -7,6 +7,7 @@ import { useTiptapEditor } from '../hooks/useTiptapEditor';
 import { Toolbar } from '../components/Toolbar';
 import { TiptapEditor } from '../components/TiptapEditor';
 import { TiptapEditorSkeleton } from '../components/TiptapEditorSkeleton';
+import { LinkPastePopup } from '../components/LinkPastePopup';
 
 type TiptapEditorContainerProps = {
   content: string;
@@ -24,7 +25,7 @@ export function TiptapEditorContainer({
   children,
 }: TiptapEditorContainerProps) {
   const [isMounted, setIsMounted] = useState(false);
-  const editor = useTiptapEditor({ content, onChange });
+  const { editor, pastedUrl, clearPastedUrl } = useTiptapEditor({ content, onChange });
 
   useEffect(() => {
     setIsMounted(true);
@@ -34,11 +35,31 @@ export function TiptapEditorContainer({
     return <TiptapEditorSkeleton />;
   }
 
+  const popupPosition = (() => {
+    if (!pastedUrl || !editor) return null;
+    const coords = editor.view.coordsAtPos(pastedUrl.cursorPos);
+    const editorRect = editor.view.dom.getBoundingClientRect();
+    return {
+      top: coords.bottom - editorRect.top + 4,
+      left: coords.left - editorRect.left,
+    };
+  })();
+
   return (
     <div className={cn('border-t border-b', className)}>
       <Toolbar editor={editor} />
       {children}
-      <TiptapEditor editor={editor} placeholder={placeholder} />
+      <div className="relative">
+        <TiptapEditor editor={editor} placeholder={placeholder} />
+        {pastedUrl && popupPosition && (
+          <LinkPastePopup
+            editor={editor}
+            url={pastedUrl.url}
+            position={popupPosition}
+            onClose={clearPastedUrl}
+          />
+        )}
+      </div>
     </div>
   );
 }

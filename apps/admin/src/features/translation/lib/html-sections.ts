@@ -17,6 +17,7 @@ const TAG_LABELS: Record<string, string> = {
 function getLabel(node: Element): string {
   const tag = node.tagName;
   if (tag === 'DIV' && node.getAttribute('data-type') === 'image-carousel') return 'img';
+  if ((tag === 'DIV' || tag === 'ASIDE') && node.getAttribute('data-type') === 'link-bookmark') return 'bookmark';
   return TAG_LABELS[tag] ?? tag.toLowerCase();
 }
 
@@ -70,11 +71,12 @@ function stripImages(html: string): string {
 export function isTranslatableSection(section: ContentSection): boolean {
   const tag = section.tagName.toUpperCase();
   if (NON_TRANSLATABLE_TAGS.has(tag) || IMAGE_TAGS.has(tag)) return false;
-  if (tag === 'DIV') {
+  if (tag === 'DIV' || tag === 'ASIDE') {
     const parser = new DOMParser();
     const doc = parser.parseFromString(section.html, 'text/html');
-    const div = doc.body.firstElementChild;
-    if (div?.getAttribute('data-type') === 'image-carousel') return false;
+    const el = doc.body.firstElementChild;
+    const dataType = el?.getAttribute('data-type');
+    if (dataType === 'image-carousel' || dataType === 'link-bookmark') return false;
   }
   const text = stripImages(section.html).replace(/<[^>]*>/g, '').trim();
   if (!text) return false;

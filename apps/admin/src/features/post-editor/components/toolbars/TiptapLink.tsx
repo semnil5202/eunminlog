@@ -13,6 +13,7 @@ import type { EditorProps } from './types';
 export function TiptapLink({ editor }: EditorProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [url, setUrl] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const [position, setPosition] = useState({ top: 0, left: 0 });
   const buttonRef = useRef<HTMLButtonElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
@@ -40,6 +41,55 @@ export function TiptapLink({ editor }: EditorProps) {
       editor.chain().focus().unsetLink().run();
     }
     setIsOpen(false);
+  };
+
+  const handleBookmark = async () => {
+    const trimmed = url.trim();
+    if (!trimmed || !/^https?:\/\//.test(trimmed)) return;
+
+    setIsLoading(true);
+    try {
+      const res = await fetch('/api/og-metadata', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: trimmed }),
+      });
+      if (res.ok) {
+        const data = (await res.json()) as {
+          url: string;
+          title: string;
+          description: string;
+          image: string;
+          favicon: string;
+        };
+        editor
+          .chain()
+          .focus()
+          .setLinkBookmark({
+            url: data.url,
+            title: data.title,
+            description: data.description,
+            image: data.image,
+            favicon: data.favicon,
+          })
+          .run();
+      } else {
+        editor
+          .chain()
+          .focus()
+          .setLinkBookmark({ url: trimmed, title: '', description: '', image: '', favicon: '' })
+          .run();
+      }
+    } catch {
+      editor
+        .chain()
+        .focus()
+        .setLinkBookmark({ url: trimmed, title: '', description: '', image: '', favicon: '' })
+        .run();
+    } finally {
+      setIsLoading(false);
+      setIsOpen(false);
+    }
   };
 
   useEffect(() => {
@@ -88,7 +138,7 @@ export function TiptapLink({ editor }: EditorProps) {
         createPortal(
           <div
             ref={modalRef}
-            className="fixed z-50 flex w-[320px] items-center gap-2 rounded-2xl border bg-background p-3 shadow-lg"
+            className="fixed z-50 flex w-[400px] items-center gap-2 rounded-2xl border bg-background p-3 shadow-lg"
             style={{ top: position.top, left: position.left }}
           >
             <Input
@@ -112,7 +162,15 @@ export function TiptapLink({ editor }: EditorProps) {
               onClick={handleSubmit}
               className="shrink-0 cursor-pointer rounded-lg bg-primary-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-primary-700"
             >
-              완료
+              링크
+            </button>
+            <button
+              type="button"
+              onClick={handleBookmark}
+              disabled={isLoading}
+              className="shrink-0 cursor-pointer rounded-lg border border-input bg-background px-3 py-1.5 text-sm font-semibold hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {isLoading ? '...' : '북마크'}
             </button>
           </div>,
           document.body,

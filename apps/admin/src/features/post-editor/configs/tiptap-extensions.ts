@@ -12,6 +12,7 @@ import { textblockTypeInputRule } from '@tiptap/core';
 
 import { CustomImageCarousel } from './image-carousel';
 import { CustomResizableImage } from './image';
+import { CustomLinkBookmark } from './link-bookmark';
 
 const HEADING_STYLES: Record<Level, string> = {
   1: '',
@@ -149,6 +150,7 @@ export const tiptapExtensions = [
   CustomTextAlign,
   CustomResizableImage,
   CustomImageCarousel,
+  CustomLinkBookmark,
   CustomTable,
   CustomTableRow,
   CustomTableHeader,

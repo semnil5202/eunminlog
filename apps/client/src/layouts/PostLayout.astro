@@ -21,6 +21,7 @@ import { formatDate } from "@/shared/lib/date";
 import { insertInArticleAds } from "@/features/post-detail/lib/ads";
 import { buildBlogPostingSchema } from "@/features/post-detail/lib/schema";
 import { optimizedUrl, injectOptimizedUrls } from "@/shared/lib/image";
+import { injectLocalizedBookmarks } from "@/shared/lib/bookmark";
 import type { LocalizedPost } from "@/shared/types/post";
 import type { Locale } from "@/shared/types/common";
 import type { BreadcrumbItem } from "@/shared/types/seo";
@@ -67,7 +68,8 @@ const contentWithAlts = post.image_alts?.length
     )
   : post.content;
 const contentOptimized = injectOptimizedUrls(contentWithAlts);
-const contentWithAds = contentOptimized;
+const contentWithBookmarks = await injectLocalizedBookmarks(contentOptimized, locale);
+const contentWithAds = contentWithBookmarks;
 const blogPosting = buildBlogPostingSchema(post, canonical);
 const sponsoredLabel = t("post.sponsored", locale);
 

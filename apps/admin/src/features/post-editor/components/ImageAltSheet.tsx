@@ -30,6 +30,7 @@ export function extractImageSrcs(html: string): string[] {
   const doc = parser.parseFromString(html, 'text/html');
   const imgs = doc.querySelectorAll('img');
   return Array.from(imgs)
+    .filter((img) => !img.closest('[data-type="link-bookmark"]'))
     .map((img) => img.getAttribute('src'))
     .filter((src): src is string => !!src);
 }

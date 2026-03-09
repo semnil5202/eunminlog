@@ -97,6 +97,24 @@ img[data-lightbox] {
   right: 8px;
 }
 
+[data-type='link-bookmark'] {
+  margin: 16px 0;
+}
+
+[data-type='link-bookmark'] a:hover {
+  background-color: #f9fafb;
+}
+
+@media (max-width: 640px) {
+  [data-type='link-bookmark'] a {
+    flex-direction: column !important;
+  }
+  [data-type='link-bookmark'] a > figure {
+    flex: none !important;
+    max-height: 200px !important;
+  }
+}
+
 @utility scrollbar-none {
   -ms-overflow-style: none;
   scrollbar-width: none;
