@@ -68,7 +68,8 @@ graph LR
 | Supabase (PostgreSQL) | 콘텐츠 DB         |
 | OpenAI GPT-5 Mini     | 다국어 번역       |
 | GitHub Actions        | CI/CD, SSG 빌드   |
-| AWS S3 + CloudFront   | 정적 호스팅 + CDN |
+| AWS S3 + CloudFront   | 정적 호스팅 + CDN (Client SSG) |
+| AWS S3 + CloudFront   | 미디어 CDN (이미지/폰트, 1년 캐시). 상세: [`secrets-reference.md`](secrets-reference.md) 섹션 12 |
 
 ## Client App Directory Structure (`apps/client`)
 
@@ -92,7 +93,7 @@ src/
 │   │   │   └── PostBadges.astro            # 협찬/추천 뱃지 조합
 │   │   └── lib/
 │   │       ├── ads.ts                      # insertInArticleAds() — H2 섹션 경계 광고 삽입
-│   │       └── schema.ts                   # buildBlogPostingSchema(), buildReviewSchema() JSON-LD
+│   │       └── schema.ts                   # buildBlogPostingSchema() JSON-LD
 │   ├── search/                             # 검색 기능
 │   │   ├── components/
 │   │   │   └── SearchUI.astro              # 검색 폼 + 추천 키워드 + 결과 리스트 + 클라이언트 스크립트
@@ -193,15 +194,18 @@ src/
 │   ├── post-management/                       # 포스트 목록/삭제
 │   │   └── api/actions.ts
 │   └── translation/                           # AI 번역
-│       ├── api/client.ts                      # OpenAI GPT 호출 (스트리밍, AbortSignal 지원)
+│       ├── api/client.ts                      # OpenAI GPT 호출 (전체/선택적 번역, AbortSignal 지원)
 │       ├── components/
-│       │   ├── TranslationSheet.tsx            # 번역 확인 Sheet (생성/수정 공용, dirty tracking, 재번역)
+│       │   ├── TranslationSheet.tsx            # 번역 확인 Sheet (섹션 기반 체크박스, dirty tracking, 선택적 재번역)
 │       │   ├── TermReviewItem.tsx              # 고유명사 검토 아이템
 │       │   └── TermReviewList.tsx              # 고유명사 검토 리스트
 │       ├── containers/TranslationSheetContainer.tsx  # 고유명사 추출 + 번역 실행
-│       ├── hooks/useTranslationDirtyFields.ts  # 번역 시점 vs 현재 폼 값 비교 훅
+│       ├── hooks/
+│       │   ├── useTranslationDirtyFields.ts   # 번역 시점 vs 현재 폼 값 비교 훅
+│       │   └── useTranslationCheckState.ts    # 필드+섹션 체크박스 상태 관리 훅
+│       ├── lib/html-sections.ts               # HTML 섹션 분할/재조립/dirty 비교 유틸리티
 │       ├── constants/locale.ts
-│       └── types/index.ts
+│       └── types/index.ts                     # ContentSection, CheckableField, SelectiveTranslateOptions 타입 포함
 ├── shared/
 │   ├── components/
 │   │   ├── filter/SearchFilter.tsx            # 검색 필터

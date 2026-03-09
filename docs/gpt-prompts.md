@@ -159,7 +159,7 @@ JSON 배열 파싱 -> `FlaggedTerm[]` 타입으로 변환.
 당신은 전문 번역가입니다. 한국어 본문을 {언어명}({locale})로 완벽하게 번역하세요.
 
 최우선 엄수 규칙:
-1. HTML 속성 보호: <img src="..."> 등 태그 내부의 속성값(URL, 너비 등)은 절대 수정하거나 이스케이프(예: &quot;, \) 처리하지 마세요. 따옴표는 반드시 원본 형태 그대로 유지해야 합니다.
+1. HTML 태그 보호: 모든 HTML 태그(h1, h2, h3, h4, h5, p, ul, ol, li, table, thead, tbody, tr, td, th, div, span, img, a, br, hr, blockquote, figure, figcaption 등)는 원본 그대로 유지하세요. 태그 내부의 속성값(src, href, style, class, width, height 등의 URL이나 수치)은 절대 수정하거나 이스케이프(예: &quot;, \) 처리하지 마세요. 따옴표는 반드시 원본 형태 그대로 유지해야 합니다.
 2. 100% 번역: 단 한 문장도 한국어로 남겨두지 마세요. 본문의 시작부터 끝까지 반드시 {언어명}로 출력해야 합니다.
 3. 이미지/썸네일 alt: 이미지의 설명(alt)도 해당 언어의 문맥에 맞게 SEO 최적화하여 번역하세요.
 4. 플레이스홀더: {{IMG_0}} 형태의 문자열은 절대 건드리지 마세요.
@@ -201,6 +201,47 @@ JSON 배열 파싱 -> `FlaggedTerm[]` 타입으로 변환.
 
 JSON 객체 파싱 -> `TranslationResult` 타입으로 변환.
 `place_name`, `address`는 원본에 없으면 응답에서도 생략.
+
+### 선택적 번역 모드 (2026-03-09 추가)
+
+> `buildTranslateSystemPrompt(locale)` 함수에서 `selectiveOptions`가 전달될 때 프롬프트에 추가되는 규칙.
+
+선택적 번역 시, 체크된 필드와 본문 섹션만 GPT에 전달한다. 본문이 섹션 단위로 전달되면 응답도 `content_sections` 형식으로 반환해야 한다.
+
+#### 추가 프롬프트 규칙
+
+```
+--- 선택적 번역 모드 ---
+아래에 제공된 필드와 본문 섹션만 번역하세요.
+
+본문이 content_sections 형식으로 제공됩니다:
+[{"index": 0, "html": "<p>...</p>"}, {"index": 3, "html": "<h2>...</h2>"}]
+
+응답도 동일한 content_sections 형식으로 반환하세요:
+{"content_sections": [{"index": 0, "html": "<p>번역된 내용</p>"}, {"index": 3, "html": "<h2>번역된 제목</h2>"}]}
+
+각 섹션의 index는 원본과 동일하게 유지하세요.
+```
+
+#### 선택적 번역 응답 형식 (JSON)
+
+```json
+{
+  "title": "...",
+  "content_sections": [
+    { "index": 0, "html": "<p>Translated paragraph...</p>" },
+    { "index": 3, "html": "<h2>Translated heading</h2>" }
+  ],
+  "description": "..."
+}
+```
+
+#### 머지 로직
+
+1. GPT 응답의 `content_sections`를 파싱
+2. 기존 번역 content를 `splitHtmlToSections()`로 분할
+3. 응답의 각 `{ index, html }`로 해당 인덱스의 섹션을 교체
+4. `reassembleSections()`로 재조립하여 최종 content 생성
 
 ---
 

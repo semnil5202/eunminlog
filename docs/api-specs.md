@@ -1,6 +1,6 @@
 # Admin API Specs
 
-> Last updated: 2026-03-07 (GPT-5 Mini 모델 통일, createCategory -> createParentCategory/createChildCategory 분리, translations 파라미터 추가)
+> Last updated: 2026-03-09 (선택적 번역 API 추가 — SelectiveTranslateOptions, content_sections 응답, 섹션 분할 유틸리티)
 
 Admin 앱에서 필요한 API 엔드포인트 목록. Server Action 기반으로 구현하며, Supabase service role 키를 사용한다.
 
@@ -282,6 +282,7 @@ Supabase Auth 클라이언트 SDK 사용 (Server Action 아님).
   address?: string | null;
   targetLocales: TranslationLocale[];        // ['en','ja','zh-CN','zh-TW','id','vi','th']
   flaggedTerms?: FlaggedTerm[];              // 용어 가이드
+  selectiveOptions?: SelectiveTranslateOptions; // 선택적 번역 옵션 (아래 4.4.1 참조)
 }
 ```
 
@@ -303,13 +304,57 @@ Supabase Auth 클라이언트 SDK 사용 (Server Action 아님).
 
 **External:** OpenAI GPT-5 Mini API — 7개 locale `Promise.allSettled` 병렬 호출
 
-**DB:** 없음 (결과는 TranslationPreviewSheet에서 프리뷰 표시. DB 저장은 `saveTranslations`에서 별도 수행)
+**DB:** 없음 (결과는 TranslationSheet에서 프리뷰 표시. DB 저장은 `saveTranslations`에서 별도 수행)
 
 **실패 처리:**
 
 - `Promise.allSettled`로 부분 성공 허용
 - 실패한 locale은 `failed: true` 플래그 설정
 - 개별 locale 재시도는 `retrySingleLocale`로 처리
+
+---
+
+#### 4.4.1 선택적 번역 — `SelectiveTranslateOptions`
+
+> Date: 2026-03-09
+
+체크된 필드/섹션만 GPT에 요청하여 output 토큰 비용을 절감하는 모드. `selectiveOptions`가 전달되면 선택적 번역 모드로 동작한다.
+
+**Input 타입:**
+
+```typescript
+interface SelectiveTranslateOptions {
+  fields: string[];                          // 선택된 필드 목록 (예: ['title', 'description'])
+  contentSections?: number[];                // 선택된 본문 섹션 인덱스 (0-based)
+}
+```
+
+**동작:**
+
+1. `fields`에 포함된 필드만 GPT 프롬프트에 전달
+2. `contentSections`가 있으면 해당 인덱스의 섹션 HTML만 전달. GPT 응답은 `content_sections` 형식 (인덱스+HTML 배열)
+3. 응답의 `content_sections`를 기존 번역 content에 섹션별 교체하여 머지 (`mergeSelectiveResult` 헬퍼)
+
+**GPT 응답 (선택적 번역 시):**
+
+```typescript
+{
+  title?: string;                            // fields에 title 포함 시
+  description?: string;                      // fields에 description 포함 시
+  content_sections?: {                       // contentSections 전달 시
+    index: number;
+    html: string;
+  }[];
+  place_name?: string;                       // fields에 place_name 포함 시
+  address?: string;                          // fields에 address 포함 시
+}
+```
+
+**섹션 분할 유틸리티** (`features/translation/lib/html-sections.ts`):
+
+- `splitHtmlToSections(html)` — DOMParser로 HTML을 top-level 블록 노드(h2, p, img, ul, ol, table 등) 단위로 분할
+- `reassembleSections(sections)` — 섹션 배열을 단일 HTML 문자열로 재조립
+- `compareSections(original, current)` — 원문과 현재 섹션 배열의 dirty 상태 비교
 
 ---
 

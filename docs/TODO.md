@@ -57,6 +57,10 @@
 - [x] 개별 locale 재번역 — `retrySingleLocale` Server Action
 - [x] 제품 리뷰 필드 번역 — product_name, purchase_source, price_prefix GPT 번역 파이프라인 연동
 - [x] dirty tracking 훅 (`useTranslationDirtyFields`) — 번역 시점 스냅샷/서버 원본 vs 현재 폼 값 비교
+- [x] 섹션 기반 선택적 번역 — 본문 HTML 블록 노드 단위 분할 + 체크박스 시스템 + content_sections 머지 + 미번역 뱃지
+- [x] 체크박스 상태 관리 훅 (`useTranslationCheckState`) — 전체 선택/indeterminate/개별 필드·섹션 체크
+- [x] HTML 섹션 유틸리티 (`html-sections.ts`) — splitHtmlToSections, reassembleSections, compareSections
+- [x] Checkbox indeterminate 상태 지원 (`shared/components/ui/checkbox.tsx`)
 
 ### Phase 4+ (완료)
 
@@ -144,7 +148,11 @@
 - [x] **검색 페이지 max-width** — `SearchUI.astro` 루트 div에 `w-full max-w-[688px]` 적용
 - [x] **애드센스 가짜 지면 주석 처리** — 5곳 주석 처리. 복원 가이드: [`docs/ADSENSE-TODO.md`](ADSENSE-TODO.md)
 
-## Admin — 최근 완료 (2026-03-07)
+## Admin — 최근 완료 (2026-03-09)
+
+- [x] **섹션 기반 번역 컨트롤** — 본문 HTML을 top-level 블록 노드 단위 섹션으로 분할 (`html-sections.ts`), 필드/섹션별 체크박스 선택적 재번역 (`useTranslationCheckState`), `content_sections` 형식 GPT 응답 머지 (`mergeSelectiveResult`), 미번역 섹션 "미번역" 뱃지, shadcn/ui Checkbox indeterminate 상태 지원, 번역 프롬프트 HTML 태그 보호 규칙 강화
+
+## Admin — 완료 (2026-03-07)
 
 - [x] **GPT 프롬프트 중앙 집중화** — 각 feature 파일에 흩어져 있던 프롬프트를 `shared/constants/prompts.ts`로 통합 (5개: 요약, 슬러그, 용어추출, 번역, 카테고리번역)
 - [x] **GPT 모델 통일** — `gpt-5-nano` / `gpt-4.1-nano` -> `gpt-5-mini`로 전체 통일 (5곳)

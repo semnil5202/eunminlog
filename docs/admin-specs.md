@@ -2,7 +2,7 @@
 
 > Date: 2026-03-04
 > Last Updated: 2026-03-09
-> Status: Phase 1~5 완료 (에디터 + 폼 + 번역 + S3 업로드 + 저장/편집 + 이탈 방지 + 카테고리 관리 + 게시글 목록 + 빌드 트리거). GPT-5 Mini 모델 통일 + 프롬프트 중앙 집중화 (`shared/constants/prompts.ts`). 대분류 카테고리 다국어 지원 추가. 이미지 캐러셀 + 밑줄 기본 스타일 적용. 모바일 UX 개선 (Sheet 스와이프 닫기, 사이드바 자동 닫기, 반응형 크기 축소)
+> Status: Phase 1~5 완료 (에디터 + 폼 + 번역 + S3 업로드 + 저장/편집 + 이탈 방지 + 카테고리 관리 + 게시글 목록 + 빌드 트리거). GPT-5 Mini 모델 통일 + 프롬프트 중앙 집중화 (`shared/constants/prompts.ts`). 대분류 카테고리 다국어 지원 추가. 이미지 캐러셀 + 밑줄 기본 스타일 적용. 모바일 UX 개선 (Sheet 스와이프 닫기, 사이드바 자동 닫기, 반응형 크기 축소). 섹션 기반 번역 컨트롤 (선택적 재번역, 체크박스 시스템, content_sections 머지)
 
 ## 1. Overview
 
@@ -707,6 +707,8 @@ features/post-management/
 | 파일명    | UUID v4로 대체 (원본 파일명 사용 안 함) |
 | 키 구조   | `posts/{YYYY}/{MM}/{uuid}.webp`         |
 
+**캐시 전략**: `PutObjectCommand`에 `CacheControl: 'public, max-age=31536000, immutable'`을 설정하여 업로드 시 1년 캐시가 자동 적용된다. UUID 파일명을 사용하므로 내용 변경 시 URL이 바뀌어 장기 캐시가 안전하다. 상세는 [`secrets-reference.md`](secrets-reference.md) 섹션 12를 참조.
+
 #### CDN URL
 
 업로드 완료 후 이미지 접근 URL. CDN 도메인은 [`secrets-reference.md`](secrets-reference.md) 섹션 1-1을 참조.
@@ -757,6 +759,9 @@ features/media/
 | TR-6 | `is_multilingual === false`이면 번역 스킵                        | P0       |
 | TR-7 | 번역 재시도 (실패 시)                                            | P1       |
 | TR-8 | 개별 locale 번역 실행 (선택적 재번역)                            | P2       |
+| TR-9 | 섹션 기반 선택적 번역 — 본문 HTML을 top-level 블록 노드 단위로 분할, 체크된 필드/섹션만 GPT 요청 (output 토큰 비용 절감) | P0 |
+| TR-10 | 체크박스 시스템 — 전체 선택, 본문 부모 indeterminate, 개별 필드/섹션 체크 (`useTranslationCheckState` 훅) | P0 |
+| TR-11 | 선택적 번역 결과 머지 — `content_sections` 형식 응답을 기존 번역 content에 섹션별 교체 (`mergeSelectiveResult`) | P0 |
 
 #### GPT 번역 Flow (브라우저 직접 호출)
 
@@ -795,6 +800,7 @@ features/media/
 - **API Key**: 브라우저에서 직접 호출하므로 클라이언트에 노출되나, Admin은 인증된 관리자만 접근 가능하여 허용. 환경 변수 상세: [`secrets-reference.md` 섹션 1](secrets-reference.md).
 - **병렬 처리**: 7개 locale 번역을 `Promise.allSettled()`로 병렬 실행. 개별 locale 실패가 전체를 중단시키지 않음 (`TranslationResult.failed?: boolean`).
 - **번역 대상 필드**: title, description(3줄 요약), content, place_name, address. 주소(address)는 locale별 표기 방식 적용 (일본식, 중국식, 영어권 역순 등).
+- **선택적 번역**: 체크된 필드/섹션만 GPT에 전송하여 output 토큰 비용 절감. 본문은 `content_sections` 형식(인덱스+HTML 배열)으로 응답받아 기존 번역에 섹션별 머지. `html-sections.ts`의 `splitHtmlToSections()`, `reassembleSections()`, `compareSections()` 유틸리티 사용.
 - **번역 저장**: 번역 결과를 Server Action으로 `post_translations` 테이블에 upsert 예정 (미구현).
 
 #### 번역 프롬프트 전략
@@ -826,20 +832,25 @@ User: {title}\n---\n{description}\n---\n{content}\n---\nplace_name: {place_name}
 ```
 features/translation/
 ├── components/
-│   ├── TranslationPreviewSheet.tsx  # ✅ 번역 결과 미리보기 Sheet
+│   ├── TranslationSheet.tsx         # ✅ 번역 확인 Sheet (섹션 기반 체크박스, dirty tracking, 선택적 재번역)
 │   ├── TermReviewList.tsx           # ✅ 고유명사 검토 리스트
 │   └── TermReviewItem.tsx           # ✅ 고유명사 검토 아이템
 ├── containers/
 │   └── TranslationSheetContainer.tsx # ✅ 고유명사 추출 → 번역 실행 통합 컨테이너
+├── hooks/
+│   ├── useTranslationDirtyFields.ts  # ✅ 번역 시점 vs 현재 폼 값 비교 훅
+│   └── useTranslationCheckState.ts   # ✅ 필드+섹션 체크박스 상태 관리 훅
 ├── api/
-│   └── client.ts                    # ✅ 브라우저 직접 GPT 호출 (fetchExtractTerms, fetchTranslatePost, fetchRetrySingleLocale)
+│   └── client.ts                    # ✅ 브라우저 직접 GPT 호출 (fetchExtractTerms, fetchTranslatePost, fetchRetrySingleLocale, 선택적 번역 content_sections 파싱/머지)
+├── lib/
+│   └── html-sections.ts            # ✅ HTML 섹션 분할(splitHtmlToSections), 재조립(reassembleSections), dirty 비교(compareSections)
 ├── types/
-│   └── index.ts                     # ✅ FlaggedTerm, TranslationResult (failed?: boolean) 타입
+│   └── index.ts                     # ✅ FlaggedTerm, TranslationResult, ContentSection, CheckableField, SelectiveTranslateOptions 타입
 └── constants/
     └── locale.ts                    # ✅ 번역 대상 locale 설정
 ```
 
-> **현재 구현 상태**: GPT-5 Mini API 실제 연동 완료 (mock 제거). 고유명사 추출 + 번역 실행 + 미리보기 Sheet + 실패 fallback + locale별 재시도까지 구현 완료. 번역 결과 DB 저장(post_translations UPSERT)은 미구현. 에디터 페이지(`/posts/new`)에서 직접 연동하여 사용.
+> **현재 구현 상태**: GPT-5 Mini API 실제 연동 완료 (mock 제거). 고유명사 추출 + 번역 실행 + 섹션 기반 선택적 재번역 + 실패 fallback + locale별 재시도까지 구현 완료. 번역 결과 DB 저장(post_translations UPSERT)은 미구현. 에디터 페이지(`/posts/new`, `/posts/[id]/edit`)에서 직접 연동하여 사용.
 
 #### 번역 Sheet UX (구현 완료)
 
@@ -852,16 +863,20 @@ features/translation/
 - Sheet가 닫힐 때 상태 초기화 (`reviewing`, confirmedTerms 리셋)
 - Sheet 스와이프 닫기: side="right" Sheet는 좌→우 스와이프, 30% threshold 초과 시 닫기 (드래그 중 실시간 translateX + overlay opacity 연동)
 
-**TranslationPreviewSheet (번역 결과 확인)**:
+**TranslationSheet (번역 결과 확인 + 섹션 기반 선택적 재번역)**:
 
 - 언어 필터 탭: 한국어 | 영어 | 일본어 | 중국어 | 대만어 | 인도네시아어 | 베트남어 | 태국어 (8개)
 - 기본 선택값: 영어 (`en`)
-- 한국어 탭: 원문 (title, place_name, address, content) 표시
-- 다국어 탭: 번역 결과 (title, place_name, address, content) 표시
+- 한국어 탭: 원문 (title, place_name, address, content) 표시. 본문은 섹션 단위로 렌더링
+- 다국어 탭: 번역 결과 표시. 한국어 원문 섹션 구조를 기준으로 렌더링. 미번역 섹션에 "미번역" 뱃지 표시
 - 번역 데이터 없는 locale: "번역 데이터가 없습니다." 표시
-- 실패 locale: "다시 시도" 버튼 표시 (`onRetryLocale` 콜백 → `retrySingleLocale` Server Action)
+- 실패 locale: "다시 시도" 버튼 표시 (`onRetryLocale` 콜백 → `retrySingleLocale`)
+- **체크박스 시스템**: 전체 선택 체크박스, 필드별 체크박스 (title, description, place_name, address), 본문 부모 체크박스 (indeterminate 상태 지원), 개별 섹션 체크박스. `useTranslationCheckState` 훅으로 상태 관리
+- **선택적 재번역**: 체크된 필드/섹션만 GPT에 요청 → `content_sections` 형식 응답 → 기존 번역에 머지 (`mergeSelectiveResult` 헬퍼)
+- **섹션 분할**: `html-sections.ts`의 `splitHtmlToSections()`로 본문 HTML을 top-level 블록 노드(h2, p, img, ul 등) 단위로 분할. DOMParser 기반
 - UI 스타일: Sheet title `text-lg`, description `text-base`, 필터 탭 `text-sm`, 필드 label `text-sm font-semibold text-muted-foreground`, 제목 `text-lg font-bold`, 본문 `prose prose-sm`
 - Sheet 너비: `w-full sm:max-w-[688px]`
+- shadcn/ui Checkbox: indeterminate 상태 지원 (`data-state="indeterminate"`)
 
 **GPT API 실패 fallback 처리**:
 
@@ -1392,16 +1407,20 @@ apps/admin/
     │   │       └── CategoryListContainer.tsx  # 테이블 + 검색 필터 통합
     │   └── translation/             # 번역 feature
     │       ├── components/
-    │       │   ├── TranslationPreviewSheet.tsx  # 번역 결과 미리보기 Sheet
-    │       │   ├── TranslationEditSheet.tsx     # 번역 결과 편집 Sheet
-    │       │   ├── TermReviewList.tsx           # 고유명사 검토 리스트
-    │       │   └── TermReviewItem.tsx           # 고유명사 검토 아이템
+    │       │   ├── TranslationSheet.tsx    # 번역 확인 Sheet (섹션 기반 체크박스, dirty tracking, 선택적 재번역)
+    │       │   ├── TermReviewList.tsx      # 고유명사 검토 리스트
+    │       │   └── TermReviewItem.tsx      # 고유명사 검토 아이템
     │       ├── containers/
     │       │   └── TranslationSheetContainer.tsx # 고유명사 추출 → 번역 실행 통합 컨테이너
+    │       ├── hooks/
+    │       │   ├── useTranslationDirtyFields.ts  # 번역 시점 vs 현재 폼 값 비교 훅
+    │       │   └── useTranslationCheckState.ts   # 필드+섹션 체크박스 상태 관리 훅
     │       ├── api/
-    │       │   └── client.ts        # 브라우저 직접 GPT 호출 (fetchExtractTerms, fetchTranslatePost, fetchRetrySingleLocale)
+    │       │   └── client.ts        # 브라우저 직접 GPT 호출 (전체/선택적 번역, content_sections 파싱/머지)
+    │       ├── lib/
+    │       │   └── html-sections.ts # HTML 섹션 분할/재조립/dirty 비교 유틸리티
     │       ├── types/
-    │       │   └── index.ts         # FlaggedTerm, TranslationResult 타입
+    │       │   └── index.ts         # FlaggedTerm, TranslationResult, ContentSection, CheckableField, SelectiveTranslateOptions 타입
     │       └── constants/
     │           └── locale.ts        # 번역 대상 locale 설정
     ├── components/ui/               # shadcn/ui 생성 컴포넌트

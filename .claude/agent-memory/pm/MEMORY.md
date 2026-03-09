@@ -35,9 +35,11 @@
 - Global UI pattern: Layout.astro contains 1x Toast + 1x ImageLightbox + 1x CookieConsentBanner (shared/components/ui/ + features/consent/)
 - Logo text: `SITE_NAME_KO`("은민로그") for ko, `SITE_NAME_EN`("eunminlog") for others (packages/config/site.ts)
 
-## Admin Phase Status (as of 2026-03-07)
+## Admin Phase Status (as of 2026-03-09)
 
 - All phases (1~5) completed. DB migrations M-01~M-10 all applied.
+- Section-based selective translation: html-sections.ts (split/reassemble/compare), useTranslationCheckState hook, content_sections GPT response merge, checkbox indeterminate support (2026-03-09)
+- TranslationPreviewSheet + TranslationEditSheet → TranslationSheet 통합 (섹션 기반 UI 리팩토링)
 - Summary prompt updated: spacing + complete sentence rules (2026-03-07)
 - Underline: browser default `<u>` style (custom removed)
 - Image carousel: Admin `data-type="image-carousel"` → Client PostLayout JS transforms to carousel
