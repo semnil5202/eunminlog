@@ -277,5 +277,11 @@ export async function deletePosts(ids: string[]) {
 
   if (error) throw new Error(`게시글 삭제 실패: ${error.message}`);
 
+  try {
+    await triggerClientBuild();
+  } catch {
+    // silent: 빌드 트리거 실패는 삭제 결과에 영향을 주지 않음
+  }
+
   return { success: true, deletedCount: count ?? 0 };
 }
