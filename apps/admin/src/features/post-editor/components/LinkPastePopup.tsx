@@ -79,13 +79,13 @@ export function LinkPastePopup({ editor, url, position, onClose }: LinkPastePopu
   return (
     <div
       ref={popupRef}
-      className="absolute z-50 flex items-center gap-1.5 rounded-lg border bg-background px-2 py-1.5 shadow-md"
+      className="absolute z-50 flex flex-col overflow-hidden rounded-lg border bg-white shadow-md"
       style={{ top: position.top, left: position.left }}
     >
       <button
         type="button"
         onClick={handleLink}
-        className="cursor-pointer rounded px-2.5 py-1 text-xs font-medium hover:bg-accent"
+        className="cursor-pointer px-4 py-2 text-xs font-semibold text-primary-600 transition-colors hover:bg-primary-50"
       >
         링크 유지
       </button>
@@ -93,7 +93,7 @@ export function LinkPastePopup({ editor, url, position, onClose }: LinkPastePopu
         type="button"
         onClick={handleBookmark}
         disabled={isLoading}
-        className="cursor-pointer rounded bg-primary-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
+        className="cursor-pointer px-4 py-2 text-xs font-semibold text-primary-600 transition-colors hover:bg-primary-50 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {isLoading ? '로딩...' : '북마크로 변환'}
       </button>
