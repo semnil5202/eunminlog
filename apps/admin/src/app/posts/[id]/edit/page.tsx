@@ -817,7 +817,11 @@ function EditPostForm({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>취소</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmSubmit} disabled={isSubmitting}>
+            <AlertDialogAction
+              onClick={handleConfirmSubmit}
+              onSelect={(e) => e.preventDefault()}
+              disabled={isSubmitting}
+            >
               {isSubmitting ? '수정 중...' : '확인'}
             </AlertDialogAction>
           </AlertDialogFooter>

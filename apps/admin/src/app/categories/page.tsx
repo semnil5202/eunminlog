@@ -378,7 +378,7 @@ function CategoriesContent() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>취소</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" onClick={handleDelete} disabled={isDeleting}>
+            <AlertDialogAction variant="destructive" onClick={handleDelete} onSelect={(e) => e.preventDefault()} disabled={isDeleting}>
               {isDeleting ? '삭제 중...' : '삭제'}
             </AlertDialogAction>
           </AlertDialogFooter>

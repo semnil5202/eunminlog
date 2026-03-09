@@ -182,7 +182,7 @@ function ParentCategoryEdit({ data }: { data: CategoryData }) {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>취소</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirm} disabled={isSaving}>
+            <AlertDialogAction onClick={handleConfirm} onSelect={(e) => e.preventDefault()} disabled={isSaving}>
               {isSaving ? '수정 중...' : '확인'}
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -199,7 +199,7 @@ function ParentCategoryEdit({ data }: { data: CategoryData }) {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>취소</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirm} disabled={isSaving}>
+            <AlertDialogAction onClick={handleConfirm} onSelect={(e) => e.preventDefault()} disabled={isSaving}>
               {isSaving ? '수정 중...' : '확인'}
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -341,7 +341,7 @@ function ChildCategoryEdit({ data }: { data: CategoryData }) {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>취소</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirm} disabled={isSaving}>
+            <AlertDialogAction onClick={handleConfirm} onSelect={(e) => e.preventDefault()} disabled={isSaving}>
               {isSaving ? '수정 중...' : '확인'}
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -358,7 +358,7 @@ function ChildCategoryEdit({ data }: { data: CategoryData }) {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>취소</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirm} disabled={isSaving}>
+            <AlertDialogAction onClick={handleConfirm} onSelect={(e) => e.preventDefault()} disabled={isSaving}>
               {isSaving ? '수정 중...' : '확인'}
             </AlertDialogAction>
           </AlertDialogFooter>
