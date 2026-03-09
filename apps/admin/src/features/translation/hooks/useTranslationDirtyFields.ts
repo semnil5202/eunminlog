@@ -60,9 +60,11 @@ export function useTranslationDirtyFields(
     if (currentValues.purchaseSource !== referenceValues.purchaseSource)
       dirty.add('purchase_source');
     if (currentValues.pricePrefix !== referenceValues.pricePrefix) dirty.add('price_prefix');
+    const currentAltsText = currentValues.imageAlts.map((a) => a.alt).join('\n');
+    const referenceAltsText = referenceValues.imageAlts.map((a) => a.alt).join('\n');
     if (
       currentValues.thumbnailAlt !== referenceValues.thumbnailAlt ||
-      JSON.stringify(currentValues.imageAlts) !== JSON.stringify(referenceValues.imageAlts)
+      currentAltsText !== referenceAltsText
     ) {
       dirty.add('image_alts');
     }
