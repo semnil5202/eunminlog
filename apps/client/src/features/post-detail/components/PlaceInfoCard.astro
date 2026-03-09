@@ -38,8 +38,9 @@ const priceValue = price && price.length > 0 ? price[0] : null;
 const rawPrefix = Array.isArray(pricePrefix) ? (pricePrefix[0] ?? '') : (pricePrefix ?? '');
 const translatedPrefix = Array.isArray(translatedPricePrefix) ? (translatedPricePrefix[0] ?? '') : (translatedPricePrefix ?? '');
 const pricePrefixValue = translatedPrefix || rawPrefix;
+const priceUnit = t("place.priceUnit", locale);
 const priceLabel = priceValue != null
-  ? `${pricePrefixValue}${priceValue.toLocaleString()}`
+  ? `${pricePrefixValue}${priceValue.toLocaleString()}${priceUnit}`
   : null;
 const mapUrl = locale === 'ko'
   ? `https://map.naver.com/v5/search/${encodeURIComponent(placeName)}`
