@@ -10,7 +10,6 @@ import type { LocalizedPost } from "@/shared/types/post";
 import { getPaginatedMultilingualPosts, getMultilingualSponsoredPosts } from "@/features/post-feed/api/posts";
 import { getLocalizedPost } from "@/features/post-feed/api/translations";
 import { t } from "@/shared/lib/i18n/translations";
-import { SITE_NAME_KO, SITE_NAME_EN } from "@eunminlog/config/site";
 
 export const getStaticPaths = async () => {
   const nonDefaultLocales = LOCALES.filter((l) => l !== DEFAULT_LOCALE);
@@ -42,15 +41,11 @@ const path = "/";
 
 const homeLabel = t("nav.home", locale);
 const breadcrumbItems = [{ name: homeLabel, url: "/" }];
-
-const pageTitle = `${homeLabel} - ${SITE_NAME_EN}`;
-const SITE_DESCRIPTION =
-  `${SITE_NAME_KO} — 커플이 함께 다녀온 맛집, 카페, 여행지를 솔직하게 리뷰합니다.`;
 ---
 
 <ListLayout
-  title={pageTitle}
-  description={SITE_DESCRIPTION}
+  title={t("meta.homeTitle", locale)}
+  description={t("meta.homeDescription", locale)}
   canonical={canonical}
   path={path}
   locale={locale}

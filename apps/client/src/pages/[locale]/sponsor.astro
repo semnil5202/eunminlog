@@ -3,10 +3,11 @@
 
 import Layout from "@/layouts/Layout.astro";
 import JsonLd from "@/shared/components/seo/JsonLd.astro";
-import { SITE_NAME_EN, SITE_URL } from "@eunminlog/config/site";
+import { SITE_URL } from "@eunminlog/config/site";
 import { LOCALES, DEFAULT_LOCALE } from "@/shared/types/common";
 import type { Locale } from "@/shared/types/common";
 import { getSponsorContent, buildMailtoHref } from "@/features/sponsor/content";
+import { t } from "@/shared/lib/i18n/translations";
 
 export const getStaticPaths = async () => {
   const nonDefaultLocales = LOCALES.filter((l) => l !== DEFAULT_LOCALE);
@@ -38,8 +39,8 @@ const jsonLd = {
 ---
 
 <Layout
-  title={`${sponsor.meta.title} - ${SITE_NAME_EN}`}
-  description={sponsor.meta.description}
+  title={`${t("meta.sponsorTitle", locale)} | ${t("meta.siteName", locale)}`}
+  description={t("meta.sponsorDescription", locale)}
   canonical={canonical}
   path="/sponsor/"
   locale={locale}

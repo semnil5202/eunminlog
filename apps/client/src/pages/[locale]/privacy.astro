@@ -2,10 +2,10 @@
 /** 다국어 개인정보처리방침 (/{locale}/privacy/) */
 
 import Layout from "@/layouts/Layout.astro";
-import { SITE_NAME_EN } from "@eunminlog/config/site";
 import { LOCALES, DEFAULT_LOCALE } from "@/shared/types/common";
 import type { Locale } from "@/shared/types/common";
 import { getPrivacyContent } from "@/features/privacy/content";
+import { t } from "@/shared/lib/i18n/translations";
 
 export const getStaticPaths = async () => {
   const nonDefaultLocales = LOCALES.filter((l) => l !== DEFAULT_LOCALE);
@@ -26,7 +26,7 @@ const canonical = `/${locale}/privacy/`;
 ---
 
 <Layout
-  title={`${privacy.title} - ${SITE_NAME_EN}`}
+  title={`${privacy.title} | ${t("meta.siteName", locale)}`}
   description={privacy.intro}
   canonical={canonical}
   path="/privacy/"

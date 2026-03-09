@@ -10,7 +10,6 @@ import type { LocalizedPost } from "@/shared/types/post";
 import { getMultilingualPosts, getMultilingualSponsoredPosts } from "@/features/post-feed/api/posts";
 import { getLocalizedPost } from "@/features/post-feed/api/translations";
 import { t } from "@/shared/lib/i18n/translations";
-import { SITE_NAME_KO, SITE_NAME_EN } from "@eunminlog/config/site";
 
 export const getStaticPaths = async () => {
   const nonDefaultLocales = LOCALES.filter((l) => l !== DEFAULT_LOCALE);
@@ -48,13 +47,11 @@ const noResultsHintText = t("search.noResultsHint", locale);
 const resultsText = t("search.results", locale);
 const suggestedText = t("search.suggested", locale);
 const sponsoredLabel = t("post.sponsored", locale);
-const navSearch = t("nav.search", locale);
-const pageTitle = `${navSearch} - ${SITE_NAME_EN}`;
 ---
 
 <ListLayout
-  title={pageTitle}
-  description={`${SITE_NAME_KO} 검색 — 맛집, 카페, 여행 게시글을 검색합니다.`}
+  title={`${t("meta.searchTitle", locale)} | ${t("meta.siteName", locale)}`}
+  description={t("meta.searchDescription", locale)}
   canonical={canonical}
   path={path}
   locale={locale}

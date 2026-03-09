@@ -18,7 +18,6 @@ import { getLocalizedPost } from "@/features/post-feed/api/translations";
 import { getCategoryLabel, getSubCategoryLabel } from "@/shared/lib/i18n/categories";
 import { t } from "@/shared/lib/i18n/translations";
 import SubCategoryTabs from "@/shared/components/navigation/SubCategoryTabs.astro";
-import { SITE_NAME_KO, SITE_NAME_EN } from "@eunminlog/config/site";
 
 export const getStaticPaths = async () => {
   const nonDefaultLocales = LOCALES.filter((l) => l !== DEFAULT_LOCALE);
@@ -74,8 +73,10 @@ const breadcrumbItems = [
   { name: subCategoryLabel, url: `/${category}/${sub_category}/` },
 ];
 
-const pageTitle = `${subCategoryLabel} - ${categoryLabel} - ${SITE_NAME_EN}`;
-const pageDescription = `${SITE_NAME_KO} ${categoryLabel} > ${subCategoryLabel} — 커플이 직접 다녀온 ${subCategoryLabel} 장소 리뷰 모음.`;
+const pageTitle = `${subCategoryLabel} ${categoryLabel} 리뷰 모음 | ${t("meta.siteName", locale)}`;
+const pageDescription = t("meta.subCategoryDescription", locale)
+  .replaceAll("{0}", categoryLabel)
+  .replaceAll("{1}", subCategoryLabel);
 ---
 
 <ListLayout

@@ -3,9 +3,10 @@
 
 import Layout from "@/layouts/Layout.astro";
 import JsonLd from "@/shared/components/seo/JsonLd.astro";
-import { SITE_NAME_KO, SITE_URL } from "@eunminlog/config/site";
+import { SITE_URL } from "@eunminlog/config/site";
 import { DEFAULT_LOCALE } from "@/shared/types/common";
 import { getSponsorContent, buildMailtoHref } from "@/features/sponsor/content";
+import { t } from "@/shared/lib/i18n/translations";
 
 const locale = DEFAULT_LOCALE;
 const sponsor = getSponsorContent(locale);
@@ -22,8 +23,8 @@ const jsonLd = {
 ---
 
 <Layout
-  title={`${sponsor.meta.title} - ${SITE_NAME_KO}`}
-  description={sponsor.meta.description}
+  title={`${t("meta.sponsorTitle", locale)} | ${t("meta.siteName", locale)}`}
+  description={t("meta.sponsorDescription", locale)}
   canonical="/sponsor/"
   path="/sponsor/"
   locale={locale}

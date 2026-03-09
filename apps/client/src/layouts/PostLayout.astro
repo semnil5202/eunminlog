@@ -82,7 +82,7 @@ const gaPageParams = {
 ---
 
 <Layout
-  title={post.title}
+  title={`${post.title} | ${t("meta.siteName", locale)}`}
   description={post.description}
   canonical={canonical}
   path={path}

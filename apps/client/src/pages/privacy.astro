@@ -2,16 +2,16 @@
 /** 한국어 개인정보처리방침 (/privacy/) */
 
 import Layout from "@/layouts/Layout.astro";
-import { SITE_NAME_KO } from "@eunminlog/config/site";
 import { DEFAULT_LOCALE } from "@/shared/types/common";
 import { getPrivacyContent } from "@/features/privacy/content";
+import { t } from "@/shared/lib/i18n/translations";
 
 const locale = DEFAULT_LOCALE;
 const privacy = getPrivacyContent(locale);
 ---
 
 <Layout
-  title={`${privacy.title} - ${SITE_NAME_KO}`}
+  title={`${privacy.title} | ${t("meta.siteName", locale)}`}
   description={privacy.intro}
   canonical="/privacy/"
   path="/privacy/"

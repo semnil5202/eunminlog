@@ -8,7 +8,6 @@ import { DEFAULT_LOCALE } from "@/shared/types/common";
 import type { LocalizedPost } from "@/shared/types/post";
 import { getPaginatedPosts, getSponsoredPosts } from "@/features/post-feed/api/posts";
 import { t } from "@/shared/lib/i18n/translations";
-import { SITE_NAME_KO } from "@eunminlog/config/site";
 
 const locale = DEFAULT_LOCALE;
 
@@ -21,14 +20,11 @@ const posts: LocalizedPost[] = rawPosts.map((p) => ({ ...p, translated_place_nam
 const sponsoredLocalized: LocalizedPost[] = sponsored.map((p) => ({ ...p, translated_place_name: null, translated_address: null, translated_product_name: null, translated_purchase_source: null, translated_price_prefix: null, locale }));
 
 const breadcrumbItems = [{ name: "홈", url: "/" }];
-
-const SITE_DESCRIPTION =
-  `${SITE_NAME_KO} — 커플이 함께 다녀온 맛집, 카페, 여행지를 솔직하게 리뷰합니다.`;
 ---
 
 <ListLayout
-  title={`${SITE_NAME_KO} - 맛집, 카페, 여행 커플 블로그`}
-  description={SITE_DESCRIPTION}
+  title={t("meta.homeTitle", locale)}
+  description={t("meta.homeDescription", locale)}
   canonical="/"
   path="/"
   locale={locale}
