@@ -21,9 +21,9 @@ export type Post = {
   address: string;
   price_prefix: string | null;
   price: number | null;
-  product_name: string;
-  purchase_source: string;
-  purchase_link: string;
+  product_name: string[] | null;
+  purchase_source: string[] | null;
+  purchase_link: string[] | null;
   image_alts: ImageAlt[];
   created_at: string;
   updated_at: string;
@@ -38,8 +38,8 @@ export type PostTranslation = {
   content: string;
   place_name: string | null;
   address: string | null;
-  product_name: string | null;
-  purchase_source: string | null;
+  product_name: string[] | null;
+  purchase_source: string[] | null;
   price_prefix: string | null;
   thumbnail_alt: string | null;
   image_alts: ImageAlt[];
@@ -54,8 +54,8 @@ export type LocalizedPost = {
   locale: Locale;
   translated_place_name: string | null;
   translated_address: string | null;
-  translated_product_name: string | null;
-  translated_purchase_source: string | null;
+  translated_product_name: string[] | null;
+  translated_purchase_source: string[] | null;
   translated_price_prefix: string | null;
   image_alts: ImageAlt[];
 } & Omit<Post, 'title' | 'description' | 'content' | 'image_alts'>;

@@ -7,11 +7,11 @@ import { t } from "@/shared/lib/i18n/translations";
 interface Props {
   categoryLabel: string;
   subCategoryLabel: string;
-  productName: string;
-  translatedProductName?: string | null;
-  purchaseSource: string;
-  translatedPurchaseSource?: string | null;
-  purchaseLink: string;
+  productNames: string[] | null;
+  translatedProductNames?: string[] | null;
+  purchaseSources: string[] | null;
+  translatedPurchaseSources?: string[] | null;
+  purchaseLinks: string[] | null;
   pricePrefix?: string | null;
   translatedPricePrefix?: string | null;
   price: number | null;
@@ -22,11 +22,11 @@ interface Props {
 const {
   categoryLabel,
   subCategoryLabel,
-  productName,
-  translatedProductName,
-  purchaseSource,
-  translatedPurchaseSource,
-  purchaseLink,
+  productNames,
+  translatedProductNames,
+  purchaseSources,
+  translatedPurchaseSources,
+  purchaseLinks,
   pricePrefix,
   translatedPricePrefix,
   price,
@@ -36,7 +36,6 @@ const {
 
 const currencyUnit = t("place.currency", locale);
 const displayPricePrefix = translatedPricePrefix ?? pricePrefix;
-const displayPurchaseSource = translatedPurchaseSource ?? purchaseSource;
 const priceLabel = price != null
   ? `${displayPricePrefix ?? ''}${price.toLocaleString()}${currencyUnit}`
   : null;
@@ -47,6 +46,15 @@ const exchangeUrl = price != null && targetCurrency
 
 const summaryLabel = t("post.summary", locale);
 const summaryLines = description ? description.split('\n').filter(Boolean) : [];
+
+const displayProductNames = translatedProductNames ?? productNames;
+const displayPurchaseSources = translatedPurchaseSources ?? purchaseSources;
+
+const products = (displayProductNames ?? []).map((name, i) => ({
+  name,
+  source: displayPurchaseSources?.[i] ?? '',
+  link: purchaseLinks?.[i] ?? '',
+}));
 ---
 
 <div
@@ -59,36 +67,40 @@ const summaryLines = description ? description.split('\n').filter(Boolean) : [];
       <dt class="shrink-0 w-20 text-gray-500 font-medium">{t("place.category", locale)}</dt>
       <dd class="text-gray-900">{categoryLabel} <span class="text-base leading-none">›</span> {subCategoryLabel}</dd>
     </div>
-    <div class="flex items-baseline gap-3">
-      <dt class="shrink-0 w-20 text-gray-500 font-medium">{t("product.name", locale)}</dt>
-      <dd class="text-gray-900 font-semibold" itemprop="name">
-        {translatedProductName ?? productName}
-      </dd>
-    </div>
-    {purchaseSource && (
-      <div class="flex items-baseline gap-3">
-        <dt class="shrink-0 w-20 text-gray-500 font-medium">{t("product.source", locale)}</dt>
-        <dd class="flex items-baseline gap-1.5">
-          <span class="text-gray-900">{displayPurchaseSource}</span>
-          {purchaseLink && (
-            <a
-              href={purchaseLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              class="shrink-0 translate-y-px text-gray-400 hover:text-gray-600 transition-colors"
-              aria-label={purchaseSource}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <title>{purchaseSource}</title>
-                <desc>{purchaseSource}</desc>
-                <path d="M7 7h10v10"></path>
-                <path d="M7 17 17 7"></path>
-              </svg>
-            </a>
-          )}
-        </dd>
+    {products.map((product) => (
+      <div class="space-y-1.5">
+        <div class="flex items-baseline gap-3">
+          <dt class="shrink-0 w-20 text-gray-500 font-medium">{t("product.name", locale)}</dt>
+          <dd class="text-gray-900 font-semibold" itemprop="name">
+            {product.name}
+          </dd>
+        </div>
+        {product.source && (
+          <div class="flex items-baseline gap-3">
+            <dt class="shrink-0 w-20 text-gray-500 font-medium">{t("product.source", locale)}</dt>
+            <dd class="flex items-baseline gap-1.5">
+              <span class="text-gray-900">{product.source}</span>
+              {product.link && (
+                <a
+                  href={product.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="shrink-0 translate-y-px text-gray-400 hover:text-gray-600 transition-colors"
+                  aria-label={product.source}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <title>{product.source}</title>
+                    <desc>{product.source}</desc>
+                    <path d="M7 7h10v10"></path>
+                    <path d="M7 17 17 7"></path>
+                  </svg>
+                </a>
+              )}
+            </dd>
+          </div>
+        )}
       </div>
-    )}
+    ))}
     {priceLabel && (
       <div class="flex items-baseline gap-3">
         <dt class="shrink-0 w-20 text-gray-500 font-medium">{t("place.price", locale)}</dt>

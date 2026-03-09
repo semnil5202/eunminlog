@@ -174,15 +174,15 @@ const gaPageParams = {
             />
           )}
 
-          {!post.place_name && post.product_name && (
+          {!post.place_name && post.product_name && post.product_name.length > 0 && (
             <ProductInfoCard
               categoryLabel={categoryLabel}
               subCategoryLabel={subCategoryLabel}
-              productName={post.product_name}
-              translatedProductName={post.translated_product_name}
-              purchaseSource={post.purchase_source}
-              translatedPurchaseSource={post.translated_purchase_source}
-              purchaseLink={post.purchase_link}
+              productNames={post.product_name}
+              translatedProductNames={post.translated_product_name}
+              purchaseSources={post.purchase_source}
+              translatedPurchaseSources={post.translated_purchase_source}
+              purchaseLinks={post.purchase_link}
               pricePrefix={post.price_prefix}
               translatedPricePrefix={post.translated_price_prefix}
               price={post.price}

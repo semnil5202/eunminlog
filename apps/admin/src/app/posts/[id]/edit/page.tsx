@@ -78,9 +78,9 @@ export default function EditPostPage() {
       address: string | null;
       price_prefix: string | null;
       price: number | null;
-      product_name: string | null;
-      purchase_source: string | null;
-      purchase_link: string | null;
+      product_name: string[] | null;
+      purchase_source: string[] | null;
+      purchase_link: string[] | null;
     };
     translations: TranslationResult[];
     imageAlts?: ImageAlt[];
@@ -141,9 +141,9 @@ function EditPostForm({
       address: string | null;
       price_prefix: string | null;
       price: number | null;
-      product_name: string | null;
-      purchase_source: string | null;
-      purchase_link: string | null;
+      product_name: string[] | null;
+      purchase_source: string[] | null;
+      purchase_link: string[] | null;
     };
     translations: TranslationResult[];
     imageAlts?: ImageAlt[];
@@ -156,7 +156,7 @@ function EditPostForm({
 
   const initialValues = useMemo<PostFormValues>(
     () => ({
-      formType: (post.product_name ? 'product-review' : 'visit') as PostFormType,
+      formType: (post.product_name && post.product_name.length > 0 ? 'product-review' : 'visit') as PostFormType,
       title: post.title,
       content: post.content,
       category: post.category,
@@ -169,9 +169,13 @@ function EditPostForm({
       address: post.address ?? '',
       pricePrefix: post.price_prefix ?? '',
       price: post.price != null ? String(post.price) : '',
-      productName: post.product_name ?? '',
-      purchaseSource: post.purchase_source ?? '',
-      purchaseLink: post.purchase_link ?? '',
+      products: post.product_name && post.product_name.length > 0
+        ? post.product_name.map((name, i) => ({
+            name,
+            source: post.purchase_source?.[i] ?? '',
+            link: post.purchase_link?.[i] ?? '',
+          }))
+        : [{ name: '', source: '', link: '' }],
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- post data only changes when id changes
     [postId],
@@ -235,7 +239,17 @@ function EditPostForm({
     if (!draftParam) return;
 
     fetchDraft(draftParam).then((draft) => {
-      reset(draft.form_data);
+      const formData = draft.form_data as PostFormValues & {
+        productName?: string;
+        purchaseSource?: string;
+        purchaseLink?: string;
+      };
+      if (!formData.products) {
+        formData.products = formData.productName
+          ? [{ name: formData.productName, source: formData.purchaseSource ?? '', link: formData.purchaseLink ?? '' }]
+          : [{ name: '', source: '', link: '' }];
+      }
+      reset(formData);
       loadDraftId(draft.id);
       if (draft.translation_data) {
         setTranslationResults(draft.translation_data.results);
@@ -256,12 +270,14 @@ function EditPostForm({
   const watchedAddress = watch('address');
   const watchedPricePrefix = watch('pricePrefix');
   const watchedPrice = watch('price');
-  const watchedProductName = watch('productName');
-  const watchedPurchaseSource = watch('purchaseSource');
+  const watchedProducts = watch('products');
   const watchedThumbnailAlt = watch('thumbnailAlt');
+
+  const currentValidProducts = watchedProducts.filter((p) => p.name.trim());
 
   const isMultilingual = post.is_multilingual;
 
+  const initialValidProducts = initialValues.products.filter((p) => p.name.trim());
   const dirtyTranslationFields = useTranslationDirtyFields(
     {
       title: initialValues.title,
@@ -269,8 +285,8 @@ function EditPostForm({
       description: initialValues.description,
       placeName: initialValues.placeName,
       address: initialValues.address,
-      productName: initialValues.productName,
-      purchaseSource: initialValues.purchaseSource,
+      productNames: initialValidProducts.map((p) => p.name),
+      purchaseSources: initialValidProducts.map((p) => p.source),
       pricePrefix: initialValues.pricePrefix,
       imageAlts: postData.imageAlts ?? [],
       thumbnailAlt: initialValues.thumbnailAlt,
@@ -281,8 +297,8 @@ function EditPostForm({
       description,
       placeName: watchedPlaceName,
       address: watchedAddress,
-      productName: watchedProductName,
-      purchaseSource: watchedPurchaseSource,
+      productNames: currentValidProducts.map((p) => p.name),
+      purchaseSources: currentValidProducts.map((p) => p.source),
       pricePrefix: watchedPricePrefix,
       imageAlts,
       thumbnailAlt: watchedThumbnailAlt,
@@ -311,8 +327,6 @@ function EditPostForm({
       'address',
       'price',
       'description',
-      'productName',
-      'purchaseSource',
     ]);
 
     const checks: [keyof PostFormValues, boolean][] = [
@@ -334,8 +348,6 @@ function EditPostForm({
 
     if (formType === 'product-review') {
       checks.push(
-        ['productName', !values.productName.trim()],
-        ['purchaseSource', !values.purchaseSource.trim()],
         ['price', !values.price.trim()],
       );
     }
@@ -364,9 +376,7 @@ function EditPostForm({
     setValue('address', '');
     setValue('pricePrefix', '');
     setValue('price', '');
-    setValue('productName', '');
-    setValue('purchaseSource', '');
-    setValue('purchaseLink', '');
+    setValue('products', [{ name: '', source: '', link: '' }]);
   };
 
   const handleCategoryChange = (value: string) => {
@@ -399,14 +409,15 @@ function EditPostForm({
     const values = getValues();
     const { title: t, content: c, description: d, placeName: pn, address: addr } = values;
     const existingTranslation = translationResults.find((r) => r.locale === locale);
+    const validProds = values.products.filter((p) => p.name.trim());
     const result = await fetchRetrySingleLocale(locale, {
       title: t,
       content: c,
       description: d,
       placeName: pn || undefined,
       address: addr || undefined,
-      productName: values.productName || undefined,
-      purchaseSource: values.purchaseSource || undefined,
+      productNames: validProds.length > 0 ? validProds.map((p) => p.name) : undefined,
+      purchaseSources: validProds.length > 0 ? validProds.map((p) => p.source) : undefined,
       pricePrefix: values.pricePrefix || undefined,
       confirmedTerms: [],
       imageAlts: imageAlts.length > 0 ? imageAlts : undefined,
@@ -438,14 +449,15 @@ function EditPostForm({
   const handleRetryAll = async (signal?: AbortSignal) => {
     const values = getValues();
     const { title: t, content: c, description: d, placeName: pn, address: addr } = values;
+    const validProds = values.products.filter((p) => p.name.trim());
     const results = await fetchTranslatePost({
       title: t,
       content: c,
       description: d,
       placeName: pn || undefined,
       address: addr || undefined,
-      productName: values.productName || undefined,
-      purchaseSource: values.purchaseSource || undefined,
+      productNames: validProds.length > 0 ? validProds.map((p) => p.name) : undefined,
+      purchaseSources: validProds.length > 0 ? validProds.map((p) => p.source) : undefined,
       pricePrefix: values.pricePrefix || undefined,
       confirmedTerms: [],
       imageAlts: imageAlts.length > 0 ? imageAlts : undefined,
@@ -638,7 +650,7 @@ function EditPostForm({
           <VisitFields register={register} errors={errors} setValue={setValue} />
         )}
         {formType === 'product-review' && (
-          <ProductReviewFields register={register} setValue={setValue} />
+          <ProductReviewFields control={control} setValue={setValue} />
         )}
 
         <div className="mt-8">
@@ -762,8 +774,8 @@ function EditPostForm({
           originalDescription={description}
           originalPlaceName={watchedPlaceName || undefined}
           originalAddress={watchedAddress || undefined}
-          originalProductName={watchedProductName || undefined}
-          originalPurchaseSource={watchedPurchaseSource || undefined}
+          originalProductNames={currentValidProducts.map((p) => p.name).filter(Boolean)}
+          originalPurchaseSources={currentValidProducts.map((p) => p.source).filter(Boolean)}
           originalPricePrefix={watchedPricePrefix || undefined}
           originalImageAlts={imageAlts.length > 0 ? imageAlts : undefined}
           originalThumbnailAlt={watchedThumbnailAlt || undefined}

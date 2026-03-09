@@ -45,8 +45,8 @@ type TranslationSheetProps = {
   originalDescription?: string;
   originalPlaceName?: string;
   originalAddress?: string;
-  originalProductName?: string;
-  originalPurchaseSource?: string;
+  originalProductNames?: string[];
+  originalPurchaseSources?: string[];
   originalPricePrefix?: string;
   originalImageAlts?: ImageAlt[];
   originalThumbnailAlt?: string;
@@ -83,8 +83,8 @@ export function TranslationSheet({
   originalDescription,
   originalPlaceName,
   originalAddress,
-  originalProductName,
-  originalPurchaseSource,
+  originalProductNames,
+  originalPurchaseSources,
   originalPricePrefix,
   originalImageAlts,
   originalThumbnailAlt,
@@ -122,14 +122,14 @@ export function TranslationSheet({
     const fields: CheckableField[] = ['title'];
     if (originalPlaceName) fields.push('place_name');
     if (originalAddress) fields.push('address');
-    if (originalProductName) fields.push('product_name');
-    if (originalPurchaseSource) fields.push('purchase_source');
+    if (originalProductNames && originalProductNames.length > 0) fields.push('product_name');
+    if (originalPurchaseSources && originalPurchaseSources.length > 0) fields.push('purchase_source');
     if (originalPricePrefix) fields.push('price_prefix');
     if (originalDescription !== undefined) fields.push('description');
     if (originalThumbnailAlt || (originalImageAlts && originalImageAlts.length > 0))
       fields.push('image_alts');
     return fields;
-  }, [originalPlaceName, originalAddress, originalProductName, originalPurchaseSource, originalPricePrefix, originalDescription, originalThumbnailAlt, originalImageAlts]);
+  }, [originalPlaceName, originalAddress, originalProductNames, originalPurchaseSources, originalPricePrefix, originalDescription, originalThumbnailAlt, originalImageAlts]);
 
   const checkState = useTranslationCheckState(availableFields, originalSections.length);
 
@@ -360,22 +360,30 @@ export function TranslationSheet({
           <p className="mt-1 text-sm">{originalAddress}</p>
         </div>
       )}
-      {originalProductName && (
+      {originalProductNames && originalProductNames.length > 0 && (
         <div className="py-5">
           <div className="flex items-center gap-2">
             <label className="text-sm font-semibold text-muted-foreground">제품명</label>
             {dirtyFields.has('product_name') && <DirtyBadge />}
           </div>
-          <p className="mt-1 text-sm">{originalProductName}</p>
+          <ul className="mt-1 space-y-0.5 text-sm">
+            {originalProductNames.map((name, i) => (
+              <li key={i}>{originalProductNames.length > 1 ? `${i + 1}. ` : ''}{name}</li>
+            ))}
+          </ul>
         </div>
       )}
-      {originalPurchaseSource && (
+      {originalPurchaseSources && originalPurchaseSources.length > 0 && (
         <div className="py-5">
           <div className="flex items-center gap-2">
             <label className="text-sm font-semibold text-muted-foreground">구매처</label>
             {dirtyFields.has('purchase_source') && <DirtyBadge />}
           </div>
-          <p className="mt-1 text-sm">{originalPurchaseSource}</p>
+          <ul className="mt-1 space-y-0.5 text-sm">
+            {originalPurchaseSources.map((source, i) => (
+              <li key={i}>{originalPurchaseSources.length > 1 ? `${i + 1}. ` : ''}{source}</li>
+            ))}
+          </ul>
         </div>
       )}
       {originalPricePrefix && (
@@ -485,10 +493,26 @@ export function TranslationSheet({
           renderFieldRow('place_name', selectedTranslation.place_name)}
         {selectedTranslation.address &&
           renderFieldRow('address', selectedTranslation.address)}
-        {selectedTranslation.product_name &&
-          renderFieldRow('product_name', selectedTranslation.product_name)}
-        {selectedTranslation.purchase_source &&
-          renderFieldRow('purchase_source', selectedTranslation.purchase_source)}
+        {selectedTranslation.product_name.length > 0 &&
+          renderFieldRow('product_name', undefined, {
+            children: (
+              <ul className="mt-1 space-y-0.5 text-sm">
+                {selectedTranslation.product_name.map((name, i) => (
+                  <li key={i}>{selectedTranslation.product_name.length > 1 ? `${i + 1}. ` : ''}{name}</li>
+                ))}
+              </ul>
+            ),
+          })}
+        {selectedTranslation.purchase_source.length > 0 &&
+          renderFieldRow('purchase_source', undefined, {
+            children: (
+              <ul className="mt-1 space-y-0.5 text-sm">
+                {selectedTranslation.purchase_source.map((source, i) => (
+                  <li key={i}>{selectedTranslation.purchase_source.length > 1 ? `${i + 1}. ` : ''}{source}</li>
+                ))}
+              </ul>
+            ),
+          })}
         {selectedTranslation.price_prefix &&
           renderFieldRow('price_prefix', selectedTranslation.price_prefix)}
 

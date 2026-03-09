@@ -2,6 +2,12 @@ import { z } from 'zod';
 
 export const TITLE_MAX_LENGTH = 40;
 
+const productSchema = z.object({
+  name: z.string(),
+  source: z.string(),
+  link: z.string(),
+});
+
 export const postFormSchema = z
   .object({
     formType: z.enum(['visit', 'product-review']),
@@ -20,9 +26,7 @@ export const postFormSchema = z
     address: z.string(),
     pricePrefix: z.string(),
     price: z.string(),
-    productName: z.string(),
-    purchaseSource: z.string(),
-    purchaseLink: z.string(),
+    products: z.array(productSchema),
   })
   .superRefine((data, ctx) => {
     if (data.formType === 'visit') {
@@ -49,7 +53,5 @@ export const POST_FORM_DEFAULTS: PostFormValues = {
   address: '',
   pricePrefix: '',
   price: '',
-  productName: '',
-  purchaseSource: '',
-  purchaseLink: '',
+  products: [{ name: '', source: '', link: '' }],
 };

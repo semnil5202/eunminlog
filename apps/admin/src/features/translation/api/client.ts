@@ -86,8 +86,8 @@ export type TranslateParams = {
   description: string;
   placeName?: string;
   address?: string;
-  productName?: string;
-  purchaseSource?: string;
+  productNames?: string[];
+  purchaseSources?: string[];
   pricePrefix?: string;
   confirmedTerms: { original: string; confirmed: string }[];
   imageAlts?: ImageAlt[];
@@ -106,8 +106,8 @@ async function fetchTranslateSingle(
     description,
     placeName,
     address,
-    productName,
-    purchaseSource,
+    productNames,
+    purchaseSources,
     pricePrefix,
     confirmedTerms,
     imageAlts,
@@ -127,8 +127,12 @@ async function fetchTranslateSingle(
   let userPrompt = `제목: ${title}\n\n본문:\n${contentBody}\n\n3줄 요약:\n${description}`;
   if (placeName) userPrompt += `\n\n장소명: ${placeName}`;
   if (address) userPrompt += `\n주소: ${address}`;
-  if (productName) userPrompt += `\n\n제품명: ${productName}`;
-  if (purchaseSource) userPrompt += `\n구매처: ${purchaseSource}`;
+  if (productNames && productNames.length > 0) {
+    userPrompt += `\n\n제품명:\n${productNames.map((n, i) => `${i + 1}. ${n}`).join('\n')}`;
+  }
+  if (purchaseSources && purchaseSources.length > 0) {
+    userPrompt += `\n구매처:\n${purchaseSources.map((s, i) => `${i + 1}. ${s}`).join('\n')}`;
+  }
   if (pricePrefix) userPrompt += `\n가격설명: ${pricePrefix}`;
 
   if (confirmedTerms.length > 0) {
@@ -199,6 +203,12 @@ async function fetchTranslateSingle(
     resultContent = restoreImgTags((parsed.content as string) ?? '', imgs);
   }
 
+  const parseStringArray = (val: unknown): string[] => {
+    if (Array.isArray(val)) return val as string[];
+    if (typeof val === 'string' && val) return [val];
+    return [];
+  };
+
   return {
     locale,
     title: (parsed.title as string) ?? '',
@@ -206,8 +216,8 @@ async function fetchTranslateSingle(
     description: (parsed.description as string) ?? '',
     place_name: (parsed.place_name as string) ?? '',
     address: (parsed.address as string) ?? '',
-    product_name: (parsed.product_name as string) ?? '',
-    purchase_source: (parsed.purchase_source as string) ?? '',
+    product_name: parseStringArray(parsed.product_name),
+    purchase_source: parseStringArray(parsed.purchase_source),
     price_prefix: (parsed.price_prefix as string) ?? '',
     image_alts: resultImageAlts,
     thumbnail_alt: (parsed.thumbnail_alt as string) ?? '',
@@ -231,8 +241,8 @@ export async function fetchTranslatePost(
       description: '',
       place_name: '',
       address: '',
-      product_name: '',
-      purchase_source: '',
+      product_name: [],
+      purchase_source: [],
       price_prefix: '',
       image_alts: [] as TranslationResult['image_alts'],
       thumbnail_alt: '',

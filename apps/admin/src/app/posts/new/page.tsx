@@ -133,8 +133,8 @@ function NewPostContent() {
     description: string;
     placeName: string;
     address: string;
-    productName: string;
-    purchaseSource: string;
+    productNames: string[];
+    purchaseSources: string[];
     pricePrefix: string;
     imageAlts: ImageAlt[];
     thumbnailAlt: string;
@@ -143,14 +143,15 @@ function NewPostContent() {
   const captureSnapshot = useCallback(
     (currentImageAlts: ImageAlt[]) => {
       const values = getValues();
+      const validProducts = values.products.filter((p) => p.name.trim());
       setTranslationSnapshot({
         title: values.title,
         content: values.content,
         description: values.description,
         placeName: values.placeName,
         address: values.address,
-        productName: values.productName,
-        purchaseSource: values.purchaseSource,
+        productNames: validProducts.map((p) => p.name),
+        purchaseSources: validProducts.map((p) => p.source),
         pricePrefix: values.pricePrefix,
         imageAlts: [...currentImageAlts],
         thumbnailAlt: values.thumbnailAlt,
@@ -183,7 +184,17 @@ function NewPostContent() {
     if (!draftParam) return;
 
     fetchDraft(draftParam).then((draft) => {
-      reset(draft.form_data);
+      const formData = draft.form_data as PostFormValues & {
+        productName?: string;
+        purchaseSource?: string;
+        purchaseLink?: string;
+      };
+      if (!formData.products) {
+        formData.products = formData.productName
+          ? [{ name: formData.productName, source: formData.purchaseSource ?? '', link: formData.purchaseLink ?? '' }]
+          : [{ name: '', source: '', link: '' }];
+      }
+      reset(formData);
       loadDraftId(draft.id);
       if (draft.translation_data) {
         setTranslationResults(draft.translation_data.results);
@@ -209,11 +220,11 @@ function NewPostContent() {
   const watchedContent = watch('content');
   const watchedPlaceName = watch('placeName');
   const watchedAddress = watch('address');
-  const watchedProductName = watch('productName');
-  const watchedPurchaseSource = watch('purchaseSource');
+  const watchedProducts = watch('products');
   const watchedPricePrefix = watch('pricePrefix');
   const watchedThumbnailAlt = watch('thumbnailAlt');
 
+  const currentValidProducts = watchedProducts.filter((p) => p.name.trim());
   const previewDirtyFields = useTranslationDirtyFields(
     translationSnapshot
       ? {
@@ -222,8 +233,8 @@ function NewPostContent() {
           description: translationSnapshot.description,
           placeName: translationSnapshot.placeName,
           address: translationSnapshot.address,
-          productName: translationSnapshot.productName,
-          purchaseSource: translationSnapshot.purchaseSource,
+          productNames: translationSnapshot.productNames,
+          purchaseSources: translationSnapshot.purchaseSources,
           pricePrefix: translationSnapshot.pricePrefix,
           imageAlts: translationSnapshot.imageAlts,
           thumbnailAlt: translationSnapshot.thumbnailAlt,
@@ -235,8 +246,8 @@ function NewPostContent() {
       description,
       placeName: watchedPlaceName,
       address: watchedAddress,
-      productName: watchedProductName,
-      purchaseSource: watchedPurchaseSource,
+      productNames: currentValidProducts.map((p) => p.name),
+      purchaseSources: currentValidProducts.map((p) => p.source),
       pricePrefix: watchedPricePrefix,
       imageAlts,
       thumbnailAlt: watchedThumbnailAlt,
@@ -257,8 +268,6 @@ function NewPostContent() {
       'address',
       'price',
       'description',
-      'productName',
-      'purchaseSource',
     ]);
 
     const checks: [keyof PostFormValues, boolean][] = [
@@ -280,8 +289,6 @@ function NewPostContent() {
 
     if (formType === 'product-review') {
       checks.push(
-        ['productName', !values.productName.trim()],
-        ['purchaseSource', !values.purchaseSource.trim()],
         ['price', !values.price.trim()],
       );
     }
@@ -310,9 +317,7 @@ function NewPostContent() {
     setValue('address', '');
     setValue('pricePrefix', '');
     setValue('price', '');
-    setValue('productName', '');
-    setValue('purchaseSource', '');
-    setValue('purchaseLink', '');
+    setValue('products', [{ name: '', source: '', link: '' }]);
   };
 
   const handleCategoryChange = (value: string) => {
@@ -352,14 +357,15 @@ function NewPostContent() {
       const terms = await fetchExtractTerms(c, pn || undefined, addr || undefined, altTexts);
 
       if (terms.length === 0) {
+        const validProds = values.products.filter((p) => p.name.trim());
         const params = {
           title: t,
           content: c,
           description: d,
           placeName: pn || undefined,
           address: addr || undefined,
-          productName: values.productName || undefined,
-          purchaseSource: values.purchaseSource || undefined,
+          productNames: validProds.length > 0 ? validProds.map((p) => p.name) : undefined,
+          purchaseSources: validProds.length > 0 ? validProds.map((p) => p.source) : undefined,
           pricePrefix: values.pricePrefix || undefined,
           confirmedTerms: [] as { original: string; confirmed: string }[],
           imageAlts: imageAlts.length > 0 ? imageAlts : undefined,
@@ -482,14 +488,15 @@ function NewPostContent() {
     const values = getValues();
     const { title: t, content: c, description: d, placeName: pn, address: addr } = values;
     const existingTranslation = translationResults.find((r) => r.locale === locale);
+    const validProds = values.products.filter((p) => p.name.trim());
     const result = await fetchRetrySingleLocale(locale, {
       title: t,
       content: c,
       description: d,
       placeName: pn || undefined,
       address: addr || undefined,
-      productName: values.productName || undefined,
-      purchaseSource: values.purchaseSource || undefined,
+      productNames: validProds.length > 0 ? validProds.map((p) => p.name) : undefined,
+      purchaseSources: validProds.length > 0 ? validProds.map((p) => p.source) : undefined,
       pricePrefix: values.pricePrefix || undefined,
       confirmedTerms: lastConfirmedTerms,
       imageAlts: imageAlts.length > 0 ? imageAlts : undefined,
@@ -507,14 +514,15 @@ function NewPostContent() {
   const handleRetryAll = async (signal?: AbortSignal) => {
     const values = getValues();
     const { title: t, content: c, description: d, placeName: pn, address: addr } = values;
+    const validProds = values.products.filter((p) => p.name.trim());
     const results = await fetchTranslatePost({
       title: t,
       content: c,
       description: d,
       placeName: pn || undefined,
       address: addr || undefined,
-      productName: values.productName || undefined,
-      purchaseSource: values.purchaseSource || undefined,
+      productNames: validProds.length > 0 ? validProds.map((p) => p.name) : undefined,
+      purchaseSources: validProds.length > 0 ? validProds.map((p) => p.source) : undefined,
       pricePrefix: values.pricePrefix || undefined,
       confirmedTerms: lastConfirmedTerms,
       imageAlts: imageAlts.length > 0 ? imageAlts : undefined,
@@ -660,7 +668,7 @@ function NewPostContent() {
           <VisitFields register={register} errors={errors} setValue={setValue} />
         )}
         {formType === 'product-review' && (
-          <ProductReviewFields register={register} setValue={setValue} />
+          <ProductReviewFields control={control} setValue={setValue} />
         )}
 
         <div className="mt-8">
@@ -809,8 +817,8 @@ function NewPostContent() {
         description={description}
         placeName={watch('placeName')}
         address={watch('address')}
-        productName={watch('productName') || undefined}
-        purchaseSource={watch('purchaseSource') || undefined}
+        productNames={currentValidProducts.map((p) => p.name).filter(Boolean)}
+        purchaseSources={currentValidProducts.map((p) => p.source).filter(Boolean)}
         pricePrefix={watch('pricePrefix') || undefined}
         imageAlts={imageAlts}
         thumbnailAlt={watch('thumbnailAlt') || undefined}
@@ -824,8 +832,8 @@ function NewPostContent() {
         originalDescription={description}
         originalPlaceName={watchedPlaceName || undefined}
         originalAddress={watchedAddress || undefined}
-        originalProductName={watchedProductName || undefined}
-        originalPurchaseSource={watchedPurchaseSource || undefined}
+        originalProductNames={currentValidProducts.map((p) => p.name).filter(Boolean)}
+        originalPurchaseSources={currentValidProducts.map((p) => p.source).filter(Boolean)}
         originalPricePrefix={watchedPricePrefix || undefined}
         originalImageAlts={imageAlts.length > 0 ? imageAlts : undefined}
         originalThumbnailAlt={watchedThumbnailAlt || undefined}

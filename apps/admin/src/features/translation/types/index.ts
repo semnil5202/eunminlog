@@ -17,8 +17,8 @@ export type TranslationResult = {
   description: string;
   place_name: string;
   address: string;
-  product_name: string;
-  purchase_source: string;
+  product_name: string[];
+  purchase_source: string[];
   price_prefix: string;
   image_alts: ImageAlt[];
   thumbnail_alt: string;

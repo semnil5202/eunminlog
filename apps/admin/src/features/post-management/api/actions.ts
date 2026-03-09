@@ -81,9 +81,9 @@ export async function fetchPost(id: string) {
       address: string | null;
       price_prefix: string | null;
       price: number | null;
-      product_name: string | null;
-      purchase_source: string | null;
-      purchase_link: string | null;
+      product_name: string[] | null;
+      purchase_source: string[] | null;
+      purchase_link: string[] | null;
       thumbnail_alt: string | null;
       prev_slug: string | null;
       created_at: string;
@@ -96,8 +96,8 @@ export async function fetchPost(id: string) {
       content: t.content,
       place_name: t.place_name ?? '',
       address: t.address ?? '',
-      product_name: t.product_name ?? '',
-      purchase_source: t.purchase_source ?? '',
+      product_name: Array.isArray(t.product_name) ? t.product_name : (t.product_name ? [t.product_name] : []),
+      purchase_source: Array.isArray(t.purchase_source) ? t.purchase_source : (t.purchase_source ? [t.purchase_source] : []),
       price_prefix: t.price_prefix ?? '',
       image_alts: (t.image_alts ?? []) as ImageAlt[],
       thumbnail_alt: t.thumbnail_alt ?? '',
@@ -113,6 +113,8 @@ export async function createPost(params: {
   draftId?: string | null;
 }): Promise<{ id: string }> {
   const fv = params.formValues;
+
+  const validProducts = fv.products.filter((p) => p.name.trim());
 
   const { data: post, error } = await supabaseServer
     .from('posts')
@@ -130,9 +132,9 @@ export async function createPost(params: {
       address: fv.address || null,
       price_prefix: fv.pricePrefix || null,
       price: fv.price ? parseInt(fv.price) : null,
-      product_name: fv.productName || null,
-      purchase_source: fv.purchaseSource || null,
-      purchase_link: fv.purchaseLink || null,
+      product_name: validProducts.length > 0 ? validProducts.map((p) => p.name) : null,
+      purchase_source: validProducts.length > 0 ? validProducts.map((p) => p.source) : null,
+      purchase_link: validProducts.length > 0 ? validProducts.map((p) => p.link) : null,
       image_alts: params.imageAlts ?? [],
     })
     .select('id')
@@ -196,6 +198,8 @@ export async function updatePost(params: {
 
   if (fetchError) throw new Error(`게시글 조회 실패: ${fetchError.message}`);
 
+  const validProducts = fv.products.filter((p) => p.name.trim());
+
   const updateData: Record<string, unknown> = {
     slug: fv.slug,
     title: fv.title,
@@ -209,9 +213,9 @@ export async function updatePost(params: {
     address: fv.address || null,
     price_prefix: fv.pricePrefix || null,
     price: fv.price ? parseInt(fv.price) : null,
-    product_name: fv.productName || null,
-    purchase_source: fv.purchaseSource || null,
-    purchase_link: fv.purchaseLink || null,
+    product_name: validProducts.length > 0 ? validProducts.map((p) => p.name) : null,
+    purchase_source: validProducts.length > 0 ? validProducts.map((p) => p.source) : null,
+    purchase_link: validProducts.length > 0 ? validProducts.map((p) => p.link) : null,
     image_alts: params.imageAlts ?? [],
     updated_at: new Date().toISOString(),
   };

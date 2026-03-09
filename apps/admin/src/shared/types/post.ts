@@ -32,9 +32,9 @@ export type Post = {
   address: string | null;
   price_prefix: string | null;
   price: number | null;
-  product_name: string | null;
-  purchase_source: string | null;
-  purchase_link: string | null;
+  product_name: string[] | null;
+  purchase_source: string[] | null;
+  purchase_link: string[] | null;
   created_at: string;
   updated_at: string;
 };

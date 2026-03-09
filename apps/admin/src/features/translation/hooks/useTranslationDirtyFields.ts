@@ -16,8 +16,8 @@ type ReferenceValues = {
   description: string;
   placeName: string;
   address: string;
-  productName: string;
-  purchaseSource: string;
+  productNames: string[];
+  purchaseSources: string[];
   pricePrefix: string;
   imageAlts: ImageAlt[];
   thumbnailAlt: string;
@@ -29,8 +29,8 @@ type CurrentValues = {
   description: string;
   placeName: string;
   address: string;
-  productName: string;
-  purchaseSource: string;
+  productNames: string[];
+  purchaseSources: string[];
   pricePrefix: string;
   imageAlts: ImageAlt[];
   thumbnailAlt: string;
@@ -56,8 +56,9 @@ export function useTranslationDirtyFields(
     if (currentValues.description !== referenceValues.description) dirty.add('description');
     if (currentValues.placeName !== referenceValues.placeName) dirty.add('place_name');
     if (currentValues.address !== referenceValues.address) dirty.add('address');
-    if (currentValues.productName !== referenceValues.productName) dirty.add('product_name');
-    if (currentValues.purchaseSource !== referenceValues.purchaseSource)
+    if (JSON.stringify(currentValues.productNames) !== JSON.stringify(referenceValues.productNames))
+      dirty.add('product_name');
+    if (JSON.stringify(currentValues.purchaseSources) !== JSON.stringify(referenceValues.purchaseSources))
       dirty.add('purchase_source');
     if (currentValues.pricePrefix !== referenceValues.pricePrefix) dirty.add('price_prefix');
     const currentAltsText = currentValues.imageAlts.map((a) => a.alt).join('\n');
