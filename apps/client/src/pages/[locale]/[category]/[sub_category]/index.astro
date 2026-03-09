@@ -73,7 +73,7 @@ const breadcrumbItems = [
   { name: subCategoryLabel, url: `/${category}/${sub_category}/` },
 ];
 
-const pageTitle = `${subCategoryLabel} ${categoryLabel} 리뷰 모음 | ${t("meta.siteName", locale)}`;
+const pageTitle = `${t("meta.subCategoryTitle", locale).replaceAll("{0}", categoryLabel).replaceAll("{1}", subCategoryLabel)} | ${t("meta.siteName", locale)}`;
 const pageDescription = t("meta.subCategoryDescription", locale)
   .replaceAll("{0}", categoryLabel)
   .replaceAll("{1}", subCategoryLabel);
