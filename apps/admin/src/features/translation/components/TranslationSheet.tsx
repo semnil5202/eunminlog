@@ -1,12 +1,11 @@
 'use client';
 
-/** 번역본 확인 시트. 원문/번역 비교, 수정 감지, 필드별·전체 재번역을 지원한다. */
+/** 번역본 확인 시트. 원문/번역 비교, 섹션별 체크박스, 선택적 재번역을 지원한다. */
 
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState, type ReactNode } from 'react';
 import { LoaderIcon, RefreshCwIcon, Sparkles } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
-import { toast } from 'sonner';
-
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Sheet,
   SheetContent,
@@ -17,21 +16,25 @@ import {
 import { Button } from '@/components/ui/button';
 
 import type { TranslationLocale } from '@/shared/types/post';
-import type { ImageAlt, TranslationResult } from '../types';
+import type { CheckableField, ImageAlt, SelectiveTranslateOptions, TranslationResult } from '../types';
 import { LOCALE_FILTER_LABELS } from '../constants/locale';
+import { splitHtmlIntoSections, isTranslatableSection, reassembleSections, type ContentSection } from '../lib/html-sections';
+import { useTranslationCheckState } from '../hooks/useTranslationCheckState';
 
 type FilterLocale = 'ko' | TranslationLocale;
-type TranslatableField = 'title' | 'content' | 'description' | 'place_name' | 'address';
 
 const FILTER_KEYS: FilterLocale[] = ['ko', 'en', 'ja', 'zh-CN', 'zh-TW', 'id', 'vi', 'th'];
 const TARGET_LOCALES: TranslationLocale[] = ['en', 'ja', 'zh-CN', 'zh-TW', 'id', 'vi', 'th'];
 
-const TRANSLATABLE_FIELD_LABELS: Record<TranslatableField, string> = {
+const FIELD_LABELS: Record<CheckableField, string> = {
   title: '제목',
-  content: '본문',
   description: '3줄 요약',
   place_name: '장소',
   address: '주소',
+  product_name: '제품명',
+  purchase_source: '구매처',
+  price_prefix: '가격설명',
+  image_alts: '이미지 Alt',
 };
 
 type TranslationSheetProps = {
@@ -50,7 +53,11 @@ type TranslationSheetProps = {
   originalThumbnail?: string | null;
   translations: TranslationResult[];
   dirtyFields: Set<string>;
-  onRetryLocale: (locale: TranslationLocale, signal?: AbortSignal) => Promise<TranslationResult>;
+  onRetryLocale: (
+    locale: TranslationLocale,
+    signal?: AbortSignal,
+    selectiveOptions?: SelectiveTranslateOptions,
+  ) => Promise<TranslationResult>;
   onRetryAll?: (signal?: AbortSignal) => Promise<void>;
   onEditComplete?: () => void;
   onUpdateTranslationContent?: (locale: TranslationLocale, content: string) => void;
@@ -59,6 +66,12 @@ type TranslationSheetProps = {
 const DirtyBadge = () => (
   <span className="rounded bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-700">
     수정됨
+  </span>
+);
+
+const TranslatedBadge = ({ label = '번역 완료' }: { label?: string }) => (
+  <span className="rounded bg-green-100 px-1.5 py-0.5 text-xs font-medium text-green-700">
+    {label}
   </span>
 );
 
@@ -79,26 +92,51 @@ export function TranslationSheet({
   translations,
   dirtyFields,
   onRetryLocale,
-  onRetryAll,
   onEditComplete,
   onUpdateTranslationContent,
 }: TranslationSheetProps) {
   const [selected, setSelected] = useState<FilterLocale>('en');
-  const [retrying, setRetrying] = useState(false);
-  const [retryingAll, setRetryingAll] = useState(false);
   const [retranslating, setRetranslating] = useState<Record<string, boolean>>({});
   const [retranslatedLocales, setRetranslatedLocales] = useState<Set<TranslationLocale>>(new Set());
   const [bulkRetranslating, setBulkRetranslating] = useState(false);
   const individualAbortRef = useRef<AbortController | null>(null);
   const suppressAbortToastRef = useRef(false);
-  const [directEditLocales, setDirectEditLocales] = useState<Set<TranslationLocale>>(new Set());
-  const [directEditContent, setDirectEditContent] = useState<Record<string, string>>({});
+  const [directEditSections, setDirectEditSections] = useState<Record<string, string>>({});
+  const [directEditingSections, setDirectEditingSections] = useState<Set<string>>(new Set());
   const [manuallyEditedLocales, setManuallyEditedLocales] = useState<Set<TranslationLocale>>(new Set());
 
-  const isAbortError = (e: unknown): boolean =>
-    (e instanceof DOMException && e.name === 'AbortError') ||
-    (e instanceof Error && e.name === 'AbortError') ||
-    (e instanceof Error && e.message === 'Request was aborted.');
+  const selectedTranslation =
+    selected !== 'ko' ? translations.find((tr) => tr.locale === selected) : null;
+
+  const originalSections = useMemo(
+    () => splitHtmlIntoSections(originalContent),
+    [originalContent],
+  );
+
+  const translatedSections = useMemo(
+    () => (selectedTranslation ? splitHtmlIntoSections(selectedTranslation.content) : []),
+    [selectedTranslation],
+  );
+
+  const availableFields = useMemo(() => {
+    const fields: CheckableField[] = ['title'];
+    if (originalPlaceName) fields.push('place_name');
+    if (originalAddress) fields.push('address');
+    if (originalProductName) fields.push('product_name');
+    if (originalPurchaseSource) fields.push('purchase_source');
+    if (originalPricePrefix) fields.push('price_prefix');
+    if (originalDescription !== undefined) fields.push('description');
+    if (originalThumbnailAlt || (originalImageAlts && originalImageAlts.length > 0))
+      fields.push('image_alts');
+    return fields;
+  }, [originalPlaceName, originalAddress, originalProductName, originalPurchaseSource, originalPricePrefix, originalDescription, originalThumbnailAlt, originalImageAlts]);
+
+  const checkState = useTranslationCheckState(availableFields, originalSections.length);
+
+  const translatableDirtyFields = new Set([...dirtyFields].filter((f) => f !== 'content_image_only'));
+  const allDirtyTranslated =
+    translatableDirtyFields.size === 0 ||
+    TARGET_LOCALES.every((l) => retranslatedLocales.has(l) || manuallyEditedLocales.has(l));
 
   const abortIndividualSilently = () => {
     suppressAbortToastRef.current = true;
@@ -107,88 +145,29 @@ export function TranslationSheet({
     setTimeout(() => { suppressAbortToastRef.current = false; }, 0);
   };
 
-  const selectedTranslation =
-    selected !== 'ko' ? translations.find((tr) => tr.locale === selected) : null;
-
-  const translatableDirtyFields = new Set([...dirtyFields].filter((f) => f !== 'content_image_only'));
-  const allDirtyTranslated =
-    translatableDirtyFields.size === 0 ||
-    TARGET_LOCALES.every((l) => retranslatedLocales.has(l) || manuallyEditedLocales.has(l));
-
-  const handleRetryLocale = async () => {
-    if (selected === 'ko' || retrying) return;
-    const controller = new AbortController();
-    individualAbortRef.current = controller;
-    setRetrying(true);
-    try {
-      const result = await onRetryLocale(selected, controller.signal);
-      setRetranslatedLocales((prev) => new Set(prev).add(selected as TranslationLocale));
-      return result;
-    } catch (e) {
-      if (isAbortError(e)) {
-        if (!suppressAbortToastRef.current) {
-          toast.info(`${LOCALE_FILTER_LABELS[selected]} 재번역 요청이 취소되었습니다.`);
-        }
-        return;
-      }
-      throw e;
-    } finally {
-      setRetrying(false);
-    }
+  const buildSelectiveOptions = (): SelectiveTranslateOptions | undefined => {
+    if (!checkState.hasAnyChecked) return undefined;
+    const targetFields = [...checkState.checkedFields];
+    const targetSectionIndices = [...checkState.checkedSections];
+    if (targetFields.length === 0 && targetSectionIndices.length === 0) return undefined;
+    return { targetFields, targetSectionIndices };
   };
 
-  const handleRetryAll = async () => {
-    if (!onRetryAll || retryingAll) return;
-    if (retrying) {
-      abortIndividualSilently();
-      toast.info('개별 재번역 요청을 취소하고 전체 재번역을 시작합니다.');
-    }
-    setRetrying(false);
-    setRetryingAll(true);
-    try {
-      await onRetryAll();
-      setRetranslatedLocales(new Set(TARGET_LOCALES));
-    } finally {
-      setRetryingAll(false);
-    }
-  };
-
-  const handleRetranslateLocale = async (locale: TranslationLocale) => {
-    const controller = new AbortController();
-    individualAbortRef.current = controller;
-    setRetranslating((prev) => ({ ...prev, [locale]: true }));
-    try {
-      await onRetryLocale(locale, controller.signal);
-      setRetranslatedLocales((prev) => new Set(prev).add(locale));
-    } catch (e) {
-      if (isAbortError(e)) {
-        if (!suppressAbortToastRef.current) {
-          toast.info(`${LOCALE_FILTER_LABELS[locale]} 번역 요청이 취소되었습니다.`);
-        }
-        return;
-      }
-      throw e;
-    } finally {
-      setRetranslating((prev) => ({ ...prev, [locale]: false }));
-    }
-  };
-
-  const handleBulkRetranslate = async () => {
+  const handleSelectiveRetranslate = async (locales: TranslationLocale[]) => {
+    const selectiveOptions = buildSelectiveOptions();
     const hasIndividual = Object.values(retranslating).some(Boolean);
     if (hasIndividual) {
       abortIndividualSilently();
-      toast.info('개별 번역 요청을 취소하고 전체 번역을 시작합니다.');
     }
     setRetranslating({});
     setBulkRetranslating(true);
     try {
-      const pending = TARGET_LOCALES.filter((l) => !retranslatedLocales.has(l));
       const results = await Promise.allSettled(
-        pending.map((locale) => onRetryLocale(locale)),
+        locales.map((locale) => onRetryLocale(locale, undefined, selectiveOptions)),
       );
       const newSet = new Set(retranslatedLocales);
       results.forEach((r, i) => {
-        if (r.status === 'fulfilled') newSet.add(pending[i]);
+        if (r.status === 'fulfilled') newSet.add(locales[i]);
       });
       setRetranslatedLocales(newSet);
     } finally {
@@ -196,113 +175,159 @@ export function TranslationSheet({
     }
   };
 
+  const handleSelectiveThisLocale = async () => {
+    if (selected === 'ko') return;
+    await handleSelectiveRetranslate([selected as TranslationLocale]);
+  };
+
+  const handleSelectiveAllLocales = async () => {
+    const pending = TARGET_LOCALES.filter((l) => !retranslatedLocales.has(l));
+    await handleSelectiveRetranslate(pending.length > 0 ? pending : TARGET_LOCALES);
+  };
+
   const handleComplete = () => {
     onEditComplete?.();
     onOpenChange(false);
   };
 
-  const handleDirectEditToggle = (locale: TranslationLocale, checked: boolean, currentContent: string) => {
-    if (checked) {
-      setDirectEditLocales((prev) => new Set(prev).add(locale));
-      setDirectEditContent((prev) => ({ ...prev, [locale]: currentContent }));
-    } else {
-      const edited = directEditContent[locale];
-      if (edited !== undefined && edited !== currentContent) {
-        onUpdateTranslationContent?.(locale, edited);
+  const sectionEditKey = (locale: TranslationLocale, index: number) => `${locale}-${index}`;
+
+  const handleSectionDirectEditToggle = (
+    locale: TranslationLocale,
+    sectionIndex: number,
+    currentHtml: string,
+  ) => {
+    const key = sectionEditKey(locale, sectionIndex);
+    if (directEditingSections.has(key)) {
+      const edited = directEditSections[key];
+      if (edited !== undefined && edited !== currentHtml) {
+        const updatedSections = originalSections.map((s, i) => {
+          if (i === sectionIndex) return { ...s, html: edited };
+          return translatedSections[i] ?? s;
+        });
+        const newContent = reassembleSections(updatedSections);
+        onUpdateTranslationContent?.(locale, newContent);
         setManuallyEditedLocales((prev) => new Set(prev).add(locale));
       }
-      setDirectEditLocales((prev) => {
+      setDirectEditingSections((prev) => {
         const next = new Set(prev);
-        next.delete(locale);
+        next.delete(key);
         return next;
       });
+    } else {
+      setDirectEditingSections((prev) => new Set(prev).add(key));
+      setDirectEditSections((prev) => ({ ...prev, [key]: currentHtml }));
     }
   };
 
-  const renderEditField = (field: TranslatableField, value: string, locale: TranslationLocale) => {
-    const isContentImageOnly = field === 'content' && dirtyFields.has('content_image_only');
-    const isDirty = dirtyFields.has(field) || isContentImageOnly;
-    const needsRetranslation = isDirty && !isContentImageOnly;
-    const isLocaleRetranslated = retranslatedLocales.has(locale);
-    const isRetranslating = retranslating[locale] || bulkRetranslating;
+  const isBulkRunning = bulkRetranslating;
 
-    const isDirectEditing = field === 'content' && directEditLocales.has(locale);
+  const renderFieldRow = (
+    field: CheckableField,
+    value: string | undefined,
+    options?: {
+      isBold?: boolean;
+      isHtml?: boolean;
+      children?: ReactNode;
+    },
+  ) => {
+    if (value === undefined && !options?.children) return null;
+
+    const isContentImageOnly = dirtyFields.has('content_image_only');
+    const fieldDirtyKey = field === 'image_alts' ? 'image_alts' : field;
+    const isDirty = dirtyFields.has(fieldDirtyKey) || (field === 'description' && isContentImageOnly);
+    const locale = selected as TranslationLocale;
+    const isLocaleRetranslated = retranslatedLocales.has(locale);
     const isManuallyEdited = manuallyEditedLocales.has(locale);
     const showTranslated = isLocaleRetranslated || isManuallyEdited;
 
     return (
-      <div key={field} className="py-5 first:pt-0 last:pb-0">
+      <div className="py-5 first:pt-0 last:pb-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <label className="text-sm font-semibold text-muted-foreground">
-              {TRANSLATABLE_FIELD_LABELS[field]}
-            </label>
-            {field !== 'content' && isDirty && !showTranslated && <DirtyBadge />}
-            {field !== 'content' && isDirty && showTranslated && (
-              <span className="rounded bg-green-100 px-1.5 py-0.5 text-xs font-medium text-green-700">
-                번역 완료
-              </span>
+            {selected !== 'ko' && (
+              <Checkbox
+                checked={checkState.checkedFields.has(field)}
+                onCheckedChange={() => checkState.toggleField(field)}
+              />
             )}
-            {field === 'content' && isDirty && !showTranslated && <DirtyBadge />}
-            {field === 'content' && (isDirty ? showTranslated : isManuallyEdited) && (
-              <span className="rounded bg-green-100 px-1.5 py-0.5 text-xs font-medium text-green-700">
-                {isManuallyEdited && !isLocaleRetranslated ? '직접 수정됨' : '번역 완료'}
+            <label className="text-sm font-semibold text-muted-foreground">
+              {FIELD_LABELS[field]}
+            </label>
+            {isDirty && !showTranslated && <DirtyBadge />}
+            {isDirty && showTranslated && <TranslatedBadge />}
+          </div>
+        </div>
+        {options?.children ?? (
+          options?.isHtml ? (
+            <div
+              className="prose prose-sm mt-1 max-w-none"
+              dangerouslySetInnerHTML={{ __html: value! }}
+            />
+          ) : (
+            <p className={`mt-1 ${options?.isBold ? 'text-lg font-bold' : 'whitespace-pre-wrap text-sm'}`}>
+              {value}
+            </p>
+          )
+        )}
+      </div>
+    );
+  };
+
+  const renderSectionRow = (origSection: ContentSection, locale: TranslationLocale) => {
+    const translated = translatedSections[origSection.index];
+    const hasTranslation = !!translated;
+    const displaySection = translated ?? origSection;
+    const key = sectionEditKey(locale, origSection.index);
+    const isDirectEditing = directEditingSections.has(key);
+    const translatable = isTranslatableSection(origSection);
+
+    return (
+      <div key={origSection.index} className="border-l-2 border-gray-200 py-3 pl-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Checkbox
+              checked={checkState.checkedSections.has(origSection.index)}
+              onCheckedChange={() => checkState.toggleSection(origSection.index)}
+            />
+            <span className="text-xs text-muted-foreground">
+              {origSection.label}
+            </span>
+            {!hasTranslation && translatable && (
+              <span className="rounded bg-rose-100 px-1.5 py-0.5 text-xs font-medium text-rose-700">
+                미번역
               </span>
             )}
           </div>
           <div className="flex items-center gap-2">
-            {field === 'content' && (
+            {translatable && hasTranslation && (
               <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 직접 수정
                 <Switch
                   size="sm"
                   checked={isDirectEditing}
-                  onCheckedChange={(checked) => handleDirectEditToggle(locale, checked, value)}
+                  onCheckedChange={() =>
+                    handleSectionDirectEditToggle(locale, origSection.index, displaySection.html)
+                  }
                 />
               </label>
             )}
-            {field !== 'content' && needsRetranslation && !showTranslated && (
-              <button
-                type="button"
-                disabled={isRetranslating}
-                onClick={() => handleRetranslateLocale(locale)}
-                className="inline-flex items-center gap-1 bg-primary-600 px-3 py-1 text-[14px] font-medium text-white transition-colors hover:bg-primary-700 disabled:opacity-50"
-              >
-                <Sparkles className={`size-3 ${isRetranslating ? 'animate-spin' : ''}`} />
-                AI 번역 요청
-              </button>
-            )}
-            {field === 'content' && needsRetranslation && !showTranslated && !isDirectEditing && (
-              <button
-                type="button"
-                disabled={isRetranslating}
-                onClick={() => handleRetranslateLocale(locale)}
-                className="inline-flex items-center gap-1 bg-primary-600 px-3 py-1 text-[14px] font-medium text-white transition-colors hover:bg-primary-700 disabled:opacity-50"
-              >
-                <Sparkles className={`size-3 ${isRetranslating ? 'animate-spin' : ''}`} />
-                AI 번역 요청
-              </button>
-            )}
           </div>
         </div>
-        {field === 'title' ? (
-          <p className="mt-1 text-lg font-bold">{value}</p>
-        ) : field === 'content' && isDirectEditing ? (
+        {isDirectEditing ? (
           <textarea
-            className="mt-1 w-full resize-none border border-input bg-transparent p-3 font-mono text-xs outline-none"
-            style={{ height: '450px' }}
-            value={directEditContent[locale] ?? value}
+            className="mt-1 w-full resize-none border border-input bg-transparent p-2 font-mono text-xs outline-none"
+            style={{ height: '120px' }}
+            value={directEditSections[key] ?? displaySection.html}
             onChange={(e) =>
-              setDirectEditContent((prev) => ({ ...prev, [locale]: e.target.value }))
+              setDirectEditSections((prev) => ({ ...prev, [key]: e.target.value }))
             }
           />
-        ) : field === 'content' ? (
+        ) : (
           <div
             className="prose prose-sm mt-1 max-w-none"
-            dangerouslySetInnerHTML={{ __html: value }}
+            dangerouslySetInnerHTML={{ __html: displaySection.html }}
           />
-        ) : (
-          <p className="mt-1 whitespace-pre-wrap text-sm">{value}</p>
         )}
       </div>
     );
@@ -433,92 +458,97 @@ export function TranslationSheet({
     }
     const locale = selected as TranslationLocale;
     const isLocaleRetranslated = retranslatedLocales.has(locale);
-    const isRetranslating = retranslating[locale] || bulkRetranslating;
-    const imageAltDirty = dirtyFields.has('image_alts');
+    const isManuallyEdited = manuallyEditedLocales.has(locale);
+    const showTranslated = isLocaleRetranslated || isManuallyEdited;
+    const contentDirty = dirtyFields.has('content') || dirtyFields.has('content_image_only');
+
+    const contentCheckboxState = checkState.isContentAllChecked
+      ? true
+      : checkState.isContentIndeterminate
+        ? ('indeterminate' as const)
+        : false;
+
     return (
       <>
-        {renderEditField('title', selectedTranslation.title, locale)}
+        {/* 전체 선택 */}
+        <div className="flex items-center gap-2 pb-4">
+          <Checkbox
+            checked={checkState.isAllChecked}
+            onCheckedChange={checkState.toggleAll}
+          />
+          <span className="text-sm font-semibold text-muted-foreground">전체 선택</span>
+        </div>
+
+        {renderFieldRow('title', selectedTranslation.title, { isBold: true })}
+
         {selectedTranslation.place_name &&
-          renderEditField('place_name', selectedTranslation.place_name, locale)}
+          renderFieldRow('place_name', selectedTranslation.place_name)}
         {selectedTranslation.address &&
-          renderEditField('address', selectedTranslation.address, locale)}
-        {selectedTranslation.product_name && (
-          <div className="py-5">
-            <label className="text-sm font-semibold text-muted-foreground">제품명</label>
-            <p className="mt-1 text-sm">{selectedTranslation.product_name}</p>
+          renderFieldRow('address', selectedTranslation.address)}
+        {selectedTranslation.product_name &&
+          renderFieldRow('product_name', selectedTranslation.product_name)}
+        {selectedTranslation.purchase_source &&
+          renderFieldRow('purchase_source', selectedTranslation.purchase_source)}
+        {selectedTranslation.price_prefix &&
+          renderFieldRow('price_prefix', selectedTranslation.price_prefix)}
+
+        {renderFieldRow('description', selectedTranslation.description)}
+
+        {/* 본문 — 섹션 리스트 */}
+        <div className="py-5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Checkbox
+                checked={contentCheckboxState}
+                onCheckedChange={checkState.toggleAllContent}
+              />
+              <label className="text-sm font-semibold text-muted-foreground">본문</label>
+              {contentDirty && !showTranslated && <DirtyBadge />}
+              {contentDirty && showTranslated && (
+                <TranslatedBadge label={isManuallyEdited && !isLocaleRetranslated ? '직접 수정됨' : '번역 완료'} />
+              )}
+            </div>
           </div>
-        )}
-        {selectedTranslation.purchase_source && (
-          <div className="py-5">
-            <label className="text-sm font-semibold text-muted-foreground">구매처</label>
-            <p className="mt-1 text-sm">{selectedTranslation.purchase_source}</p>
+          <div className="mt-2 space-y-1">
+            {originalSections.map((section) => renderSectionRow(section, locale))}
           </div>
-        )}
-        {selectedTranslation.price_prefix && (
-          <div className="py-5">
-            <label className="text-sm font-semibold text-muted-foreground">가격설명</label>
-            <p className="mt-1 text-sm">{selectedTranslation.price_prefix}</p>
-          </div>
-        )}
-        {renderEditField('description', selectedTranslation.description, locale)}
-        {renderEditField('content', selectedTranslation.content, locale)}
-        {(selectedTranslation.thumbnail_alt || selectedTranslation.image_alts.length > 0) && (
-          <div className="pt-5">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <label className="text-sm font-semibold text-muted-foreground">이미지 Alt</label>
-                {imageAltDirty && !isLocaleRetranslated && <DirtyBadge />}
-                {imageAltDirty && isLocaleRetranslated && (
-                  <span className="rounded bg-green-100 px-1.5 py-0.5 text-xs font-medium text-green-700">
-                    번역 완료
-                  </span>
+        </div>
+
+        {/* 이미지 Alt */}
+        {(selectedTranslation.thumbnail_alt || selectedTranslation.image_alts.length > 0) &&
+          renderFieldRow('image_alts', undefined, {
+            children: (
+              <div className="mt-2 space-y-3">
+                {selectedTranslation.thumbnail_alt && (
+                  <div className="flex items-start gap-3">
+                    <span className="shrink-0 rounded bg-gray-100 px-1.5 py-0.5 text-xs font-medium text-gray-600">
+                      썸네일
+                    </span>
+                    <div className="min-w-0">
+                      {originalThumbnail && (
+                        <img src={originalThumbnail} alt="" className="mb-1 h-12 w-auto object-cover" />
+                      )}
+                      <p className="text-sm">{selectedTranslation.thumbnail_alt}</p>
+                    </div>
+                  </div>
                 )}
+                {selectedTranslation.image_alts.map((item, i) => (
+                  <div key={item.src} className="flex items-start gap-3">
+                    <span className="shrink-0 rounded bg-gray-100 px-1.5 py-0.5 text-xs font-medium text-gray-600">
+                      이미지 {i + 1}
+                    </span>
+                    <div className="min-w-0">
+                      <img src={item.src} alt="" className="mb-1 h-12 w-auto object-cover" />
+                      <p className="text-sm">{item.alt}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
-              {imageAltDirty && !isLocaleRetranslated && (
-                <button
-                  type="button"
-                  disabled={isRetranslating}
-                  onClick={() => handleRetranslateLocale(locale)}
-                  className="inline-flex items-center gap-1 bg-primary-600 px-3 py-1 text-[14px] font-medium text-white transition-colors hover:bg-primary-700 disabled:opacity-50"
-                >
-                  <Sparkles className={`size-3 ${isRetranslating ? 'animate-spin' : ''}`} />
-                  AI 번역 요청
-                </button>
-              )}
-            </div>
-            <div className="mt-2 space-y-3">
-              {selectedTranslation.thumbnail_alt && (
-                <div className="flex items-start gap-3">
-                  <span className="shrink-0 rounded bg-gray-100 px-1.5 py-0.5 text-xs font-medium text-gray-600">
-                    썸네일
-                  </span>
-                  <div className="min-w-0">
-                    {originalThumbnail && (
-                      <img src={originalThumbnail} alt="" className="mb-1 h-12 w-auto object-cover" />
-                    )}
-                    <p className="text-sm">{selectedTranslation.thumbnail_alt}</p>
-                  </div>
-                </div>
-              )}
-              {selectedTranslation.image_alts.map((item, i) => (
-                <div key={item.src} className="flex items-start gap-3">
-                  <span className="shrink-0 rounded bg-gray-100 px-1.5 py-0.5 text-xs font-medium text-gray-600">
-                    이미지 {i + 1}
-                  </span>
-                  <div className="min-w-0">
-                    <img src={item.src} alt="" className="mb-1 h-12 w-auto object-cover" />
-                    <p className="text-sm">{item.alt}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+            ),
+          })}
       </>
     );
   };
-
-  const isBulkRunning = retryingAll || bulkRetranslating;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -551,56 +581,44 @@ export function TranslationSheet({
           <div className="mt-6 divide-y divide-gray-200">
             {selected === 'ko' ? renderKoTab() : renderTranslationTab()}
           </div>
-
         </div>
 
         {selected !== 'ko' && (
-          <div className="grid grid-cols-2 gap-2 border-t px-4 py-4">
-            <button
-              type="button"
-              onClick={handleRetryLocale}
-              disabled={retrying || isBulkRunning}
-              className="inline-flex items-center justify-center gap-1.5 h-10 border border-input px-5 text-sm font-semibold shadow-xs transition-colors hover:bg-accent disabled:opacity-50"
-            >
-              <RefreshCwIcon className={`size-3.5 ${retrying ? 'animate-spin' : ''}`} />
-              이 언어만 AI 재번역
-            </button>
-            {onRetryAll ? (
-              <button
-                type="button"
-                onClick={handleRetryAll}
-                disabled={isBulkRunning}
-                className="inline-flex items-center justify-center gap-1.5 h-10 border border-input px-5 text-sm font-semibold shadow-xs transition-colors hover:bg-accent disabled:opacity-50"
-              >
-                <RefreshCwIcon className={`size-3.5 ${retryingAll ? 'animate-spin' : ''}`} />
-                전체 언어 AI 재번역
-              </button>
-            ) : (
-              <div />
+          <div className="flex flex-col gap-2 border-t px-4 py-4">
+            {checkState.hasAnyChecked && (
+              <>
+                <button
+                  type="button"
+                  disabled={isBulkRunning}
+                  onClick={handleSelectiveThisLocale}
+                  className="inline-flex items-center justify-center gap-1.5 h-10 border border-input px-5 text-sm font-semibold shadow-xs transition-colors hover:bg-accent disabled:opacity-50"
+                >
+                  {bulkRetranslating ? (
+                    <LoaderIcon className="size-3.5 animate-spin" />
+                  ) : (
+                    <Sparkles className="size-3.5" />
+                  )}
+                  선택 항목 AI 번역 ({LOCALE_FILTER_LABELS[selected]})
+                </button>
+                <button
+                  type="button"
+                  disabled={isBulkRunning}
+                  onClick={handleSelectiveAllLocales}
+                  className="inline-flex items-center justify-center gap-1.5 h-10 border border-input px-5 text-sm font-semibold shadow-xs transition-colors hover:bg-accent disabled:opacity-50"
+                >
+                  {bulkRetranslating ? (
+                    <LoaderIcon className="size-3.5 animate-spin" />
+                  ) : (
+                    <RefreshCwIcon className="size-3.5" />
+                  )}
+                  선택 항목 AI 번역 (전체 언어)
+                </button>
+              </>
             )}
-            {translatableDirtyFields.size > 0 && !allDirtyTranslated ? (
-              <button
-                type="button"
-                disabled={bulkRetranslating}
-                onClick={handleBulkRetranslate}
-                className="inline-flex items-center justify-center gap-1.5 h-10 border border-input px-5 text-sm font-semibold shadow-xs transition-colors hover:bg-accent disabled:opacity-50"
-              >
-                {bulkRetranslating ? (
-                  <LoaderIcon className="size-4 animate-spin" />
-                ) : (
-                  <Sparkles className="size-4" />
-                )}
-                모든 언어 수정 부분 AI 번역 요청
-              </button>
-            ) : (
-              <div />
-            )}
-            {dirtyFields.size > 0 ? (
+            {dirtyFields.size > 0 && (
               <Button disabled={!allDirtyTranslated} onClick={handleComplete}>
                 번역 수정 완료
               </Button>
-            ) : (
-              <div />
             )}
           </div>
         )}

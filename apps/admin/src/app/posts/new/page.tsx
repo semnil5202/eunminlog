@@ -49,7 +49,29 @@ import { Check, ChevronLeft, ImageIcon, Languages, LoaderIcon, Save, Sparkles } 
 import { toast } from 'sonner';
 
 import type { PostFormType, TranslationLocale } from '@/shared/types/post';
-import type { FlaggedTerm, ImageAlt, TranslationResult } from '@/features/translation/types';
+import type { FlaggedTerm, ImageAlt, SelectiveTranslateOptions, TranslationResult } from '@/features/translation/types';
+
+function mergeSelectiveResult(
+  existing: TranslationResult,
+  partial: TranslationResult,
+  options: SelectiveTranslateOptions,
+): TranslationResult {
+  const fields = new Set(options.targetFields ?? []);
+  const hasSections = options.targetSectionIndices && options.targetSectionIndices.length > 0;
+  return {
+    ...existing,
+    title: fields.has('title') ? partial.title : existing.title,
+    description: fields.has('description') ? partial.description : existing.description,
+    place_name: fields.has('place_name') ? partial.place_name : existing.place_name,
+    address: fields.has('address') ? partial.address : existing.address,
+    product_name: fields.has('product_name') ? partial.product_name : existing.product_name,
+    purchase_source: fields.has('purchase_source') ? partial.purchase_source : existing.purchase_source,
+    price_prefix: fields.has('price_prefix') ? partial.price_prefix : existing.price_prefix,
+    image_alts: fields.has('image_alts') ? partial.image_alts : existing.image_alts,
+    thumbnail_alt: fields.has('image_alts') ? partial.thumbnail_alt : existing.thumbnail_alt,
+    content: hasSections ? partial.content : existing.content,
+  };
+}
 
 export default function NewPostPage() {
   return (
@@ -452,9 +474,14 @@ function NewPostContent() {
     setTimeout(() => setIsPreviewOpen(true), 800);
   };
 
-  const handleRetryLocale = async (locale: TranslationLocale, signal?: AbortSignal) => {
+  const handleRetryLocale = async (
+    locale: TranslationLocale,
+    signal?: AbortSignal,
+    selectiveOptions?: SelectiveTranslateOptions,
+  ) => {
     const values = getValues();
     const { title: t, content: c, description: d, placeName: pn, address: addr } = values;
+    const existingTranslation = translationResults.find((r) => r.locale === locale);
     const result = await fetchRetrySingleLocale(locale, {
       title: t,
       content: c,
@@ -467,7 +494,12 @@ function NewPostContent() {
       confirmedTerms: lastConfirmedTerms,
       imageAlts: imageAlts.length > 0 ? imageAlts : undefined,
       thumbnailAlt: getValues('thumbnailAlt') || undefined,
-    }, signal);
+    }, signal, selectiveOptions);
+    if (selectiveOptions && existingTranslation) {
+      const merged = mergeSelectiveResult(existingTranslation, result, selectiveOptions);
+      setTranslationResults((prev) => prev.map((r) => (r.locale === locale ? merged : r)));
+      return merged;
+    }
     setTranslationResults((prev) => prev.map((r) => (r.locale === locale ? result : r)));
     return result;
   };

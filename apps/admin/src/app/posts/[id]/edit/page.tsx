@@ -55,7 +55,7 @@ import { SlugField } from '@/shared/components/slug/SlugField';
 import { AiGenerateButton } from '@/shared/components/ui/AiGenerateButton';
 
 import type { PostFormType, TranslationLocale } from '@/shared/types/post';
-import type { ImageAlt, TranslationResult } from '@/features/translation/types';
+import type { ImageAlt, SelectiveTranslateOptions, TranslationResult } from '@/features/translation/types';
 
 export default function EditPostPage() {
   const { id } = useParams<{ id: string }>();
@@ -391,9 +391,14 @@ function EditPostForm({
     }
   };
 
-  const handleRetranslateLocale = async (locale: TranslationLocale, signal?: AbortSignal): Promise<TranslationResult> => {
+  const handleRetranslateLocale = async (
+    locale: TranslationLocale,
+    signal?: AbortSignal,
+    selectiveOptions?: SelectiveTranslateOptions,
+  ): Promise<TranslationResult> => {
     const values = getValues();
     const { title: t, content: c, description: d, placeName: pn, address: addr } = values;
+    const existingTranslation = translationResults.find((r) => r.locale === locale);
     const result = await fetchRetrySingleLocale(locale, {
       title: t,
       content: c,
@@ -406,7 +411,26 @@ function EditPostForm({
       confirmedTerms: [],
       imageAlts: imageAlts.length > 0 ? imageAlts : undefined,
       thumbnailAlt: getValues('thumbnailAlt') || undefined,
-    }, signal);
+    }, signal, selectiveOptions);
+    if (selectiveOptions && existingTranslation) {
+      const fields = new Set(selectiveOptions.targetFields ?? []);
+      const hasSections = selectiveOptions.targetSectionIndices && selectiveOptions.targetSectionIndices.length > 0;
+      const merged: TranslationResult = {
+        ...existingTranslation,
+        title: fields.has('title') ? result.title : existingTranslation.title,
+        description: fields.has('description') ? result.description : existingTranslation.description,
+        place_name: fields.has('place_name') ? result.place_name : existingTranslation.place_name,
+        address: fields.has('address') ? result.address : existingTranslation.address,
+        product_name: fields.has('product_name') ? result.product_name : existingTranslation.product_name,
+        purchase_source: fields.has('purchase_source') ? result.purchase_source : existingTranslation.purchase_source,
+        price_prefix: fields.has('price_prefix') ? result.price_prefix : existingTranslation.price_prefix,
+        image_alts: fields.has('image_alts') ? result.image_alts : existingTranslation.image_alts,
+        thumbnail_alt: fields.has('image_alts') ? result.thumbnail_alt : existingTranslation.thumbnail_alt,
+        content: hasSections ? result.content : existingTranslation.content,
+      };
+      setTranslationResults((prev) => prev.map((r) => (r.locale === locale ? merged : r)));
+      return merged;
+    }
     setTranslationResults((prev) => prev.map((r) => (r.locale === locale ? result : r)));
     return result;
   };
