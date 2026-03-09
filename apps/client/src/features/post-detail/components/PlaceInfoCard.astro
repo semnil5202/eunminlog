@@ -12,6 +12,7 @@ interface Props {
   address: string;
   translatedAddress?: string | null;
   pricePrefix?: string[] | null;
+  translatedPricePrefix?: string[] | null;
   price: number[] | null;
   description: string;
   translatedDescription?: string | null;
@@ -26,6 +27,7 @@ const {
   address,
   translatedAddress,
   pricePrefix,
+  translatedPricePrefix,
   price,
   description,
   translatedDescription,
@@ -33,7 +35,9 @@ const {
 } = Astro.props;
 
 const priceValue = price && price.length > 0 ? price[0] : null;
-const pricePrefixValue = Array.isArray(pricePrefix) ? (pricePrefix[0] ?? '') : (pricePrefix ?? '');
+const rawPrefix = Array.isArray(pricePrefix) ? (pricePrefix[0] ?? '') : (pricePrefix ?? '');
+const translatedPrefix = Array.isArray(translatedPricePrefix) ? (translatedPricePrefix[0] ?? '') : (translatedPricePrefix ?? '');
+const pricePrefixValue = translatedPrefix || rawPrefix;
 const priceLabel = priceValue != null
   ? `${pricePrefixValue}${priceValue.toLocaleString()}`
   : null;
