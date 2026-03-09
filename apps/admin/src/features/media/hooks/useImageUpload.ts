@@ -63,7 +63,7 @@ export function useImageUpload() {
   };
 
   const uploadImages = async (files: File[]): Promise<string[]> => {
-    return Promise.all(files.map(uploadImage));
+    return Promise.all(files.map((file) => uploadImage(file)));
   };
 
   const uploadWithLoading = async (file: File, options?: { og?: boolean }): Promise<string> => {
