@@ -1,5 +1,5 @@
 ---
-/** 별점 렌더링. Schema.org Rating 마크업을 포함한다. */
+/** 별점 렌더링. */
 
 import type { Locale } from "@/shared/types/common";
 import { t } from "@/shared/lib/i18n/translations";
@@ -15,14 +15,7 @@ const fullStars = Math.min(5, Math.max(0, Math.floor(rating)));
 const emptyStars = 5 - fullStars;
 ---
 
-<div
-  class="flex items-center gap-1"
-  itemprop="reviewRating"
-  itemscope
-  itemtype="https://schema.org/Rating"
->
-  <meta itemprop="ratingValue" content={String(rating)} />
-  <meta itemprop="bestRating" content="5" />
+<div class="flex items-center gap-1">
   {Array.from({ length: fullStars }).map(() => (
     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-yellow-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
       <title>{t("a11y.star", locale)}</title>
