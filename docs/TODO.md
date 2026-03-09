@@ -150,6 +150,9 @@
 
 ## Admin — 최근 완료 (2026-03-09)
 
+- [x] **링크 북마크 기능** — Tiptap 커스텀 노드 `CustomLinkBookmark` (OG 태그 카드 UI). URL 붙여넣기 시 `LinkPastePopup`으로 링크/북마크 선택. 내부 링크(`eunminlog.site`) 북마크는 빌드 타임에 다국어 URL/텍스트 자동 변환 (`shared/lib/bookmark.ts`). 번역 파이프라인에서 북마크 영역 skip. Client CSS hover 효과 + 모바일 세로 배치
+- [x] **제품 리뷰 필드 배열 변환** — `product_name`, `purchase_source`, `purchase_link`: `text` -> `text[]`. `price`: `integer` -> `integer[]`. `price_prefix`: `text` -> `text[]`. `post_translations.prices` 컬럼 제거. `useFieldArray` 동적 제품 추가/삭제. `PriceInputRow` 공용 컴포넌트 (visit/product 공용)
+- [x] **ProductInfoCard UI 개선** — 제품 2개 이상: PC 2열 그리드, border 구분선. 제품 1개: 심플 레이아웃. 가격 표시: `pricePrefix + price.toLocaleString()` 조합
 - [x] **섹션 기반 번역 컨트롤** — 본문 HTML을 top-level 블록 노드 단위 섹션으로 분할 (`html-sections.ts`), 필드/섹션별 체크박스 선택적 재번역 (`useTranslationCheckState`), `content_sections` 형식 GPT 응답 머지 (`mergeSelectiveResult`), 미번역 섹션 "미번역" 뱃지, shadcn/ui Checkbox indeterminate 상태 지원, 번역 프롬프트 HTML 태그 보호 규칙 강화
 
 ## Admin — 완료 (2026-03-07)

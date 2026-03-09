@@ -267,6 +267,41 @@
 - 3줄 요약: `description` prop (`translatedDescription` 우선)을 개행 분할하여 `⋅` 접두사 리스트로 표시 (`post.summary` 라벨)
 - 상세 스펙: [`docs/place-i18n-specs.md`](place-i18n-specs.md)
 
+#### `ProductInfoCard.astro`
+
+- **위치**: `features/post-detail/components/ProductInfoCard.astro`
+- Props: `categoryLabel`, `subCategoryLabel`, `productNames` (`string[]`), `translatedProductNames?`, `purchaseSources` (`string[]`), `translatedPurchaseSources?`, `purchaseLinks` (`string[]`), `prices?` (`number[]`), `pricePrefixes?` (`string[]`), `translatedPricePrefixes?`, `description`, `locale`
+- Schema.org `Product` 마이크로데이터 포함
+- `border-radius` 없음 (`bg-gray-50 border border-gray-200 p-5 mb-6`)
+- `<dl>` 기반 키-값 레이아웃: 카테고리, 제품별(제품명/구매처/가격), 3줄 요약
+- **제품 2개 이상**: PC 2열 그리드 (`grid-cols-1 lg:grid-cols-2`), `border-t border-b border-gray-200 py-3` 구분선
+- **제품 1개**: 심플 레이아웃 (그리드/보더 없음)
+- 제품명: `translatedProductNames` 우선 표시, `font-semibold`, `itemprop="name"`
+- 구매처: 텍스트 + 구매 링크가 있으면 외부 링크 아이콘 (`target="_blank" rel="noopener noreferrer"`)
+- 가격 표시: `pricePrefix + price.toLocaleString()` 조합
+- dt 라벨 폭: 제품 섹션 내부 `w-16` (64px), 카테고리/요약 `w-20` (80px)
+- 필드 라벨 i18n: `place.category`, `product.name`, `product.source`, `place.price`, `post.summary`
+- 3줄 요약: `description`을 개행 분할하여 `⋅` 접두사 리스트로 표시
+
+#### 링크 북마크 카드
+
+본문 내 URL을 OG 태그 기반 카드 형태로 표시하는 기능.
+
+**Admin (에디터)**:
+- Tiptap 커스텀 노드 `CustomLinkBookmark` (`features/post-editor/configs/link-bookmark.ts`)
+- HTML 출력: `<aside data-type="link-bookmark">` + `data-url`, `data-title`, `data-description`, `data-image`, `data-favicon` 속성
+- 내부 구조: `<a>` 래퍼 안에 `<figure>` (이미지) + `<figcaption>` (제목/설명/도메인)
+- URL 붙여넣기 시 `LinkPastePopup` 팝업으로 "링크" / "북마크 카드" 선택
+- 파비콘 alt: `${title} 프로필 이미지` (i18n)
+- 북마크 이미지는 ImageAltSheet에서 제외
+
+**Client (렌더링)**:
+- CSS: `global.css`에서 `[data-type='link-bookmark']` 스타일 정의
+- hover 효과: `background-color: #f9fafb`
+- 모바일 (`max-width: 640px`): `flex-direction: column` 세로 배치, figure `max-height: 200px`
+- 내부 링크(`eunminlog.site`) 북마크: 빌드 타임에 다국어 URL/title/description 자동 변환 (`shared/lib/bookmark.ts` — `injectLocalizedBookmarks()`)
+- 번역 파이프라인: 북마크 영역(`data-type="link-bookmark"`)은 번역 skip (`html-sections.ts`)
+
 #### AI 번역 안내 문구
 
 - **위치**: `PostLayout.astro` 내 본문과 NearbyPostList 사이

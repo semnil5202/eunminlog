@@ -1,6 +1,6 @@
 # Database Schema (Supabase PostgreSQL)
 
-> Last updated: 2026-03-09 (카테고리 다국어 정합성 비즈니스 규칙 추가)
+> Last updated: 2026-03-09 (제품 리뷰 필드 배열 변환 M-17, 카테고리 다국어 정합성 비즈니스 규칙)
 
 DB 스키마, 인덱스, 쿼리 패턴, 스케일링 가이드, 마이그레이션 현황은 [`secrets-reference.md`](secrets-reference.md) 섹션 6~11을 참조한다.
 
