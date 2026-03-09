@@ -4,6 +4,7 @@ import type { FocusEvent } from 'react';
 import { useFieldArray, type Control, type UseFormSetValue } from 'react-hook-form';
 
 import type { PostFormValues } from '../types/form';
+import { PriceInputRow } from './PriceInputRow';
 
 type ProductReviewFieldsProps = {
   control: Control<PostFormValues>;
@@ -59,26 +60,11 @@ export function ProductReviewFields({ control, setValue }: ProductReviewFieldsPr
                 className="h-9 grow basis-0 border border-input bg-transparent px-3 text-sm shadow-xs outline-none placeholder:text-muted-foreground"
               />
             </div>
-            <div className="flex gap-2">
-              <div className="grow-[2] basis-0">
-                <input
-                  type="text"
-                  {...control.register(`products.${index}.pricePrefix`, {
-                    onBlur: handlePricePrefixBlur(index),
-                  })}
-                  placeholder="ex) 1인 기준 "
-                  className="h-9 w-full border border-input bg-transparent px-3 text-sm shadow-xs outline-none placeholder:text-muted-foreground"
-                />
-              </div>
-              <div className="grow basis-0">
-                <input
-                  type="number"
-                  {...control.register(`products.${index}.price`)}
-                  placeholder="금액"
-                  className="h-9 w-full border border-input bg-transparent px-3 text-sm shadow-xs outline-none placeholder:text-muted-foreground [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                />
-              </div>
-            </div>
+            <PriceInputRow
+              prefixRegister={control.register(`products.${index}.pricePrefix`)}
+              priceRegister={control.register(`products.${index}.price`)}
+              onPrefixBlur={handlePricePrefixBlur(index)}
+            />
           </div>
         ))}
         <button

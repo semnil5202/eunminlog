@@ -4,6 +4,7 @@ import type { FocusEvent } from 'react';
 import type { FieldErrors, UseFormRegister, UseFormSetValue } from 'react-hook-form';
 
 import type { PostFormValues } from '../types/form';
+import { PriceInputRow } from './PriceInputRow';
 
 type VisitFieldsProps = {
   register: UseFormRegister<PostFormValues>;
@@ -49,30 +50,14 @@ export function VisitFields({ register, errors, setValue }: VisitFieldsProps) {
           <p className="mt-1 text-[14px] text-red-500">{errors.address.message}</p>
         )}
       </div>
-      <div className="flex gap-2">
-        <div className="grow-[2] basis-0">
-          <label className="mb-1 block text-base font-bold">가격 설명</label>
-          <input
-            type="text"
-            {...register('pricePrefix', { onBlur: handlePricePrefixBlur })}
-            placeholder="ex) 메인 메뉴 평균 가격: "
-            className="h-9 w-full border border-input bg-transparent px-3 text-sm shadow-xs outline-none placeholder:text-muted-foreground"
-          />
-        </div>
-        <div className="grow basis-0">
-          <div className="mb-1 flex items-baseline justify-between">
-            <label className="text-base font-bold">
-              금액
-            </label>
-            <span className="text-[12px] text-muted-foreground">(단위: 만원)</span>
-          </div>
-          <input
-            type="number"
-            {...register('price')}
-            placeholder="금액"
-            className="h-9 w-full border border-input bg-transparent px-3 text-sm shadow-xs outline-none placeholder:text-muted-foreground [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-          />
-        </div>
+      <div>
+        <label className="mb-1 block text-base font-bold">가격</label>
+        <PriceInputRow
+          prefixRegister={register('pricePrefix')}
+          priceRegister={register('price')}
+          onPrefixBlur={handlePricePrefixBlur}
+          prefixPlaceholder="ex) 메인 메뉴 평균 가격: "
+        />
       </div>
     </div>
   );
