@@ -14,6 +14,9 @@ const siteUrl = getSiteUrlFromEnv(process.env.PUBLIC_STAGE);
 export default defineConfig({
   site: siteUrl,
   trailingSlash: 'always',
+  build: {
+    inlineStylesheets: 'always',
+  },
   integrations: [
     sitemap({
       i18n: {
