@@ -18,7 +18,7 @@ img[data-lightbox] {
 }
 
 [itemprop='articleBody'] > p > img {
-  margin: 16px 0;
+  margin: 12px 0;
 }
 
 [itemprop='articleBody'] p:empty,
@@ -46,7 +46,7 @@ img[data-lightbox] {
 
 [data-type='image-carousel'] {
   position: relative;
-  margin: 16px 0;
+  margin: 12px 0;
 }
 
 [data-type='image-carousel'] .carousel-viewport {

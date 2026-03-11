@@ -161,7 +161,7 @@
 .ProseMirror img {
   max-width: 100%;
   height: auto;
-  margin: 16px 0;
+  margin: 12px 0;
 }
 
 /* Tiptap Table */
@@ -209,7 +209,7 @@
 
 /* Image Carousel — editor NodeView */
 .image-carousel-container {
-  margin: 16px 0;
+  margin: 12px 0;
 }
 
 .image-carousel-viewport {
