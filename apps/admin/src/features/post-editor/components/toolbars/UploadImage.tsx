@@ -38,8 +38,8 @@ export function UploadImage({ editor }: EditorProps) {
 
     // Case 0: carousel node itself is selected (NodeSelection) → append images
     if (selection instanceof NodeSelection && selection.node.type.name === 'imageCarousel') {
-      for (const { url } of results) {
-        editor.commands.addImageToCarousel($from.pos, url);
+      for (const { url, width, height } of results) {
+        editor.commands.addImageToCarousel($from.pos, url, width, height);
       }
       e.target.value = '';
       return;
@@ -65,8 +65,8 @@ export function UploadImage({ editor }: EditorProps) {
     }
 
     if (carouselPos !== null) {
-      for (const { url } of results) {
-        editor.commands.addImageToCarousel(carouselPos, url);
+      for (const { url, width, height } of results) {
+        editor.commands.addImageToCarousel(carouselPos, url, width, height);
       }
       e.target.value = '';
       return;
@@ -74,7 +74,7 @@ export function UploadImage({ editor }: EditorProps) {
 
     // Case 2: multiple files selected → create carousel directly
     if (results.length > 1) {
-      const images = results.map(({ url }) => ({ src: url, width: '90%', height: 'auto' }));
+      const images = results.map(({ url, width, height }) => ({ src: url, width: '90%', height: 'auto', naturalWidth: width, naturalHeight: height }));
 
       // If cursor is after an inline image, include it in the carousel
       const nodeBefore = $from.nodeBefore;
@@ -96,8 +96,10 @@ export function UploadImage({ editor }: EditorProps) {
             const parentStart = $afterDelete.start($afterDelete.depth);
             const parentEnd = $afterDelete.end($afterDelete.depth);
 
+            const existingWidth = nodeBefore.attrs.width as number | undefined;
+            const existingHeight = nodeBefore.attrs.height as number | undefined;
             const carouselNode = editor.schema.nodes.imageCarousel.create({
-              images: [{ src: existingSrc, width: '90%', height: 'auto' }, ...images],
+              images: [{ src: existingSrc, width: '90%', height: 'auto', naturalWidth: existingWidth, naturalHeight: existingHeight }, ...images],
             });
 
             if (parentNode.content.size === 0) {
@@ -137,10 +139,12 @@ export function UploadImage({ editor }: EditorProps) {
           const parentStart = $afterDelete.start($afterDelete.depth);
           const parentEnd = $afterDelete.end($afterDelete.depth);
 
+          const existingWidth = nodeBefore.attrs.width as number | undefined;
+          const existingHeight = nodeBefore.attrs.height as number | undefined;
           const carouselNode = editor.schema.nodes.imageCarousel.create({
             images: [
-              { src: existingSrc, width: '90%', height: 'auto' },
-              { src: results[0].url, width: '90%', height: 'auto' },
+              { src: existingSrc, width: '90%', height: 'auto', naturalWidth: existingWidth, naturalHeight: existingHeight },
+              { src: results[0].url, width: '90%', height: 'auto', naturalWidth: results[0].width, naturalHeight: results[0].height },
             ],
           });
 

@@ -1,6 +1,6 @@
 import { Node, mergeAttributes } from '@tiptap/core';
 
-type ImageItem = { src: string; width: string; height: string };
+type ImageItem = { src: string; width: string; height: string; naturalWidth?: number; naturalHeight?: number };
 
 const DEFAULT_WIDTH = '90%';
 const DEFAULT_HEIGHT = 'auto';
@@ -11,7 +11,7 @@ declare module '@tiptap/core' {
   interface Commands<ReturnType> {
     imageCarousel: {
       setImageCarousel: (attrs: { images: ImageItem[]; style?: string }) => ReturnType;
-      addImageToCarousel: (pos: number, src: string) => ReturnType;
+      addImageToCarousel: (pos: number, src: string, naturalWidth?: number, naturalHeight?: number) => ReturnType;
       removeImageFromCarousel: (pos: number, imageIndex: number) => ReturnType;
     };
   }
@@ -36,6 +36,8 @@ export const CustomImageCarousel = Node.create({
             src: img.getAttribute('src') ?? '',
             width: img.getAttribute('data-width') ?? DEFAULT_WIDTH,
             height: img.getAttribute('data-height') ?? DEFAULT_HEIGHT,
+            naturalWidth: img.getAttribute('width') ? Number(img.getAttribute('width')) : undefined,
+            naturalHeight: img.getAttribute('height') ? Number(img.getAttribute('height')) : undefined,
           }));
         },
         renderHTML: () => ({}),
@@ -55,10 +57,12 @@ export const CustomImageCarousel = Node.create({
   },
 
   renderHTML({ node, HTMLAttributes }) {
-    const images = (node.attrs.images as ImageItem[]).map((img) => [
-      'img',
-      { src: img.src, 'data-width': img.width, 'data-height': img.height },
-    ]);
+    const images = (node.attrs.images as ImageItem[]).map((img) => {
+      const attrs: Record<string, string> = { src: img.src, 'data-width': img.width, 'data-height': img.height };
+      if (img.naturalWidth) attrs.width = String(img.naturalWidth);
+      if (img.naturalHeight) attrs.height = String(img.naturalHeight);
+      return ['img', attrs];
+    });
     return ['div', mergeAttributes(HTMLAttributes, { 'data-type': 'image-carousel' }), ...images];
   },
 
@@ -71,14 +75,14 @@ export const CustomImageCarousel = Node.create({
         },
 
       addImageToCarousel:
-        (pos, src) =>
+        (pos, src, naturalWidth?, naturalHeight?) =>
         ({ tr, dispatch }) => {
           const node = tr.doc.nodeAt(pos);
           if (!node || node.type.name !== 'imageCarousel') return false;
 
           const currentImages = [
             ...(node.attrs.images as ImageItem[]),
-            { src, width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT },
+            { src, width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT, naturalWidth, naturalHeight },
           ];
 
           if (dispatch) {
@@ -155,6 +159,8 @@ export const CustomImageCarousel = Node.create({
 
         const $img = document.createElement('img');
         $img.src = img.src;
+        if (img.naturalWidth) $img.setAttribute('width', String(img.naturalWidth));
+        if (img.naturalHeight) $img.setAttribute('height', String(img.naturalHeight));
         const heightCss =
           img.height === 'auto' ? 'height: auto' : `height: ${img.height}; object-fit: cover`;
         $img.style.cssText = `width: 100%; ${heightCss}; display: block;`;
