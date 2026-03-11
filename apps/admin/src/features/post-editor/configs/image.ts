@@ -6,11 +6,19 @@ export const CustomResizableImage = Image.extend({
       ...this.parent?.(),
       width: {
         default: null,
-        renderHTML: (attributes) => (attributes.width ? { width: attributes.width } : {}),
+        parseHTML: (element: HTMLElement) => element.getAttribute('width'),
+        renderHTML: (attributes: Record<string, unknown>) => {
+          if (!attributes.width) return {};
+          return { width: String(attributes.width) };
+        },
       },
       height: {
         default: null,
-        renderHTML: (attributes) => (attributes.height ? { height: attributes.height } : {}),
+        parseHTML: (element: HTMLElement) => element.getAttribute('height'),
+        renderHTML: (attributes: Record<string, unknown>) => {
+          if (!attributes.height) return {};
+          return { height: String(attributes.height) };
+        },
       },
       style: {
         default: 'width: 100%; height: auto;',
