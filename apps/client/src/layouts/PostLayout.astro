@@ -95,6 +95,7 @@ const gaPageParams = {
   isMultilingual={post.is_multilingual}
 >
   <Fragment slot="head">
+    <link rel="preload" href={optimizedUrl(post.thumbnail)} as="image" type="image/webp" fetchpriority="high" />
     <BreadcrumbJsonLd items={breadcrumbs} />
     <BlogPostingJsonLd posting={blogPosting} />
   </Fragment>

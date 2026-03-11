@@ -59,6 +59,7 @@ export function TranslationSheetContainer({
   const [status, setStatus] = useState<TranslationStatus>('reviewing');
   const [confirmedTerms, setConfirmedTerms] = useState<Map<number, string>>(new Map());
   const [error, setError] = useState<string | null>(null);
+  const [progress, setProgress] = useState({ completed: 0, total: 7 });
 
   const handleConfirmTerm = (index: number, value: string) => {
     setConfirmedTerms((prev) => {
@@ -71,6 +72,7 @@ export function TranslationSheetContainer({
   const handleTranslateRequest = async () => {
     setStatus('translating');
     setError(null);
+    setProgress({ completed: 0, total: 7 });
 
     const terms = initialTerms.map((term, i) => ({
       original: term.original,
@@ -78,20 +80,26 @@ export function TranslationSheetContainer({
     }));
 
     try {
-      const results = await fetchTranslatePost({
-        title,
-        content,
-        description,
-        placeName,
-        address,
-        productNames,
-        purchaseSources,
-        pricePrefixes,
-        pricePrefix,
-        confirmedTerms: terms,
-        imageAlts,
-        thumbnailAlt,
-      });
+      const results = await fetchTranslatePost(
+        {
+          title,
+          content,
+          description,
+          placeName,
+          address,
+          productNames,
+          purchaseSources,
+          pricePrefixes,
+          pricePrefix,
+          confirmedTerms: terms,
+          imageAlts,
+          thumbnailAlt,
+        },
+        undefined,
+        (completed, total) => {
+          setProgress({ completed, total });
+        },
+      );
 
       const failedLocales = results.filter((r) => r.failed);
       for (const r of failedLocales) {
@@ -99,6 +107,7 @@ export function TranslationSheetContainer({
         toast.error(`${label} 번역에 실패했습니다. 번역본 확인에서 다시 시도해주세요.`);
       }
 
+      toast.success('번역 완료');
       setStatus('success');
       setTimeout(() => {
         onTranslationComplete(results, terms);
@@ -114,6 +123,7 @@ export function TranslationSheetContainer({
       setStatus('reviewing');
       setConfirmedTerms(new Map());
       setError(null);
+      setProgress({ completed: 0, total: 7 });
     }
     onOpenChange(nextOpen);
   };
@@ -141,7 +151,9 @@ export function TranslationSheetContainer({
 
           {status === 'translating' && (
             <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">번역 중...</p>
+              <p className="text-sm text-muted-foreground">
+                번역 중... ({progress.completed}/{progress.total})
+              </p>
               {Array.from({ length: 4 }).map((_, i) => (
                 <Skeleton key={i} className="h-4 w-full" />
               ))}

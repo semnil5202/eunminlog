@@ -4,6 +4,7 @@
 
 import { useMemo, useRef, useState, type ReactNode } from 'react';
 import { LoaderIcon, RefreshCwIcon, Sparkles } from 'lucide-react';
+import { toast } from 'sonner';
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -73,6 +74,12 @@ const DirtyBadge = () => (
 const TranslatedBadge = ({ label = '번역 완료' }: { label?: string }) => (
   <span className="rounded bg-green-100 px-1.5 py-0.5 text-xs font-medium text-green-700">
     {label}
+  </span>
+);
+
+const UntranslatedBadge = () => (
+  <span className="rounded bg-red-100 px-1.5 py-0.5 text-xs font-medium text-red-700">
+    미번역
   </span>
 );
 
@@ -163,15 +170,27 @@ export function TranslationSheet({
     }
     setRetranslating({});
     setBulkRetranslating(true);
+    const total = locales.length;
+    let completed = 0;
+    const toastId = toast.loading(`번역 중... (0/${total})`);
     try {
       const results = await Promise.allSettled(
-        locales.map((locale) => onRetryLocale(locale, undefined, selectiveOptions)),
+        locales.map((locale) =>
+          onRetryLocale(locale, undefined, selectiveOptions).then((r) => {
+            completed++;
+            toast.loading(`번역 중... (${completed}/${total})`, { id: toastId });
+            return r;
+          }),
+        ),
       );
       const newSet = new Set(retranslatedLocales);
       results.forEach((r, i) => {
         if (r.status === 'fulfilled') newSet.add(locales[i]);
       });
       setRetranslatedLocales(newSet);
+      toast.success('번역 완료', { id: toastId });
+    } catch {
+      toast.error('번역 중 오류가 발생했습니다.', { id: toastId });
     } finally {
       setBulkRetranslating(false);
     }
@@ -562,34 +581,45 @@ export function TranslationSheet({
         </div>
 
         {/* 이미지 Alt */}
-        {(selectedTranslation.thumbnail_alt || selectedTranslation.image_alts.length > 0) &&
+        {(originalThumbnailAlt || (originalImageAlts && originalImageAlts.length > 0)) &&
           renderFieldRow('image_alts', undefined, {
             children: (
               <div className="mt-2 space-y-3">
-                {selectedTranslation.thumbnail_alt && (
+                {originalThumbnailAlt && (
                   <div className="flex items-start gap-3">
-                    <span className="shrink-0 rounded bg-gray-100 px-1.5 py-0.5 text-xs font-medium text-gray-600">
-                      썸네일
-                    </span>
+                    <div className="flex shrink-0 items-center gap-1.5">
+                      <span className="rounded bg-gray-100 px-1.5 py-0.5 text-xs font-medium text-gray-600">
+                        썸네일
+                      </span>
+                      {!selectedTranslation.thumbnail_alt && <UntranslatedBadge />}
+                    </div>
                     <div className="min-w-0">
                       {originalThumbnail && (
                         <img src={originalThumbnail} alt="" className="mb-1 h-12 w-auto object-cover" />
                       )}
-                      <p className="text-sm">{selectedTranslation.thumbnail_alt}</p>
+                      <p className="text-sm">
+                        {selectedTranslation.thumbnail_alt || originalThumbnailAlt}
+                      </p>
                     </div>
                   </div>
                 )}
-                {selectedTranslation.image_alts.map((item, i) => (
-                  <div key={item.src} className="flex items-start gap-3">
-                    <span className="shrink-0 rounded bg-gray-100 px-1.5 py-0.5 text-xs font-medium text-gray-600">
-                      이미지 {i + 1}
-                    </span>
-                    <div className="min-w-0">
-                      <img src={item.src} alt="" className="mb-1 h-12 w-auto object-cover" />
-                      <p className="text-sm">{item.alt}</p>
+                {(originalImageAlts ?? []).map((origItem, i) => {
+                  const translated = selectedTranslation.image_alts.find((t) => t.src === origItem.src);
+                  return (
+                    <div key={origItem.src} className="flex items-start gap-3">
+                      <div className="flex shrink-0 items-center gap-1.5">
+                        <span className="rounded bg-gray-100 px-1.5 py-0.5 text-xs font-medium text-gray-600">
+                          이미지 {i + 1}
+                        </span>
+                        {!translated && <UntranslatedBadge />}
+                      </div>
+                      <div className="min-w-0">
+                        <img src={origItem.src} alt="" className="mb-1 h-12 w-auto object-cover" />
+                        <p className="text-sm">{translated?.alt || origItem.alt}</p>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ),
           })}

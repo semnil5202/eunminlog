@@ -382,8 +382,11 @@ function NewPostContent() {
           imageAlts: imageAlts.length > 0 ? imageAlts : undefined,
           thumbnailAlt: getValues('thumbnailAlt') || undefined,
         };
-        const results = await fetchTranslatePost(params);
-        toast.success('번역 완료');
+        const toastId = toast.loading('번역 중... (0/7)');
+        const results = await fetchTranslatePost(params, undefined, (c, total) => {
+          toast.loading(`번역 중... (${c}/${total})`, { id: toastId });
+        });
+        toast.success('번역 완료', { id: toastId });
         setLastConfirmedTerms([]);
 
         const failedLocales = results.filter((r) => r.failed);
@@ -528,6 +531,7 @@ function NewPostContent() {
     const values = getValues();
     const { title: t, content: c, description: d, placeName: pn, address: addr } = values;
     const validProds = values.products.filter((p) => p.name.trim());
+    const toastId = toast.loading('번역 중... (0/7)');
     const results = await fetchTranslatePost({
       title: t,
       content: c,
@@ -541,8 +545,10 @@ function NewPostContent() {
       confirmedTerms: lastConfirmedTerms,
       imageAlts: imageAlts.length > 0 ? imageAlts : undefined,
       thumbnailAlt: getValues('thumbnailAlt') || undefined,
-    }, signal);
-    toast.success('번역 완료');
+    }, signal, (completed, total) => {
+      toast.loading(`번역 중... (${completed}/${total})`, { id: toastId });
+    });
+    toast.success('번역 완료', { id: toastId });
     setTranslationResults(results);
     captureSnapshot(imageAlts);
   };
