@@ -17,6 +17,10 @@ img[data-lightbox] {
   cursor: pointer;
 }
 
+[itemprop='articleBody'] > p > img {
+  margin: 16px 0;
+}
+
 [itemprop='articleBody'] p:empty,
 [itemprop='articleBody'] p:has(> br:only-child) {
   min-height: 1em;

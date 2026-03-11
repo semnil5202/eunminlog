@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 import { toWebP } from '@/features/post-editor/lib/image';
 
@@ -76,8 +77,14 @@ export function useImageUpload() {
     options?: { og?: boolean },
   ): Promise<UploadImageResult> => {
     setIsUploading(true);
+    const toastId = toast.loading('이미지 업로드 중...');
     try {
-      return await uploadImage(file, options);
+      const result = await uploadImage(file, options);
+      toast.success('이미지 업로드 완료', { id: toastId });
+      return result;
+    } catch (err) {
+      toast.error('이미지 업로드에 실패했습니다.', { id: toastId });
+      throw err;
     } finally {
       setIsUploading(false);
     }
@@ -85,8 +92,14 @@ export function useImageUpload() {
 
   const uploadImagesWithLoading = async (files: File[]): Promise<UploadImageResult[]> => {
     setIsUploading(true);
+    const toastId = toast.loading(`이미지 ${files.length}장 업로드 중...`);
     try {
-      return await uploadImages(files);
+      const results = await uploadImages(files);
+      toast.success(`이미지 ${files.length}장 업로드 완료`, { id: toastId });
+      return results;
+    } catch (err) {
+      toast.error('이미지 업로드에 실패했습니다.', { id: toastId });
+      throw err;
     } finally {
       setIsUploading(false);
     }
