@@ -23,9 +23,9 @@ export function UploadImage({ editor }: EditorProps) {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    let urls: string[];
+    let results: { url: string; width: number; height: number }[];
     try {
-      urls = await uploadImages(Array.from(files));
+      results = await uploadImages(Array.from(files));
     } catch (err) {
       console.error('이미지 업로드 실패:', err);
       e.target.value = '';
@@ -38,7 +38,7 @@ export function UploadImage({ editor }: EditorProps) {
 
     // Case 0: carousel node itself is selected (NodeSelection) → append images
     if (selection instanceof NodeSelection && selection.node.type.name === 'imageCarousel') {
-      for (const url of urls) {
+      for (const { url } of results) {
         editor.commands.addImageToCarousel($from.pos, url);
       }
       e.target.value = '';
@@ -65,7 +65,7 @@ export function UploadImage({ editor }: EditorProps) {
     }
 
     if (carouselPos !== null) {
-      for (const url of urls) {
+      for (const { url } of results) {
         editor.commands.addImageToCarousel(carouselPos, url);
       }
       e.target.value = '';
@@ -73,8 +73,8 @@ export function UploadImage({ editor }: EditorProps) {
     }
 
     // Case 2: multiple files selected → create carousel directly
-    if (urls.length > 1) {
-      const images = urls.map((src) => ({ src, width: '90%', height: 'auto' }));
+    if (results.length > 1) {
+      const images = results.map(({ url }) => ({ src: url, width: '90%', height: 'auto' }));
 
       // If cursor is after an inline image, include it in the carousel
       const nodeBefore = $from.nodeBefore;
@@ -140,7 +140,7 @@ export function UploadImage({ editor }: EditorProps) {
           const carouselNode = editor.schema.nodes.imageCarousel.create({
             images: [
               { src: existingSrc, width: '90%', height: 'auto' },
-              { src: urls[0], width: '90%', height: 'auto' },
+              { src: results[0].url, width: '90%', height: 'auto' },
             ],
           });
 
@@ -158,8 +158,9 @@ export function UploadImage({ editor }: EditorProps) {
       return;
     }
 
-    // Case 4: single file, no special context → insert as single image
-    editor.chain().focus().setImage({ src: urls[0] }).run();
+    // Case 4: single file, no special context → insert as single image with dimensions
+    const { url, width, height } = results[0];
+    editor.chain().focus().setImage({ src: url, width, height }).run();
     e.target.value = '';
   };
 

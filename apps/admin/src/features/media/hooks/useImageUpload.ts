@@ -12,6 +12,8 @@ const RESIZED_MAX_WIDTH = 688;
 const OG_SUFFIX = '_og';
 const OG_MAX_WIDTH = 1200;
 
+export type UploadImageResult = { url: string; width: number; height: number };
+
 async function uploadBlob(presignedUrl: string, blob: Blob) {
   const res = await fetch(presignedUrl, {
     method: 'PUT',
@@ -24,49 +26,55 @@ async function uploadBlob(presignedUrl: string, blob: Blob) {
 export function useImageUpload() {
   const [isUploading, setIsUploading] = useState(false);
 
-  const uploadImage = async (file: File, options?: { og?: boolean }): Promise<string> => {
-    const originalBlob = await toWebP(file, { maxWidth: ORIGINAL_MAX_WIDTH });
-    const blobType = originalBlob.type || 'image/webp';
+  const uploadImage = async (
+    file: File,
+    options?: { og?: boolean },
+  ): Promise<UploadImageResult> => {
+    const original = await toWebP(file, { maxWidth: ORIGINAL_MAX_WIDTH });
+    const blobType = original.blob.type || 'image/webp';
     const { presignedUrl, cdnUrl, key } = await getPresignedUrl(
       file.type,
-      originalBlob.size,
+      original.blob.size,
       undefined,
       blobType,
     );
 
-    await uploadBlob(presignedUrl, originalBlob);
+    await uploadBlob(presignedUrl, original.blob);
 
-    const resizedBlob = await toWebP(file, { maxWidth: RESIZED_MAX_WIDTH, quality: 0.8 });
+    const resized = await toWebP(file, { maxWidth: RESIZED_MAX_WIDTH, quality: 0.75 });
     const ext = blobType === 'image/jpeg' ? 'jpg' : 'webp';
     const resizedKey = key.replace(/\.(webp|jpg)$/, `${RESIZED_SUFFIX}.${ext}`);
     const { presignedUrl: resizedUrl } = await getPresignedUrl(
       file.type,
-      resizedBlob.size,
+      resized.blob.size,
       resizedKey,
       blobType,
     );
-    await uploadBlob(resizedUrl, resizedBlob);
+    await uploadBlob(resizedUrl, resized.blob);
 
     if (options?.og) {
-      const ogBlob = await toWebP(file, { maxWidth: OG_MAX_WIDTH, maxHeight: 630 });
+      const og = await toWebP(file, { maxWidth: OG_MAX_WIDTH, maxHeight: 630 });
       const ogKey = key.replace(/\.(webp|jpg)$/, `${OG_SUFFIX}.${ext}`);
       const { presignedUrl: ogPresignedUrl } = await getPresignedUrl(
         file.type,
-        ogBlob.size,
+        og.blob.size,
         ogKey,
         blobType,
       );
-      await uploadBlob(ogPresignedUrl, ogBlob);
+      await uploadBlob(ogPresignedUrl, og.blob);
     }
 
-    return cdnUrl;
+    return { url: cdnUrl, width: resized.width, height: resized.height };
   };
 
-  const uploadImages = async (files: File[]): Promise<string[]> => {
+  const uploadImages = async (files: File[]): Promise<UploadImageResult[]> => {
     return Promise.all(files.map((file) => uploadImage(file)));
   };
 
-  const uploadWithLoading = async (file: File, options?: { og?: boolean }): Promise<string> => {
+  const uploadWithLoading = async (
+    file: File,
+    options?: { og?: boolean },
+  ): Promise<UploadImageResult> => {
     setIsUploading(true);
     try {
       return await uploadImage(file, options);
@@ -75,7 +83,7 @@ export function useImageUpload() {
     }
   };
 
-  const uploadImagesWithLoading = async (files: File[]): Promise<string[]> => {
+  const uploadImagesWithLoading = async (files: File[]): Promise<UploadImageResult[]> => {
     setIsUploading(true);
     try {
       return await uploadImages(files);

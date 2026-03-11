@@ -24,7 +24,9 @@ type ToWebPOptions = {
   quality?: number;
 };
 
-export function toWebP(file: File, options: ToWebPOptions = {}): Promise<Blob> {
+export type WebPResult = { blob: Blob; width: number; height: number };
+
+export function toWebP(file: File, options: ToWebPOptions = {}): Promise<WebPResult> {
   const { maxWidth, maxHeight, quality = 1 } = options;
 
   return new Promise((resolve, reject) => {
@@ -65,10 +67,13 @@ export function toWebP(file: File, options: ToWebPOptions = {}): Promise<Blob> {
       canvas.toBlob(
         (blob) => {
           if (blob) {
-            resolve(blob);
+            resolve({ blob, width: w, height: canvasH });
           } else {
             canvas.toBlob(
-              (fallback) => (fallback ? resolve(fallback) : reject(new Error('toBlob failed'))),
+              (fallback) =>
+                fallback
+                  ? resolve({ blob: fallback, width: w, height: canvasH })
+                  : reject(new Error('toBlob failed')),
               'image/jpeg',
               quality,
             );

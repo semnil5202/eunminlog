@@ -4,8 +4,14 @@ export const CustomResizableImage = Image.extend({
   addAttributes() {
     return {
       ...this.parent?.(),
-      width: { default: null, renderHTML: () => ({}) },
-      height: { default: null, renderHTML: () => ({}) },
+      width: {
+        default: null,
+        renderHTML: (attributes) => (attributes.width ? { width: attributes.width } : {}),
+      },
+      height: {
+        default: null,
+        renderHTML: (attributes) => (attributes.height ? { height: attributes.height } : {}),
+      },
       style: {
         default: 'width: 100%; height: auto;',
         parseHTML: (element: HTMLElement) => {

@@ -25,8 +25,8 @@ export function ThumbnailUpload({ thumbnail, onThumbnailChange }: ThumbnailUploa
     if (!file) return;
 
     try {
-      const cdnUrl = await uploadImage(file, { og: true });
-      onThumbnailChange(cdnUrl);
+      const { url } = await uploadImage(file, { og: true });
+      onThumbnailChange(url);
     } catch (err) {
       console.error('썸네일 업로드 실패:', err);
     }
