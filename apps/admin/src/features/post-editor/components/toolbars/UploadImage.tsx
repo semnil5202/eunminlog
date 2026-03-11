@@ -45,34 +45,7 @@ export function UploadImage({ editor }: EditorProps) {
       return;
     }
 
-    // Case 1: cursor after an imageCarousel block → append all images
-    let carouselPos: number | null = null;
-
-    if ($from.depth >= 1) {
-      const posBefore = $from.before();
-      if (posBefore > 0) {
-        const resolved = state.doc.resolve(posBefore);
-        const node = resolved.nodeBefore;
-        if (node?.type.name === 'imageCarousel') {
-          carouselPos = posBefore - node.nodeSize;
-        }
-      }
-    } else if ($from.pos > 0) {
-      const node = $from.nodeBefore;
-      if (node?.type.name === 'imageCarousel') {
-        carouselPos = $from.pos - node.nodeSize;
-      }
-    }
-
-    if (carouselPos !== null) {
-      for (const { url, width, height } of results) {
-        editor.commands.addImageToCarousel(carouselPos, url, width, height);
-      }
-      e.target.value = '';
-      return;
-    }
-
-    // Case 2: multiple files selected → create carousel directly
+    // Case 1: multiple files selected → create carousel directly
     if (results.length > 1) {
       const images = results.map(({ url, width, height }) => ({ src: url, width: '90%', height: 'auto', naturalWidth: width, naturalHeight: height }));
 
