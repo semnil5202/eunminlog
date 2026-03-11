@@ -175,11 +175,9 @@ export const getLocalizedPost = async (post: Post, locale: Locale): Promise<Loca
 };
 ```
 
-### 4-2. Client: Mock 번역 데이터 업데이트
+### 4-2. Client: Mock 번역 데이터 (삭제됨)
 
-**파일**: `apps/client/src/features/post-feed/mock/translations.ts`
-
-기존 mock 데이터에 `place_name`, `address` 필드를 추가한다.
+> Mock 데이터(`apps/client/src/features/post-feed/mock/`)는 Supabase 직접 연동 완료 후 삭제됨. 아래는 과거 참조용.
 
 ```typescript
 // 예시 — post-1 (광장시장 빈대떡) English
@@ -553,8 +551,7 @@ SQL은 [`secrets-reference.md` 섹션 8-6](secrets-reference.md#8-6-마이그레
 기존 번역 레코드가 많은 경우: 일괄 번역 스크립트를 작성하여 처리한다.
 
 ```
-현재 mock 데이터 기준: 3개 번역 레코드 (post-1 en, post-11 en, post-11 ja)
-→ 수동 업데이트로 충분
+현재 Supabase 직접 연동 (mock 데이터 삭제됨)
 ```
 
 ---
@@ -567,7 +564,7 @@ SQL은 [`secrets-reference.md` 섹션 8-6](secrets-reference.md#8-6-마이그레
 | ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
 | `shared/types/post.ts`                                | PostTranslation에 place_name, address 추가. LocalizedPost에 translated_place_name, translated_address 추가            |
 | `features/post-feed/api/translations.ts`              | getLocalizedPost()에서 translated_place_name, translated_address 매핑                                                 |
-| `features/post-feed/mock/translations.ts`             | mock 데이터에 place_name, address 추가                                                                                |
+| ~~`features/post-feed/mock/translations.ts`~~         | ~~mock 데이터~~ (삭제됨 — Supabase 직접 연동)                                                                         |
 | `features/post-detail/components/PlaceInfoCard.astro` | Props 추가 (translatedPricePrefix 포함), 번역 텍스트 표시, 장소명 지도 링크 (ko: 네이버, 다국어: 구글), 주소 복사, 필드 라벨 다국어 처리, 가격 설명 번역 우선 적용 |
 | `layouts/PostLayout.astro`                            | PlaceInfoCard에 translatedPlaceName, translatedAddress, translatedPricePrefix props 전달                              |
 | `shared/lib/i18n/translations.ts`                     | place.category, place.name, place.address, place.price, place.currency, place.targetCurrency, place.copyToast, a11y.mapSearch 키 추가 |
@@ -606,7 +603,7 @@ SQL은 [`secrets-reference.md` 섹션 8-6](secrets-reference.md#8-6-마이그레
 | 1    | DB: post_translations 테이블에 place_name, address 컬럼 추가 (Supabase)          | P0       | 없음             |
 | 2    | Client: PostTranslation, LocalizedPost 타입 변경                                 | P0       | #1               |
 | 3    | Client: translations.ts — getLocalizedPost() 수정                                | P0       | #2               |
-| 4    | Client: mock/translations.ts — mock 데이터에 place_name, address 추가            | P0       | #2               |
+| 4    | ~~Client: mock/translations.ts~~ (삭제됨)                                        | -        | -                |
 | 5    | Client: i18n/translations.ts — place.\* 번역 키 추가                             | P0       | 없음             |
 | 6    | Client: PlaceInfoCard.astro — Props 추가, 번역 표시, 복사 버튼 변경, 라벨 다국어 | P0       | #2, #3, #5       |
 | 7    | Client: PostLayout.astro — PlaceInfoCard props 전달                              | P0       | #6               |

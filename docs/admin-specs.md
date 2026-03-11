@@ -1211,8 +1211,6 @@ features/category-management/
 │   ├── CategoryTable.tsx          # 카테고리 목록 그룹 테이블 UI
 │   ├── CategoryTableRow.tsx       # 대분류/소분류 행
 │   └── SlugWarningDialog.tsx      # slug 변경 경고 모달 (CM-7)
-├── mock/
-│   └── categories.ts              # mock 데이터 (CATEGORY_OPTIONS + SUB_CATEGORY_MAP 기반)
 ├── api/
 │   └── category-actions.ts        # Server Actions (getCategory, createCategory, updateCategory)
 └── containers/
@@ -1428,8 +1426,6 @@ apps/admin/
     │   │   │   ├── CategoryTable.tsx          # 카테고리 그룹 테이블 UI
     │   │   │   ├── CategoryTableRow.tsx       # 대분류/소분류 행
     │   │   │   └── SlugWarningDialog.tsx      # slug 변경 경고 모달
-    │   │   ├── mock/
-    │   │   │   └── categories.ts              # mock 데이터
     │   │   ├── api/
     │   │   │   └── category-actions.ts        # Server Actions (getCategory, createCategory, updateCategory)
     │   │   └── containers/

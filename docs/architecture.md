@@ -86,7 +86,7 @@ src/
 │   │   │   ├── posts.ts                    # 포스트 데이터 fetch (빌드 타임, Supabase)
 │   │   │   ├── translations.ts             # 번역 데이터 fetch (빌드 타임, Supabase)
 │   │   │   └── categories.ts              # 카테고리 데이터 fetch (빌드 타임, Supabase categories 테이블)
-│   │   └── mock/                            # (레거시 — 현재 미사용, Supabase 직접 연동)
+
 │   ├── post-detail/                        # 포스트 상세 페이지
 │   │   ├── components/
 │   │   │   ├── PlaceInfoCard.astro         # 장소 정보 카드 (Schema.org LocalBusiness)
