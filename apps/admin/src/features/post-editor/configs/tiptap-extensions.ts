@@ -65,6 +65,9 @@ const CustomStarterKit = StarterKit.configure({
   dropcursor: {
     width: 2,
   },
+  undoRedo: {
+    newGroupDelay: 100,
+  },
   bulletList: false,
   heading: false,
   codeBlock: false,
