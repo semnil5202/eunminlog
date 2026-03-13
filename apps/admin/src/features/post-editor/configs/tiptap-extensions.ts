@@ -123,7 +123,7 @@ const CustomTextAlign = TextAlign.configure({
 const CustomTable = Table.configure({
   resizable: true,
   HTMLAttributes: {
-    style: 'border-collapse: collapse; width: 100%; margin: 16px 0;',
+    style: 'border-collapse: collapse; width: 100%; margin: 12px 0;',
   },
 });
 

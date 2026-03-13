@@ -134,6 +134,33 @@ img[data-lightbox] {
   right: 8px;
 }
 
+[itemprop='articleBody'] table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 12px 0;
+}
+
+[itemprop='articleBody'] th,
+[itemprop='articleBody'] td {
+  border: 1px solid #d1d5db;
+  padding: 8px 12px;
+  vertical-align: top;
+}
+
+[itemprop='articleBody'] th {
+  background-color: #f3f4f6;
+  font-weight: 600;
+  text-align: left;
+}
+
+@media (max-width: 640px) {
+  [itemprop='articleBody'] table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
 [data-type='link-bookmark'] {
   margin: 16px 0;
 }
