@@ -5,8 +5,8 @@ import { TableIcon } from '../icons';
 
 import type { EditorProps } from './types';
 
-const CELL_COLORS: { color: string | null; label: string }[] = [
-  { color: null, label: '없음' },
+const CELL_COLORS: { color: string; label: string }[] = [
+  { color: 'transparent', label: '없음' },
   { color: '#f3f4f6', label: '회색' },
   { color: '#fef9c3', label: '노랑' },
   { color: '#dcfce7', label: '초록' },
@@ -148,9 +148,9 @@ export function TableToolbar({ editor }: EditorProps) {
             >
               <span
                 className="h-4 w-4 rounded-sm border border-gray-300"
-                style={{ backgroundColor: color ?? 'transparent' }}
+                style={{ backgroundColor: color }}
               >
-                {color === null && (
+                {color === 'transparent' && (
                   <svg viewBox="0 0 16 16" className="h-4 w-4 text-gray-400">
                     <line x1="2" y1="14" x2="14" y2="2" stroke="currentColor" strokeWidth="1.5" />
                   </svg>
