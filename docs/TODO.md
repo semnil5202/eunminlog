@@ -209,4 +209,4 @@
 
 - [ ] 게시글 폼 타입 필터링 — `posts` 테이블에 `form_type` enum 컬럼 추가 (`place`, `product`, `general`). 기존 데이터는 `place_name`/`product_name` null 체크로 마이그레이션. Admin 게시글 목록에 폼 타입 필터 추가
 - [ ] 게시글 소프트 딜리트 — `deleted_at` 컬럼 추가, 삭제 후 복구 지원, S3 이미지 고아 방지, SEO 301 대응 여유 확보
-- [ ] AVIF 이미지 포맷 도입 검토 — Chrome `canvas.toBlob('image/avif')` 인코더는 quality 파라미터 반영이 미흡하여 WebP 대비 파일 크기가 오히려 큼 (688px 이미지 기준 1.1MB vs WebP 96KB). 서버사이드 인코딩(Sharp/libavif) 방식 재검토 필요. 브라우저 지원: AVIF 96.19%, WebP 96.96% (caniuse.com 2026-03 기준)
+- [ ] AVIF 이미지 포맷 도입 보류 — Chrome canvas.toBlob 인코더는 압축 효율 매우 낮음 (WebP보다 큼). WASM(@jsquash/avif) Web Worker 방식은 동작하나 quality 40에서 WebP 대비 57% 감소 수준이며 화질 저하 있음. 서버사이드 Sharp 인코딩이 가장 유력하나 Vercel hobby 타임아웃 제약. Lambda 비동기 변환 방식 재검토 필요
