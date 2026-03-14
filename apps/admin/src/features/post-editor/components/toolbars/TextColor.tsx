@@ -59,7 +59,7 @@ export function TextColor({ editor }: EditorProps) {
         onClick={() => setOpen((v) => !v)}
         className={cn(
           'flex h-8 w-8 cursor-pointer items-center justify-center rounded hover:bg-accent',
-          open && 'bg-accent',
+          (open || (editor.isActive('textStyle') && !editor.isActive('textStyle', { color: '#000000' }))) && 'bg-gray-200',
         )}
         title="글자 색상"
       >

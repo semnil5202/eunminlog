@@ -13,7 +13,7 @@ export function FontStyles({ editor }: EditorProps) {
         disabled={!editor.can().chain().focus().toggleBold().run()}
         className={cn(
           'flex h-8 w-8 cursor-pointer items-center justify-center rounded text-foreground hover:bg-accent',
-          editor.isActive('bold') && 'bg-accent',
+          editor.isActive('bold') && 'bg-gray-200',
         )}
       >
         <BoldIcon />
@@ -25,7 +25,7 @@ export function FontStyles({ editor }: EditorProps) {
         disabled={!editor.can().chain().focus().toggleItalic().run()}
         className={cn(
           'flex h-8 w-8 cursor-pointer items-center justify-center rounded text-foreground hover:bg-accent',
-          editor.isActive('italic') && 'bg-accent',
+          editor.isActive('italic') && 'bg-gray-200',
         )}
       >
         <ItalicIcon />
@@ -37,7 +37,7 @@ export function FontStyles({ editor }: EditorProps) {
         disabled={!editor.can().chain().focus().toggleUnderline().run()}
         className={cn(
           'flex h-8 w-8 cursor-pointer items-center justify-center rounded text-foreground hover:bg-accent',
-          editor.isActive('underline') && 'bg-accent',
+          editor.isActive('underline') && 'bg-gray-200',
         )}
       >
         <UnderlineIcon />

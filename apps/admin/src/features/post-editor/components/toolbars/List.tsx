@@ -13,7 +13,7 @@ export function List({ editor }: EditorProps) {
         disabled={!editor.can().chain().focus().toggleBulletList().run()}
         className={cn(
           'flex h-8 w-8 cursor-pointer items-center justify-center rounded text-foreground hover:bg-accent',
-          editor.isActive('bulletList') && 'bg-accent',
+          editor.isActive('bulletList') && 'bg-gray-200',
         )}
       >
         <UnorderIcon />
@@ -25,7 +25,7 @@ export function List({ editor }: EditorProps) {
         disabled={!editor.can().chain().focus().toggleOrderedList().run()}
         className={cn(
           'flex h-8 w-8 cursor-pointer items-center justify-center rounded text-foreground hover:bg-accent',
-          editor.isActive('orderedList') && 'bg-accent',
+          editor.isActive('orderedList') && 'bg-gray-200',
         )}
       >
         <OrderIcon />

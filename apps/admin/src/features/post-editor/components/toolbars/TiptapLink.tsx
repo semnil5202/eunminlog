@@ -129,7 +129,7 @@ export function TiptapLink({ editor }: EditorProps) {
         onClick={handleOpen}
         className={cn(
           'flex h-8 w-8 cursor-pointer items-center justify-center rounded text-foreground hover:bg-accent',
-          editor.isActive('link') && 'bg-accent',
+          editor.isActive('link') && 'bg-gray-200',
         )}
       >
         <LinkIcon />

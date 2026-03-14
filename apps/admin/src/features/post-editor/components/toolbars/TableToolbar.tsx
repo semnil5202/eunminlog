@@ -60,7 +60,7 @@ export function TableToolbar({ editor }: EditorProps) {
         }
         className={cn(
           'flex h-8 w-8 cursor-pointer items-center justify-center rounded text-foreground hover:bg-accent',
-          isInTable && 'bg-accent',
+          isInTable && 'bg-gray-200',
         )}
       >
         <TableIcon />
