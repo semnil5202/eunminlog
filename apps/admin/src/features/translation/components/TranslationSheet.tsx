@@ -133,14 +133,14 @@ export function TranslationSheet({
   const [manuallyEditedLocales, setManuallyEditedLocales] = useState<Set<TranslationLocale>>(new Set());
 
   const [extractingTerms, setExtractingTerms] = useState(false);
-  const prevDirtyFieldsRef = useRef<Set<string>>(dirtyFields);
+  const prevDirtyKeyRef = useRef('');
 
   useEffect(() => {
-    const prev = prevDirtyFieldsRef.current;
-    prevDirtyFieldsRef.current = dirtyFields;
-    if (retranslatedLocales.size === 0 && manuallyEditedLocales.size === 0) return;
-    const hasNewDirty = [...dirtyFields].some((f) => !prev.has(f));
-    if (hasNewDirty) {
+    const currentKey = [...dirtyFields].sort().join(',');
+    if (currentKey === prevDirtyKeyRef.current) return;
+    const hadStatus = retranslatedLocales.size > 0 || manuallyEditedLocales.size > 0;
+    prevDirtyKeyRef.current = currentKey;
+    if (hadStatus && currentKey) {
       setRetranslatedLocales(new Set());
       setManuallyEditedLocales(new Set());
     }
@@ -215,11 +215,14 @@ export function TranslationSheet({
           }),
         ),
       );
-      const newSet = new Set(retranslatedLocales);
-      results.forEach((r, i) => {
-        if (r.status === 'fulfilled') newSet.add(locales[i]);
+      const successLocales = results
+        .map((r, i) => (r.status === 'fulfilled' ? locales[i] : null))
+        .filter((l): l is TranslationLocale => l !== null);
+      setRetranslatedLocales((prev) => {
+        const next = new Set(prev);
+        for (const l of successLocales) next.add(l);
+        return next;
       });
-      setRetranslatedLocales(newSet);
       toast.success('번역 완료', { id: toastId });
     } catch {
       toast.error('번역 중 오류가 발생했습니다.', { id: toastId });
@@ -254,7 +257,8 @@ export function TranslationSheet({
   useEffect(() => {
     if (!open || !pendingRetranslation) return;
     onPendingRetranslationConsumed?.();
-    handleSelectiveRetranslate(pendingRetranslation.locales, pendingRetranslation.confirmedTerms);
+    handleSelectiveRetranslate(pendingRetranslation.locales, pendingRetranslation.confirmedTerms)
+      .catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps -- trigger once when sheet reopens with pending data
   }, [open, pendingRetranslation]);
 
@@ -264,8 +268,7 @@ export function TranslationSheet({
   };
 
   const handleSelectiveAllLocales = async () => {
-    const pending = TARGET_LOCALES.filter((l) => !retranslatedLocales.has(l));
-    await startRetranslateWithTerms(pending.length > 0 ? pending : TARGET_LOCALES);
+    await startRetranslateWithTerms(TARGET_LOCALES);
   };
 
   const handleComplete = () => {
@@ -284,9 +287,10 @@ export function TranslationSheet({
     if (directEditingSections.has(key)) {
       const edited = directEditSections[key];
       if (edited !== undefined && edited !== currentHtml) {
-        const updatedSections = originalSections.map((s, i) => {
+        const baseSections = translatedSections.length > 0 ? translatedSections : originalSections;
+        const updatedSections = baseSections.map((s, i) => {
           if (i === sectionIndex) return { ...s, html: edited };
-          return translatedSections[i] ?? s;
+          return s;
         });
         const newContent = reassembleSections(updatedSections);
         onUpdateTranslationContent?.(locale, newContent);
