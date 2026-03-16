@@ -13,7 +13,7 @@ interface Props {
 
 const { title, description, url, image, locale, type = "website" } = Astro.props;
 
-const ogImage = image?.endsWith('.webp')
+const ogImage = image?.includes('media.eunminlog.site/posts/') && image.endsWith('.webp')
   ? image.replace(/\.webp$/, '_og.webp')
   : image;
 
