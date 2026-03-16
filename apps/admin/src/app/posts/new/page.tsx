@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -556,19 +556,31 @@ function NewPostContent() {
     setTimeout(() => setIsPreviewOpen(true), 800);
   };
 
+  const sheetTransitionRef = useRef(false);
+
   const handleRetranslateTermReview = (terms: FlaggedTerm[], locales: TranslationLocale[]) => {
+    if (sheetTransitionRef.current) return;
+    sheetTransitionRef.current = true;
     setRetranslateTermReviewTerms(terms);
     setPendingRetranslateLocales(locales);
     setIsPreviewOpen(false);
-    setTimeout(() => setIsRetranslateTermReviewOpen(true), 800);
+    setTimeout(() => {
+      setIsRetranslateTermReviewOpen(true);
+      sheetTransitionRef.current = false;
+    }, 800);
   };
 
   const handleRetranslateTermsConfirmed = (confirmedTerms: { original: string; confirmed: Record<string, string> }[]) => {
+    if (sheetTransitionRef.current) return;
+    sheetTransitionRef.current = true;
     setLastConfirmedTerms(confirmedTerms);
     setRetranslateTermReviewTerms([]);
     setIsRetranslateTermReviewOpen(false);
     setPendingRetranslation({ confirmedTerms, locales: pendingRetranslateLocales });
-    setTimeout(() => setIsPreviewOpen(true), 800);
+    setTimeout(() => {
+      setIsPreviewOpen(true);
+      sheetTransitionRef.current = false;
+    }, 800);
   };
 
   const handleRetryLocale = async (

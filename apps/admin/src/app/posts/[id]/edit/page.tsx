@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
@@ -549,19 +549,31 @@ function EditPostForm({
     setCompletedFormSnapshot(currentFormFingerprint);
   };
 
+  const sheetTransitionRef = useRef(false);
+
   const handleRequestTermReview = (terms: FlaggedTerm[], locales: TranslationLocale[]) => {
+    if (sheetTransitionRef.current) return;
+    sheetTransitionRef.current = true;
     setTermReviewTerms(terms);
     setPendingRetranslateLocales(locales);
     setIsEditSheetOpen(false);
-    setTimeout(() => setIsTermReviewOpen(true), 800);
+    setTimeout(() => {
+      setIsTermReviewOpen(true);
+      sheetTransitionRef.current = false;
+    }, 800);
   };
 
   const handleTermsConfirmed = (confirmedTerms: { original: string; confirmed: Record<string, string> }[]) => {
+    if (sheetTransitionRef.current) return;
+    sheetTransitionRef.current = true;
     setLastConfirmedTerms(confirmedTerms);
     setTermReviewTerms([]);
     setIsTermReviewOpen(false);
     setPendingRetranslation({ confirmedTerms, locales: pendingRetranslateLocales });
-    setTimeout(() => setIsEditSheetOpen(true), 800);
+    setTimeout(() => {
+      setIsEditSheetOpen(true);
+      sheetTransitionRef.current = false;
+    }, 800);
   };
 
   const handleEditSheetOpen = () => {
@@ -835,11 +847,15 @@ function EditPostForm({
             <button
               type="button"
               onClick={handleSubmitClick}
-              disabled={submitDisabled}
+              disabled={submitDisabled || isSubmitting}
               className="inline-flex items-center justify-center gap-1.5 h-10 bg-primary px-5 text-sm font-medium text-primary-foreground shadow-xs transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <Check className="size-4" />
-              수정 완료
+              {isSubmitting ? (
+                <LoaderIcon className="size-4 animate-spin" />
+              ) : (
+                <Check className="size-4" />
+              )}
+              {isSubmitting ? '수정 중...' : '수정 완료'}
             </button>
           </div>
           {submitDisabled && isDirty && (
