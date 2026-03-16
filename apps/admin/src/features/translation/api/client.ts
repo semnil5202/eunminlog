@@ -46,7 +46,7 @@ export async function fetchExtractTerms(
   const arr = Array.isArray(parsed) ? parsed : ((parsed.terms ?? []) as Record<string, unknown>[]);
   return arr.map((item: Record<string, unknown>) => ({
     original: (item.original ?? item.term ?? '') as string,
-    suggestions: (item.suggestions ?? item.translations ?? []) as string[],
+    suggestions: (item.suggestions ?? item.translations ?? []) as Record<string, string>[],
   }));
 }
 
@@ -90,7 +90,7 @@ export type TranslateParams = {
   purchaseSources?: string[];
   pricePrefixes?: string[];
   pricePrefix?: string;
-  confirmedTerms: { original: string; confirmed: string }[];
+  confirmedTerms: { original: string; confirmed: string | Record<string, string> }[];
   imageAlts?: ImageAlt[];
   thumbnailAlt?: string;
 };
@@ -143,7 +143,11 @@ async function fetchTranslateSingle(
   if (confirmedTerms.length > 0) {
     userPrompt += '\n\n확정 번역 용어:';
     for (const term of confirmedTerms) {
-      userPrompt += `\n- "${term.original}" → "${term.confirmed}"`;
+      const confirmed =
+        typeof term.confirmed === 'string'
+          ? term.confirmed
+          : (term.confirmed[locale] ?? '');
+      if (confirmed) userPrompt += `\n- "${term.original}" → "${confirmed}"`;
     }
   }
 

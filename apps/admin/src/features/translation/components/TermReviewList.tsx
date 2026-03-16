@@ -5,12 +5,15 @@ import { Separator } from '@/components/ui/separator';
 import type { FlaggedTerm } from '../types';
 import { TermReviewItem } from './TermReviewItem';
 
+const LOCALE_KEYS = ['en', 'ja', 'zh-CN', 'zh-TW', 'id', 'vi', 'th'];
+
 type TermReviewListProps = {
   terms: FlaggedTerm[];
-  confirmedTerms: Map<number, string>;
-  onConfirmTerm: (index: number, value: string) => void;
+  confirmedTerms: Map<number, Record<string, string>>;
+  onConfirmTerm: (index: number, value: Record<string, string>) => void;
   onTranslateRequest: () => void;
   isTranslating: boolean;
+  submitLabel?: string;
 };
 
 export function TermReviewList({
@@ -19,10 +22,12 @@ export function TermReviewList({
   onConfirmTerm,
   onTranslateRequest,
   isTranslating,
+  submitLabel,
 }: TermReviewListProps) {
   const allConfirmed = terms.every((_, i) => {
     const value = confirmedTerms.get(i);
-    return value !== undefined && value.trim() !== '';
+    if (!value) return false;
+    return LOCALE_KEYS.every((k) => (value[k] ?? '').trim() !== '');
   });
 
   return (
@@ -31,7 +36,7 @@ export function TermReviewList({
         <div key={term.original}>
           <TermReviewItem
             term={term}
-            confirmedValue={confirmedTerms.get(index) ?? ''}
+            confirmedValue={confirmedTerms.get(index) ?? {}}
             onChange={(value) => onConfirmTerm(index, value)}
           />
           {index < terms.length - 1 && <Separator className="mt-4" />}
@@ -48,7 +53,7 @@ export function TermReviewList({
         ) : (
           <Sparkles className="size-4" />
         )}
-        {isTranslating ? '번역 중...' : 'AI 번역 요청'}
+        {isTranslating ? '번역 중...' : (submitLabel ?? 'AI 번역 요청')}
       </button>
     </div>
   );

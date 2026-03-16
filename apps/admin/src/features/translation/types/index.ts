@@ -2,7 +2,7 @@ import type { TranslationLocale } from '@/shared/types/post';
 
 export type FlaggedTerm = {
   original: string;
-  suggestions: string[];
+  suggestions: Record<string, string>[];
 };
 
 export type ImageAlt = {

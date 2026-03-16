@@ -2,7 +2,7 @@ import type { PostFormValues } from '@/features/post-editor/types/form';
 import type { ImageAlt, TranslationResult } from '@/features/translation/types';
 
 export type TranslationData = {
-  confirmedTerms: { original: string; translation: string }[];
+  confirmedTerms: { original: string; translation: string | Record<string, string> }[];
   results: TranslationResult[];
 };
 
