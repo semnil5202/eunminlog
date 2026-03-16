@@ -2,7 +2,7 @@
 
 /** 번역본 확인 시트. 원문/번역 비교, 섹션별 체크박스, 선택적 재번역을 지원한다. */
 
-import { useMemo, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { LoaderIcon, RefreshCwIcon, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { Switch } from '@/components/ui/switch';
@@ -17,7 +17,7 @@ import {
 import { Button } from '@/components/ui/button';
 
 import type { TranslationLocale } from '@/shared/types/post';
-import type { CheckableField, ImageAlt, SelectiveTranslateOptions, TranslationResult } from '../types';
+import type { CheckableField, FlaggedTerm, ImageAlt, SelectiveTranslateOptions, TranslationResult } from '../types';
 import { LOCALE_FILTER_LABELS } from '../constants/locale';
 import { splitHtmlIntoSections, isTranslatableSection, reassembleSections, type ContentSection } from '../lib/html-sections';
 import { useTranslationCheckState } from '../hooks/useTranslationCheckState';
@@ -37,6 +37,8 @@ const FIELD_LABELS: Record<CheckableField, string> = {
   price_prefix: '가격설명',
   image_alts: '이미지 Alt',
 };
+
+type ConfirmedTerm = { original: string; confirmed: string | Record<string, string> };
 
 type TranslationSheetProps = {
   open: boolean;
@@ -59,11 +61,19 @@ type TranslationSheetProps = {
     locale: TranslationLocale,
     signal?: AbortSignal,
     selectiveOptions?: SelectiveTranslateOptions,
+    confirmedTerms?: ConfirmedTerm[],
   ) => Promise<TranslationResult>;
   onRetryAll?: (signal?: AbortSignal) => Promise<void>;
   onEditComplete?: () => void;
   onUpdateTranslationContent?: (locale: TranslationLocale, content: string) => void;
   onUpdateTranslation?: (locale: TranslationLocale, partial: Partial<TranslationResult>) => void;
+  onExtractTerms?: (dirtyFields: Set<string>) => Promise<FlaggedTerm[]>;
+  onRequestTermReview?: (terms: FlaggedTerm[], pendingLocales: TranslationLocale[]) => void;
+  pendingRetranslation?: {
+    confirmedTerms: ConfirmedTerm[];
+    locales: TranslationLocale[];
+  } | null;
+  onPendingRetranslationConsumed?: () => void;
 };
 
 const DirtyBadge = () => (
@@ -105,6 +115,10 @@ export function TranslationSheet({
   onEditComplete,
   onUpdateTranslationContent,
   onUpdateTranslation,
+  onExtractTerms,
+  onRequestTermReview,
+  pendingRetranslation,
+  onPendingRetranslationConsumed,
 }: TranslationSheetProps) {
   const [selected, setSelected] = useState<FilterLocale>('en');
   const [retranslating, setRetranslating] = useState<Record<string, boolean>>({});
@@ -117,6 +131,20 @@ export function TranslationSheet({
   const [directEditFields, setDirectEditFields] = useState<Record<string, string>>({});
   const [directEditingFields, setDirectEditingFields] = useState<Set<string>>(new Set());
   const [manuallyEditedLocales, setManuallyEditedLocales] = useState<Set<TranslationLocale>>(new Set());
+
+  const [extractingTerms, setExtractingTerms] = useState(false);
+  const prevDirtyFieldsRef = useRef<Set<string>>(dirtyFields);
+
+  useEffect(() => {
+    const prev = prevDirtyFieldsRef.current;
+    prevDirtyFieldsRef.current = dirtyFields;
+    if (retranslatedLocales.size === 0 && manuallyEditedLocales.size === 0) return;
+    const hasNewDirty = [...dirtyFields].some((f) => !prev.has(f));
+    if (hasNewDirty) {
+      setRetranslatedLocales(new Set());
+      setManuallyEditedLocales(new Set());
+    }
+  }, [dirtyFields, retranslatedLocales.size, manuallyEditedLocales.size]);
 
   const selectedTranslation =
     selected !== 'ko' ? translations.find((tr) => tr.locale === selected) : null;
@@ -166,7 +194,7 @@ export function TranslationSheet({
     return { targetFields, targetSectionIndices };
   };
 
-  const handleSelectiveRetranslate = async (locales: TranslationLocale[]) => {
+  const handleSelectiveRetranslate = async (locales: TranslationLocale[], confirmedTerms?: ConfirmedTerm[]) => {
     const selectiveOptions = buildSelectiveOptions();
     const hasIndividual = Object.values(retranslating).some(Boolean);
     if (hasIndividual) {
@@ -180,7 +208,7 @@ export function TranslationSheet({
     try {
       const results = await Promise.allSettled(
         locales.map((locale) =>
-          onRetryLocale(locale, undefined, selectiveOptions).then((r) => {
+          onRetryLocale(locale, undefined, selectiveOptions, confirmedTerms).then((r) => {
             completed++;
             toast.loading(`번역 중... (${completed}/${total})`, { id: toastId });
             return r;
@@ -200,14 +228,44 @@ export function TranslationSheet({
     }
   };
 
+  const startRetranslateWithTerms = async (locales: TranslationLocale[]) => {
+    if (!onExtractTerms) {
+      await handleSelectiveRetranslate(locales);
+      return;
+    }
+    setExtractingTerms(true);
+    const toastId = toast.loading('번역 용어 검토중...');
+    try {
+      const terms = await onExtractTerms(dirtyFields);
+      if (terms.length === 0) {
+        toast.dismiss(toastId);
+        await handleSelectiveRetranslate(locales);
+      } else {
+        toast.success('용어 검토가 필요합니다.', { id: toastId });
+        onRequestTermReview?.(terms, locales);
+      }
+    } catch {
+      toast.error('용어 추출에 실패했습니다. 다시 시도해주세요.', { id: toastId });
+    } finally {
+      setExtractingTerms(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!open || !pendingRetranslation) return;
+    onPendingRetranslationConsumed?.();
+    handleSelectiveRetranslate(pendingRetranslation.locales, pendingRetranslation.confirmedTerms);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- trigger once when sheet reopens with pending data
+  }, [open, pendingRetranslation]);
+
   const handleSelectiveThisLocale = async () => {
     if (selected === 'ko') return;
-    await handleSelectiveRetranslate([selected as TranslationLocale]);
+    await startRetranslateWithTerms([selected as TranslationLocale]);
   };
 
   const handleSelectiveAllLocales = async () => {
     const pending = TARGET_LOCALES.filter((l) => !retranslatedLocales.has(l));
-    await handleSelectiveRetranslate(pending.length > 0 ? pending : TARGET_LOCALES);
+    await startRetranslateWithTerms(pending.length > 0 ? pending : TARGET_LOCALES);
   };
 
   const handleComplete = () => {
@@ -295,7 +353,7 @@ export function TranslationSheet({
     }
   };
 
-  const isBulkRunning = bulkRetranslating;
+  const isBulkRunning = bulkRetranslating || extractingTerms;
 
   const renderFieldRow = (
     field: CheckableField,
@@ -830,25 +888,25 @@ export function TranslationSheet({
           </SheetDescription>
         </SheetHeader>
 
-        <div className="flex-1 overflow-y-auto px-4 pb-4">
-          <div className="flex flex-wrap gap-2">
-            {FILTER_KEYS.map((key) => (
-              <button
-                key={key}
-                type="button"
-                onClick={() => setSelected(key)}
-                className={`px-3 py-1 text-sm font-semibold transition-colors ${
-                  selected === key
-                    ? 'bg-primary-600 text-white'
-                    : 'border border-input text-muted-foreground hover:bg-accent'
-                }`}
-              >
-                {LOCALE_FILTER_LABELS[key]}
-              </button>
-            ))}
-          </div>
+        <div className="flex flex-wrap gap-2 px-4 pb-3">
+          {FILTER_KEYS.map((key) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setSelected(key)}
+              className={`px-3 py-1 text-sm font-semibold transition-colors ${
+                selected === key
+                  ? 'bg-primary-600 text-white'
+                  : 'border border-input text-muted-foreground hover:bg-accent'
+              }`}
+            >
+              {LOCALE_FILTER_LABELS[key]}
+            </button>
+          ))}
+        </div>
 
-          <div className="mt-6 divide-y divide-gray-200">
+        <div className="flex-1 overflow-y-auto px-4 pb-4">
+          <div className="divide-y divide-gray-200">
             {selected === 'ko' ? renderKoTab() : renderTranslationTab()}
           </div>
         </div>
@@ -863,7 +921,7 @@ export function TranslationSheet({
                   onClick={handleSelectiveThisLocale}
                   className="inline-flex items-center justify-center gap-1.5 h-10 border border-input px-5 text-sm font-semibold shadow-xs transition-colors hover:bg-accent disabled:opacity-50"
                 >
-                  {bulkRetranslating ? (
+                  {isBulkRunning ? (
                     <LoaderIcon className="size-3.5 animate-spin" />
                   ) : (
                     <Sparkles className="size-3.5" />
@@ -876,7 +934,7 @@ export function TranslationSheet({
                   onClick={handleSelectiveAllLocales}
                   className="inline-flex items-center justify-center gap-1.5 h-10 border border-input px-5 text-sm font-semibold shadow-xs transition-colors hover:bg-accent disabled:opacity-50"
                 >
-                  {bulkRetranslating ? (
+                  {isBulkRunning ? (
                     <LoaderIcon className="size-3.5 animate-spin" />
                   ) : (
                     <RefreshCwIcon className="size-3.5" />
