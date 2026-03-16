@@ -195,7 +195,6 @@ async function fetchTranslateSingle(
     alt: translatedAlts[i] ?? orig.alt,
   }));
 
-  // Handle selective content_sections response
   let resultContent: string;
   if (isSelective && parsed.content_sections && typeof parsed.content_sections === 'object') {
     const contentSections = parsed.content_sections as Record<string, string>;
@@ -208,6 +207,23 @@ async function fetchTranslateSingle(
       return s;
     });
     resultContent = reassembleSections(mergedSections);
+  } else if (isSelective && !parsed.content_sections && parsed.content) {
+    const targetIndices = new Set(selectiveOptions?.targetSectionIndices ?? []);
+    if (targetIndices.size > 0) {
+      const existingSections = splitHtmlIntoSections(content);
+      const returnedSections = splitHtmlIntoSections(
+        restoreImgTags(parsed.content as string, imgs),
+      );
+      const mergedSections = existingSections.map((s) => {
+        if (targetIndices.has(s.index) && s.index < returnedSections.length && returnedSections[s.index]) {
+          return { ...s, html: returnedSections[s.index].html };
+        }
+        return s;
+      });
+      resultContent = reassembleSections(mergedSections);
+    } else {
+      resultContent = restoreImgTags((parsed.content as string) ?? '', imgs);
+    }
   } else {
     resultContent = restoreImgTags((parsed.content as string) ?? '', imgs);
   }
