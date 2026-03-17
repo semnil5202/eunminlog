@@ -73,20 +73,10 @@ jobs:
           aws s3 sync apps/client/dist/ s3://${{ env.S3_BUCKET }} \
             --exclude "*" --include "*.html" \
             --cache-control "no-cache" \
-            --delete \
-            --dryrun | grep 'upload:' | awk '{print $5}' | sed "s|s3://${{ env.S3_BUCKET }}||" > /tmp/changed-paths.txt
-          aws s3 sync apps/client/dist/ s3://${{ env.S3_BUCKET }} \
-            --exclude "*" --include "*.html" \
-            --cache-control "no-cache" \
             --delete
 
       - name: Deploy to S3 (static assets — long cache)
         run: |
-          aws s3 sync apps/client/dist/ s3://${{ env.S3_BUCKET }} \
-            --exclude "*.html" \
-            --cache-control "public, max-age=31536000, immutable" \
-            --delete \
-            --dryrun | grep 'upload:' | awk '{print $5}' | sed "s|s3://${{ env.S3_BUCKET }}||" >> /tmp/changed-paths.txt
           aws s3 sync apps/client/dist/ s3://${{ env.S3_BUCKET }} \
             --exclude "*.html" \
             --cache-control "public, max-age=31536000, immutable" \
@@ -103,15 +93,6 @@ jobs:
 
       - name: Invalidate CloudFront cache
         run: |
-          if [ ! -s /tmp/changed-paths.txt ]; then
-            echo "No changed files, skipping invalidation"
-            exit 0
-          fi
-          PATHS=$(cat /tmp/changed-paths.txt | sed 's|/index.html$|/|' | grep '^/' | sort -u | head -3000)
-          echo "Invalidation paths:"
-          echo "$PATHS"
-          COUNT=$(echo "$PATHS" | wc -l | tr -d ' ')
-          echo "Total paths: $COUNT"
           aws cloudfront create-invalidation \
             --distribution-id ${{ env.CLOUDFRONT_DISTRIBUTION_ID }} \
-            --paths $PATHS
+            --paths "/*"

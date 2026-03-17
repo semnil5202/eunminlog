@@ -1,6 +1,6 @@
 # CI/CD Pipeline — GitHub Actions
 
-> Date: 2026-03-02 (2026-03-06 리다이렉트 매핑 + CF Function 업데이트 추가, 2026-03-16 선택적 캐시 무효화 적용)
+> Date: 2026-03-02 (2026-03-06 리다이렉트 매핑 + CF Function 업데이트 추가)
 > Status: Draft (PM 작성, 승인 후 se가 구현)
 
 ## 1. Overview
@@ -12,8 +12,8 @@ Push to main/develop
   → GitHub Actions Trigger
     → pnpm install (monorepo 전체)
     → pnpm --filter @eunminlog/client build
-    → aws s3 sync dist/ → S3 버킷 (변경 파일만 업로드)
-    → aws cloudfront create-invalidation (변경된 경로만 선택적 무효화)
+    → aws s3 sync dist/ → S3 버킷
+    → aws cloudfront create-invalidation /*
 ```
 
 ## 2. Environment Strategy
@@ -135,18 +135,13 @@ Job: deploy
 
 `aws-actions/configure-aws-credentials@v4`로 AWS 자격 증명 설정. 시크릿 키 목록은 [`secrets-reference.md`](secrets-reference.md) 섹션 2-1을 참조.
 
-#### Step 8: Deploy to S3 + 변경 파일 추출
+#### Step 8: Deploy to S3
 
-파일 유형별 `Cache-Control` 분리 배포. 각 sync 전에 `--dryrun`으로 변경 파일 목록을 먼저 추출한다.
+파일 유형별 `Cache-Control` 분리 배포:
 
 ```yaml
 - name: Deploy to S3 (HTML — no-cache)
   run: |
-    aws s3 sync apps/client/dist/ s3://${{ env.S3_BUCKET }} \
-      --exclude "*" --include "*.html" \
-      --cache-control "no-cache" \
-      --delete \
-      --dryrun | grep 'upload:' | awk '{print $4}' | sed "s|s3://${{ env.S3_BUCKET }}||" > /tmp/changed-paths.txt
     aws s3 sync apps/client/dist/ s3://${{ env.S3_BUCKET }} \
       --exclude "*" --include "*.html" \
       --cache-control "no-cache" \
@@ -157,40 +152,25 @@ Job: deploy
     aws s3 sync apps/client/dist/ s3://${{ env.S3_BUCKET }} \
       --exclude "*.html" \
       --cache-control "public, max-age=31536000, immutable" \
-      --delete \
-      --dryrun | grep 'upload:' | awk '{print $4}' | sed "s|s3://${{ env.S3_BUCKET }}||" >> /tmp/changed-paths.txt
-    aws s3 sync apps/client/dist/ s3://${{ env.S3_BUCKET }} \
-      --exclude "*.html" \
-      --cache-control "public, max-age=31536000, immutable" \
       --delete
 ```
 
 - **HTML** (`no-cache`): 브라우저가 매번 서버에 재검증. SSG 빌드마다 내용이 바뀌므로 장기 캐시하면 안 됨.
 - **정적 에셋** (`max-age=1년, immutable`): Astro가 파일명에 해시를 포함하므로 내용 변경 시 URL이 바뀜. 장기 캐시 안전.
 - `--delete`: S3에 있지만 로컬 dist에 없는 파일 삭제. 이전 빌드의 잔여 파일 정리.
-- `--dryrun` → 실제 sync 2단계: dryrun 출력(`(dryrun) upload: local/path to s3://bucket/path`)에서 S3 경로를 추출하여 `/tmp/changed-paths.txt`에 수집. 이후 실제 sync를 실행.
 
-#### Step 9: Invalidate CloudFront cache (선택적 무효화)
-
-변경된 파일이 있을 때만 해당 경로만 무효화한다. `/*` 전체 무효화 대비 불필요한 캐시 미스를 방지하여 배포 직후 LCP 저하와 크롤 버짓 낭비를 줄인다.
+#### Step 9: Invalidate CloudFront cache
 
 ```yaml
 - name: Invalidate CloudFront cache
   run: |
-    if [ ! -s /tmp/changed-paths.txt ]; then
-      echo "No changed files, skipping invalidation"
-      exit 0
-    fi
-    PATHS=$(cat /tmp/changed-paths.txt | sed 's|/index.html|/|' | sort -u | head -3000)
     aws cloudfront create-invalidation \
       --distribution-id ${{ env.CLOUDFRONT_DISTRIBUTION_ID }} \
-      --paths $PATHS
+      --paths "/*"
 ```
 
-- 변경 파일 없으면 invalidation 스킵
-- `/index.html` → `/`로 변환 (CloudFront URL 구조에 맞춤)
-- `head -3000`: CloudFront invalidation 1회 요청 최대 3,000 경로 제한
-- CloudFront invalidation은 paths 수와 관계없이 1회 요청 = 1건 (월 1,000건 무료)
+- `/*`: 전체 캐시 무효화. SSG 특성상 빌드마다 다수 페이지가 변경될 수 있으므로 전체 무효화가 적합.
+- CloudFront 무효화는 월 1,000건 무료. `/*`는 1건으로 계산됨.
 
 ## 6. 코드 변경 사항 (se 에이전트 위임)
 
