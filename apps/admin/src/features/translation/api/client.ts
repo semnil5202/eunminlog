@@ -209,7 +209,7 @@ async function fetchTranslateSingle(
     });
     resultContent = reassembleSections(mergedSections);
   } else if (isSelective && !parsed.content_sections && parsed.content) {
-    toast.warning('GPT 응답 형식이 예상과 다릅니다. 섹션 단위 병합으로 대체합니다.');
+    toast.warning('GPT 응답 형식이 예상과 다릅니다. 차선책으로 처리하겠습니다.');
     const targetIndices = new Set(selectiveOptions?.targetSectionIndices ?? []);
     if (targetIndices.size > 0) {
       const existingSections = splitHtmlIntoSections(content);
