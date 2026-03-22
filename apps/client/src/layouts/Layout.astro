@@ -1,13 +1,15 @@
 ---
-import { GA_MEASUREMENT_ID } from "@eunminlog/config/site";
+import { GA_MEASUREMENT_ID, SITE_NAME_EN } from "@eunminlog/config/site";
 import BaseHead from "@/shared/components/layout/BaseHead.astro";
 import Header from "@/shared/components/layout/Header.astro";
 import Footer from "@/shared/components/layout/Footer.astro";
 import Toast from "@/shared/components/ui/Toast.astro";
 import ImageLightbox from "@/shared/components/ui/ImageLightbox.astro";
 import CookieConsentBanner from "@/features/consent/components/CookieConsentBanner.astro";
+import JsonLd from "@/shared/components/seo/JsonLd.astro";
 import type { Locale } from "@/shared/types/common";
 import { DEFAULT_LOCALE } from "@/shared/types/common";
+import { t } from "@/shared/lib/i18n/translations";
 
 interface Props {
   title: string;
@@ -35,6 +37,16 @@ const {
 
 const isProduction = import.meta.env.PUBLIC_STAGE === 'production';
 const robotsContent = isProduction ? 'index, follow' : 'noindex, nofollow';
+
+const siteOrigin = Astro.site?.origin ?? "";
+const siteName = t("meta.siteName", locale);
+const webSiteSchema: Record<string, unknown> = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": siteName,
+  ...(siteName !== SITE_NAME_EN && { "alternateName": SITE_NAME_EN }),
+  "url": `${siteOrigin}/`,
+};
 ---
 
 <!doctype html>
@@ -54,6 +66,7 @@ const robotsContent = isProduction ? 'index, follow' : 'noindex, nofollow';
     <link rel="preload" href="https://media.eunminlog.site/fonts/Pretendard-SemiBold.subset.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="https://media.eunminlog.site/fonts/Pretendard-Bold.subset.woff2" as="font" type="font/woff2" crossorigin />
     <meta name="robots" content={robotsContent} />
+    <JsonLd schema={webSiteSchema} />
     <slot name="head" />
     <script async src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}></script>
     <script is:inline define:vars={{ GA_MEASUREMENT_ID, gaPageParams }}>
