@@ -52,14 +52,33 @@ export const CustomLinkBookmark = Node.create({
   renderHTML({ node, HTMLAttributes }) {
     const { url, title, description, image, favicon } = node.attrs as Record<string, string>;
     const domain = (() => {
-      try { return new URL(url).hostname; } catch { return url; }
+      try {
+        return new URL(url).hostname;
+      } catch {
+        return url;
+      }
+    })();
+
+    const isInternal = (() => {
+      try {
+        return new URL(url).hostname.endsWith('eunminlog.site');
+      } catch {
+        return false;
+      }
     })();
 
     const imageSection = image
       ? [
           'figure',
           { style: 'flex: 0 0 200px; max-height: 160px; overflow: hidden; margin: 0;' },
-          ['img', { src: image, alt: title || domain, style: 'width: 100%; height: 100%; object-fit: cover;' }],
+          [
+            'img',
+            {
+              src: image,
+              alt: title || domain,
+              style: 'width: 100%; height: 100%; object-fit: cover;',
+            },
+          ],
         ]
       : null;
 
@@ -84,8 +103,18 @@ export const CustomLinkBookmark = Node.create({
       ],
       [
         'cite',
-        { style: 'display: flex; align-items: center; gap: 6px; margin-top: 8px; font-style: normal;' },
-        ['img', { src: favicon, alt: `${title || domain} 프로필 이미지`, style: 'width: 16px; height: 16px;' }],
+        {
+          style:
+            'display: flex; align-items: center; gap: 6px; margin-top: 8px; font-style: normal;',
+        },
+        [
+          'img',
+          {
+            src: favicon,
+            alt: `${title || domain} 프로필 이미지`,
+            style: 'width: 16px; height: 16px;',
+          },
+        ],
         ['span', { style: 'font-size: 12px; color: #9ca3af;' }, domain],
       ],
     ];
@@ -93,12 +122,11 @@ export const CustomLinkBookmark = Node.create({
     const linkChildren: unknown[] = [textSection];
     if (imageSection) linkChildren.unshift(imageSection);
 
-    const linkAttrs = {
+    const linkAttrs: Record<string, string> = {
       href: url,
-      target: '_blank',
-      rel: 'noopener noreferrer',
       style:
         'display: flex; border: 1px solid #e5e7eb; overflow: hidden; text-decoration: none; color: inherit; cursor: pointer;',
+      ...(isInternal ? {} : { target: '_blank', rel: 'noopener noreferrer' }),
     };
 
     return [
@@ -129,12 +157,17 @@ export const CustomLinkBookmark = Node.create({
     return ({ node }) => {
       const { url, title, description, image, favicon } = node.attrs as Record<string, string>;
       const domain = (() => {
-        try { return new URL(url).hostname; } catch { return url; }
+        try {
+          return new URL(url).hostname;
+        } catch {
+          return url;
+        }
       })();
 
       const $container = document.createElement('aside');
       $container.setAttribute('data-type', 'link-bookmark');
-      $container.style.cssText = 'margin: 16px 0; border: 1px solid #e5e7eb; overflow: hidden; cursor: default;';
+      $container.style.cssText =
+        'margin: 16px 0; border: 1px solid #e5e7eb; overflow: hidden; cursor: default;';
 
       const $inner = document.createElement('div');
       $inner.style.cssText = 'display: flex;';
@@ -164,7 +197,8 @@ export const CustomLinkBookmark = Node.create({
       $desc.textContent = description;
 
       const $cite = document.createElement('cite');
-      $cite.style.cssText = 'display: flex; align-items: center; gap: 6px; margin-top: 8px; font-style: normal;';
+      $cite.style.cssText =
+        'display: flex; align-items: center; gap: 6px; margin-top: 8px; font-style: normal;';
 
       if (favicon) {
         const $favicon = document.createElement('img');

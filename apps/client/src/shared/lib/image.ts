@@ -2,6 +2,8 @@
 
 const RESIZED_SUFFIX = '_688';
 const RESIZED_MAX_WIDTH = 688;
+const SKIP_BLOCKS_REGEX =
+  /<div[^>]*data-type="image-carousel"[^>]*>[\s\S]*?<\/div>|<aside[^>]*data-type="link-bookmark"[^>]*>[\s\S]*?<\/aside>/gi;
 
 export function optimizedUrl(original: string): string {
   if (!original.endsWith('.webp')) return original;
@@ -9,7 +11,13 @@ export function optimizedUrl(original: string): string {
 }
 
 export function injectOptimizedUrls(html: string): string {
-  return html.replace(
+  const preserved: string[] = [];
+  let processed = html.replace(SKIP_BLOCKS_REGEX, (match) => {
+    preserved.push(match);
+    return `<!--OPT_SKIP_${preserved.length - 1}-->`;
+  });
+
+  processed = processed.replace(
     /<img([^>]*?)src="([^"]+?)\.webp"([^>]*?)>/gi,
     (match, before, base, after) => {
       if (!base.includes('media.eunminlog.site')) return match;
@@ -34,6 +42,12 @@ export function injectOptimizedUrls(html: string): string {
       return result;
     },
   );
+
+  preserved.forEach((block, i) => {
+    processed = processed.replace(`<!--OPT_SKIP_${i}-->`, block);
+  });
+
+  return processed;
 }
 
 const ZOOM_ICON =
@@ -41,13 +55,10 @@ const ZOOM_ICON =
 
 export function injectZoomIcons(html: string): string {
   const preserved: string[] = [];
-  let processed = html.replace(
-    /<div\s+data-type="image-carousel"[^>]*>[\s\S]*?<\/div>|<aside\s+data-type="link-bookmark"[^>]*>[\s\S]*?<\/aside>/gi,
-    (match) => {
-      preserved.push(match);
-      return `<!--ZOOM_SKIP_${preserved.length - 1}-->`;
-    },
-  );
+  let processed = html.replace(SKIP_BLOCKS_REGEX, (match) => {
+    preserved.push(match);
+    return `<!--ZOOM_SKIP_${preserved.length - 1}-->`;
+  });
 
   processed = processed.replace(/<img([^>]*?)>/gi, (_match, attrs: string) => {
     let width = '100%';
