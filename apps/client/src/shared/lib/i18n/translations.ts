@@ -79,17 +79,22 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'bookmark.profileImage': '프로필 이미지',
     'meta.siteName': '은민로그',
     'meta.homeTitle': '은민로그 - 커플 블로그 | 맛집, 데이트, 여행, 리뷰',
-    'meta.homeDescription': '은민커플이 직접 다녀온 맛집, 데이트 코스, 국내외 여행, 제품 리뷰 등을 기록하는 커플 블로그입니다.',
+    'meta.homeDescription':
+      '직접 경험한 맛집과 데이트 코스, 국내외 여행지, 야구장 좌석 시야 및 제품 리뷰와 실생활에 유용한 꿀팁을 기록합니다.',
     'meta.categoryTitle': '{0}',
-    'meta.categoryDescription': '{0} — 은민커플이 직접 경험한 {0} 추천 리스트',
-    'meta.subCategoryTitle': '{1}',
-    'meta.subCategoryDescription': '{1} — 은민커플이 직접 경험한 {1} 추천 리스트',
+    'meta.categoryDescription':
+      '직접 경험한 {0} 카테고리 관련 기록입니다. 실제 후기와 유용한 정보를 확인하고, 관심 있는 주제별로 모아서 확인하실 수 있습니다.',
+    'meta.subCategoryTitle': '{0} - {1}',
+    'meta.subCategoryDescription':
+      '직접 경험한 {0} 카테고리 중 {1}에 관한 기록입니다. 실제 방문 후기와 유용한 팁을 확인해보세요.',
     'meta.searchTitle': '검색',
     'meta.searchDescription': '맛집, 카페, 여행, 리뷰 게시글을 검색할 수 있습니다.',
     'meta.errorTitle': '페이지를 찾을 수 없습니다',
-    'meta.errorDescription': '요청하신 페이지를 찾을 수 없습니다. 은민로그의 다른 게시글을 확인해보세요.',
+    'meta.errorDescription':
+      '요청하신 페이지를 찾을 수 없습니다. 은민로그의 다른 게시글을 확인해보세요.',
     'meta.sponsorTitle': '협찬 문의',
-    'meta.sponsorDescription': '당신의 공간과 브랜드를 8개의 언어로 더 많은 사람에게 알리세요.',
+    'meta.sponsorDescription':
+      '은민로그 협찬 및 비즈니스 제휴 문의 페이지입니다. 생생한 경험을 검색에 잘 노출되는 콘텐츠로 작성하고, 8개 국어 다국어 번역 서비스를 제공합니다.',
   },
   en: {
     'nav.home': 'Home',
@@ -111,7 +116,8 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'search.noResultsHint': 'Try a different search term',
     'search.results': 'posts found',
     'search.suggested': 'Suggested',
-    'profile.bio': 'A space where the Eunmin couple records their favorite restaurants, date courses, and travels.',
+    'profile.bio':
+      'A space where the Eunmin couple records their favorite restaurants, date courses, and travels.',
     'profile.alt': 'eunminlog profile photo',
     'error.title': 'Page not found.',
     'error.description': 'The page you requested does not exist or may have been moved.',
@@ -167,17 +173,22 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'bookmark.profileImage': 'profile image',
     'meta.siteName': 'eunminlog',
     'meta.homeTitle': 'eunminlog - Couple Blog | Restaurants, Dates, Travel, Reviews',
-    'meta.homeDescription': 'A couple blog where Eunmin couple records restaurants, date courses, domestic and international travel, and product reviews.',
+    'meta.homeDescription':
+      'We share firsthand experiences of restaurants, date courses, travel destinations, baseball stadium seat views, product reviews, and useful life tips.',
     'meta.categoryTitle': '{0}',
-    'meta.categoryDescription': '{0} — Eunmin couple\'s personally experienced {0} recommendations',
-    'meta.subCategoryTitle': '{1}',
-    'meta.subCategoryDescription': '{1} — Eunmin couple\'s personally experienced {1} recommendations',
+    'meta.categoryDescription':
+      'A collection of firsthand experiences in the {0} category. Check out real reviews and useful information, organized by topic.',
+    'meta.subCategoryTitle': '{0} - {1}',
+    'meta.subCategoryDescription':
+      'Firsthand experiences about {1} in the {0} category. Check out real visit reviews and useful tips.',
     'meta.searchTitle': 'Search',
     'meta.searchDescription': 'Search for restaurant, cafe, travel, and review posts.',
     'meta.errorTitle': 'Page Not Found',
-    'meta.errorDescription': 'The page you requested could not be found. Check out other posts on eunminlog.',
+    'meta.errorDescription':
+      'The page you requested could not be found. Check out other posts on eunminlog.',
     'meta.sponsorTitle': 'Sponsorship Inquiry',
-    'meta.sponsorDescription': 'Promote your space and brand to more people in 8 languages.',
+    'meta.sponsorDescription':
+      'This is the sponsorship and business partnership inquiry page for eunminlog. We create search-optimized content from real experiences and offer translation services in 8 languages.',
   },
   ja: {
     'nav.home': 'ホーム',
@@ -255,17 +266,22 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'bookmark.profileImage': 'プロフィール画像',
     'meta.siteName': 'eunminlog',
     'meta.homeTitle': 'eunminlog - カップルブログ | グルメ、デート、旅行、レビュー',
-    'meta.homeDescription': 'ウンミンカップルが直接訪れたグルメ、デートコース、国内外の旅行、製品レビューなどを記録するカップルブログです。',
+    'meta.homeDescription':
+      '実際に体験したグルメやデートコース、国内外の旅行先、野球場の座席ビュー、製品レビュー、暮らしに役立つ情報を記録しています。',
     'meta.categoryTitle': '{0}',
-    'meta.categoryDescription': '{0} — ウンミンカップルが直接体験した{0}のおすすめリスト',
-    'meta.subCategoryTitle': '{1}',
-    'meta.subCategoryDescription': '{1} — ウンミンカップルが直接体験した{1}のおすすめリスト',
+    'meta.categoryDescription':
+      '{0}カテゴリーに関する実体験の記録です。実際のレビューと役立つ情報をテーマ別にご確認いただけます。',
+    'meta.subCategoryTitle': '{0} - {1}',
+    'meta.subCategoryDescription':
+      '{0}カテゴリーの{1}に関する実体験の記録です。実際の訪問レビューと役立つヒントをご覧ください。',
     'meta.searchTitle': '検索',
     'meta.searchDescription': 'グルメ、カフェ、旅行、レビュー記事を検索できます。',
     'meta.errorTitle': 'ページが見つかりません',
-    'meta.errorDescription': 'お探しのページが見つかりませんでした。eunminlogの他の記事をご覧ください。',
+    'meta.errorDescription':
+      'お探しのページが見つかりませんでした。eunminlogの他の記事をご覧ください。',
     'meta.sponsorTitle': '協賛お問い合わせ',
-    'meta.sponsorDescription': 'あなたの空間とブランドを8つの言語でより多くの人に届けましょう。',
+    'meta.sponsorDescription':
+      'eunminlogの協賛・ビジネス提携のお問い合わせページです。リアルな体験を検索に強いコンテンツとして作成し、8言語の翻訳サービスを提供しています。',
   },
   'zh-CN': {
     'nav.home': '首页',
@@ -342,17 +358,20 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'bookmark.profileImage': '头像',
     'meta.siteName': 'eunminlog',
     'meta.homeTitle': 'eunminlog - 情侣博客 | 美食、约会、旅行、评测',
-    'meta.homeDescription': '银民情侣亲身探访的美食、约会路线、国内外旅行、产品评测等记录博客。',
+    'meta.homeDescription':
+      '记录亲身体验的美食与约会路线、国内外旅行地、棒球场座位视野、产品评测以及实用生活小贴士。',
     'meta.categoryTitle': '{0}',
-    'meta.categoryDescription': '{0} — 银民情侣亲身体验的{0}推荐列表',
-    'meta.subCategoryTitle': '{1}',
-    'meta.subCategoryDescription': '{1} — 银民情侣亲身体验的{1}推荐列表',
+    'meta.categoryDescription':
+      '关于{0}分类的亲身体验记录。查看真实评价和实用信息，按主题分类浏览。',
+    'meta.subCategoryTitle': '{0} - {1}',
+    'meta.subCategoryDescription': '关于{0}分类中{1}的亲身体验记录。查看真实访问评价和实用小贴士。',
     'meta.searchTitle': '搜索',
     'meta.searchDescription': '可搜索美食、咖啡、旅行、评测相关文章。',
     'meta.errorTitle': '找不到页面',
     'meta.errorDescription': '您请求的页面未找到，请浏览eunminlog的其他文章。',
     'meta.sponsorTitle': '赞助咨询',
-    'meta.sponsorDescription': '用8种语言向更多人推广您的空间和品牌。',
+    'meta.sponsorDescription':
+      '这是eunminlog的赞助及商务合作咨询页面。我们将真实体验撰写为搜索优化内容，并提供8种语言的翻译服务。',
   },
   'zh-TW': {
     'nav.home': '首頁',
@@ -429,17 +448,20 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'bookmark.profileImage': '頭像',
     'meta.siteName': 'eunminlog',
     'meta.homeTitle': 'eunminlog - 情侶部落格 | 美食、約會、旅行、評測',
-    'meta.homeDescription': '銀民情侶親身探訪的美食、約會路線、國內外旅行、產品評測等記錄部落格。',
+    'meta.homeDescription':
+      '記錄親身體驗的美食與約會路線、國內外旅行地、棒球場座位視野、產品評測以及實用生活小貼士。',
     'meta.categoryTitle': '{0}',
-    'meta.categoryDescription': '{0} — 銀民情侶親身體驗的{0}推薦清單',
-    'meta.subCategoryTitle': '{1}',
-    'meta.subCategoryDescription': '{1} — 銀民情侶親身體驗的{1}推薦清單',
+    'meta.categoryDescription':
+      '關於{0}分類的親身體驗記錄。查看真實評價和實用資訊，按主題分類瀏覽。',
+    'meta.subCategoryTitle': '{0} - {1}',
+    'meta.subCategoryDescription': '關於{0}分類中{1}的親身體驗記錄。查看真實訪問評價和實用小貼士。',
     'meta.searchTitle': '搜尋',
     'meta.searchDescription': '可搜尋美食、咖啡、旅行、評測相關文章。',
     'meta.errorTitle': '找不到頁面',
     'meta.errorDescription': '您請求的頁面未找到，請瀏覽eunminlog的其他文章。',
     'meta.sponsorTitle': '贊助諮詢',
-    'meta.sponsorDescription': '用8種語言向更多人推廣您的空間和品牌。',
+    'meta.sponsorDescription':
+      '這是eunminlog的贊助及商務合作諮詢頁面。我們將真實體驗撰寫為搜尋優化內容，並提供8種語言的翻譯服務。',
   },
   id: {
     'nav.home': 'Beranda',
@@ -461,7 +483,8 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'search.noResultsHint': 'Coba kata kunci lain',
     'search.results': 'artikel',
     'search.suggested': 'Rekomendasi',
-    'profile.bio': 'Ruang tempat pasangan Eunmin mencatat restoran favorit, rute kencan, dan perjalanan yang mereka alami langsung.',
+    'profile.bio':
+      'Ruang tempat pasangan Eunmin mencatat restoran favorit, rute kencan, dan perjalanan yang mereka alami langsung.',
     'profile.alt': 'Foto profil eunminlog',
     'error.title': 'Halaman tidak ditemukan.',
     'error.description': 'Halaman yang Anda minta tidak ada atau telah dipindahkan.',
@@ -517,17 +540,22 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'bookmark.profileImage': 'gambar profil',
     'meta.siteName': 'eunminlog',
     'meta.homeTitle': 'eunminlog - Blog Pasangan | Kuliner, Kencan, Perjalanan, Ulasan',
-    'meta.homeDescription': 'Blog pasangan yang mencatat kuliner, rute kencan, perjalanan dalam dan luar negeri, serta ulasan produk dari pasangan Eunmin.',
+    'meta.homeDescription':
+      'Kami berbagi pengalaman langsung tentang kuliner, rute kencan, destinasi wisata, pemandangan kursi stadion bisbol, ulasan produk, dan tips kehidupan yang berguna.',
     'meta.categoryTitle': '{0}',
-    'meta.categoryDescription': '{0} — Daftar rekomendasi {0} yang dialami langsung oleh pasangan Eunmin',
-    'meta.subCategoryTitle': '{1}',
-    'meta.subCategoryDescription': '{1} — Daftar rekomendasi {1} yang dialami langsung oleh pasangan Eunmin',
+    'meta.categoryDescription':
+      'Kumpulan pengalaman langsung dalam kategori {0}. Temukan ulasan nyata dan informasi berguna yang dikelompokkan berdasarkan topik.',
+    'meta.subCategoryTitle': '{0} - {1}',
+    'meta.subCategoryDescription':
+      'Pengalaman langsung tentang {1} dalam kategori {0}. Lihat ulasan kunjungan nyata dan tips berguna.',
     'meta.searchTitle': 'Cari',
     'meta.searchDescription': 'Cari artikel kuliner, kafe, perjalanan, dan ulasan.',
     'meta.errorTitle': 'Halaman Tidak Ditemukan',
-    'meta.errorDescription': 'Halaman yang Anda cari tidak ditemukan. Lihat artikel lain di eunminlog.',
+    'meta.errorDescription':
+      'Halaman yang Anda cari tidak ditemukan. Lihat artikel lain di eunminlog.',
     'meta.sponsorTitle': 'Kerjasama Sponsor',
-    'meta.sponsorDescription': 'Promosikan ruang dan merek Anda kepada lebih banyak orang dalam 8 bahasa.',
+    'meta.sponsorDescription':
+      'Halaman pertanyaan sponsorship dan kemitraan bisnis eunminlog. Kami membuat konten yang dioptimalkan untuk pencarian dari pengalaman nyata dan menawarkan layanan terjemahan dalam 8 bahasa.',
   },
   vi: {
     'nav.home': 'Trang chủ',
@@ -549,7 +577,8 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'search.noResultsHint': 'Thử từ khóa khác',
     'search.results': 'bài viết',
     'search.suggested': 'Gợi ý',
-    'profile.bio': 'Không gian ghi lại những quán ăn ngon, lộ trình hẹn hò, du lịch mà cặp đôi Eunmin đã trực tiếp trải nghiệm.',
+    'profile.bio':
+      'Không gian ghi lại những quán ăn ngon, lộ trình hẹn hò, du lịch mà cặp đôi Eunmin đã trực tiếp trải nghiệm.',
     'profile.alt': 'Ảnh hồ sơ eunminlog',
     'error.title': 'Không tìm thấy trang.',
     'error.description': 'Trang bạn yêu cầu không tồn tại hoặc đã được di chuyển.',
@@ -605,17 +634,22 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'bookmark.profileImage': 'ảnh hồ sơ',
     'meta.siteName': 'eunminlog',
     'meta.homeTitle': 'eunminlog - Blog Cặp Đôi | Ẩm Thực, Hẹn Hò, Du Lịch, Đánh Giá',
-    'meta.homeDescription': 'Blog cặp đôi ghi lại những trải nghiệm ẩm thực, lịch trình hẹn hò, du lịch trong và ngoài nước, đánh giá sản phẩm của cặp đôi Eunmin.',
+    'meta.homeDescription':
+      'Ghi lại trải nghiệm thực tế về ẩm thực, lộ trình hẹn hò, điểm du lịch trong và ngoài nước, góc nhìn ghế sân bóng chày, đánh giá sản phẩm và mẹo hữu ích trong cuộc sống.',
     'meta.categoryTitle': '{0}',
-    'meta.categoryDescription': '{0} — Danh sách đề xuất {0} được cặp đôi Eunmin trực tiếp trải nghiệm',
-    'meta.subCategoryTitle': '{1}',
-    'meta.subCategoryDescription': '{1} — Danh sách đề xuất {1} được cặp đôi Eunmin trực tiếp trải nghiệm',
+    'meta.categoryDescription':
+      'Bộ sưu tập trải nghiệm thực tế trong danh mục {0}. Xem đánh giá thực và thông tin hữu ích được sắp xếp theo chủ đề.',
+    'meta.subCategoryTitle': '{0} - {1}',
+    'meta.subCategoryDescription':
+      'Trải nghiệm thực tế về {1} trong danh mục {0}. Xem đánh giá thăm quan thực và mẹo hữu ích.',
     'meta.searchTitle': 'Tìm kiếm',
     'meta.searchDescription': 'Tìm kiếm các bài viết về ẩm thực, cà phê, du lịch và đánh giá.',
     'meta.errorTitle': 'Không Tìm Thấy Trang',
-    'meta.errorDescription': 'Trang bạn tìm kiếm không tồn tại. Hãy xem các bài viết khác trên eunminlog.',
+    'meta.errorDescription':
+      'Trang bạn tìm kiếm không tồn tại. Hãy xem các bài viết khác trên eunminlog.',
     'meta.sponsorTitle': 'Hợp Tác Tài Trợ',
-    'meta.sponsorDescription': 'Quảng bá không gian và thương hiệu của bạn đến nhiều người hơn bằng 8 ngôn ngữ.',
+    'meta.sponsorDescription':
+      'Đây là trang liên hệ tài trợ và hợp tác kinh doanh của eunminlog. Chúng tôi tạo nội dung tối ưu hóa tìm kiếm từ trải nghiệm thực tế và cung cấp dịch vụ dịch thuật 8 ngôn ngữ.',
   },
   th: {
     'nav.home': 'หน้าแรก',
@@ -637,7 +671,8 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'search.noResultsHint': 'ลองใช้คำค้นหาอื่น',
     'search.results': 'บทความ',
     'search.suggested': 'แนะนำ',
-    'profile.bio': 'พื้นที่บันทึกร้านอาหาร เส้นทางเดต และการท่องเที่ยวที่คู่รักอึนมินได้สัมผัสด้วยตัวเอง',
+    'profile.bio':
+      'พื้นที่บันทึกร้านอาหาร เส้นทางเดต และการท่องเที่ยวที่คู่รักอึนมินได้สัมผัสด้วยตัวเอง',
     'profile.alt': 'รูปโปรไฟล์ eunminlog',
     'error.title': 'ไม่พบหน้าเว็บ.',
     'error.description': 'หน้าเว็บที่คุณร้องขอไม่มีอยู่หรืออาจถูกย้าย',
@@ -693,17 +728,21 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'bookmark.profileImage': 'รูปโปรไฟล์',
     'meta.siteName': 'eunminlog',
     'meta.homeTitle': 'eunminlog - บล็อกคู่รัก | อาหาร, เดต, ท่องเที่ยว, รีวิว',
-    'meta.homeDescription': 'บล็อกคู่รักที่บันทึกประสบการณ์ร้านอาหาร, เส้นทางเดต, การท่องเที่ยวในและต่างประเทศ, รีวิวสินค้า โดยคู่รักอึนมิน',
+    'meta.homeDescription':
+      'บันทึกประสบการณ์จริงเกี่ยวกับร้านอาหาร เส้นทางเดท สถานที่ท่องเที่ยวในและต่างประเทศ วิวที่นั่งสนามเบสบอล รีวิวสินค้า และเคล็ดลับที่มีประโยชน์ในชีวิตประจำวัน',
     'meta.categoryTitle': '{0}',
-    'meta.categoryDescription': '{0} — รายการแนะนำ{0}ที่คู่รักอึนมินสัมผัสด้วยตัวเอง',
-    'meta.subCategoryTitle': '{1}',
-    'meta.subCategoryDescription': '{1} — รายการแนะนำ{1}ที่คู่รักอึนมินสัมผัสด้วยตัวเอง',
+    'meta.categoryDescription':
+      'บันทึกประสบการณ์จริงในหมวดหมู่{0} ดูรีวิวจริงและข้อมูลที่เป็นประโยชน์จัดกลุ่มตามหัวข้อ',
+    'meta.subCategoryTitle': '{0} - {1}',
+    'meta.subCategoryDescription':
+      'ประสบการณ์จริงเกี่ยวกับ{1}ในหมวดหมู่{0} ดูรีวิวการเยี่ยมชมจริงและเคล็ดลับที่มีประโยชน์',
     'meta.searchTitle': 'ค้นหา',
     'meta.searchDescription': 'ค้นหาบทความร้านอาหาร, คาเฟ่, ท่องเที่ยว และรีวิว',
     'meta.errorTitle': 'ไม่พบหน้าเว็บ',
     'meta.errorDescription': 'ไม่พบหน้าเว็บที่คุณค้นหา ลองดูบทความอื่นๆ บน eunminlog',
     'meta.sponsorTitle': 'สอบถามสปอนเซอร์',
-    'meta.sponsorDescription': 'โปรโมทพื้นที่และแบรนด์ของคุณให้เข้าถึงคนมากขึ้นใน 8 ภาษา',
+    'meta.sponsorDescription':
+      'หน้าสอบถามสปอนเซอร์และความร่วมมือทางธุรกิจของ eunminlog เราสร้างเนื้อหาที่เหมาะกับการค้นหาจากประสบการณ์จริง และให้บริการแปลภาษา 8 ภาษา',
   },
 };
 

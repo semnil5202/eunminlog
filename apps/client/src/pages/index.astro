@@ -6,15 +6,20 @@ import PostCardGrid from "@/features/post-feed/components/PostCardGrid.astro";
 import BreadcrumbJsonLd from "@/shared/components/seo/BreadcrumbJsonLd.astro";
 import { DEFAULT_LOCALE } from "@/shared/types/common";
 import type { LocalizedPost } from "@/shared/types/post";
-import { getPaginatedPosts, getSponsoredPosts } from "@/features/post-feed/api/posts";
+import { getPaginatedPosts, getSponsoredPosts, getActiveCategorySlugs } from "@/features/post-feed/api/posts";
+import { getCategoryLabel } from "@/shared/lib/i18n/categories";
 import { t } from "@/shared/lib/i18n/translations";
 
 const locale = DEFAULT_LOCALE;
 
-const [{ posts: rawPosts, totalPages }, sponsored] = await Promise.all([
+const [{ posts: rawPosts, totalPages }, sponsored, categorySlugs] = await Promise.all([
   getPaginatedPosts(1),
   getSponsoredPosts(),
+  getActiveCategorySlugs(),
 ]);
+
+const categoryLabels = await Promise.all(categorySlugs.map((s) => getCategoryLabel(s, locale)));
+const homeTitle = `${t("meta.siteName", locale)} | ${categoryLabels.join(' · ')}`;
 
 const posts: LocalizedPost[] = rawPosts.map((p) => ({ ...p, translated_place_name: null, translated_address: null, translated_product_name: null, translated_purchase_source: null, translated_price_prefix: null, locale }));
 const sponsoredLocalized: LocalizedPost[] = sponsored.map((p) => ({ ...p, translated_place_name: null, translated_address: null, translated_product_name: null, translated_purchase_source: null, translated_price_prefix: null, locale }));
@@ -23,7 +28,7 @@ const breadcrumbItems = [{ name: "홈", url: "/" }];
 ---
 
 <ListLayout
-  title={t("meta.homeTitle", locale)}
+  title={homeTitle}
   description={t("meta.homeDescription", locale)}
   canonical="/"
   path="/"

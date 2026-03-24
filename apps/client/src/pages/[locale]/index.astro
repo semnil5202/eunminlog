@@ -7,8 +7,9 @@ import BreadcrumbJsonLd from "@/shared/components/seo/BreadcrumbJsonLd.astro";
 import { LOCALES, DEFAULT_LOCALE } from "@/shared/types/common";
 import type { Locale } from "@/shared/types/common";
 import type { LocalizedPost } from "@/shared/types/post";
-import { getPaginatedMultilingualPosts, getMultilingualSponsoredPosts } from "@/features/post-feed/api/posts";
+import { getPaginatedMultilingualPosts, getMultilingualSponsoredPosts, getActiveCategorySlugs } from "@/features/post-feed/api/posts";
 import { getLocalizedPost } from "@/features/post-feed/api/translations";
+import { getCategoryLabel } from "@/shared/lib/i18n/categories";
 import { t } from "@/shared/lib/i18n/translations";
 
 export const getStaticPaths = async () => {
@@ -26,15 +27,19 @@ interface Props {
 
 const { locale } = Astro.props;
 
-const [{ posts, totalPages }, sponsored] = await Promise.all([
+const [{ posts, totalPages }, sponsored, categorySlugs] = await Promise.all([
   getPaginatedMultilingualPosts(1),
   getMultilingualSponsoredPosts(),
+  getActiveCategorySlugs(),
 ]);
 
 const localizedPosts = await Promise.all(posts.map((p) => getLocalizedPost(p, locale)));
 const sponsoredLocalized: LocalizedPost[] = await Promise.all(
   sponsored.map((p) => getLocalizedPost(p, locale))
 );
+
+const categoryLabels = await Promise.all(categorySlugs.map((s) => getCategoryLabel(s, locale)));
+const homeTitle = `${t("meta.siteName", locale)} | ${categoryLabels.join(' · ')}`;
 
 const canonical = `/${locale}/`;
 const path = "/";
@@ -44,7 +49,7 @@ const breadcrumbItems = [{ name: homeLabel, url: "/" }];
 ---
 
 <ListLayout
-  title={t("meta.homeTitle", locale)}
+  title={homeTitle}
   description={t("meta.homeDescription", locale)}
   canonical={canonical}
   path={path}

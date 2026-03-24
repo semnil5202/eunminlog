@@ -10,6 +10,7 @@ type PrivacyContent = {
   title: string;
   lastUpdated: string;
   intro: string;
+  metaDescription: string;
   sections: PrivacySection[];
 };
 
@@ -18,6 +19,8 @@ const PRIVACY: Record<Locale, PrivacyContent> = {
     title: '개인정보처리방침',
     lastUpdated: '2026년 3월 3일',
     intro: `${SITE_NAME_KO}(${SITE_URL}, 이하 "사이트")는 이용자의 개인정보를 중요시하며, 관련 법령을 준수합니다. 본 방침은 사이트가 수집하는 정보와 그 이용 방법을 안내합니다.`,
+    metaDescription:
+      '은민로그 개인정보처리방침입니다. 수집 정보, 이용 목적, 제3자 서비스에 대해 안내합니다.',
     sections: [
       {
         heading: '1. 수집하는 정보',
@@ -49,6 +52,8 @@ const PRIVACY: Record<Locale, PrivacyContent> = {
     title: 'Privacy Policy',
     lastUpdated: 'March 3, 2026',
     intro: `${SITE_NAME_EN} (${SITE_URL}, hereinafter "the Site") values your privacy and complies with applicable laws. This policy explains what information is collected and how it is used.`,
+    metaDescription:
+      'eunminlog Privacy Policy. Information about data collection, usage purposes, and third-party services.',
     sections: [
       {
         heading: '1. Information We Collect',
@@ -80,6 +85,8 @@ const PRIVACY: Record<Locale, PrivacyContent> = {
     title: 'プライバシーポリシー',
     lastUpdated: '2026年3月3日',
     intro: `${SITE_NAME_EN}（${SITE_URL}、以下「本サイト」）は、利用者のプライバシーを重視し、関連法令を遵守します。本ポリシーでは、収集する情報とその利用方法についてご案内します。`,
+    metaDescription:
+      'eunminlogプライバシーポリシー。収集する情報、利用目的、第三者サービスについてご案内します。',
     sections: [
       {
         heading: '1. 収集する情報',
@@ -111,6 +118,7 @@ const PRIVACY: Record<Locale, PrivacyContent> = {
     title: '隐私政策',
     lastUpdated: '2026年3月3日',
     intro: `${SITE_NAME_EN}（${SITE_URL}，以下简称"本站"）重视用户隐私，遵守相关法律法规。本政策说明本站收集的信息及其使用方式。`,
+    metaDescription: 'eunminlog隐私政策。关于信息收集、使用目的和第三方服务的说明。',
     sections: [
       {
         heading: '1. 收集的信息',
@@ -142,6 +150,7 @@ const PRIVACY: Record<Locale, PrivacyContent> = {
     title: '隱私權政策',
     lastUpdated: '2026年3月3日',
     intro: `${SITE_NAME_EN}（${SITE_URL}，以下簡稱「本站」）重視用戶隱私，遵守相關法律法規。本政策說明本站收集的資訊及其使用方式。`,
+    metaDescription: 'eunminlog隱私權政策。關於資訊收集、使用目的和第三方服務的說明。',
     sections: [
       {
         heading: '1. 收集的資訊',
@@ -173,6 +182,8 @@ const PRIVACY: Record<Locale, PrivacyContent> = {
     title: 'Kebijakan Privasi',
     lastUpdated: '3 Maret 2026',
     intro: `${SITE_NAME_EN} (${SITE_URL}, selanjutnya disebut "Situs") menghargai privasi Anda dan mematuhi hukum yang berlaku. Kebijakan ini menjelaskan informasi yang dikumpulkan dan cara penggunaannya.`,
+    metaDescription:
+      'Kebijakan Privasi eunminlog. Informasi tentang pengumpulan data, tujuan penggunaan, dan layanan pihak ketiga.',
     sections: [
       {
         heading: '1. Informasi yang Dikumpulkan',
@@ -204,6 +215,8 @@ const PRIVACY: Record<Locale, PrivacyContent> = {
     title: 'Chính sách bảo mật',
     lastUpdated: '3 tháng 3, 2026',
     intro: `${SITE_NAME_EN} (${SITE_URL}, sau đây gọi là "Trang web") coi trọng quyền riêng tư của bạn và tuân thủ luật pháp hiện hành. Chính sách này giải thích thông tin được thu thập và cách sử dụng.`,
+    metaDescription:
+      'Chính sách Bảo mật eunminlog. Thông tin về thu thập dữ liệu, mục đích sử dụng và dịch vụ bên thứ ba.',
     sections: [
       {
         heading: '1. Thông tin thu thập',
@@ -235,6 +248,8 @@ const PRIVACY: Record<Locale, PrivacyContent> = {
     title: 'นโยบายความเป็นส่วนตัว',
     lastUpdated: '3 มีนาคม 2026',
     intro: `${SITE_NAME_EN} (${SITE_URL} ต่อไปนี้เรียกว่า "เว็บไซต์") ให้ความสำคัญกับความเป็นส่วนตัวของคุณและปฏิบัติตามกฎหมายที่เกี่ยวข้อง นโยบายนี้อธิบายข้อมูลที่เก็บรวบรวมและวิธีการใช้งาน`,
+    metaDescription:
+      'นโยบายความเป็นส่วนตัวของ eunminlog ข้อมูลเกี่ยวกับการเก็บรวบรวมข้อมูล วัตถุประสงค์การใช้งาน และบริการของบุคคลที่สาม',
     sections: [
       {
         heading: '1. ข้อมูลที่เก็บรวบรวม',
