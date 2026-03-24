@@ -46,3 +46,6 @@ docs/secrets-reference.md
 
 # generated cf function
 infra/cf-functions/viewer-request.js
+
+# claude code note
+check.md
