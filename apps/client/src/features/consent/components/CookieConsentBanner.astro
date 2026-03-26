@@ -1,5 +1,10 @@
 ---
-/** 쿠키 동의 Sticky Footer Banner. CONSENT_REQUIRED_LOCALES에 해당하는 locale에서만 렌더링된다. */
+/**
+ * 쿠키 동의 Sticky Footer Banner. CONSENT_REQUIRED_LOCALES에 해당하는 locale에서만 렌더링된다.
+ *
+ * 현재 비활성화 — Google CMP(GDPR 동의 모달)로 대체하여 유럽 사용자 모달 중복 방지.
+ * 향후 자체 동의 배너가 필요할 경우 Layout.astro에서 다시 import하여 사용.
+ */
 
 import { isConsentRequired } from "@/shared/lib/consent";
 import { getLocalePath } from "@/shared/lib/i18n/locales";
@@ -77,8 +82,8 @@ const privacyHref = getLocalePath("/privacy/", locale);
 
       const handle = (accepted: boolean) => {
         setConsentCookie(accepted);
-        if (typeof window.gtag === "function") {
-          window.gtag("event", "cookie_consent", {
+        if (typeof (window as any).gtag === "function") {
+          (window as any).gtag("event", "cookie_consent", {
             action: accepted ? "accept" : "reject",
             content_locale: locale,
           });
