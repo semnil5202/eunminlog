@@ -117,7 +117,7 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'search.results': 'posts found',
     'search.suggested': 'Suggested',
     'profile.bio':
-      'A space where the Eunmin couple records their favorite restaurants, date courses, and travels.',
+      'A space where Eunmin, a Korean couple, records their favorite restaurants, date courses, and travels.',
     'profile.alt': 'eunminlog profile photo',
     'error.title': 'Page not found.',
     'error.description': 'The page you requested does not exist or may have been moved.',
@@ -210,7 +210,8 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'search.noResultsHint': '別のキーワードをお試しください',
     'search.results': '件の記事',
     'search.suggested': 'おすすめキーワード',
-    'profile.bio': 'ウンミンカップルが実際に体験したグルメ、デートコース、旅行などを記録する空間',
+    'profile.bio':
+      '韓国カップル・ウンミンが実際に体験したグルメ、デートコース、旅行などを記録する空間',
     'profile.alt': 'eunminlogプロフィール写真',
     'error.title': 'ページが見つかりません。',
     'error.description': 'リクエストされたページは存在しないか、移動された可能性があります。',
@@ -303,7 +304,7 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'search.noResultsHint': '请尝试其他搜索词',
     'search.results': '篇文章',
     'search.suggested': '推荐搜索',
-    'profile.bio': '银民情侣亲身体验的美食、约会路线、旅行等记录空间',
+    'profile.bio': '韩国情侣银民亲身体验的美食、约会路线、旅行等记录空间',
     'profile.alt': 'eunminlog个人资料照片',
     'error.title': '页面未找到。',
     'error.description': '您请求的页面不存在或已被移动。',
@@ -393,7 +394,7 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'search.noResultsHint': '請嘗試其他搜尋詞',
     'search.results': '篇文章',
     'search.suggested': '推薦搜尋',
-    'profile.bio': '銀民情侶親身體驗的美食、約會路線、旅行等記錄空間',
+    'profile.bio': '韓國情侶銀民親身體驗的美食、約會路線、旅行等記錄空間',
     'profile.alt': 'eunminlog個人資料照片',
     'error.title': '找不到頁面。',
     'error.description': '您請求的頁面不存在或已被移動。',
@@ -484,7 +485,7 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'search.results': 'artikel',
     'search.suggested': 'Rekomendasi',
     'profile.bio':
-      'Ruang tempat pasangan Eunmin mencatat restoran favorit, rute kencan, dan perjalanan yang mereka alami langsung.',
+      'Ruang tempat Eunmin, pasangan Korea, mencatat restoran favorit, rute kencan, dan perjalanan yang mereka alami langsung.',
     'profile.alt': 'Foto profil eunminlog',
     'error.title': 'Halaman tidak ditemukan.',
     'error.description': 'Halaman yang Anda minta tidak ada atau telah dipindahkan.',
@@ -578,7 +579,7 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'search.results': 'bài viết',
     'search.suggested': 'Gợi ý',
     'profile.bio':
-      'Không gian ghi lại những quán ăn ngon, lộ trình hẹn hò, du lịch mà cặp đôi Eunmin đã trực tiếp trải nghiệm.',
+      'Không gian ghi lại những quán ăn ngon, lộ trình hẹn hò, du lịch mà Eunmin, cặp đôi Hàn Quốc, đã trực tiếp trải nghiệm.',
     'profile.alt': 'Ảnh hồ sơ eunminlog',
     'error.title': 'Không tìm thấy trang.',
     'error.description': 'Trang bạn yêu cầu không tồn tại hoặc đã được di chuyển.',
@@ -672,7 +673,7 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'search.results': 'บทความ',
     'search.suggested': 'แนะนำ',
     'profile.bio':
-      'พื้นที่บันทึกร้านอาหาร เส้นทางเดต และการท่องเที่ยวที่คู่รักอึนมินได้สัมผัสด้วยตัวเอง',
+      'พื้นที่บันทึกร้านอาหาร เส้นทางเดท และการท่องเที่ยวที่อึนมิน คู่รักเกาหลี ได้สัมผัสด้วยตัวเอง',
     'profile.alt': 'รูปโปรไฟล์ eunminlog',
     'error.title': 'ไม่พบหน้าเว็บ.',
     'error.description': 'หน้าเว็บที่คุณร้องขอไม่มีอยู่หรืออาจถูกย้าย',
