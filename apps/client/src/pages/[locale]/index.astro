@@ -60,6 +60,8 @@ const breadcrumbItems = [{ name: homeLabel, url: "/" }];
 >
   <BreadcrumbJsonLd slot="head" items={breadcrumbItems} />
 
+  <h1 class="text-xl lg:text-[22px] font-bold text-gray-900 mb-6">{t("heading.allPosts", locale)}</h1>
+
   <PostCardGrid
     posts={localizedPosts}
     locale={locale}

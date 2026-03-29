@@ -77,6 +77,8 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'a11y.advertisement': '광고',
     'a11y.sitemap': 'XML 사이트맵',
     'bookmark.profileImage': '프로필 이미지',
+    'heading.allPosts': '전체 게시글',
+    'heading.posts': '게시글',
     'meta.siteName': '은민로그',
     'meta.homeTitle': '은민로그 - 커플 블로그 | 맛집, 데이트, 여행, 리뷰',
     'meta.homeDescription':
@@ -171,6 +173,8 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'a11y.advertisement': 'Advertisement',
     'a11y.sitemap': 'XML Sitemap',
     'bookmark.profileImage': 'profile image',
+    'heading.allPosts': 'All Posts',
+    'heading.posts': 'Posts',
     'meta.siteName': 'eunminlog',
     'meta.homeTitle': 'eunminlog - Couple Blog | Restaurants, Dates, Travel, Reviews',
     'meta.homeDescription':
@@ -265,6 +269,8 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'a11y.advertisement': '広告',
     'a11y.sitemap': 'XMLサイトマップ',
     'bookmark.profileImage': 'プロフィール画像',
+    'heading.allPosts': '全記事',
+    'heading.posts': '記事',
     'meta.siteName': 'eunminlog',
     'meta.homeTitle': 'eunminlog - カップルブログ | グルメ、デート、旅行、レビュー',
     'meta.homeDescription':
@@ -357,6 +363,8 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'a11y.advertisement': '广告',
     'a11y.sitemap': 'XML站点地图',
     'bookmark.profileImage': '头像',
+    'heading.allPosts': '全部文章',
+    'heading.posts': '文章',
     'meta.siteName': 'eunminlog',
     'meta.homeTitle': 'eunminlog - 情侣博客 | 美食、约会、旅行、评测',
     'meta.homeDescription':
@@ -447,6 +455,8 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'a11y.advertisement': '廣告',
     'a11y.sitemap': 'XML網站地圖',
     'bookmark.profileImage': '頭像',
+    'heading.allPosts': '全部文章',
+    'heading.posts': '文章',
     'meta.siteName': 'eunminlog',
     'meta.homeTitle': 'eunminlog - 情侶部落格 | 美食、約會、旅行、評測',
     'meta.homeDescription':
@@ -539,6 +549,8 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'a11y.advertisement': 'Iklan',
     'a11y.sitemap': 'Peta situs XML',
     'bookmark.profileImage': 'gambar profil',
+    'heading.allPosts': 'Semua Postingan',
+    'heading.posts': 'Postingan',
     'meta.siteName': 'eunminlog',
     'meta.homeTitle': 'eunminlog - Blog Pasangan | Kuliner, Kencan, Perjalanan, Ulasan',
     'meta.homeDescription':
@@ -633,6 +645,8 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'a11y.advertisement': 'Quảng cáo',
     'a11y.sitemap': 'Sơ đồ trang XML',
     'bookmark.profileImage': 'ảnh hồ sơ',
+    'heading.allPosts': 'Tất Cả Bài Viết',
+    'heading.posts': 'Bài Viết',
     'meta.siteName': 'eunminlog',
     'meta.homeTitle': 'eunminlog - Blog Cặp Đôi | Ẩm Thực, Hẹn Hò, Du Lịch, Đánh Giá',
     'meta.homeDescription':
@@ -727,6 +741,8 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'a11y.advertisement': 'โฆษณา',
     'a11y.sitemap': 'แผนผังเว็บไซต์ XML',
     'bookmark.profileImage': 'รูปโปรไฟล์',
+    'heading.allPosts': 'บทความทั้งหมด',
+    'heading.posts': 'บทความ',
     'meta.siteName': 'eunminlog',
     'meta.homeTitle': 'eunminlog - บล็อกคู่รัก | อาหาร, เดต, ท่องเที่ยว, รีวิว',
     'meta.homeDescription':

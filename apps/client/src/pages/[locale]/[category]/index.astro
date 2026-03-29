@@ -82,6 +82,8 @@ const pageDescription = t("meta.categoryDescription", locale).replaceAll("{0}", 
 >
   <BreadcrumbJsonLd slot="head" items={breadcrumbItems} />
 
+  <h1 class="text-xl lg:text-[22px] font-bold text-gray-900 mb-6">{categoryLabel} {t("heading.posts", locale)}</h1>
+
   <SubCategoryTabs category={category} locale={locale} />
 
   {localizedPosts.length > 0 ? (

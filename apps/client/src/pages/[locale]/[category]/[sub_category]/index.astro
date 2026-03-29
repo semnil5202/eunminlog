@@ -93,6 +93,8 @@ const pageDescription = t("meta.subCategoryDescription", locale)
 
   <SubCategoryTabs category={category} activeSubCategory={sub_category} locale={locale} />
 
+  <h1 class="text-xl lg:text-[22px] font-bold text-gray-900 mb-6">{categoryLabel} <span class="mx-1">›</span> {subCategoryLabel} {t("heading.posts", locale)}</h1>
+
   {localizedPosts.length > 0 ? (
     <PostCardGrid
       posts={localizedPosts}
