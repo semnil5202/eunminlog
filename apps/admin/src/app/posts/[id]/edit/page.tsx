@@ -1,12 +1,20 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import Link from 'next/link';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { Check, ChevronLeft, ImageIcon, Languages, LoaderIcon, Save } from 'lucide-react';
+import {
+  Check,
+  ChevronLeft,
+  ClipboardCopy,
+  ImageIcon,
+  Languages,
+  LoaderIcon,
+  Save,
+} from 'lucide-react';
 import { toast } from 'sonner';
 
 import { fetchDraft } from '@/features/draft/api';
@@ -41,34 +49,22 @@ import { ProductReviewFields } from '@/features/post-editor/components/ProductRe
 import { VisitFields } from '@/features/post-editor/components/VisitFields';
 import { TiptapEditorContainer } from '@/features/post-editor/containers/TiptapEditorContainer';
 import { FORM_TYPE_OPTIONS } from '@/features/post-editor/constants/category';
-import { streamSummary } from '@/features/post-editor/api/client';
+import { SUMMARY_SYSTEM_PROMPT } from '@/shared/constants/prompts';
 import {
   postFormSchema,
   TITLE_MAX_LENGTH,
   type PostFormValues,
 } from '@/features/post-editor/types/form';
-import {
-  fetchExtractTerms,
-  fetchRetrySingleLocale,
-  fetchTranslatePost,
-} from '@/features/translation/api/client';
-import { mergeSelectiveResult } from '@/features/translation/lib/merge-selective';
-import { TranslationSheet } from '@/features/translation/components/TranslationSheet';
-import { TranslationSheetContainer } from '@/features/translation/containers/TranslationSheetContainer';
-import { useTranslationDirtyFields } from '@/features/translation/hooks/useTranslationDirtyFields';
-import { ImageAltSheet, extractImageSrcs } from '@/features/post-editor/components/ImageAltSheet';
+import { ImageAltSheet } from '@/features/post-editor/components/ImageAltSheet';
 import { SlugField } from '@/shared/components/slug/SlugField';
-import { AiGenerateButton } from '@/shared/components/ui/AiGenerateButton';
 
-import type { PostFormType, TranslationLocale } from '@/shared/types/post';
-import type {
-  FlaggedTerm,
-  ImageAlt,
-  SelectiveTranslateOptions,
-  TranslationResult,
-} from '@/features/translation/types';
+import type { PostFormType } from '@/shared/types/post';
+import type { ImageAlt, TranslationResult } from '@/features/translation/types';
 import { ManualTranslationSheet } from '@/features/translation/components/ManualTranslationSheet';
-import type { ParsedLocaleResult } from '@/features/translation/lib/prompt-parser';
+import {
+  toTranslationResults,
+  type ParsedLocaleResult,
+} from '@/features/translation/lib/prompt-parser';
 
 export default function EditPostPage() {
   const { id } = useParams<{ id: string }>();
@@ -232,40 +228,23 @@ function EditPostForm({
     });
   }, []);
 
-  const [isSummarizing, setIsSummarizing] = useState(false);
-  const [isSummarized, setIsSummarized] = useState(false);
-  const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
-  const [lastConfirmedTerms, setLastConfirmedTerms] = useState<
-    { original: string; confirmed: string | Record<string, string> }[]
-  >([]);
-  const [translationResults, setTranslationResults] = useState<TranslationResult[]>(
-    postData.translations,
-  );
-  const [translationEditCompleted, setTranslationEditCompleted] = useState(false);
   const [showSubmitDialog, setShowSubmitDialog] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imageAlts, setImageAlts] = useState<ImageAlt[]>(postData.imageAlts ?? []);
   const [isAltSheetOpen, setIsAltSheetOpen] = useState(false);
-  const [imageAltError, setImageAltError] = useState(false);
   const [isManualTranslationOpen, setIsManualTranslationOpen] = useState(false);
   const [manualTranslationRaw, setManualTranslationRaw] = useState('');
   const [manualTranslationResults, setManualTranslationResults] = useState<ParsedLocaleResult[]>(
     [],
   );
-  const [isTermReviewOpen, setIsTermReviewOpen] = useState(false);
-  const [termReviewTerms, setTermReviewTerms] = useState<FlaggedTerm[]>([]);
-  const [pendingRetranslation, setPendingRetranslation] = useState<{
-    confirmedTerms: { original: string; confirmed: string | Record<string, string> }[];
-    locales: TranslationLocale[];
-  } | null>(null);
-  const [pendingRetranslateLocales, setPendingRetranslateLocales] = useState<TranslationLocale[]>(
-    [],
-  );
 
   const getTranslationData = useCallback(() => {
-    if (translationResults.length === 0) return null;
-    return { confirmedTerms: [], results: translationResults };
-  }, [translationResults]);
+    if (manualTranslationResults.length === 0) return null;
+    return {
+      confirmedTerms: [],
+      results: toTranslationResults(manualTranslationResults),
+    };
+  }, [manualTranslationResults]);
 
   const getImageAltsCallback = useCallback(() => imageAlts, [imageAlts]);
 
@@ -307,9 +286,6 @@ function EditPostForm({
       }
       reset(formData);
       loadDraftId(draft.id);
-      if (draft.translation_data) {
-        setTranslationResults(draft.translation_data.results);
-      }
       if (draft.image_alts.length > 0) {
         setImageAlts(draft.image_alts);
       }
@@ -322,63 +298,13 @@ function EditPostForm({
   const category = watch('category');
   const subCategory = watch('subCategory');
   const watchedContent = watch('content');
-  const watchedPlaceName = watch('placeName');
-  const watchedAddress = watch('address');
-  const watchedPricePrefix = watch('pricePrefix');
-  const watchedPrice = watch('price');
   const watchedProducts = watch('products');
-  const watchedThumbnailAlt = watch('thumbnailAlt');
 
   const currentValidProducts = watchedProducts.filter((p) => p.name.trim());
 
   const isMultilingual = post.is_multilingual;
 
-  const initialValidProducts = initialValues.products.filter((p) => p.name.trim());
-  const dirtyTranslationFields = useTranslationDirtyFields(
-    {
-      title: initialValues.title,
-      content: initialValues.content,
-      description: initialValues.description,
-      placeName: initialValues.placeName,
-      address: initialValues.address,
-      productNames: initialValidProducts.map((p) => p.name),
-      purchaseSources: initialValidProducts.map((p) => p.source),
-      pricePrefixes: initialValidProducts.map((p) => p.pricePrefix),
-      pricePrefix: initialValues.pricePrefix,
-      imageAlts: postData.imageAlts ?? [],
-      thumbnailAlt: initialValues.thumbnailAlt,
-    },
-    {
-      title,
-      content: watchedContent,
-      description,
-      placeName: watchedPlaceName,
-      address: watchedAddress,
-      productNames: currentValidProducts.map((p) => p.name),
-      purchaseSources: currentValidProducts.map((p) => p.source),
-      pricePrefixes: currentValidProducts.map((p) => p.pricePrefix),
-      pricePrefix: watchedPricePrefix,
-      imageAlts,
-      thumbnailAlt: watchedThumbnailAlt,
-    },
-  );
-
-  const isDirty =
-    dirtyTranslationFields.size > 0 ||
-    watch('slug') !== initialValues.slug ||
-    category !== initialValues.category ||
-    subCategory !== initialValues.subCategory ||
-    watch('thumbnail') !== initialValues.thumbnail ||
-    watchedPricePrefix !== initialValues.pricePrefix ||
-    watchedPrice !== initialValues.price ||
-    JSON.stringify(currentValidProducts.map((p) => p.price)) !==
-      JSON.stringify(initialValidProducts.map((p) => p.price)) ||
-    JSON.stringify(currentValidProducts.map((p) => p.pricePrefix)) !==
-      JSON.stringify(initialValidProducts.map((p) => p.pricePrefix));
-
   const needsTranslation = isMultilingual && !!(category && subCategory);
-  const needsRetranslation = needsTranslation && dirtyTranslationFields.size > 0;
-  const submitDisabled = needsRetranslation && !translationEditCompleted;
 
   const focusFirstEmptyField = () => {
     const values = getValues();
@@ -444,183 +370,15 @@ function EditPostForm({
     setValue('subCategory', '', { shouldValidate: true });
   };
 
-  const handleGenerateSummary = async () => {
-    setIsSummarizing(true);
-
-    try {
-      const { title: t, content: c } = getValues();
-      const summary = await streamSummary(t, c, (partial) => {
-        setValue('description', partial);
-      });
-      setValue('description', summary, { shouldValidate: true });
-      setIsSummarized(true);
-    } catch {
-      toast.error('요약 생성에 실패했습니다. 다시 시도해주세요.');
-    } finally {
-      setIsSummarizing(false);
-    }
-  };
-
-  const handleRetranslateLocale = async (
-    locale: TranslationLocale,
-    signal?: AbortSignal,
-    selectiveOptions?: SelectiveTranslateOptions,
-    confirmedTerms?: { original: string; confirmed: string | Record<string, string> }[],
-  ): Promise<TranslationResult> => {
-    const values = getValues();
-    const { title: t, content: c, description: d, placeName: pn, address: addr } = values;
-    const existingTranslation = translationResults.find((r) => r.locale === locale);
-    const validProds = values.products.filter((p) => p.name.trim());
-    const termsToUse = confirmedTerms ?? lastConfirmedTerms;
-    if (confirmedTerms) setLastConfirmedTerms(confirmedTerms);
-    const result = await fetchRetrySingleLocale(
-      locale,
-      {
-        title: t,
-        content: c,
-        description: d,
-        placeName: pn || undefined,
-        address: addr || undefined,
-        productNames: validProds.length > 0 ? validProds.map((p) => p.name) : undefined,
-        purchaseSources: validProds.length > 0 ? validProds.map((p) => p.source) : undefined,
-        pricePrefixes:
-          validProds.length > 0 ? validProds.map((p) => p.pricePrefix).filter(Boolean) : undefined,
-        pricePrefix: values.pricePrefix || undefined,
-        confirmedTerms: termsToUse,
-        imageAlts: imageAlts.length > 0 ? imageAlts : undefined,
-        thumbnailAlt: getValues('thumbnailAlt') || undefined,
-      },
-      signal,
-      selectiveOptions,
-    );
-    if (selectiveOptions && existingTranslation) {
-      const mergedResult = mergeSelectiveResult(existingTranslation, result, selectiveOptions);
-      setTranslationResults((prev) => prev.map((r) => (r.locale === locale ? mergedResult : r)));
-      return mergedResult;
-    }
-    setTranslationResults((prev) => prev.map((r) => (r.locale === locale ? result : r)));
-    return result;
-  };
-
-  const handleRetryAll = async (signal?: AbortSignal) => {
-    const values = getValues();
-    const { title: t, content: c, description: d, placeName: pn, address: addr } = values;
-    const validProds = values.products.filter((p) => p.name.trim());
-    const toastId = toast.loading('번역 중... (0/7)');
-    const results = await fetchTranslatePost(
-      {
-        title: t,
-        content: c,
-        description: d,
-        placeName: pn || undefined,
-        address: addr || undefined,
-        productNames: validProds.length > 0 ? validProds.map((p) => p.name) : undefined,
-        purchaseSources: validProds.length > 0 ? validProds.map((p) => p.source) : undefined,
-        pricePrefixes:
-          validProds.length > 0 ? validProds.map((p) => p.pricePrefix).filter(Boolean) : undefined,
-        pricePrefix: values.pricePrefix || undefined,
-        confirmedTerms: [],
-        imageAlts: imageAlts.length > 0 ? imageAlts : undefined,
-        thumbnailAlt: getValues('thumbnailAlt') || undefined,
-      },
-      signal,
-      (completed, total) => {
-        toast.loading(`번역 중... (${completed}/${total})`, { id: toastId });
-      },
-    );
-    toast.success('번역 완료', { id: toastId });
-    setTranslationResults(results);
-  };
-
-  const [completedFormSnapshot, setCompletedFormSnapshot] = useState<string | null>(null);
-
-  const currentFormFingerprint = useMemo(() => {
-    return JSON.stringify({
-      title,
-      content: watchedContent,
-      description,
-      placeName: watchedPlaceName,
-      address: watchedAddress,
-      productNames: currentValidProducts.map((p) => p.name),
-      purchaseSources: currentValidProducts.map((p) => p.source),
-      pricePrefixes: currentValidProducts.map((p) => p.pricePrefix),
-      pricePrefix: watchedPricePrefix,
-      imageAlts: imageAlts.map((a) => a.alt),
-      thumbnailAlt: watchedThumbnailAlt,
-    });
-  }, [
-    title,
-    watchedContent,
-    description,
-    watchedPlaceName,
-    watchedAddress,
-    currentValidProducts,
-    watchedPricePrefix,
-    imageAlts,
-    watchedThumbnailAlt,
-  ]);
-
-  useEffect(() => {
-    if (!translationEditCompleted || !completedFormSnapshot) return;
-    if (currentFormFingerprint !== completedFormSnapshot) {
-      setTranslationEditCompleted(false);
-      setCompletedFormSnapshot(null);
-    }
-  }, [currentFormFingerprint, translationEditCompleted, completedFormSnapshot]);
-
-  const handleTranslationEditComplete = () => {
-    setTranslationEditCompleted(true);
-    setCompletedFormSnapshot(currentFormFingerprint);
-  };
-
-  const sheetTransitionRef = useRef(false);
-  useEffect(
-    () => () => {
-      sheetTransitionRef.current = false;
-    },
-    [],
-  );
-
-  const handleRequestTermReview = (terms: FlaggedTerm[], locales: TranslationLocale[]) => {
-    if (sheetTransitionRef.current) return;
-    sheetTransitionRef.current = true;
-    setTermReviewTerms(terms);
-    setPendingRetranslateLocales(locales);
-    setIsEditSheetOpen(false);
-    setTimeout(() => {
-      setIsTermReviewOpen(true);
-      sheetTransitionRef.current = false;
-    }, 800);
-  };
-
-  const handleTermsConfirmed = (
-    confirmedTerms: { original: string; confirmed: Record<string, string> }[],
-  ) => {
-    if (sheetTransitionRef.current) return;
-    sheetTransitionRef.current = true;
-    setLastConfirmedTerms(confirmedTerms);
-    setTermReviewTerms([]);
-    setIsTermReviewOpen(false);
-    setPendingRetranslation({ confirmedTerms, locales: pendingRetranslateLocales });
-    setTimeout(() => {
-      setIsEditSheetOpen(true);
-      sheetTransitionRef.current = false;
-    }, 800);
-  };
-
-  const _handleEditSheetOpen = () => {
-    setImageAltError(false);
-    const thumbnailAltFilled = !getValues('thumbnail') || getValues('thumbnailAlt').trim();
-    const srcs = extractImageSrcs(getValues('content'));
-    const contentAltsFilled = srcs.every((src) => {
-      const found = imageAlts.find((a) => a.src === src);
-      return found && found.alt.trim();
-    });
-    if (!thumbnailAltFilled || !contentAltsFilled) {
-      setImageAltError(true);
+  const handleCopySummaryPrompt = async () => {
+    const contentText = watchedContent.replace(/<[^>]*>/g, '').trim();
+    if (!contentText) {
+      toast.error('본문을 먼저 입력해주세요.');
       return;
     }
-    setIsEditSheetOpen(true);
+    const prompt = `${SUMMARY_SYSTEM_PROMPT}\n\n제목: ${title}\n\n본문:\n${contentText}\n\n위 내용을 바탕으로 3줄 요약을 작성해주세요. 각 줄은 줄바꿈(\\n)으로 구분해주세요.`;
+    await navigator.clipboard.writeText(prompt);
+    toast.success('3줄 요약 프롬프트가 복사되었습니다.');
   };
 
   const handleSubmitClick = async () => {
@@ -630,7 +388,10 @@ function EditPostForm({
       return;
     }
 
-    if (submitDisabled) return;
+    if (needsTranslation && manualTranslationResults.length === 0) {
+      toast.error('번역을 먼저 완료해주세요.');
+      return;
+    }
 
     setShowSubmitDialog(true);
   };
@@ -641,7 +402,7 @@ function EditPostForm({
       await updatePost({
         id: postId,
         formValues: getValues(),
-        translations: translationResults,
+        translations: toTranslationResults(manualTranslationResults),
         imageAlts,
       });
       setShowSubmitDialog(false);
@@ -796,13 +557,15 @@ function EditPostForm({
             <label className="text-base font-bold">
               3줄 요약 <span className="text-primary-600">*</span>
             </label>
-            <AiGenerateButton
-              onClick={handleGenerateSummary}
-              isLoading={isSummarizing}
-              isCompleted={isSummarized}
-              disabled={!watch('content').trim()}
-              hasExistingValue={!!description.trim()}
-            />
+            <button
+              type="button"
+              onClick={handleCopySummaryPrompt}
+              disabled={!watchedContent.trim()}
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-primary-600 hover:text-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <ClipboardCopy className="size-3.5" />
+              AI에게 질문하기
+            </button>
           </div>
           <Controller
             name="description"
@@ -810,10 +573,7 @@ function EditPostForm({
             render={({ field }) => (
               <textarea
                 value={field.value}
-                onChange={(e) => {
-                  field.onChange(e.target.value);
-                  setIsSummarized(false);
-                }}
+                onChange={field.onChange}
                 onBlur={field.onBlur}
                 ref={field.ref}
                 placeholder="3줄 요약을 입력해주세요."
@@ -869,7 +629,7 @@ function EditPostForm({
             <button
               type="button"
               onClick={handleSubmitClick}
-              disabled={submitDisabled || isSubmitting}
+              disabled={isSubmitting}
               className="inline-flex items-center justify-center gap-1.5 h-10 bg-primary px-5 text-sm font-medium text-primary-foreground shadow-xs transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isSubmitting ? (
@@ -880,18 +640,6 @@ function EditPostForm({
               {isSubmitting ? '수정 중...' : '수정 완료'}
             </button>
           </div>
-          {submitDisabled && isDirty && (
-            <p className="mt-2 text-end text-[14px] text-red-500">
-              {termReviewTerms.length > 0
-                ? '번역 용어 검토가 먼저 필요합니다.'
-                : '수정된 번역 영역의 번역 요청이 먼저 필요합니다.'}
-            </p>
-          )}
-          {imageAltError && (
-            <p className="mt-2 text-end text-[14px] text-red-500">
-              이미지 alt 입력이 먼저 필요합니다.
-            </p>
-          )}
         </div>
       </div>
 
@@ -930,74 +678,6 @@ function EditPostForm({
           setManualTranslationResults(results);
         }}
       />
-
-      {needsTranslation && (
-        <TranslationSheet
-          open={isEditSheetOpen}
-          onOpenChange={setIsEditSheetOpen}
-          originalTitle={title}
-          originalContent={watchedContent}
-          originalDescription={description}
-          originalPlaceName={watchedPlaceName || undefined}
-          originalAddress={watchedAddress || undefined}
-          originalProductNames={currentValidProducts.map((p) => p.name).filter(Boolean)}
-          originalPurchaseSources={currentValidProducts.map((p) => p.source).filter(Boolean)}
-          originalPricePrefixes={currentValidProducts.map((p) => p.pricePrefix).filter(Boolean)}
-          originalPricePrefix={watchedPricePrefix || undefined}
-          originalImageAlts={imageAlts.length > 0 ? imageAlts : undefined}
-          originalThumbnailAlt={watchedThumbnailAlt || undefined}
-          originalThumbnail={watch('thumbnail')}
-          translations={translationResults}
-          dirtyFields={dirtyTranslationFields}
-          onRetryLocale={handleRetranslateLocale}
-          onRetryAll={handleRetryAll}
-          onExtractTerms={async (dirty) => {
-            const values = getValues();
-            const content = dirty.has('content') ? values.content : undefined;
-            const pn = dirty.has('place_name') ? values.placeName || undefined : undefined;
-            const addr = dirty.has('address') ? values.address || undefined : undefined;
-            const altTexts =
-              dirty.has('image_alts') && imageAlts.length > 0
-                ? imageAlts.map((a) => a.alt)
-                : undefined;
-            if (!content && !pn && !addr && !altTexts) return [];
-            return fetchExtractTerms(content ?? '', pn, addr, altTexts);
-          }}
-          onRequestTermReview={handleRequestTermReview}
-          pendingRetranslation={pendingRetranslation}
-          onPendingRetranslationConsumed={() => setPendingRetranslation(null)}
-          onEditComplete={handleTranslationEditComplete}
-          onUpdateTranslationContent={(locale, content) =>
-            setTranslationResults((prev) =>
-              prev.map((r) => (r.locale === locale ? { ...r, content } : r)),
-            )
-          }
-          onUpdateTranslation={(locale, partial) =>
-            setTranslationResults((prev) =>
-              prev.map((r) => (r.locale === locale ? { ...r, ...partial } : r)),
-            )
-          }
-        />
-      )}
-
-      {needsTranslation && (
-        <TranslationSheetContainer
-          open={isTermReviewOpen}
-          onOpenChange={setIsTermReviewOpen}
-          onTranslationComplete={() => {}}
-          initialTerms={termReviewTerms}
-          initialConfirmedValues={
-            lastConfirmedTerms as { original: string; confirmed: Record<string, string> }[]
-          }
-          title={title}
-          content={watchedContent}
-          description={description}
-          placeName={watchedPlaceName}
-          address={watchedAddress}
-          reviewOnly
-          onTermsConfirmed={handleTermsConfirmed}
-        />
-      )}
 
       <AlertDialog open={showSubmitDialog} onOpenChange={setShowSubmitDialog}>
         <AlertDialogContent>

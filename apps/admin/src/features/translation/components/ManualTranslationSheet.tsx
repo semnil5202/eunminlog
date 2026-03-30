@@ -123,7 +123,7 @@ export function ManualTranslationSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-[720px] flex flex-col">
+      <SheetContent side="right" className="w-full sm:max-w-[688px] flex flex-col">
         <SheetHeader>
           <SheetTitle className="text-lg">수동 번역</SheetTitle>
           <SheetDescription>

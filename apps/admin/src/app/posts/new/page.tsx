@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, useCallback, useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -19,24 +19,14 @@ import { ProductReviewFields } from '@/features/post-editor/components/ProductRe
 import { VisitFields } from '@/features/post-editor/components/VisitFields';
 import { TiptapEditorContainer } from '@/features/post-editor/containers/TiptapEditorContainer';
 import { FORM_TYPE_OPTIONS } from '@/features/post-editor/constants/category';
-import { streamSummary } from '@/features/post-editor/api/client';
+import { SUMMARY_SYSTEM_PROMPT } from '@/shared/constants/prompts';
 import {
   postFormSchema,
   POST_FORM_DEFAULTS,
   TITLE_MAX_LENGTH,
   type PostFormValues,
 } from '@/features/post-editor/types/form';
-import {
-  fetchExtractTerms,
-  fetchTranslatePost,
-  fetchRetrySingleLocale,
-} from '@/features/translation/api/client';
-import { LOCALE_FILTER_LABELS } from '@/features/translation/constants/locale';
-import { TranslationSheet } from '@/features/translation/components/TranslationSheet';
-import { useTranslationDirtyFields } from '@/features/translation/hooks/useTranslationDirtyFields';
-import { TranslationSheetContainer } from '@/features/translation/containers/TranslationSheetContainer';
 import { SlugField } from '@/shared/components/slug/SlugField';
-import { AiGenerateButton } from '@/shared/components/ui/AiGenerateButton';
 import { fetchDraft } from '@/features/draft/api';
 import { useAutoSaveDraft } from '@/features/draft/hooks/useAutoSaveDraft';
 import { createPost } from '@/features/post-management/api/actions';
@@ -44,20 +34,25 @@ import {
   fetchCategoryOptions,
   type CategoryOption,
 } from '@/features/category-management/api/actions';
-import { ImageAltSheet, extractImageSrcs } from '@/features/post-editor/components/ImageAltSheet';
-import { Check, ChevronLeft, ImageIcon, Languages, LoaderIcon, Save } from 'lucide-react';
+import { ImageAltSheet } from '@/features/post-editor/components/ImageAltSheet';
+import {
+  Check,
+  ChevronLeft,
+  ClipboardCopy,
+  ImageIcon,
+  Languages,
+  LoaderIcon,
+  Save,
+} from 'lucide-react';
 import { toast } from 'sonner';
 
-import type { PostFormType, TranslationLocale } from '@/shared/types/post';
-import type {
-  FlaggedTerm,
-  ImageAlt,
-  SelectiveTranslateOptions,
-  TranslationResult,
-} from '@/features/translation/types';
-import { mergeSelectiveResult } from '@/features/translation/lib/merge-selective';
+import type { PostFormType } from '@/shared/types/post';
+import type { ImageAlt } from '@/features/translation/types';
 import { ManualTranslationSheet } from '@/features/translation/components/ManualTranslationSheet';
-import type { ParsedLocaleResult } from '@/features/translation/lib/prompt-parser';
+import {
+  toTranslationResults,
+  type ParsedLocaleResult,
+} from '@/features/translation/lib/prompt-parser';
 
 export default function NewPostPage() {
   return (
@@ -96,22 +91,7 @@ function NewPostContent() {
     });
   }, []);
 
-  const [isSummarizing, setIsSummarizing] = useState(false);
-  const [isSummarized, setIsSummarized] = useState(false);
-  const [isTranslated, setIsTranslated] = useState(false);
-  const [translationEditCompleted, setTranslationEditCompleted] = useState(false);
-  const [completedFormSnapshot, setCompletedFormSnapshot] = useState<string | null>(null);
-  const [isExtracting, setIsExtracting] = useState(false);
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-  const [flaggedTerms, setFlaggedTerms] = useState<FlaggedTerm[]>([]);
-  const [translationResults, setTranslationResults] = useState<TranslationResult[]>([]);
-  const [translationError, setTranslationError] = useState(false);
-  const [_extractionFailed, setExtractionFailed] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [lastConfirmedTerms, setLastConfirmedTerms] = useState<
-    { original: string; confirmed: string | Record<string, string> }[]
-  >([]);
   const [imageAlts, setImageAlts] = useState<ImageAlt[]>([]);
   const [isAltSheetOpen, setIsAltSheetOpen] = useState(false);
   const [imageAltError, setImageAltError] = useState(false);
@@ -120,60 +100,14 @@ function NewPostContent() {
   const [manualTranslationResults, setManualTranslationResults] = useState<ParsedLocaleResult[]>(
     [],
   );
-  const [isRetranslateTermReviewOpen, setIsRetranslateTermReviewOpen] = useState(false);
-  const [retranslateTermReviewTerms, setRetranslateTermReviewTerms] = useState<FlaggedTerm[]>([]);
-  const [pendingRetranslation, setPendingRetranslation] = useState<{
-    confirmedTerms: { original: string; confirmed: string | Record<string, string> }[];
-    locales: TranslationLocale[];
-  } | null>(null);
-  const [pendingRetranslateLocales, setPendingRetranslateLocales] = useState<TranslationLocale[]>(
-    [],
-  );
-  const [translationSnapshot, setTranslationSnapshot] = useState<{
-    title: string;
-    content: string;
-    description: string;
-    placeName: string;
-    address: string;
-    productNames: string[];
-    purchaseSources: string[];
-    pricePrefixes: string[];
-    pricePrefix: string;
-    imageAlts: ImageAlt[];
-    thumbnailAlt: string;
-  } | null>(null);
-
-  const captureSnapshot = useCallback(
-    (currentImageAlts: ImageAlt[]) => {
-      const values = getValues();
-      const validProducts = values.products.filter((p) => p.name.trim());
-      setTranslationSnapshot({
-        title: values.title,
-        content: values.content,
-        description: values.description,
-        placeName: values.placeName,
-        address: values.address,
-        productNames: validProducts.map((p) => p.name),
-        purchaseSources: validProducts.map((p) => p.source),
-        pricePrefixes: validProducts.map((p) => p.pricePrefix),
-        pricePrefix: values.pricePrefix,
-        imageAlts: [...currentImageAlts],
-        thumbnailAlt: values.thumbnailAlt,
-      });
-    },
-    [getValues],
-  );
 
   const getTranslationData = useCallback(() => {
-    if (translationResults.length === 0) return null;
+    if (manualTranslationResults.length === 0) return null;
     return {
-      confirmedTerms: lastConfirmedTerms.map((t) => ({
-        original: t.original,
-        translation: t.confirmed,
-      })),
-      results: translationResults,
+      confirmedTerms: [],
+      results: toTranslationResults(manualTranslationResults),
     };
-  }, [translationResults, lastConfirmedTerms]);
+  }, [manualTranslationResults]);
 
   const getImageAltsCallback = useCallback(() => imageAlts, [imageAlts]);
 
@@ -214,16 +148,6 @@ function NewPostContent() {
       }
       reset(formData);
       loadDraftId(draft.id);
-      if (draft.translation_data) {
-        setTranslationResults(draft.translation_data.results);
-        setLastConfirmedTerms(
-          draft.translation_data.confirmedTerms.map((t) => ({
-            original: t.original,
-            confirmed: t.translation,
-          })),
-        );
-        setIsTranslated(true);
-      }
       if (draft.image_alts.length > 0) {
         setImageAlts(draft.image_alts);
       }
@@ -235,78 +159,9 @@ function NewPostContent() {
   const description = watch('description');
   const category = watch('category');
   const subCategory = watch('subCategory');
-  const watchedContent = watch('content');
-  const watchedPlaceName = watch('placeName');
-  const watchedAddress = watch('address');
   const watchedProducts = watch('products');
-  const watchedPricePrefix = watch('pricePrefix');
-  const watchedThumbnailAlt = watch('thumbnailAlt');
 
   const currentValidProducts = watchedProducts.filter((p) => p.name.trim());
-  const previewDirtyFields = useTranslationDirtyFields(
-    translationSnapshot
-      ? {
-          title: translationSnapshot.title,
-          content: translationSnapshot.content,
-          description: translationSnapshot.description,
-          placeName: translationSnapshot.placeName,
-          address: translationSnapshot.address,
-          productNames: translationSnapshot.productNames,
-          purchaseSources: translationSnapshot.purchaseSources,
-          pricePrefixes: translationSnapshot.pricePrefixes,
-          pricePrefix: translationSnapshot.pricePrefix,
-          imageAlts: translationSnapshot.imageAlts,
-          thumbnailAlt: translationSnapshot.thumbnailAlt,
-        }
-      : null,
-    {
-      title,
-      content: watchedContent,
-      description,
-      placeName: watchedPlaceName,
-      address: watchedAddress,
-      productNames: currentValidProducts.map((p) => p.name),
-      purchaseSources: currentValidProducts.map((p) => p.source),
-      pricePrefixes: currentValidProducts.map((p) => p.pricePrefix),
-      pricePrefix: watchedPricePrefix,
-      imageAlts,
-      thumbnailAlt: watchedThumbnailAlt,
-    },
-  );
-
-  const currentFormFingerprint = useMemo(() => {
-    return JSON.stringify({
-      title,
-      content: watchedContent,
-      description,
-      placeName: watchedPlaceName,
-      address: watchedAddress,
-      productNames: currentValidProducts.map((p) => p.name),
-      purchaseSources: currentValidProducts.map((p) => p.source),
-      pricePrefixes: currentValidProducts.map((p) => p.pricePrefix),
-      pricePrefix: watchedPricePrefix,
-      imageAlts: imageAlts.map((a) => a.alt),
-      thumbnailAlt: watchedThumbnailAlt,
-    });
-  }, [
-    title,
-    watchedContent,
-    description,
-    watchedPlaceName,
-    watchedAddress,
-    currentValidProducts,
-    watchedPricePrefix,
-    imageAlts,
-    watchedThumbnailAlt,
-  ]);
-
-  useEffect(() => {
-    if (!translationEditCompleted || !completedFormSnapshot) return;
-    if (currentFormFingerprint !== completedFormSnapshot) {
-      setTranslationEditCompleted(false);
-      setCompletedFormSnapshot(null);
-    }
-  }, [currentFormFingerprint, translationEditCompleted, completedFormSnapshot]);
 
   const isMultilingual =
     !!(category && subCategory) &&
@@ -375,131 +230,22 @@ function NewPostContent() {
   const handleCategoryChange = (value: string) => {
     setValue('category', value, { shouldValidate: true });
     setValue('subCategory', '', { shouldValidate: true });
-    setIsTranslated(false);
-    setTranslationResults([]);
-    setTranslationError(false);
   };
 
-  const handleGenerateSummary = async () => {
-    setIsSummarizing(true);
-
-    try {
-      const { title: t, content: c } = getValues();
-      const summary = await streamSummary(t, c, (partial) => {
-        setValue('description', partial);
-      });
-      setValue('description', summary, { shouldValidate: true });
-      setIsSummarized(true);
-    } catch {
-      toast.error('요약 생성에 실패했습니다. 다시 시도해주세요.');
-    } finally {
-      setIsSummarizing(false);
-    }
-  };
-
-  const handleTranslationStart = async () => {
-    setIsExtracting(true);
-    setExtractionFailed(false);
-    const extractToastId = toast.loading('번역 용어 검토중...');
-
-    try {
-      const values = getValues();
-      const { title: t, content: c, description: d, placeName: pn, address: addr } = values;
-
-      const altTexts = imageAlts.length > 0 ? imageAlts.map((a) => a.alt) : undefined;
-      const terms = await fetchExtractTerms(c, pn || undefined, addr || undefined, altTexts);
-
-      if (terms.length === 0) {
-        toast.dismiss(extractToastId);
-        const validProds = values.products.filter((p) => p.name.trim());
-        const params = {
-          title: t,
-          content: c,
-          description: d,
-          placeName: pn || undefined,
-          address: addr || undefined,
-          productNames: validProds.length > 0 ? validProds.map((p) => p.name) : undefined,
-          purchaseSources: validProds.length > 0 ? validProds.map((p) => p.source) : undefined,
-          pricePrefixes:
-            validProds.length > 0
-              ? validProds.map((p) => p.pricePrefix).filter(Boolean)
-              : undefined,
-          pricePrefix: values.pricePrefix || undefined,
-          confirmedTerms: [] as { original: string; confirmed: string }[],
-          imageAlts: imageAlts.length > 0 ? imageAlts : undefined,
-          thumbnailAlt: getValues('thumbnailAlt') || undefined,
-        };
-        const toastId = toast.loading('번역 중... (0/7)');
-        const results = await fetchTranslatePost(params, undefined, (c, total) => {
-          toast.loading(`번역 중... (${c}/${total})`, { id: toastId });
-        });
-        toast.success('번역 완료', { id: toastId });
-        setLastConfirmedTerms([]);
-
-        const failedLocales = results.filter((r) => r.failed);
-        for (const r of failedLocales) {
-          const label = LOCALE_FILTER_LABELS[r.locale];
-          toast.error(`${label} 번역에 실패했습니다. 번역본 확인에서 다시 시도해주세요.`);
-        }
-
-        setTranslationResults(results);
-        setIsTranslated(true);
-        captureSnapshot(imageAlts);
-        setTimeout(() => setIsPreviewOpen(true), 800);
-      } else {
-        toast.success('용어 검토가 필요합니다.', { id: extractToastId });
-        setFlaggedTerms(terms);
-        setIsSheetOpen(true);
-      }
-    } catch {
-      setExtractionFailed(true);
-      toast.error('번역 용어 추출에 실패했습니다. 다시 시도해주세요.', { id: extractToastId });
-    } finally {
-      setIsExtracting(false);
-    }
-  };
-
-  const _handleTranslateClick = async () => {
-    if (isExtracting) return;
-    setImageAltError(false);
-
-    const thumbnailAltFilled = !getValues('thumbnail') || getValues('thumbnailAlt').trim();
-    const srcs = extractImageSrcs(getValues('content'));
-    const contentAltsFilled = srcs.every((src) => {
-      const found = imageAlts.find((a) => a.src === src);
-      return found && found.alt.trim();
-    });
-    if (!thumbnailAltFilled || !contentAltsFilled) {
-      setImageAltError(true);
+  const handleCopySummaryPrompt = async () => {
+    const contentText = watch('content')
+      .replace(/<[^>]*>/g, '')
+      .trim();
+    if (!contentText) {
+      toast.error('본문을 먼저 입력해주세요.');
       return;
     }
-
-    const valid = await trigger();
-    if (!valid) {
-      focusFirstEmptyField();
-      return;
-    }
-
-    handleTranslationStart();
-  };
-
-  const _handlePreviewClick = () => {
-    setImageAltError(false);
-    const thumbnailAltFilled = !getValues('thumbnail') || getValues('thumbnailAlt').trim();
-    const srcs = extractImageSrcs(getValues('content'));
-    const contentAltsFilled = srcs.every((src) => {
-      const found = imageAlts.find((a) => a.src === src);
-      return found && found.alt.trim();
-    });
-    if (!thumbnailAltFilled || !contentAltsFilled) {
-      setImageAltError(true);
-      return;
-    }
-    setIsPreviewOpen(true);
+    const prompt = `${SUMMARY_SYSTEM_PROMPT}\n\n제목: ${title}\n\n본문:\n${contentText}\n\n위 내용을 바탕으로 3줄 요약을 작성해주세요. 각 줄은 줄바꿈(\\n)으로 구분해주세요.`;
+    await navigator.clipboard.writeText(prompt);
+    toast.success('3줄 요약 프롬프트가 복사되었습니다.');
   };
 
   const handleSubmitClick = async () => {
-    setTranslationError(false);
     setImageAltError(false);
 
     const valid = await trigger();
@@ -508,18 +254,8 @@ function NewPostContent() {
       return;
     }
 
-    if (needsTranslation && !isTranslated) {
-      setTranslationError(true);
-      return;
-    }
-
-    if (
-      needsTranslation &&
-      isTranslated &&
-      previewDirtyFields.size > 0 &&
-      !translationEditCompleted
-    ) {
-      setTranslationError(true);
+    if (needsTranslation && manualTranslationResults.length === 0) {
+      toast.error('번역을 먼저 완료해주세요.');
       return;
     }
 
@@ -527,7 +263,7 @@ function NewPostContent() {
     try {
       await createPost({
         formValues: getValues(),
-        translations: translationResults,
+        translations: toTranslationResults(manualTranslationResults),
         imageAlts,
         draftId: draftId,
       });
@@ -538,126 +274,6 @@ function NewPostContent() {
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const handleTranslationComplete = (
-    results: TranslationResult[],
-    confirmedTerms: { original: string; confirmed: Record<string, string> }[],
-  ) => {
-    setTranslationResults(results);
-    setLastConfirmedTerms(confirmedTerms);
-    setIsTranslated(true);
-    setIsSheetOpen(false);
-    setTranslationError(false);
-    captureSnapshot(imageAlts);
-    setTimeout(() => setIsPreviewOpen(true), 800);
-  };
-
-  const sheetTransitionRef = useRef(false);
-  useEffect(
-    () => () => {
-      sheetTransitionRef.current = false;
-    },
-    [],
-  );
-
-  const handleRetranslateTermReview = (terms: FlaggedTerm[], locales: TranslationLocale[]) => {
-    if (sheetTransitionRef.current) return;
-    sheetTransitionRef.current = true;
-    setRetranslateTermReviewTerms(terms);
-    setPendingRetranslateLocales(locales);
-    setIsPreviewOpen(false);
-    setTimeout(() => {
-      setIsRetranslateTermReviewOpen(true);
-      sheetTransitionRef.current = false;
-    }, 800);
-  };
-
-  const handleRetranslateTermsConfirmed = (
-    confirmedTerms: { original: string; confirmed: Record<string, string> }[],
-  ) => {
-    if (sheetTransitionRef.current) return;
-    sheetTransitionRef.current = true;
-    setLastConfirmedTerms(confirmedTerms);
-    setRetranslateTermReviewTerms([]);
-    setIsRetranslateTermReviewOpen(false);
-    setPendingRetranslation({ confirmedTerms, locales: pendingRetranslateLocales });
-    setTimeout(() => {
-      setIsPreviewOpen(true);
-      sheetTransitionRef.current = false;
-    }, 800);
-  };
-
-  const handleRetryLocale = async (
-    locale: TranslationLocale,
-    signal?: AbortSignal,
-    selectiveOptions?: SelectiveTranslateOptions,
-    confirmedTerms?: { original: string; confirmed: string | Record<string, string> }[],
-  ) => {
-    const values = getValues();
-    const { title: t, content: c, description: d, placeName: pn, address: addr } = values;
-    const existingTranslation = translationResults.find((r) => r.locale === locale);
-    const validProds = values.products.filter((p) => p.name.trim());
-    const termsToUse = confirmedTerms ?? lastConfirmedTerms;
-    if (confirmedTerms) setLastConfirmedTerms(confirmedTerms);
-    const result = await fetchRetrySingleLocale(
-      locale,
-      {
-        title: t,
-        content: c,
-        description: d,
-        placeName: pn || undefined,
-        address: addr || undefined,
-        productNames: validProds.length > 0 ? validProds.map((p) => p.name) : undefined,
-        purchaseSources: validProds.length > 0 ? validProds.map((p) => p.source) : undefined,
-        pricePrefixes:
-          validProds.length > 0 ? validProds.map((p) => p.pricePrefix).filter(Boolean) : undefined,
-        pricePrefix: values.pricePrefix || undefined,
-        confirmedTerms: termsToUse,
-        imageAlts: imageAlts.length > 0 ? imageAlts : undefined,
-        thumbnailAlt: getValues('thumbnailAlt') || undefined,
-      },
-      signal,
-      selectiveOptions,
-    );
-    if (selectiveOptions && existingTranslation) {
-      const merged = mergeSelectiveResult(existingTranslation, result, selectiveOptions);
-      setTranslationResults((prev) => prev.map((r) => (r.locale === locale ? merged : r)));
-      return merged;
-    }
-    setTranslationResults((prev) => prev.map((r) => (r.locale === locale ? result : r)));
-    return result;
-  };
-
-  const handleRetryAll = async (signal?: AbortSignal) => {
-    const values = getValues();
-    const { title: t, content: c, description: d, placeName: pn, address: addr } = values;
-    const validProds = values.products.filter((p) => p.name.trim());
-    const toastId = toast.loading('번역 중... (0/7)');
-    const results = await fetchTranslatePost(
-      {
-        title: t,
-        content: c,
-        description: d,
-        placeName: pn || undefined,
-        address: addr || undefined,
-        productNames: validProds.length > 0 ? validProds.map((p) => p.name) : undefined,
-        purchaseSources: validProds.length > 0 ? validProds.map((p) => p.source) : undefined,
-        pricePrefixes:
-          validProds.length > 0 ? validProds.map((p) => p.pricePrefix).filter(Boolean) : undefined,
-        pricePrefix: values.pricePrefix || undefined,
-        confirmedTerms: lastConfirmedTerms,
-        imageAlts: imageAlts.length > 0 ? imageAlts : undefined,
-        thumbnailAlt: getValues('thumbnailAlt') || undefined,
-      },
-      signal,
-      (completed, total) => {
-        toast.loading(`번역 중... (${completed}/${total})`, { id: toastId });
-      },
-    );
-    toast.success('번역 완료', { id: toastId });
-    setTranslationResults(results);
-    captureSnapshot(imageAlts);
   };
 
   return (
@@ -804,13 +420,15 @@ function NewPostContent() {
             <label className="text-base font-bold">
               3줄 요약 <span className="text-primary-600">*</span>
             </label>
-            <AiGenerateButton
-              onClick={handleGenerateSummary}
-              isLoading={isSummarizing}
-              isCompleted={isSummarized}
+            <button
+              type="button"
+              onClick={handleCopySummaryPrompt}
               disabled={!watch('content').trim()}
-              hasExistingValue={!!description.trim()}
-            />
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-primary-600 hover:text-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <ClipboardCopy className="size-3.5" />
+              AI에게 질문하기
+            </button>
           </div>
           <Controller
             name="description"
@@ -818,10 +436,7 @@ function NewPostContent() {
             render={({ field }) => (
               <textarea
                 value={field.value}
-                onChange={(e) => {
-                  field.onChange(e.target.value);
-                  setIsSummarized(false);
-                }}
+                onChange={field.onChange}
                 onBlur={field.onBlur}
                 ref={field.ref}
                 placeholder="3줄 요약을 입력해주세요."
@@ -893,16 +508,6 @@ function NewPostContent() {
               이미지 alt 입력이 먼저 필요합니다.
             </p>
           )}
-          {translationError && isTranslated && previewDirtyFields.size > 0 && (
-            <p className="mt-2 text-end text-[14px] text-red-500">
-              {retranslateTermReviewTerms.length > 0
-                ? '번역 용어 검토가 먼저 필요합니다.'
-                : '수정된 번역 영역의 번역 요청이 먼저 필요합니다.'}
-            </p>
-          )}
-          {translationError && !isTranslated && (
-            <p className="mt-2 text-end text-[14px] text-red-500">번역본 생성이 먼저 필요합니다.</p>
-          )}
         </div>
       </div>
 
@@ -940,94 +545,6 @@ function NewPostContent() {
           setManualTranslationRaw(raw);
           setManualTranslationResults(results);
         }}
-      />
-
-      <TranslationSheetContainer
-        open={isSheetOpen}
-        onOpenChange={setIsSheetOpen}
-        onTranslationComplete={handleTranslationComplete}
-        initialTerms={flaggedTerms}
-        initialConfirmedValues={
-          lastConfirmedTerms as { original: string; confirmed: Record<string, string> }[]
-        }
-        title={title}
-        content={watch('content')}
-        description={description}
-        placeName={watch('placeName')}
-        address={watch('address')}
-        productNames={currentValidProducts.map((p) => p.name).filter(Boolean)}
-        purchaseSources={currentValidProducts.map((p) => p.source).filter(Boolean)}
-        pricePrefixes={currentValidProducts.map((p) => p.pricePrefix).filter(Boolean)}
-        pricePrefix={watch('pricePrefix') || undefined}
-        imageAlts={imageAlts}
-        thumbnailAlt={watch('thumbnailAlt') || undefined}
-      />
-
-      <TranslationSheet
-        open={isPreviewOpen}
-        onOpenChange={setIsPreviewOpen}
-        originalTitle={title}
-        originalContent={watchedContent}
-        originalDescription={description}
-        originalPlaceName={watchedPlaceName || undefined}
-        originalAddress={watchedAddress || undefined}
-        originalProductNames={currentValidProducts.map((p) => p.name).filter(Boolean)}
-        originalPurchaseSources={currentValidProducts.map((p) => p.source).filter(Boolean)}
-        originalPricePrefixes={currentValidProducts.map((p) => p.pricePrefix).filter(Boolean)}
-        originalPricePrefix={watchedPricePrefix || undefined}
-        originalImageAlts={imageAlts.length > 0 ? imageAlts : undefined}
-        originalThumbnailAlt={watchedThumbnailAlt || undefined}
-        originalThumbnail={watch('thumbnail')}
-        translations={translationResults}
-        dirtyFields={previewDirtyFields}
-        onRetryLocale={handleRetryLocale}
-        onRetryAll={handleRetryAll}
-        onExtractTerms={async (dirty) => {
-          const values = getValues();
-          const content = dirty.has('content') ? values.content : undefined;
-          const pn = dirty.has('place_name') ? values.placeName || undefined : undefined;
-          const addr = dirty.has('address') ? values.address || undefined : undefined;
-          const altTexts =
-            dirty.has('image_alts') && imageAlts.length > 0
-              ? imageAlts.map((a) => a.alt)
-              : undefined;
-          if (!content && !pn && !addr && !altTexts) return [];
-          return fetchExtractTerms(content ?? '', pn, addr, altTexts);
-        }}
-        onRequestTermReview={handleRetranslateTermReview}
-        pendingRetranslation={pendingRetranslation}
-        onPendingRetranslationConsumed={() => setPendingRetranslation(null)}
-        onEditComplete={() => {
-          setTranslationEditCompleted(true);
-          setCompletedFormSnapshot(currentFormFingerprint);
-        }}
-        onUpdateTranslationContent={(locale, content) =>
-          setTranslationResults((prev) =>
-            prev.map((r) => (r.locale === locale ? { ...r, content } : r)),
-          )
-        }
-        onUpdateTranslation={(locale, partial) =>
-          setTranslationResults((prev) =>
-            prev.map((r) => (r.locale === locale ? { ...r, ...partial } : r)),
-          )
-        }
-      />
-
-      <TranslationSheetContainer
-        open={isRetranslateTermReviewOpen}
-        onOpenChange={setIsRetranslateTermReviewOpen}
-        onTranslationComplete={() => {}}
-        initialTerms={retranslateTermReviewTerms}
-        initialConfirmedValues={
-          lastConfirmedTerms as { original: string; confirmed: Record<string, string> }[]
-        }
-        title={title}
-        content={watchedContent}
-        description={description}
-        placeName={watchedPlaceName}
-        address={watchedAddress}
-        reviewOnly
-        onTermsConfirmed={handleRetranslateTermsConfirmed}
       />
     </>
   );

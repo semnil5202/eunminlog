@@ -1,6 +1,7 @@
 /** Markdown 구분자 형식의 번역 결과를 파싱한다. */
 
 import type { TranslationLocale } from '@/shared/types/post';
+import type { TranslationResult } from '@/features/translation/types';
 
 export type ParsedLocaleResult = {
   locale: TranslationLocale;
@@ -65,4 +66,21 @@ export function parseTranslationResult(raw: string): ParsedLocaleResult[] {
   }
 
   return results;
+}
+
+export function toTranslationResults(parsed: ParsedLocaleResult[]): TranslationResult[] {
+  return parsed.map((r) => ({
+    locale: r.locale,
+    title: r.title,
+    content: r.content,
+    description: r.description,
+    place_name: r.placeName,
+    address: r.address,
+    product_name: r.productNames,
+    purchase_source: r.purchaseSources,
+    price_prefix:
+      r.pricePrefixes.length > 0 ? r.pricePrefixes : r.pricePrefix ? [r.pricePrefix] : [],
+    image_alts: r.imageAlts.map((alt) => ({ src: '', alt })),
+    thumbnail_alt: r.thumbnailAlt,
+  }));
 }
