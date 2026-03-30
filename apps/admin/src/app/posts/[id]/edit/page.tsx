@@ -6,15 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 
 import Link from 'next/link';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import {
-  Check,
-  ChevronLeft,
-  ClipboardCopy,
-  ImageIcon,
-  Languages,
-  LoaderIcon,
-  Save,
-} from 'lucide-react';
+import { Check, ChevronLeft, ImageIcon, Languages, LoaderIcon, Save } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { fetchDraft } from '@/features/draft/api';
@@ -61,7 +53,6 @@ import {
   fetchTranslatePost,
 } from '@/features/translation/api/client';
 import { mergeSelectiveResult } from '@/features/translation/lib/merge-selective';
-import { buildTranslationPrompt } from '@/features/translation/lib/prompt-builder';
 import { TranslationSheet } from '@/features/translation/components/TranslationSheet';
 import { TranslationSheetContainer } from '@/features/translation/containers/TranslationSheetContainer';
 import { useTranslationDirtyFields } from '@/features/translation/hooks/useTranslationDirtyFields';
@@ -76,6 +67,8 @@ import type {
   SelectiveTranslateOptions,
   TranslationResult,
 } from '@/features/translation/types';
+import { ManualTranslationSheet } from '@/features/translation/components/ManualTranslationSheet';
+import type { ParsedLocaleResult } from '@/features/translation/lib/prompt-parser';
 
 export default function EditPostPage() {
   const { id } = useParams<{ id: string }>();
@@ -254,6 +247,11 @@ function EditPostForm({
   const [imageAlts, setImageAlts] = useState<ImageAlt[]>(postData.imageAlts ?? []);
   const [isAltSheetOpen, setIsAltSheetOpen] = useState(false);
   const [imageAltError, setImageAltError] = useState(false);
+  const [isManualTranslationOpen, setIsManualTranslationOpen] = useState(false);
+  const [manualTranslationRaw, setManualTranslationRaw] = useState('');
+  const [manualTranslationResults, setManualTranslationResults] = useState<ParsedLocaleResult[]>(
+    [],
+  );
   const [isTermReviewOpen, setIsTermReviewOpen] = useState(false);
   const [termReviewTerms, setTermReviewTerms] = useState<FlaggedTerm[]>([]);
   const [pendingRetranslation, setPendingRetranslation] = useState<{
@@ -625,33 +623,6 @@ function EditPostForm({
     setIsEditSheetOpen(true);
   };
 
-  const handleCopyPrompt = async () => {
-    const valid = await trigger();
-    if (!valid) {
-      focusFirstEmptyField();
-      return;
-    }
-
-    const values = getValues();
-    const prompt = buildTranslationPrompt({
-      formType: values.formType as 'visit' | 'product-review',
-      title: values.title,
-      content: values.content,
-      description: values.description,
-      placeName: values.placeName || undefined,
-      address: values.address || undefined,
-      pricePrefix: values.pricePrefix || undefined,
-      productNames: values.products.map((p) => p.name).filter(Boolean),
-      purchaseSources: values.products.map((p) => p.source).filter(Boolean),
-      pricePrefixes: values.products.map((p) => p.pricePrefix).filter(Boolean),
-      imageAlts,
-      thumbnailAlt: values.thumbnailAlt || undefined,
-    });
-
-    await navigator.clipboard.writeText(prompt);
-    toast.success('번역 프롬프트가 클립보드에 복사되었습니다.');
-  };
-
   const handleSubmitClick = async () => {
     const valid = await trigger();
     if (!valid) {
@@ -875,11 +846,11 @@ function EditPostForm({
             {needsTranslation && (
               <button
                 type="button"
-                onClick={handleCopyPrompt}
+                onClick={() => setIsManualTranslationOpen(true)}
                 className="inline-flex items-center justify-center gap-1.5 h-10 border border-input px-5 text-sm font-semibold shadow-xs transition-colors hover:bg-accent"
               >
-                <ClipboardCopy className="size-4" />
-                번역 프롬프트 복사
+                <Languages className="size-4" />
+                번역하기
               </button>
             )}
             {needsTranslation && termReviewTerms.length > 0 && (
@@ -955,6 +926,29 @@ function EditPostForm({
         onThumbnailAltChange={(alt) =>
           setValue('thumbnailAlt', alt, { shouldValidate: !!errors.thumbnailAlt })
         }
+      />
+
+      <ManualTranslationSheet
+        open={isManualTranslationOpen}
+        onOpenChange={setIsManualTranslationOpen}
+        formType={formType as 'visit' | 'product-review'}
+        title={title}
+        content={watchedContent}
+        description={description}
+        placeName={watch('placeName') || undefined}
+        address={watch('address') || undefined}
+        pricePrefix={watch('pricePrefix') || undefined}
+        productNames={currentValidProducts.map((p) => p.name).filter(Boolean)}
+        purchaseSources={currentValidProducts.map((p) => p.source).filter(Boolean)}
+        pricePrefixes={currentValidProducts.map((p) => p.pricePrefix).filter(Boolean)}
+        imageAlts={imageAlts}
+        thumbnailAlt={watch('thumbnailAlt') || undefined}
+        savedRawText={manualTranslationRaw}
+        savedResults={manualTranslationResults}
+        onResultsChange={(raw, results) => {
+          setManualTranslationRaw(raw);
+          setManualTranslationResults(results);
+        }}
       />
 
       {needsTranslation && (
