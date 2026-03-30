@@ -424,10 +424,10 @@ function NewPostContent() {
               type="button"
               onClick={handleCopySummaryPrompt}
               disabled={!watch('content').trim()}
-              className="inline-flex items-center gap-1.5 text-xs font-medium text-primary-600 hover:text-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <ClipboardCopy className="size-3.5" />
-              AI에게 질문하기
+              3줄 요약 프롬프트 복사
             </button>
           </div>
           <Controller
