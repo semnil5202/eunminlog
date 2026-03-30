@@ -237,7 +237,7 @@ export function ManualTranslationSheet({
                   <div>
                     <span className="text-gray-500 font-medium">본문</span>
                     <div
-                      className="mt-1 p-3 bg-white border border-gray-200 rounded-md text-sm max-h-64 overflow-y-auto prose prose-sm"
+                      className="mt-1 p-3 bg-white border border-gray-200 rounded-md text-sm prose prose-sm"
                       dangerouslySetInnerHTML={{ __html: activeResult.content }}
                     />
                   </div>
