@@ -6,7 +6,15 @@ import { zodResolver } from '@hookform/resolvers/zod';
 
 import Link from 'next/link';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { Check, ChevronLeft, ImageIcon, Languages, LoaderIcon, Save } from 'lucide-react';
+import {
+  Check,
+  ChevronLeft,
+  ClipboardCopy,
+  ImageIcon,
+  Languages,
+  LoaderIcon,
+  Save,
+} from 'lucide-react';
 import { toast } from 'sonner';
 
 import { fetchDraft } from '@/features/draft/api';
@@ -47,8 +55,13 @@ import {
   TITLE_MAX_LENGTH,
   type PostFormValues,
 } from '@/features/post-editor/types/form';
-import { fetchExtractTerms, fetchRetrySingleLocale, fetchTranslatePost } from '@/features/translation/api/client';
+import {
+  fetchExtractTerms,
+  fetchRetrySingleLocale,
+  fetchTranslatePost,
+} from '@/features/translation/api/client';
 import { mergeSelectiveResult } from '@/features/translation/lib/merge-selective';
+import { buildTranslationPrompt } from '@/features/translation/lib/prompt-builder';
 import { TranslationSheet } from '@/features/translation/components/TranslationSheet';
 import { TranslationSheetContainer } from '@/features/translation/containers/TranslationSheetContainer';
 import { useTranslationDirtyFields } from '@/features/translation/hooks/useTranslationDirtyFields';
@@ -57,7 +70,12 @@ import { SlugField } from '@/shared/components/slug/SlugField';
 import { AiGenerateButton } from '@/shared/components/ui/AiGenerateButton';
 
 import type { PostFormType, TranslationLocale } from '@/shared/types/post';
-import type { FlaggedTerm, ImageAlt, SelectiveTranslateOptions, TranslationResult } from '@/features/translation/types';
+import type {
+  FlaggedTerm,
+  ImageAlt,
+  SelectiveTranslateOptions,
+  TranslationResult,
+} from '@/features/translation/types';
 
 export default function EditPostPage() {
   const { id } = useParams<{ id: string }>();
@@ -158,7 +176,9 @@ function EditPostForm({
 
   const initialValues = useMemo<PostFormValues>(
     () => ({
-      formType: (post.product_name && post.product_name.length > 0 ? 'product-review' : 'visit') as PostFormType,
+      formType: (post.product_name && post.product_name.length > 0
+        ? 'product-review'
+        : 'visit') as PostFormType,
       title: post.title,
       content: post.content,
       category: post.category,
@@ -169,17 +189,25 @@ function EditPostForm({
       description: post.description,
       placeName: post.place_name ?? '',
       address: post.address ?? '',
-      pricePrefix: Array.isArray(post.price_prefix) ? (post.price_prefix[0] ?? '') : (post.price_prefix ?? ''),
-      price: Array.isArray(post.price) && !post.product_name?.length ? (post.price[0] != null ? String(post.price[0]) : '') : '',
-      products: post.product_name && post.product_name.length > 0
-        ? post.product_name.map((name, i) => ({
-            name,
-            source: post.purchase_source?.[i] ?? '',
-            link: post.purchase_link?.[i] ?? '',
-            pricePrefix: post.price_prefix?.[i] ?? '',
-            price: post.price?.[i] != null ? String(post.price[i]) : '',
-          }))
-        : [{ name: '', source: '', link: '', pricePrefix: '', price: '' }],
+      pricePrefix: Array.isArray(post.price_prefix)
+        ? (post.price_prefix[0] ?? '')
+        : (post.price_prefix ?? ''),
+      price:
+        Array.isArray(post.price) && !post.product_name?.length
+          ? post.price[0] != null
+            ? String(post.price[0])
+            : ''
+          : '',
+      products:
+        post.product_name && post.product_name.length > 0
+          ? post.product_name.map((name, i) => ({
+              name,
+              source: post.purchase_source?.[i] ?? '',
+              link: post.purchase_link?.[i] ?? '',
+              pricePrefix: post.price_prefix?.[i] ?? '',
+              price: post.price?.[i] != null ? String(post.price[i]) : '',
+            }))
+          : [{ name: '', source: '', link: '', pricePrefix: '', price: '' }],
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- post data only changes when id changes
     [postId],
@@ -232,7 +260,9 @@ function EditPostForm({
     confirmedTerms: { original: string; confirmed: string | Record<string, string> }[];
     locales: TranslationLocale[];
   } | null>(null);
-  const [pendingRetranslateLocales, setPendingRetranslateLocales] = useState<TranslationLocale[]>([]);
+  const [pendingRetranslateLocales, setPendingRetranslateLocales] = useState<TranslationLocale[]>(
+    [],
+  );
 
   const getTranslationData = useCallback(() => {
     if (translationResults.length === 0) return null;
@@ -260,7 +290,15 @@ function EditPostForm({
       };
       if (!formData.products) {
         formData.products = formData.productName
-          ? [{ name: formData.productName, source: formData.purchaseSource ?? '', link: formData.purchaseLink ?? '', pricePrefix: '', price: '' }]
+          ? [
+              {
+                name: formData.productName,
+                source: formData.purchaseSource ?? '',
+                link: formData.purchaseLink ?? '',
+                pricePrefix: '',
+                price: '',
+              },
+            ]
           : [{ name: '', source: '', link: '', pricePrefix: '', price: '' }];
       } else {
         formData.products = formData.products.map((p) => ({
@@ -335,8 +373,10 @@ function EditPostForm({
     watch('thumbnail') !== initialValues.thumbnail ||
     watchedPricePrefix !== initialValues.pricePrefix ||
     watchedPrice !== initialValues.price ||
-    JSON.stringify(currentValidProducts.map((p) => p.price)) !== JSON.stringify(initialValidProducts.map((p) => p.price)) ||
-    JSON.stringify(currentValidProducts.map((p) => p.pricePrefix)) !== JSON.stringify(initialValidProducts.map((p) => p.pricePrefix));
+    JSON.stringify(currentValidProducts.map((p) => p.price)) !==
+      JSON.stringify(initialValidProducts.map((p) => p.price)) ||
+    JSON.stringify(currentValidProducts.map((p) => p.pricePrefix)) !==
+      JSON.stringify(initialValidProducts.map((p) => p.pricePrefix));
 
   const needsTranslation = isMultilingual && !!(category && subCategory);
   const needsRetranslation = needsTranslation && dirtyTranslationFields.size > 0;
@@ -371,9 +411,7 @@ function EditPostForm({
     }
 
     if (formType === 'product-review') {
-      checks.push(
-        ['price', !values.price.trim()],
-      );
+      checks.push(['price', !values.price.trim()]);
     }
 
     checks.push(['description', !values.description.trim()]);
@@ -437,20 +475,26 @@ function EditPostForm({
     const validProds = values.products.filter((p) => p.name.trim());
     const termsToUse = confirmedTerms ?? lastConfirmedTerms;
     if (confirmedTerms) setLastConfirmedTerms(confirmedTerms);
-    const result = await fetchRetrySingleLocale(locale, {
-      title: t,
-      content: c,
-      description: d,
-      placeName: pn || undefined,
-      address: addr || undefined,
-      productNames: validProds.length > 0 ? validProds.map((p) => p.name) : undefined,
-      purchaseSources: validProds.length > 0 ? validProds.map((p) => p.source) : undefined,
-      pricePrefixes: validProds.length > 0 ? validProds.map((p) => p.pricePrefix).filter(Boolean) : undefined,
-      pricePrefix: values.pricePrefix || undefined,
-      confirmedTerms: termsToUse,
-      imageAlts: imageAlts.length > 0 ? imageAlts : undefined,
-      thumbnailAlt: getValues('thumbnailAlt') || undefined,
-    }, signal, selectiveOptions);
+    const result = await fetchRetrySingleLocale(
+      locale,
+      {
+        title: t,
+        content: c,
+        description: d,
+        placeName: pn || undefined,
+        address: addr || undefined,
+        productNames: validProds.length > 0 ? validProds.map((p) => p.name) : undefined,
+        purchaseSources: validProds.length > 0 ? validProds.map((p) => p.source) : undefined,
+        pricePrefixes:
+          validProds.length > 0 ? validProds.map((p) => p.pricePrefix).filter(Boolean) : undefined,
+        pricePrefix: values.pricePrefix || undefined,
+        confirmedTerms: termsToUse,
+        imageAlts: imageAlts.length > 0 ? imageAlts : undefined,
+        thumbnailAlt: getValues('thumbnailAlt') || undefined,
+      },
+      signal,
+      selectiveOptions,
+    );
     if (selectiveOptions && existingTranslation) {
       const mergedResult = mergeSelectiveResult(existingTranslation, result, selectiveOptions);
       setTranslationResults((prev) => prev.map((r) => (r.locale === locale ? mergedResult : r)));
@@ -465,22 +509,27 @@ function EditPostForm({
     const { title: t, content: c, description: d, placeName: pn, address: addr } = values;
     const validProds = values.products.filter((p) => p.name.trim());
     const toastId = toast.loading('번역 중... (0/7)');
-    const results = await fetchTranslatePost({
-      title: t,
-      content: c,
-      description: d,
-      placeName: pn || undefined,
-      address: addr || undefined,
-      productNames: validProds.length > 0 ? validProds.map((p) => p.name) : undefined,
-      purchaseSources: validProds.length > 0 ? validProds.map((p) => p.source) : undefined,
-      pricePrefixes: validProds.length > 0 ? validProds.map((p) => p.pricePrefix).filter(Boolean) : undefined,
-      pricePrefix: values.pricePrefix || undefined,
-      confirmedTerms: [],
-      imageAlts: imageAlts.length > 0 ? imageAlts : undefined,
-      thumbnailAlt: getValues('thumbnailAlt') || undefined,
-    }, signal, (completed, total) => {
-      toast.loading(`번역 중... (${completed}/${total})`, { id: toastId });
-    });
+    const results = await fetchTranslatePost(
+      {
+        title: t,
+        content: c,
+        description: d,
+        placeName: pn || undefined,
+        address: addr || undefined,
+        productNames: validProds.length > 0 ? validProds.map((p) => p.name) : undefined,
+        purchaseSources: validProds.length > 0 ? validProds.map((p) => p.source) : undefined,
+        pricePrefixes:
+          validProds.length > 0 ? validProds.map((p) => p.pricePrefix).filter(Boolean) : undefined,
+        pricePrefix: values.pricePrefix || undefined,
+        confirmedTerms: [],
+        imageAlts: imageAlts.length > 0 ? imageAlts : undefined,
+        thumbnailAlt: getValues('thumbnailAlt') || undefined,
+      },
+      signal,
+      (completed, total) => {
+        toast.loading(`번역 중... (${completed}/${total})`, { id: toastId });
+      },
+    );
     toast.success('번역 완료', { id: toastId });
     setTranslationResults(results);
   };
@@ -501,7 +550,17 @@ function EditPostForm({
       imageAlts: imageAlts.map((a) => a.alt),
       thumbnailAlt: watchedThumbnailAlt,
     });
-  }, [title, watchedContent, description, watchedPlaceName, watchedAddress, currentValidProducts, watchedPricePrefix, imageAlts, watchedThumbnailAlt]);
+  }, [
+    title,
+    watchedContent,
+    description,
+    watchedPlaceName,
+    watchedAddress,
+    currentValidProducts,
+    watchedPricePrefix,
+    imageAlts,
+    watchedThumbnailAlt,
+  ]);
 
   useEffect(() => {
     if (!translationEditCompleted || !completedFormSnapshot) return;
@@ -517,7 +576,12 @@ function EditPostForm({
   };
 
   const sheetTransitionRef = useRef(false);
-  useEffect(() => () => { sheetTransitionRef.current = false; }, []);
+  useEffect(
+    () => () => {
+      sheetTransitionRef.current = false;
+    },
+    [],
+  );
 
   const handleRequestTermReview = (terms: FlaggedTerm[], locales: TranslationLocale[]) => {
     if (sheetTransitionRef.current) return;
@@ -531,7 +595,9 @@ function EditPostForm({
     }, 800);
   };
 
-  const handleTermsConfirmed = (confirmedTerms: { original: string; confirmed: Record<string, string> }[]) => {
+  const handleTermsConfirmed = (
+    confirmedTerms: { original: string; confirmed: Record<string, string> }[],
+  ) => {
     if (sheetTransitionRef.current) return;
     sheetTransitionRef.current = true;
     setLastConfirmedTerms(confirmedTerms);
@@ -557,6 +623,33 @@ function EditPostForm({
       return;
     }
     setIsEditSheetOpen(true);
+  };
+
+  const handleCopyPrompt = async () => {
+    const valid = await trigger();
+    if (!valid) {
+      focusFirstEmptyField();
+      return;
+    }
+
+    const values = getValues();
+    const prompt = buildTranslationPrompt({
+      formType: values.formType as 'visit' | 'product-review',
+      title: values.title,
+      content: values.content,
+      description: values.description,
+      placeName: values.placeName || undefined,
+      address: values.address || undefined,
+      pricePrefix: values.pricePrefix || undefined,
+      productNames: values.products.map((p) => p.name).filter(Boolean),
+      purchaseSources: values.products.map((p) => p.source).filter(Boolean),
+      pricePrefixes: values.products.map((p) => p.pricePrefix).filter(Boolean),
+      imageAlts,
+      thumbnailAlt: values.thumbnailAlt || undefined,
+    });
+
+    await navigator.clipboard.writeText(prompt);
+    toast.success('번역 프롬프트가 클립보드에 복사되었습니다.');
   };
 
   const handleSubmitClick = async () => {
@@ -779,6 +872,16 @@ function EditPostForm({
               <ImageIcon className="size-4" />
               이미지 alt 입력
             </button>
+            {needsTranslation && (
+              <button
+                type="button"
+                onClick={handleCopyPrompt}
+                className="inline-flex items-center justify-center gap-1.5 h-10 border border-input px-5 text-sm font-semibold shadow-xs transition-colors hover:bg-accent"
+              >
+                <ClipboardCopy className="size-4" />
+                번역 프롬프트 복사
+              </button>
+            )}
             {needsTranslation && termReviewTerms.length > 0 && (
               <button
                 type="button"
@@ -877,9 +980,12 @@ function EditPostForm({
           onExtractTerms={async (dirty) => {
             const values = getValues();
             const content = dirty.has('content') ? values.content : undefined;
-            const pn = dirty.has('place_name') ? (values.placeName || undefined) : undefined;
-            const addr = dirty.has('address') ? (values.address || undefined) : undefined;
-            const altTexts = dirty.has('image_alts') && imageAlts.length > 0 ? imageAlts.map((a) => a.alt) : undefined;
+            const pn = dirty.has('place_name') ? values.placeName || undefined : undefined;
+            const addr = dirty.has('address') ? values.address || undefined : undefined;
+            const altTexts =
+              dirty.has('image_alts') && imageAlts.length > 0
+                ? imageAlts.map((a) => a.alt)
+                : undefined;
             if (!content && !pn && !addr && !altTexts) return [];
             return fetchExtractTerms(content ?? '', pn, addr, altTexts);
           }}
@@ -906,7 +1012,9 @@ function EditPostForm({
           onOpenChange={setIsTermReviewOpen}
           onTranslationComplete={() => {}}
           initialTerms={termReviewTerms}
-          initialConfirmedValues={lastConfirmedTerms as { original: string; confirmed: Record<string, string> }[]}
+          initialConfirmedValues={
+            lastConfirmedTerms as { original: string; confirmed: Record<string, string> }[]
+          }
           title={title}
           content={watchedContent}
           description={description}

@@ -45,12 +45,27 @@ import {
   type CategoryOption,
 } from '@/features/category-management/api/actions';
 import { ImageAltSheet, extractImageSrcs } from '@/features/post-editor/components/ImageAltSheet';
-import { Check, ChevronLeft, ImageIcon, Languages, LoaderIcon, Save, Sparkles } from 'lucide-react';
+import {
+  Check,
+  ChevronLeft,
+  ClipboardCopy,
+  ImageIcon,
+  Languages,
+  LoaderIcon,
+  Save,
+  Sparkles,
+} from 'lucide-react';
 import { toast } from 'sonner';
 
 import type { PostFormType, TranslationLocale } from '@/shared/types/post';
-import type { FlaggedTerm, ImageAlt, SelectiveTranslateOptions, TranslationResult } from '@/features/translation/types';
+import type {
+  FlaggedTerm,
+  ImageAlt,
+  SelectiveTranslateOptions,
+  TranslationResult,
+} from '@/features/translation/types';
 import { mergeSelectiveResult } from '@/features/translation/lib/merge-selective';
+import { buildTranslationPrompt } from '@/features/translation/lib/prompt-builder';
 
 export default function NewPostPage() {
   return (
@@ -114,7 +129,9 @@ function NewPostContent() {
     confirmedTerms: { original: string; confirmed: string | Record<string, string> }[];
     locales: TranslationLocale[];
   } | null>(null);
-  const [pendingRetranslateLocales, setPendingRetranslateLocales] = useState<TranslationLocale[]>([]);
+  const [pendingRetranslateLocales, setPendingRetranslateLocales] = useState<TranslationLocale[]>(
+    [],
+  );
   const [translationSnapshot, setTranslationSnapshot] = useState<{
     title: string;
     content: string;
@@ -181,7 +198,15 @@ function NewPostContent() {
       };
       if (!formData.products) {
         formData.products = formData.productName
-          ? [{ name: formData.productName, source: formData.purchaseSource ?? '', link: formData.purchaseLink ?? '', pricePrefix: '', price: '' }]
+          ? [
+              {
+                name: formData.productName,
+                source: formData.purchaseSource ?? '',
+                link: formData.purchaseLink ?? '',
+                pricePrefix: '',
+                price: '',
+              },
+            ]
           : [{ name: '', source: '', link: '', pricePrefix: '', price: '' }];
       } else {
         formData.products = formData.products.map((p) => ({
@@ -266,7 +291,17 @@ function NewPostContent() {
       imageAlts: imageAlts.map((a) => a.alt),
       thumbnailAlt: watchedThumbnailAlt,
     });
-  }, [title, watchedContent, description, watchedPlaceName, watchedAddress, currentValidProducts, watchedPricePrefix, imageAlts, watchedThumbnailAlt]);
+  }, [
+    title,
+    watchedContent,
+    description,
+    watchedPlaceName,
+    watchedAddress,
+    currentValidProducts,
+    watchedPricePrefix,
+    imageAlts,
+    watchedThumbnailAlt,
+  ]);
 
   useEffect(() => {
     if (!translationEditCompleted || !completedFormSnapshot) return;
@@ -310,9 +345,7 @@ function NewPostContent() {
     }
 
     if (formType === 'product-review') {
-      checks.push(
-        ['price', !values.price.trim()],
-      );
+      checks.push(['price', !values.price.trim()]);
     }
 
     checks.push(['description', !values.description.trim()]);
@@ -390,7 +423,10 @@ function NewPostContent() {
           address: addr || undefined,
           productNames: validProds.length > 0 ? validProds.map((p) => p.name) : undefined,
           purchaseSources: validProds.length > 0 ? validProds.map((p) => p.source) : undefined,
-          pricePrefixes: validProds.length > 0 ? validProds.map((p) => p.pricePrefix).filter(Boolean) : undefined,
+          pricePrefixes:
+            validProds.length > 0
+              ? validProds.map((p) => p.pricePrefix).filter(Boolean)
+              : undefined,
           pricePrefix: values.pricePrefix || undefined,
           confirmedTerms: [] as { original: string; confirmed: string }[],
           imageAlts: imageAlts.length > 0 ? imageAlts : undefined,
@@ -450,6 +486,33 @@ function NewPostContent() {
     handleTranslationStart();
   };
 
+  const handleCopyPrompt = async () => {
+    const valid = await trigger();
+    if (!valid) {
+      focusFirstEmptyField();
+      return;
+    }
+
+    const values = getValues();
+    const prompt = buildTranslationPrompt({
+      formType: values.formType as 'visit' | 'product-review',
+      title: values.title,
+      content: values.content,
+      description: values.description,
+      placeName: values.placeName || undefined,
+      address: values.address || undefined,
+      pricePrefix: values.pricePrefix || undefined,
+      productNames: values.products.map((p) => p.name).filter(Boolean),
+      purchaseSources: values.products.map((p) => p.source).filter(Boolean),
+      pricePrefixes: values.products.map((p) => p.pricePrefix).filter(Boolean),
+      imageAlts,
+      thumbnailAlt: values.thumbnailAlt || undefined,
+    });
+
+    await navigator.clipboard.writeText(prompt);
+    toast.success('번역 프롬프트가 클립보드에 복사되었습니다.');
+  };
+
   const handlePreviewClick = () => {
     setImageAltError(false);
     const thumbnailAltFilled = !getValues('thumbnail') || getValues('thumbnailAlt').trim();
@@ -480,7 +543,12 @@ function NewPostContent() {
       return;
     }
 
-    if (needsTranslation && isTranslated && previewDirtyFields.size > 0 && !translationEditCompleted) {
+    if (
+      needsTranslation &&
+      isTranslated &&
+      previewDirtyFields.size > 0 &&
+      !translationEditCompleted
+    ) {
       setTranslationError(true);
       return;
     }
@@ -516,7 +584,12 @@ function NewPostContent() {
   };
 
   const sheetTransitionRef = useRef(false);
-  useEffect(() => () => { sheetTransitionRef.current = false; }, []);
+  useEffect(
+    () => () => {
+      sheetTransitionRef.current = false;
+    },
+    [],
+  );
 
   const handleRetranslateTermReview = (terms: FlaggedTerm[], locales: TranslationLocale[]) => {
     if (sheetTransitionRef.current) return;
@@ -530,7 +603,9 @@ function NewPostContent() {
     }, 800);
   };
 
-  const handleRetranslateTermsConfirmed = (confirmedTerms: { original: string; confirmed: Record<string, string> }[]) => {
+  const handleRetranslateTermsConfirmed = (
+    confirmedTerms: { original: string; confirmed: Record<string, string> }[],
+  ) => {
     if (sheetTransitionRef.current) return;
     sheetTransitionRef.current = true;
     setLastConfirmedTerms(confirmedTerms);
@@ -555,20 +630,26 @@ function NewPostContent() {
     const validProds = values.products.filter((p) => p.name.trim());
     const termsToUse = confirmedTerms ?? lastConfirmedTerms;
     if (confirmedTerms) setLastConfirmedTerms(confirmedTerms);
-    const result = await fetchRetrySingleLocale(locale, {
-      title: t,
-      content: c,
-      description: d,
-      placeName: pn || undefined,
-      address: addr || undefined,
-      productNames: validProds.length > 0 ? validProds.map((p) => p.name) : undefined,
-      purchaseSources: validProds.length > 0 ? validProds.map((p) => p.source) : undefined,
-      pricePrefixes: validProds.length > 0 ? validProds.map((p) => p.pricePrefix).filter(Boolean) : undefined,
-      pricePrefix: values.pricePrefix || undefined,
-      confirmedTerms: termsToUse,
-      imageAlts: imageAlts.length > 0 ? imageAlts : undefined,
-      thumbnailAlt: getValues('thumbnailAlt') || undefined,
-    }, signal, selectiveOptions);
+    const result = await fetchRetrySingleLocale(
+      locale,
+      {
+        title: t,
+        content: c,
+        description: d,
+        placeName: pn || undefined,
+        address: addr || undefined,
+        productNames: validProds.length > 0 ? validProds.map((p) => p.name) : undefined,
+        purchaseSources: validProds.length > 0 ? validProds.map((p) => p.source) : undefined,
+        pricePrefixes:
+          validProds.length > 0 ? validProds.map((p) => p.pricePrefix).filter(Boolean) : undefined,
+        pricePrefix: values.pricePrefix || undefined,
+        confirmedTerms: termsToUse,
+        imageAlts: imageAlts.length > 0 ? imageAlts : undefined,
+        thumbnailAlt: getValues('thumbnailAlt') || undefined,
+      },
+      signal,
+      selectiveOptions,
+    );
     if (selectiveOptions && existingTranslation) {
       const merged = mergeSelectiveResult(existingTranslation, result, selectiveOptions);
       setTranslationResults((prev) => prev.map((r) => (r.locale === locale ? merged : r)));
@@ -583,22 +664,27 @@ function NewPostContent() {
     const { title: t, content: c, description: d, placeName: pn, address: addr } = values;
     const validProds = values.products.filter((p) => p.name.trim());
     const toastId = toast.loading('번역 중... (0/7)');
-    const results = await fetchTranslatePost({
-      title: t,
-      content: c,
-      description: d,
-      placeName: pn || undefined,
-      address: addr || undefined,
-      productNames: validProds.length > 0 ? validProds.map((p) => p.name) : undefined,
-      purchaseSources: validProds.length > 0 ? validProds.map((p) => p.source) : undefined,
-      pricePrefixes: validProds.length > 0 ? validProds.map((p) => p.pricePrefix).filter(Boolean) : undefined,
-      pricePrefix: values.pricePrefix || undefined,
-      confirmedTerms: lastConfirmedTerms,
-      imageAlts: imageAlts.length > 0 ? imageAlts : undefined,
-      thumbnailAlt: getValues('thumbnailAlt') || undefined,
-    }, signal, (completed, total) => {
-      toast.loading(`번역 중... (${completed}/${total})`, { id: toastId });
-    });
+    const results = await fetchTranslatePost(
+      {
+        title: t,
+        content: c,
+        description: d,
+        placeName: pn || undefined,
+        address: addr || undefined,
+        productNames: validProds.length > 0 ? validProds.map((p) => p.name) : undefined,
+        purchaseSources: validProds.length > 0 ? validProds.map((p) => p.source) : undefined,
+        pricePrefixes:
+          validProds.length > 0 ? validProds.map((p) => p.pricePrefix).filter(Boolean) : undefined,
+        pricePrefix: values.pricePrefix || undefined,
+        confirmedTerms: lastConfirmedTerms,
+        imageAlts: imageAlts.length > 0 ? imageAlts : undefined,
+        thumbnailAlt: getValues('thumbnailAlt') || undefined,
+      },
+      signal,
+      (completed, total) => {
+        toast.loading(`번역 중... (${completed}/${total})`, { id: toastId });
+      },
+    );
     toast.success('번역 완료', { id: toastId });
     setTranslationResults(results);
     captureSnapshot(imageAlts);
@@ -795,6 +881,16 @@ function NewPostContent() {
               <ImageIcon className="size-4" />
               이미지 alt 입력
             </button>
+            {needsTranslation && (
+              <button
+                type="button"
+                onClick={handleCopyPrompt}
+                className="inline-flex items-center justify-center gap-1.5 h-10 border border-input px-5 text-sm font-semibold shadow-xs transition-colors hover:bg-accent"
+              >
+                <ClipboardCopy className="size-4" />
+                번역 프롬프트 복사
+              </button>
+            )}
             {needsTranslation && !isTranslated && flaggedTerms.length === 0 && (
               <button
                 type="button"
@@ -901,7 +997,9 @@ function NewPostContent() {
         onOpenChange={setIsSheetOpen}
         onTranslationComplete={handleTranslationComplete}
         initialTerms={flaggedTerms}
-        initialConfirmedValues={lastConfirmedTerms as { original: string; confirmed: Record<string, string> }[]}
+        initialConfirmedValues={
+          lastConfirmedTerms as { original: string; confirmed: Record<string, string> }[]
+        }
         title={title}
         content={watch('content')}
         description={description}
@@ -937,9 +1035,12 @@ function NewPostContent() {
         onExtractTerms={async (dirty) => {
           const values = getValues();
           const content = dirty.has('content') ? values.content : undefined;
-          const pn = dirty.has('place_name') ? (values.placeName || undefined) : undefined;
-          const addr = dirty.has('address') ? (values.address || undefined) : undefined;
-          const altTexts = dirty.has('image_alts') && imageAlts.length > 0 ? imageAlts.map((a) => a.alt) : undefined;
+          const pn = dirty.has('place_name') ? values.placeName || undefined : undefined;
+          const addr = dirty.has('address') ? values.address || undefined : undefined;
+          const altTexts =
+            dirty.has('image_alts') && imageAlts.length > 0
+              ? imageAlts.map((a) => a.alt)
+              : undefined;
           if (!content && !pn && !addr && !altTexts) return [];
           return fetchExtractTerms(content ?? '', pn, addr, altTexts);
         }}
@@ -967,7 +1068,9 @@ function NewPostContent() {
         onOpenChange={setIsRetranslateTermReviewOpen}
         onTranslationComplete={() => {}}
         initialTerms={retranslateTermReviewTerms}
-        initialConfirmedValues={lastConfirmedTerms as { original: string; confirmed: Record<string, string> }[]}
+        initialConfirmedValues={
+          lastConfirmedTerms as { original: string; confirmed: Record<string, string> }[]
+        }
         title={title}
         content={watchedContent}
         description={description}
