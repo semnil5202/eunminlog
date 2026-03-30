@@ -608,7 +608,7 @@ function EditPostForm({
     }, 800);
   };
 
-  const handleEditSheetOpen = () => {
+  const _handleEditSheetOpen = () => {
     setImageAltError(false);
     const thumbnailAltFilled = !getValues('thumbnail') || getValues('thumbnailAlt').trim();
     const srcs = extractImageSrcs(getValues('content'));
@@ -851,26 +851,6 @@ function EditPostForm({
               >
                 <Languages className="size-4" />
                 번역하기
-              </button>
-            )}
-            {needsTranslation && termReviewTerms.length > 0 && (
-              <button
-                type="button"
-                onClick={() => setIsTermReviewOpen(true)}
-                className="inline-flex items-center justify-center gap-1.5 h-10 border border-input px-5 text-sm font-semibold shadow-xs transition-colors hover:bg-accent"
-              >
-                <Languages className="size-4" />
-                번역 용어 검토
-              </button>
-            )}
-            {needsTranslation && termReviewTerms.length === 0 && (
-              <button
-                type="button"
-                onClick={handleEditSheetOpen}
-                className="inline-flex items-center justify-center gap-1.5 h-10 border border-input px-5 text-sm font-semibold shadow-xs transition-colors hover:bg-accent"
-              >
-                <Languages className="size-4" />
-                번역본 확인하기
               </button>
             )}
             <button

@@ -45,7 +45,7 @@ import {
   type CategoryOption,
 } from '@/features/category-management/api/actions';
 import { ImageAltSheet, extractImageSrcs } from '@/features/post-editor/components/ImageAltSheet';
-import { Check, ChevronLeft, ImageIcon, Languages, LoaderIcon, Save, Sparkles } from 'lucide-react';
+import { Check, ChevronLeft, ImageIcon, Languages, LoaderIcon, Save } from 'lucide-react';
 import { toast } from 'sonner';
 
 import type { PostFormType, TranslationLocale } from '@/shared/types/post';
@@ -107,7 +107,7 @@ function NewPostContent() {
   const [flaggedTerms, setFlaggedTerms] = useState<FlaggedTerm[]>([]);
   const [translationResults, setTranslationResults] = useState<TranslationResult[]>([]);
   const [translationError, setTranslationError] = useState(false);
-  const [extractionFailed, setExtractionFailed] = useState(false);
+  const [_extractionFailed, setExtractionFailed] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [lastConfirmedTerms, setLastConfirmedTerms] = useState<
     { original: string; confirmed: string | Record<string, string> }[]
@@ -459,7 +459,7 @@ function NewPostContent() {
     }
   };
 
-  const handleTranslateClick = async () => {
+  const _handleTranslateClick = async () => {
     if (isExtracting) return;
     setImageAltError(false);
 
@@ -483,7 +483,7 @@ function NewPostContent() {
     handleTranslationStart();
   };
 
-  const handlePreviewClick = () => {
+  const _handlePreviewClick = () => {
     setImageAltError(false);
     const thumbnailAltFilled = !getValues('thumbnail') || getValues('thumbnailAlt').trim();
     const srcs = extractImageSrcs(getValues('content'));
@@ -859,49 +859,6 @@ function NewPostContent() {
               >
                 <Languages className="size-4" />
                 번역하기
-              </button>
-            )}
-            {needsTranslation && !isTranslated && flaggedTerms.length === 0 && (
-              <button
-                type="button"
-                onClick={handleTranslateClick}
-                className="inline-flex items-center justify-center gap-1.5 h-10 border border-input px-5 text-sm font-semibold shadow-xs transition-colors hover:bg-accent"
-              >
-                {isExtracting ? (
-                  <LoaderIcon className="size-4 animate-spin" />
-                ) : (
-                  <Sparkles className="size-4" />
-                )}
-                {extractionFailed ? 'AI 번역본 재생성하기' : 'AI 번역본 생성하기'}
-              </button>
-            )}
-            {needsTranslation && !isTranslated && flaggedTerms.length > 0 && (
-              <button
-                type="button"
-                onClick={() => setIsSheetOpen(true)}
-                className="inline-flex items-center justify-center h-10 border border-input px-5 text-sm font-semibold shadow-xs transition-colors hover:bg-accent"
-              >
-                용어 검토 계속하기
-              </button>
-            )}
-            {isTranslated && retranslateTermReviewTerms.length > 0 && (
-              <button
-                type="button"
-                onClick={() => setIsRetranslateTermReviewOpen(true)}
-                className="inline-flex items-center justify-center gap-1.5 h-10 border border-input px-5 text-sm font-semibold shadow-xs transition-colors hover:bg-accent"
-              >
-                <Languages className="size-4" />
-                번역 용어 검토
-              </button>
-            )}
-            {isTranslated && retranslateTermReviewTerms.length === 0 && (
-              <button
-                type="button"
-                onClick={handlePreviewClick}
-                className="inline-flex items-center justify-center gap-1.5 h-10 border border-input px-5 text-sm font-semibold shadow-xs transition-colors hover:bg-accent"
-              >
-                <Languages className="size-4" />
-                번역본 확인하기
               </button>
             )}
             <button
