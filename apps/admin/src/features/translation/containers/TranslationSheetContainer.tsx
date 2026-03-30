@@ -1,5 +1,11 @@
 'use client';
 
+/**
+ * 고유명사 추출 + 번역 실행 컨테이너. 용어 검토 후 번역을 트리거한다.
+ *
+ * 현재 비활성화 — 프롬프트 복사 방식으로 대체 예정. 비활성화 사유 및 알려진 버그는 api/client.ts 참조.
+ */
+
 import { useState, useEffect, useRef } from 'react';
 import { CheckIcon } from 'lucide-react';
 import { toast } from 'sonner';
@@ -65,7 +71,9 @@ export function TranslationSheetContainer({
   onTermsConfirmed,
 }: TranslationSheetContainerProps) {
   const [status, setStatus] = useState<TranslationStatus>('reviewing');
-  const [confirmedTerms, setConfirmedTerms] = useState<Map<number, Record<string, string>>>(new Map());
+  const [confirmedTerms, setConfirmedTerms] = useState<Map<number, Record<string, string>>>(
+    new Map(),
+  );
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState({ completed: 0, total: 7 });
   const prevTermsKeyRef = useRef('');
@@ -186,7 +194,9 @@ export function TranslationSheetContainer({
     <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetContent side="right" className="w-full sm:max-w-[688px]">
         <SheetHeader>
-          <SheetTitle className="text-lg">{reviewOnly ? '번역 용어 검토' : '번역본 생성'}</SheetTitle>
+          <SheetTitle className="text-lg">
+            {reviewOnly ? '번역 용어 검토' : '번역본 생성'}
+          </SheetTitle>
           <SheetDescription className="text-base">
             번역이 어려운 용어를 검토하고 확정 번역을 입력해주세요.
           </SheetDescription>

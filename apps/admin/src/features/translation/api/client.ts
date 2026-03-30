@@ -1,3 +1,15 @@
+/**
+ * GPT-5 Mini 기반 자동 번역 API 클라이언트.
+ *
+ * 현재 비활성화 — 프롬프트 복사 방식(사용자가 외부 AI에 직접 요청)으로 대체 예정.
+ * 코드는 향후 자동 번역 재도입 시 재사용 가능성을 위해 유지.
+ *
+ * 알려진 버그:
+ * 1. 번역 퀄리티 불안정 — 한국어가 번역 결과에 중간중간 섞여 나오는 경우 발생
+ * 2. 일부 문장(태그 단위) 누락 — 실제 번역 데이터에는 포함되어 있으나 미리보기 모달(TranslationSheet)에서 표시되지 않음
+ * 3. 가격 필드 UI 오류 — 직접 수정 버튼 클릭 시 가격 탭 자체가 사라짐
+ * 4. 토스트 렌더링 오류 — 간헐적으로 토스트 텍스트 없이 배경만 표시됨
+ */
 import { openai } from '@/shared/lib/openai';
 import {
   EXTRACT_TERMS_SYSTEM_PROMPT,
@@ -117,9 +129,10 @@ async function fetchTranslateSingle(
     thumbnailAlt,
   } = params;
 
-  const isSelective = selectiveOptions &&
+  const isSelective =
+    selectiveOptions &&
     ((selectiveOptions.targetFields && selectiveOptions.targetFields.length > 0) ||
-     (selectiveOptions.targetSectionIndices && selectiveOptions.targetSectionIndices.length > 0));
+      (selectiveOptions.targetSectionIndices && selectiveOptions.targetSectionIndices.length > 0));
 
   const { cleaned: contentWithPlaceholders, imgs } = replaceImgTags(content);
 
@@ -145,9 +158,7 @@ async function fetchTranslateSingle(
     userPrompt += '\n\n확정 번역 용어:';
     for (const term of confirmedTerms) {
       const confirmed =
-        typeof term.confirmed === 'string'
-          ? term.confirmed
-          : (term.confirmed[locale] ?? '');
+        typeof term.confirmed === 'string' ? term.confirmed : (term.confirmed[locale] ?? '');
       if (confirmed) userPrompt += `\n- "${term.original}" → "${confirmed}"`;
     }
   }
@@ -217,7 +228,11 @@ async function fetchTranslateSingle(
         restoreImgTags(parsed.content as string, imgs),
       );
       const mergedSections = existingSections.map((s) => {
-        if (targetIndices.has(s.index) && s.index < returnedSections.length && returnedSections[s.index]) {
+        if (
+          targetIndices.has(s.index) &&
+          s.index < returnedSections.length &&
+          returnedSections[s.index]
+        ) {
           return { ...s, html: returnedSections[s.index].html };
         }
         return s;

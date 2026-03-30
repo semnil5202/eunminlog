@@ -1,6 +1,10 @@
 'use client';
 
-/** 번역본 확인 시트. 원문/번역 비교, 섹션별 체크박스, 선택적 재번역을 지원한다. */
+/**
+ * 번역본 확인 시트. 원문/번역 비교, 섹션별 체크박스, 선택적 재번역을 지원한다.
+ *
+ * 현재 비활성화 — 프롬프트 복사 방식으로 대체 예정. 비활성화 사유 및 알려진 버그는 api/client.ts 참조.
+ */
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { LoaderIcon, RefreshCwIcon, Sparkles } from 'lucide-react';
@@ -17,9 +21,20 @@ import {
 import { Button } from '@/components/ui/button';
 
 import type { TranslationLocale } from '@/shared/types/post';
-import type { CheckableField, FlaggedTerm, ImageAlt, SelectiveTranslateOptions, TranslationResult } from '../types';
+import type {
+  CheckableField,
+  FlaggedTerm,
+  ImageAlt,
+  SelectiveTranslateOptions,
+  TranslationResult,
+} from '../types';
 import { LOCALE_FILTER_LABELS } from '../constants/locale';
-import { splitHtmlIntoSections, isTranslatableSection, reassembleSections, type ContentSection } from '../lib/html-sections';
+import {
+  splitHtmlIntoSections,
+  isTranslatableSection,
+  reassembleSections,
+  type ContentSection,
+} from '../lib/html-sections';
 import { useTranslationCheckState } from '../hooks/useTranslationCheckState';
 
 type FilterLocale = 'ko' | TranslationLocale;
@@ -89,9 +104,7 @@ const TranslatedBadge = ({ label = '번역 완료' }: { label?: string }) => (
 );
 
 const UntranslatedBadge = () => (
-  <span className="rounded bg-red-100 px-1.5 py-0.5 text-xs font-medium text-red-700">
-    미번역
-  </span>
+  <span className="rounded bg-red-100 px-1.5 py-0.5 text-xs font-medium text-red-700">미번역</span>
 );
 
 export function TranslationSheet({
@@ -130,7 +143,9 @@ export function TranslationSheet({
   const [directEditingSections, setDirectEditingSections] = useState<Set<string>>(new Set());
   const [directEditFields, setDirectEditFields] = useState<Record<string, string>>({});
   const [directEditingFields, setDirectEditingFields] = useState<Set<string>>(new Set());
-  const [manuallyEditedLocales, setManuallyEditedLocales] = useState<Set<TranslationLocale>>(new Set());
+  const [manuallyEditedLocales, setManuallyEditedLocales] = useState<Set<TranslationLocale>>(
+    new Set(),
+  );
 
   const [extractingTerms, setExtractingTerms] = useState(false);
   const prevDirtyKeyRef = useRef('');
@@ -149,10 +164,7 @@ export function TranslationSheet({
   const selectedTranslation =
     selected !== 'ko' ? translations.find((tr) => tr.locale === selected) : null;
 
-  const originalSections = useMemo(
-    () => splitHtmlIntoSections(originalContent),
-    [originalContent],
-  );
+  const originalSections = useMemo(() => splitHtmlIntoSections(originalContent), [originalContent]);
 
   const translatedSections = useMemo(
     () => (selectedTranslation ? splitHtmlIntoSections(selectedTranslation.content) : []),
@@ -164,17 +176,31 @@ export function TranslationSheet({
     if (originalPlaceName) fields.push('place_name');
     if (originalAddress) fields.push('address');
     if (originalProductNames && originalProductNames.length > 0) fields.push('product_name');
-    if (originalPurchaseSources && originalPurchaseSources.length > 0) fields.push('purchase_source');
-    if ((originalPricePrefixes && originalPricePrefixes.some(Boolean)) || originalPricePrefix) fields.push('price_prefix');
+    if (originalPurchaseSources && originalPurchaseSources.length > 0)
+      fields.push('purchase_source');
+    if ((originalPricePrefixes && originalPricePrefixes.some(Boolean)) || originalPricePrefix)
+      fields.push('price_prefix');
     if (originalDescription !== undefined) fields.push('description');
     if (originalThumbnailAlt || (originalImageAlts && originalImageAlts.length > 0))
       fields.push('image_alts');
     return fields;
-  }, [originalPlaceName, originalAddress, originalProductNames, originalPurchaseSources, originalPricePrefixes, originalPricePrefix, originalDescription, originalThumbnailAlt, originalImageAlts]);
+  }, [
+    originalPlaceName,
+    originalAddress,
+    originalProductNames,
+    originalPurchaseSources,
+    originalPricePrefixes,
+    originalPricePrefix,
+    originalDescription,
+    originalThumbnailAlt,
+    originalImageAlts,
+  ]);
 
   const checkState = useTranslationCheckState(availableFields, originalSections.length);
 
-  const translatableDirtyFields = new Set([...dirtyFields].filter((f) => f !== 'content_image_only'));
+  const translatableDirtyFields = new Set(
+    [...dirtyFields].filter((f) => f !== 'content_image_only'),
+  );
   const allDirtyTranslated =
     translatableDirtyFields.size === 0 ||
     TARGET_LOCALES.every((l) => retranslatedLocales.has(l) || manuallyEditedLocales.has(l));
@@ -183,7 +209,9 @@ export function TranslationSheet({
     suppressAbortToastRef.current = true;
     individualAbortRef.current?.abort();
     individualAbortRef.current = null;
-    setTimeout(() => { suppressAbortToastRef.current = false; }, 0);
+    setTimeout(() => {
+      suppressAbortToastRef.current = false;
+    }, 0);
   };
 
   const buildSelectiveOptions = (): SelectiveTranslateOptions | undefined => {
@@ -194,7 +222,10 @@ export function TranslationSheet({
     return { targetFields, targetSectionIndices };
   };
 
-  const handleSelectiveRetranslate = async (locales: TranslationLocale[], confirmedTerms?: ConfirmedTerm[]) => {
+  const handleSelectiveRetranslate = async (
+    locales: TranslationLocale[],
+    confirmedTerms?: ConfirmedTerm[],
+  ) => {
     const selectiveOptions = buildSelectiveOptions();
     const hasIndividual = Object.values(retranslating).some(Boolean);
     if (hasIndividual) {
@@ -257,8 +288,12 @@ export function TranslationSheet({
   useEffect(() => {
     if (!open || !pendingRetranslation) return;
     onPendingRetranslationConsumed?.();
-    handleSelectiveRetranslate(pendingRetranslation.locales, pendingRetranslation.confirmedTerms)
-      .catch(() => { toast.error('재번역 자동 실행에 실패했습니다. 다시 시도해 주세요.'); });
+    handleSelectiveRetranslate(
+      pendingRetranslation.locales,
+      pendingRetranslation.confirmedTerms,
+    ).catch(() => {
+      toast.error('재번역 자동 실행에 실패했습니다. 다시 시도해 주세요.');
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- trigger once when sheet reopens with pending data
   }, [open, pendingRetranslation]);
 
@@ -376,7 +411,8 @@ export function TranslationSheet({
 
     const isContentImageOnly = dirtyFields.has('content_image_only');
     const fieldDirtyKey = field === 'image_alts' ? 'image_alts' : field;
-    const isDirty = dirtyFields.has(fieldDirtyKey) || (field === 'description' && isContentImageOnly);
+    const isDirty =
+      dirtyFields.has(fieldDirtyKey) || (field === 'description' && isContentImageOnly);
     const locale = selected as TranslationLocale;
     const isLocaleRetranslated = retranslatedLocales.has(locale);
     const isManuallyEdited = manuallyEditedLocales.has(locale);
@@ -389,7 +425,9 @@ export function TranslationSheet({
         ? fieldEditKey(locale, options.directEditArrayField)
         : null;
     const isDirectEditing = editFieldKey !== null && directEditingFields.has(editFieldKey);
-    const showDirectEditSwitch = !isKo && (options?.directEditField !== undefined || options?.directEditArrayField !== undefined);
+    const showDirectEditSwitch =
+      !isKo &&
+      (options?.directEditField !== undefined || options?.directEditArrayField !== undefined);
 
     return (
       <div className="py-5 first:pt-0 last:pb-0">
@@ -415,7 +453,11 @@ export function TranslationSheet({
                 checked={isDirectEditing}
                 onCheckedChange={() => {
                   if (options?.directEditArrayField && options?.directEditArrayValues) {
-                    handleArrayFieldDirectEditToggle(locale, options.directEditArrayField, options.directEditArrayValues);
+                    handleArrayFieldDirectEditToggle(
+                      locale,
+                      options.directEditArrayField,
+                      options.directEditArrayValues,
+                    );
                   } else if (options?.directEditField) {
                     handleFieldDirectEditToggle(locale, options.directEditField, value ?? '');
                   }
@@ -428,24 +470,30 @@ export function TranslationSheet({
           <textarea
             className="mt-1 w-full resize-none border border-input bg-transparent p-2 font-mono text-xs outline-none"
             style={{ height: '80px' }}
-            value={directEditFields[editFieldKey] ?? (options?.directEditArrayValues ? options.directEditArrayValues.join('\n') : (value ?? ''))}
+            value={
+              directEditFields[editFieldKey] ??
+              (options?.directEditArrayValues
+                ? options.directEditArrayValues.join('\n')
+                : (value ?? ''))
+            }
             onChange={(e) =>
               setDirectEditFields((prev) => ({ ...prev, [editFieldKey]: e.target.value }))
             }
           />
         ) : (
-          options?.children ?? (
-            options?.isHtml ? (
-              <div
-                className="prose prose-sm mt-1 max-w-none"
-                dangerouslySetInnerHTML={{ __html: value! }}
-              />
-            ) : (
-              <p className={`mt-1 ${options?.isBold ? 'text-lg font-bold' : 'whitespace-pre-wrap text-sm'}`}>
-                {value}
-              </p>
-            )
-          )
+          (options?.children ??
+          (options?.isHtml ? (
+            <div
+              className="prose prose-sm mt-1 max-w-none"
+              dangerouslySetInnerHTML={{ __html: value! }}
+            />
+          ) : (
+            <p
+              className={`mt-1 ${options?.isBold ? 'text-lg font-bold' : 'whitespace-pre-wrap text-sm'}`}
+            >
+              {value}
+            </p>
+          )))
         )}
       </div>
     );
@@ -467,9 +515,7 @@ export function TranslationSheet({
               checked={checkState.checkedSections.has(origSection.index)}
               onCheckedChange={() => checkState.toggleSection(origSection.index)}
             />
-            <span className="text-xs text-muted-foreground">
-              {origSection.label}
-            </span>
+            <span className="text-xs text-muted-foreground">{origSection.label}</span>
             {!hasTranslation && translatable && (
               <span className="rounded bg-rose-100 px-1.5 py-0.5 text-xs font-medium text-rose-700">
                 미번역
@@ -496,9 +542,7 @@ export function TranslationSheet({
             className="mt-1 w-full resize-none border border-input bg-transparent p-2 font-mono text-xs outline-none"
             style={{ height: '120px' }}
             value={directEditSections[key] ?? displaySection.html}
-            onChange={(e) =>
-              setDirectEditSections((prev) => ({ ...prev, [key]: e.target.value }))
-            }
+            onChange={(e) => setDirectEditSections((prev) => ({ ...prev, [key]: e.target.value }))}
           />
         ) : (
           <div
@@ -545,7 +589,10 @@ export function TranslationSheet({
           </div>
           <ul className="mt-1 space-y-0.5 text-sm">
             {originalProductNames.map((name, i) => (
-              <li key={i}>{originalProductNames.length > 1 ? `${i + 1}. ` : ''}{name}</li>
+              <li key={i}>
+                {originalProductNames.length > 1 ? `${i + 1}. ` : ''}
+                {name}
+              </li>
             ))}
           </ul>
         </div>
@@ -558,7 +605,10 @@ export function TranslationSheet({
           </div>
           <ul className="mt-1 space-y-0.5 text-sm">
             {originalPurchaseSources.map((source, i) => (
-              <li key={i}>{originalPurchaseSources.length > 1 ? `${i + 1}. ` : ''}{source}</li>
+              <li key={i}>
+                {originalPurchaseSources.length > 1 ? `${i + 1}. ` : ''}
+                {source}
+              </li>
             ))}
           </ul>
         </div>
@@ -571,7 +621,10 @@ export function TranslationSheet({
           </div>
           <ul className="mt-1 space-y-0.5 text-sm">
             {originalPricePrefixes.map((prefix, i) => (
-              <li key={i}>{originalPricePrefixes.length > 1 ? `${i + 1}. ` : ''}{prefix}</li>
+              <li key={i}>
+                {originalPricePrefixes.length > 1 ? `${i + 1}. ` : ''}
+                {prefix}
+              </li>
             ))}
           </ul>
         </div>
@@ -674,17 +727,19 @@ export function TranslationSheet({
       <>
         {/* 전체 선택 */}
         <div className="flex items-center gap-2 pb-4">
-          <Checkbox
-            checked={checkState.isAllChecked}
-            onCheckedChange={checkState.toggleAll}
-          />
+          <Checkbox checked={checkState.isAllChecked} onCheckedChange={checkState.toggleAll} />
           <span className="text-sm font-semibold text-muted-foreground">전체 선택</span>
         </div>
 
-        {renderFieldRow('title', selectedTranslation.title, { isBold: true, directEditField: 'title' })}
+        {renderFieldRow('title', selectedTranslation.title, {
+          isBold: true,
+          directEditField: 'title',
+        })}
 
         {selectedTranslation.place_name &&
-          renderFieldRow('place_name', selectedTranslation.place_name, { directEditField: 'place_name' })}
+          renderFieldRow('place_name', selectedTranslation.place_name, {
+            directEditField: 'place_name',
+          })}
         {selectedTranslation.address &&
           renderFieldRow('address', selectedTranslation.address, { directEditField: 'address' })}
         {selectedTranslation.product_name.length > 0 &&
@@ -697,7 +752,10 @@ export function TranslationSheet({
               return (
                 <ul className="mt-1 space-y-0.5 text-sm">
                   {selectedTranslation.product_name.map((name, i) => (
-                    <li key={i}>{selectedTranslation.product_name.length > 1 ? `${i + 1}. ` : ''}{name}</li>
+                    <li key={i}>
+                      {selectedTranslation.product_name.length > 1 ? `${i + 1}. ` : ''}
+                      {name}
+                    </li>
                   ))}
                 </ul>
               );
@@ -713,7 +771,10 @@ export function TranslationSheet({
               return (
                 <ul className="mt-1 space-y-0.5 text-sm">
                   {selectedTranslation.purchase_source.map((source, i) => (
-                    <li key={i}>{selectedTranslation.purchase_source.length > 1 ? `${i + 1}. ` : ''}{source}</li>
+                    <li key={i}>
+                      {selectedTranslation.purchase_source.length > 1 ? `${i + 1}. ` : ''}
+                      {source}
+                    </li>
                   ))}
                 </ul>
               );
@@ -729,14 +790,19 @@ export function TranslationSheet({
               return (
                 <ul className="mt-1 space-y-0.5 text-sm">
                   {selectedTranslation.price_prefix.map((prefix, i) => (
-                    <li key={i}>{selectedTranslation.price_prefix.length > 1 ? `${i + 1}. ` : ''}{prefix}</li>
+                    <li key={i}>
+                      {selectedTranslation.price_prefix.length > 1 ? `${i + 1}. ` : ''}
+                      {prefix}
+                    </li>
                   ))}
                 </ul>
               );
             })(),
           })}
 
-        {renderFieldRow('description', selectedTranslation.description, { directEditField: 'description' })}
+        {renderFieldRow('description', selectedTranslation.description, {
+          directEditField: 'description',
+        })}
 
         {/* 본문 — 섹션 리스트 */}
         <div className="py-5">
@@ -749,7 +815,9 @@ export function TranslationSheet({
               <label className="text-sm font-semibold text-muted-foreground">본문</label>
               {contentDirty && (!showTranslated || hasUntranslatedSection) && <DirtyBadge />}
               {contentDirty && showTranslated && !hasUntranslatedSection && (
-                <TranslatedBadge label={isManuallyEdited && !isLocaleRetranslated ? '직접 수정됨' : '번역 완료'} />
+                <TranslatedBadge
+                  label={isManuallyEdited && !isLocaleRetranslated ? '직접 수정됨' : '번역 완료'}
+                />
               )}
             </div>
           </div>
@@ -763,70 +831,85 @@ export function TranslationSheet({
           renderFieldRow('image_alts', undefined, {
             hasUntranslatedChild:
               (originalThumbnailAlt ? !selectedTranslation.thumbnail_alt : false) ||
-              (originalImageAlts ?? []).some((orig, i) =>
-                !selectedTranslation.image_alts.find((t) => t.src === orig.src) && !selectedTranslation.image_alts[i],
+              (originalImageAlts ?? []).some(
+                (orig, i) =>
+                  !selectedTranslation.image_alts.find((t) => t.src === orig.src) &&
+                  !selectedTranslation.image_alts[i],
               ),
             children: (
               <div className="mt-2 space-y-3">
-                {originalThumbnailAlt && (() => {
-                  const thumbKey = fieldEditKey(locale, 'thumbnail_alt');
-                  const isEditingThumb = directEditingFields.has(thumbKey);
-                  const currentThumbAlt = selectedTranslation.thumbnail_alt || originalThumbnailAlt;
-                  return (
-                    <div className="flex items-start gap-3">
-                      <div className="flex shrink-0 items-center gap-1.5">
-                        <span className="rounded bg-gray-100 px-1.5 py-0.5 text-xs font-medium text-gray-600">
-                          썸네일
-                        </span>
-                        {!selectedTranslation.thumbnail_alt && <UntranslatedBadge />}
-                      </div>
-                      <div className="min-w-0 grow">
-                        {originalThumbnail && (
-                          <img src={originalThumbnail} alt="" className="mb-1 h-12 w-auto object-cover" />
-                        )}
-                        {isEditingThumb ? (
-                          <textarea
-                            className="w-full resize-none border border-input bg-transparent p-2 font-mono text-xs outline-none"
-                            style={{ height: '60px' }}
-                            value={directEditFields[thumbKey] ?? currentThumbAlt}
-                            onChange={(e) =>
-                              setDirectEditFields((prev) => ({ ...prev, [thumbKey]: e.target.value }))
-                            }
-                          />
-                        ) : (
-                          <p className="text-sm">{currentThumbAlt}</p>
-                        )}
-                      </div>
-                      <label className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
-                        직접 수정
-                        <Switch
-                          size="sm"
-                          checked={isEditingThumb}
-                          onCheckedChange={() => {
-                            if (isEditingThumb) {
-                              const edited = directEditFields[thumbKey];
-                              if (edited !== undefined && edited !== currentThumbAlt) {
-                                onUpdateTranslation?.(locale, { thumbnail_alt: edited });
-                                setManuallyEditedLocales((prev) => new Set(prev).add(locale));
+                {originalThumbnailAlt &&
+                  (() => {
+                    const thumbKey = fieldEditKey(locale, 'thumbnail_alt');
+                    const isEditingThumb = directEditingFields.has(thumbKey);
+                    const currentThumbAlt =
+                      selectedTranslation.thumbnail_alt || originalThumbnailAlt;
+                    return (
+                      <div className="flex items-start gap-3">
+                        <div className="flex shrink-0 items-center gap-1.5">
+                          <span className="rounded bg-gray-100 px-1.5 py-0.5 text-xs font-medium text-gray-600">
+                            썸네일
+                          </span>
+                          {!selectedTranslation.thumbnail_alt && <UntranslatedBadge />}
+                        </div>
+                        <div className="min-w-0 grow">
+                          {originalThumbnail && (
+                            <img
+                              src={originalThumbnail}
+                              alt=""
+                              className="mb-1 h-12 w-auto object-cover"
+                            />
+                          )}
+                          {isEditingThumb ? (
+                            <textarea
+                              className="w-full resize-none border border-input bg-transparent p-2 font-mono text-xs outline-none"
+                              style={{ height: '60px' }}
+                              value={directEditFields[thumbKey] ?? currentThumbAlt}
+                              onChange={(e) =>
+                                setDirectEditFields((prev) => ({
+                                  ...prev,
+                                  [thumbKey]: e.target.value,
+                                }))
                               }
-                              setDirectEditingFields((prev) => {
-                                const next = new Set(prev);
-                                next.delete(thumbKey);
-                                return next;
-                              });
-                            } else {
-                              setDirectEditingFields((prev) => new Set(prev).add(thumbKey));
-                              setDirectEditFields((prev) => ({ ...prev, [thumbKey]: currentThumbAlt }));
-                            }
-                          }}
-                        />
-                      </label>
-                    </div>
-                  );
-                })()}
+                            />
+                          ) : (
+                            <p className="text-sm">{currentThumbAlt}</p>
+                          )}
+                        </div>
+                        <label className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
+                          직접 수정
+                          <Switch
+                            size="sm"
+                            checked={isEditingThumb}
+                            onCheckedChange={() => {
+                              if (isEditingThumb) {
+                                const edited = directEditFields[thumbKey];
+                                if (edited !== undefined && edited !== currentThumbAlt) {
+                                  onUpdateTranslation?.(locale, { thumbnail_alt: edited });
+                                  setManuallyEditedLocales((prev) => new Set(prev).add(locale));
+                                }
+                                setDirectEditingFields((prev) => {
+                                  const next = new Set(prev);
+                                  next.delete(thumbKey);
+                                  return next;
+                                });
+                              } else {
+                                setDirectEditingFields((prev) => new Set(prev).add(thumbKey));
+                                setDirectEditFields((prev) => ({
+                                  ...prev,
+                                  [thumbKey]: currentThumbAlt,
+                                }));
+                              }
+                            }}
+                          />
+                        </label>
+                      </div>
+                    );
+                  })()}
                 {(originalImageAlts ?? []).map((origItem, i) => {
-                  const translated = selectedTranslation.image_alts.find((t) => t.src === origItem.src)
-                    ?? selectedTranslation.image_alts[i];
+                  const translated =
+                    selectedTranslation.image_alts.find((t) => t.src === origItem.src) ??
+                    selectedTranslation.image_alts[i];
                   const imgKey = fieldEditKey(locale, `image_alt_${origItem.src}`);
                   const isEditingImg = directEditingFields.has(imgKey);
                   const currentAlt = translated?.alt || origItem.alt;
