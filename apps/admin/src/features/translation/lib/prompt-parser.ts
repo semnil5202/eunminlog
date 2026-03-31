@@ -35,7 +35,10 @@ function parseNumberedList(text: string): string[] {
 }
 
 export function parseTranslationResult(rawInput: string): ParsedLocaleResult[] {
-  const raw = rawInput.replaceAll('\\---', '---');
+  const raw = rawInput
+    .replaceAll('\\---', '---')
+    .replaceAll('\\\\', '')
+    .replace(/\\(?!n)([^\\])/g, '$1');
   const results: ParsedLocaleResult[] = [];
 
   for (const locale of LOCALES) {
