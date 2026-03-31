@@ -12,7 +12,10 @@ import {
   SheetTitle,
   SheetDescription,
 } from '@/components/ui/sheet';
-import { buildTranslationPrompt } from '@/features/translation/lib/prompt-builder';
+import {
+  buildTranslationPrompt,
+  type PromptVariant,
+} from '@/features/translation/lib/prompt-builder';
 import {
   parseTranslationResult,
   type ParsedLocaleResult,
@@ -65,7 +68,7 @@ export function ManualTranslationSheet({
   const [rawText, setRawText] = useState(savedRawText);
   const [results, setResults] = useState<ParsedLocaleResult[]>(savedResults);
   const [activeLocale, setActiveLocale] = useState<TranslationLocale>('en');
-  const [copied, setCopied] = useState(false);
+  const [copiedVariant, setCopiedVariant] = useState<PromptVariant | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -73,26 +76,29 @@ export function ManualTranslationSheet({
     setResults(savedResults);
   }, [savedRawText, savedResults]);
 
-  const handleCopyPrompt = async () => {
-    const prompt = buildTranslationPrompt({
-      formType,
-      title,
-      content,
-      description,
-      placeName,
-      address,
-      pricePrefix,
-      productNames,
-      purchaseSources,
-      pricePrefixes,
-      imageAlts,
-      thumbnailAlt,
-    });
+  const handleCopyPrompt = async (variant: PromptVariant) => {
+    const prompt = buildTranslationPrompt(
+      {
+        formType,
+        title,
+        content,
+        description,
+        placeName,
+        address,
+        pricePrefix,
+        productNames,
+        purchaseSources,
+        pricePrefixes,
+        imageAlts,
+        thumbnailAlt,
+      },
+      variant,
+    );
 
     await navigator.clipboard.writeText(prompt);
-    setCopied(true);
+    setCopiedVariant(variant);
     toast.success('번역 프롬프트가 클립보드에 복사되었습니다.');
-    setTimeout(() => setCopied(false), 2000);
+    setTimeout(() => setCopiedVariant(null), 2000);
   };
 
   const handleApply = () => {
@@ -133,19 +139,28 @@ export function ManualTranslationSheet({
 
         <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-6">
           <div>
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-semibold text-gray-900">1. 프롬프트 복사</h3>
-              <button
-                type="button"
-                onClick={handleCopyPrompt}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-input rounded-md hover:bg-accent transition-colors"
-              >
-                {copied ? <Check className="size-3.5" /> : <ClipboardCopy className="size-3.5" />}
-                {copied ? '복사됨' : '프롬프트 복사'}
-              </button>
+            <h3 className="text-sm font-semibold text-gray-900 mb-2">1. 프롬프트 복사</h3>
+            <div className="flex gap-2 flex-wrap">
+              {(['claude', 'gpt', 'gemini'] as const).map((v) => (
+                <button
+                  key={v}
+                  type="button"
+                  onClick={() => handleCopyPrompt(v)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-input rounded-md hover:bg-accent transition-colors"
+                >
+                  {copiedVariant === v ? (
+                    <Check className="size-3.5" />
+                  ) : (
+                    <ClipboardCopy className="size-3.5" />
+                  )}
+                  {copiedVariant === v
+                    ? '복사됨'
+                    : `${v === 'claude' ? 'Claude' : v === 'gpt' ? 'GPT' : 'Gemini'} 프롬프트 복사`}
+                </button>
+              ))}
             </div>
-            <p className="text-xs text-muted-foreground">
-              복사한 프롬프트를 ChatGPT, Claude 등 외부 AI에 붙여넣고 번역 결과를 받으세요.
+            <p className="mt-2 text-xs text-muted-foreground">
+              사용하는 AI 서비스에 맞는 버튼을 눌러 프롬프트를 복사한 후, 번역 결과를 받으세요.
             </p>
           </div>
 

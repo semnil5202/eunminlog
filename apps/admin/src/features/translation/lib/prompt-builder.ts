@@ -2,6 +2,8 @@
 
 type ImageAlt = { src: string; alt: string };
 
+export type PromptVariant = 'claude' | 'gpt' | 'gemini';
+
 type PromptBuildParams = {
   formType: 'visit' | 'product-review';
   title: string;
@@ -47,7 +49,32 @@ function buildResponseFormat(params: PromptBuildParams): string {
   return `---LOCALE:{locale}---\n${fields.join('\n')}`;
 }
 
-export function buildTranslationPrompt(params: PromptBuildParams): string {
+function getVariantRules(variant: PromptVariant): string {
+  if (variant === 'gpt') {
+    return `
+=== GPT 전용 규칙 ===
+
+- 출력 길이 제한으로 한 번에 7개 locale을 모두 출력하지 못할 수 있습니다
+- locale 순서(en → ja → zh-CN → zh-TW → id → vi → th)대로 가능한 만큼 출력하세요
+- 출력이 중간에 끊기면, 사용자가 "다음" 또는 "이어서"라고 요청할 것입니다. 끊긴 locale의 처음부터 다시 출력하고 남은 locale을 이어서 출력하세요
+- "네", "알겠습니다", "계속하겠습니다" 등의 대답 없이 바로 ---LOCALE:{다음locale}---부터 출력하세요`;
+  }
+
+  if (variant === 'gemini') {
+    return `
+=== Gemini 전용 규칙 ===
+
+- 복사 버튼으로 복사될 텍스트에 백슬래시(\\)를 포함하지 마세요
+- Markdown 이스케이프(\\*, \\", \\\\, \\- 등)를 사용하지 마세요. 순수 텍스트와 HTML 태그만 출력하세요`;
+  }
+
+  return '';
+}
+
+export function buildTranslationPrompt(
+  params: PromptBuildParams,
+  variant: PromptVariant = 'claude',
+): string {
   const {
     formType,
     title,
@@ -111,7 +138,7 @@ export function buildTranslationPrompt(params: PromptBuildParams): string {
 - 설명, 인사, 이모지, 요약, 마무리 멘트 등 번역 결과 외의 텍스트를 절대 출력하지 마세요
 - ---LOCALE:en---부터 바로 시작하고, 마지막 locale의 CONTENT가 끝나면 즉시 종료하세요
 - 원문에 없는 필드를 추가하지 마세요. 아래 응답 형식에 명시된 필드만 반환하세요
-
+${getVariantRules(variant)}
 === 응답 형식 ===
 
 아래 구분자 형식을 정확히 지켜주세요. 7개 locale 모두 빠짐없이 반환하세요.
