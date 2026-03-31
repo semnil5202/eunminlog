@@ -561,10 +561,10 @@ function EditPostForm({
               type="button"
               onClick={handleCopySummaryPrompt}
               disabled={!watchedContent.trim()}
-              className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-input rounded-md hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <ClipboardCopy className="size-3.5" />
-              3줄 요약 프롬프트 복사
+              프롬프트 복사
             </button>
           </div>
           <Controller
