@@ -25,7 +25,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="ko" suppressHydrationWarning>
       <body className="font-pretendard antialiased" suppressHydrationWarning>
         <SidebarLayout>{children}</SidebarLayout>
-        <Toaster position="top-right" toastOptions={{ style: { zIndex: 9999 } }} />
+        <Toaster position="top-right" richColors toastOptions={{ style: { zIndex: 9999 } }} />
       </body>
     </html>
   );
