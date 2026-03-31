@@ -54,10 +54,11 @@ function getVariantRules(variant: PromptVariant): string {
     return `
 === GPT 전용 규칙 ===
 
-- 출력 길이 제한으로 한 번에 7개 locale을 모두 출력하지 못할 수 있습니다
-- locale 순서(en → ja → zh-CN → zh-TW → id → vi → th)대로 가능한 만큼 출력하세요
-- 출력이 중간에 끊기면, 사용자가 "다음" 또는 "이어서"라고 요청할 것입니다. 끊긴 locale의 처음부터 다시 출력하고 남은 locale을 이어서 출력하세요
-- "네", "알겠습니다", "계속하겠습니다" 등의 대답 없이 바로 ---LOCALE:{다음locale}---부터 출력하세요`;
+- 한 번에 1개 locale만 출력하세요. 첫 요청에는 ---LOCALE:en--- 만 출력하세요
+- 사용자가 "다음" 또는 "이어서"라고 요청하면, 다음 locale 1개만 출력하세요
+- locale 순서: en → ja → zh-CN → zh-TW → id → vi → th
+- "네", "알겠습니다", "계속하겠습니다" 등의 대답은 절대 하지 마세요. 바로 ---LOCALE:{locale}---부터 출력하세요
+- 각 locale 출력이 끝나면 즉시 멈추세요. 다음 locale을 이어서 출력하지 마세요`;
   }
 
   if (variant === 'gemini') {
