@@ -237,6 +237,8 @@ function EditPostForm({
   const [manualTranslationResults, setManualTranslationResults] = useState<ParsedLocaleResult[]>(
     [],
   );
+  const [translationFormSnapshot, setTranslationFormSnapshot] = useState<string | null>(null);
+  const [translationSkipDirtyCheck, setTranslationSkipDirtyCheck] = useState(false);
 
   const getTranslationData = useCallback(() => {
     if (manualTranslationResults.length === 0) return null;
@@ -305,6 +307,16 @@ function EditPostForm({
   const isMultilingual = post.is_multilingual;
 
   const needsTranslation = isMultilingual && !!(category && subCategory);
+
+  const watchedPlaceName = watch('placeName');
+  const watchedAddress = watch('address');
+  const formFingerprint = `${title}|${watchedContent}|${description}|${watchedPlaceName}|${watchedAddress}`;
+
+  const isTranslationDirty =
+    manualTranslationResults.length > 0 &&
+    translationFormSnapshot !== null &&
+    formFingerprint !== translationFormSnapshot &&
+    !translationSkipDirtyCheck;
 
   const focusFirstEmptyField = () => {
     const values = getValues();
@@ -402,6 +414,11 @@ function EditPostForm({
 
     if (needsTranslation && manualTranslationResults.length === 0) {
       toast.error('번역을 먼저 완료해주세요.');
+      return;
+    }
+
+    if (needsTranslation && isTranslationDirty) {
+      toast.error('원문이 수정되었습니다. 번역을 다시 확인해주세요.');
       return;
     }
 
@@ -698,10 +715,14 @@ function EditPostForm({
         thumbnailAlt={watch('thumbnailAlt') || undefined}
         savedRawText={manualTranslationRaw}
         savedResults={manualTranslationResults}
+        isTranslationDirty={isTranslationDirty}
         onResultsChange={(raw, results) => {
           setManualTranslationRaw(raw);
           setManualTranslationResults(results);
+          setTranslationFormSnapshot(formFingerprint);
+          setTranslationSkipDirtyCheck(false);
         }}
+        onSkipDirtyCheck={() => setTranslationSkipDirtyCheck(true)}
       />
 
       <AlertDialog open={showSubmitDialog} onOpenChange={setShowSubmitDialog}>

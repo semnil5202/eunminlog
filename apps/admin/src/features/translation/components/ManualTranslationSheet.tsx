@@ -40,7 +40,9 @@ type ManualTranslationSheetProps = {
   thumbnailAlt?: string;
   savedRawText?: string;
   savedResults?: ParsedLocaleResult[];
+  isTranslationDirty?: boolean;
   onResultsChange?: (rawText: string, results: ParsedLocaleResult[]) => void;
+  onSkipDirtyCheck?: () => void;
 };
 
 export function ManualTranslationSheet({
@@ -60,7 +62,9 @@ export function ManualTranslationSheet({
   thumbnailAlt,
   savedRawText = '',
   savedResults = [],
+  isTranslationDirty = false,
   onResultsChange,
+  onSkipDirtyCheck,
 }: ManualTranslationSheetProps) {
   const [rawText, setRawText] = useState(savedRawText);
   const [results, setResults] = useState<ParsedLocaleResult[]>(savedResults);
@@ -163,7 +167,19 @@ export function ManualTranslationSheet({
               placeholder="AI에서 받은 번역 결과를 여기에 붙여넣으세요..."
               className="w-full h-48 p-3 text-sm border border-input rounded-md resize-y focus:outline-none focus:ring-2 focus:ring-ring"
             />
-            <div className="mt-2 flex justify-end">
+            <div className="mt-2 flex justify-end gap-2">
+              {isTranslationDirty && onSkipDirtyCheck && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onSkipDirtyCheck();
+                    toast.success('번역 수정 없이 진행합니다.');
+                  }}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium border border-input rounded-md hover:bg-accent transition-colors"
+                >
+                  수정 안함
+                </button>
+              )}
               <button
                 type="button"
                 onClick={handleApply}
