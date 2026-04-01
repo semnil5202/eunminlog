@@ -239,6 +239,7 @@ function EditPostForm({
   );
   const [translationFormSnapshot, setTranslationFormSnapshot] = useState<string | null>(null);
   const [translationSkipDirtyCheck, setTranslationSkipDirtyCheck] = useState(false);
+  const [skipCheckSnapshot, setSkipCheckSnapshot] = useState<string | null>(null);
 
   const getTranslationData = useCallback(() => {
     if (manualTranslationResults.length === 0) return null;
@@ -312,11 +313,12 @@ function EditPostForm({
   const watchedAddress = watch('address');
   const formFingerprint = `${title}|${watchedContent}|${description}|${watchedPlaceName}|${watchedAddress}`;
 
+  const skipStillValid = translationSkipDirtyCheck && skipCheckSnapshot === formFingerprint;
   const isTranslationDirty =
     manualTranslationResults.length > 0 &&
     translationFormSnapshot !== null &&
     formFingerprint !== translationFormSnapshot &&
-    !translationSkipDirtyCheck;
+    !skipStillValid;
 
   const focusFirstEmptyField = () => {
     const values = getValues();
@@ -722,7 +724,10 @@ function EditPostForm({
           setTranslationFormSnapshot(formFingerprint);
           setTranslationSkipDirtyCheck(false);
         }}
-        onSkipDirtyCheck={() => setTranslationSkipDirtyCheck(true)}
+        onSkipDirtyCheck={() => {
+          setTranslationSkipDirtyCheck(true);
+          setSkipCheckSnapshot(formFingerprint);
+        }}
       />
 
       <AlertDialog open={showSubmitDialog} onOpenChange={setShowSubmitDialog}>
