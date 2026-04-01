@@ -251,6 +251,19 @@ function NewPostContent() {
     const valid = await trigger();
     if (!valid) {
       focusFirstEmptyField();
+      toast.error('필수 항목을 모두 입력해주세요.');
+      return;
+    }
+
+    const thumbnailAltFilled = !getValues('thumbnail') || getValues('thumbnailAlt').trim();
+    const srcs = extractImageSrcs(getValues('content'));
+    const contentAltsFilled = srcs.every((src) => {
+      const found = imageAlts.find((a) => a.src === src);
+      return found && found.alt.trim();
+    });
+    if (!thumbnailAltFilled || !contentAltsFilled) {
+      setImageAltError(true);
+      toast.error('이미지 alt 입력이 먼저 필요합니다.');
       return;
     }
 
