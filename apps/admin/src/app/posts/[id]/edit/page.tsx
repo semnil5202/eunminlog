@@ -55,7 +55,7 @@ import {
   TITLE_MAX_LENGTH,
   type PostFormValues,
 } from '@/features/post-editor/types/form';
-import { ImageAltSheet } from '@/features/post-editor/components/ImageAltSheet';
+import { ImageAltSheet, extractImageSrcs } from '@/features/post-editor/components/ImageAltSheet';
 import { SlugField } from '@/shared/components/slug/SlugField';
 
 import type { PostFormType } from '@/shared/types/post';
@@ -606,7 +606,20 @@ function EditPostForm({
             {needsTranslation && (
               <button
                 type="button"
-                onClick={() => setIsManualTranslationOpen(true)}
+                onClick={() => {
+                  const thumbnailAltFilled =
+                    !getValues('thumbnail') || getValues('thumbnailAlt').trim();
+                  const srcs = extractImageSrcs(getValues('content'));
+                  const contentAltsFilled = srcs.every((src) => {
+                    const found = imageAlts.find((a) => a.src === src);
+                    return found && found.alt.trim();
+                  });
+                  if (!thumbnailAltFilled || !contentAltsFilled) {
+                    toast.error('이미지 alt 입력이 먼저 필요합니다.');
+                    return;
+                  }
+                  setIsManualTranslationOpen(true);
+                }}
                 className="inline-flex items-center justify-center gap-1.5 h-10 border border-input px-5 text-sm font-semibold shadow-xs transition-colors hover:bg-accent"
               >
                 <Languages className="size-4" />
