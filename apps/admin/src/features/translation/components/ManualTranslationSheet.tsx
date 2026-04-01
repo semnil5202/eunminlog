@@ -12,10 +12,7 @@ import {
   SheetTitle,
   SheetDescription,
 } from '@/components/ui/sheet';
-import {
-  buildTranslationPrompt,
-  type PromptVariant,
-} from '@/features/translation/lib/prompt-builder';
+import { buildTranslationPrompt } from '@/features/translation/lib/prompt-builder';
 import {
   parseTranslationResult,
   type ParsedLocaleResult,
@@ -68,7 +65,7 @@ export function ManualTranslationSheet({
   const [rawText, setRawText] = useState(savedRawText);
   const [results, setResults] = useState<ParsedLocaleResult[]>(savedResults);
   const [activeLocale, setActiveLocale] = useState<TranslationLocale>('en');
-  const [copiedVariant, setCopiedVariant] = useState<PromptVariant | null>(null);
+  const [copied, setCopied] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -76,29 +73,26 @@ export function ManualTranslationSheet({
     setResults(savedResults);
   }, [savedRawText, savedResults]);
 
-  const handleCopyPrompt = async (variant: PromptVariant) => {
-    const prompt = buildTranslationPrompt(
-      {
-        formType,
-        title,
-        content,
-        description,
-        placeName,
-        address,
-        pricePrefix,
-        productNames,
-        purchaseSources,
-        pricePrefixes,
-        imageAlts,
-        thumbnailAlt,
-      },
-      variant,
-    );
+  const handleCopyPrompt = async () => {
+    const prompt = buildTranslationPrompt({
+      formType,
+      title,
+      content,
+      description,
+      placeName,
+      address,
+      pricePrefix,
+      productNames,
+      purchaseSources,
+      pricePrefixes,
+      imageAlts,
+      thumbnailAlt,
+    });
 
     await navigator.clipboard.writeText(prompt);
-    setCopiedVariant(variant);
+    setCopied(true);
     toast.success('번역 프롬프트가 클립보드에 복사되었습니다.');
-    setTimeout(() => setCopiedVariant(null), 2000);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   const handleApply = () => {
@@ -139,28 +133,21 @@ export function ManualTranslationSheet({
 
         <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-6">
           <div>
-            <h3 className="text-sm font-semibold text-gray-900 mb-2">1. 프롬프트 복사</h3>
-            <div className="flex gap-2 flex-wrap">
-              {(['claude', 'gpt', 'gemini'] as const).map((v) => (
-                <button
-                  key={v}
-                  type="button"
-                  onClick={() => handleCopyPrompt(v)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-input rounded-md hover:bg-accent transition-colors"
-                >
-                  {copiedVariant === v ? (
-                    <Check className="size-3.5" />
-                  ) : (
-                    <ClipboardCopy className="size-3.5" />
-                  )}
-                  {copiedVariant === v
-                    ? '복사됨'
-                    : `${v === 'claude' ? 'Claude' : v === 'gpt' ? 'GPT' : 'Gemini'} 프롬프트 복사`}
-                </button>
-              ))}
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-semibold text-gray-900">1. 프롬프트 복사</h3>
+              <button
+                type="button"
+                onClick={handleCopyPrompt}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-input rounded-md hover:bg-accent transition-colors"
+              >
+                {copied ? <Check className="size-3.5" /> : <ClipboardCopy className="size-3.5" />}
+                {copied ? '복사됨' : '프롬프트 복사'}
+              </button>
             </div>
-            <p className="mt-2 text-xs text-muted-foreground">
-              사용하는 AI 서비스에 맞는 버튼을 눌러 프롬프트를 복사한 후, 번역 결과를 받으세요.
+            <p className="text-xs text-muted-foreground">
+              복사한 프롬프트를 외부 AI에 붙여넣고 번역 결과를 받으세요. 결과를 붙여넣은 후 영어부터
+              태국어까지 모든 언어가 보이는지 확인해주세요. 일부 언어가 누락되었다면 AI의 복사
+              아이콘 대신 직접 드래그하여 복사/붙여넣기 해주세요.
             </p>
           </div>
 
