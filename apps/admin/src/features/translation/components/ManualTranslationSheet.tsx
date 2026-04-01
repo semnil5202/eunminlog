@@ -144,11 +144,14 @@ export function ManualTranslationSheet({
                 {copied ? '복사됨' : '프롬프트 복사'}
               </button>
             </div>
-            <p className="text-xs text-muted-foreground">
-              복사한 프롬프트를 외부 AI에 붙여넣고 번역 결과를 받으세요. 결과를 붙여넣은 후 영어부터
-              태국어까지 모든 언어가 보이는지 확인해주세요. 일부 언어가 누락되었다면 AI의 복사
-              아이콘 대신 직접 드래그하여 복사/붙여넣기 해주세요.
-            </p>
+            <ul className="mt-2 text-xs text-muted-foreground space-y-1">
+              <li>- 복사한 프롬프트를 외부 AI에 붙여넣고 번역 결과를 받으세요.</li>
+              <li>- 결과를 붙여넣은 후 영어부터 태국어까지 모든 언어가 보이는지 확인해주세요.</li>
+              <li>
+                - 일부 언어가 누락되었다면 AI의 복사 아이콘 대신 직접 드래그하여 복사/붙여넣기
+                해주세요.
+              </li>
+            </ul>
           </div>
 
           <div>
