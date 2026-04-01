@@ -74,6 +74,12 @@ const webSiteSchema: Record<string, unknown> = {
       gtag('js', new Date());
       gtag('config', GA_MEASUREMENT_ID, gaPageParams);
     </script>
+    <script async src="https://wcs.pstatic.net/wcslog.js"></script>
+    <script is:inline>
+      if (!window.wcs_add) window.wcs_add = {};
+      wcs_add["wa"] = "c8876b6e46c848";
+      if (window.wcs) wcs_do();
+    </script>
   </head>
   <body class="flex min-h-screen flex-col bg-white text-gray-900 antialiased font-pretendard">
     <Header locale={locale} path={path} isMultilingual={isMultilingual} />
