@@ -21,7 +21,7 @@ export const postFormSchema = z
     category: z.string().min(1, '대분류를 선택해주세요.'),
     subCategory: z.string().min(1, '소분류를 선택해주세요.'),
     thumbnail: z.string().min(1, '썸네일을 등록해주세요.'),
-    thumbnailAlt: z.string().min(1, '썸네일 alt를 입력해주세요.'),
+    thumbnailAlt: z.string(),
     slug: z.string().min(1, '슬러그를 입력해주세요.'),
     description: z.string().min(1, '3줄 요약을 입력해주세요.'),
     placeName: z.string(),
