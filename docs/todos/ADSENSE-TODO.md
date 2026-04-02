@@ -111,13 +111,14 @@
 
 아래 5곳에서 TODO 주석을 해제한다:
 
-| 파일                                                   | 위치  | 복원 내용                                            |
-| ------------------------------------------------------ | ----- | ---------------------------------------------------- |
-| `src/layouts/PostLayout.astro` (frontmatter)           | ~60행 | `insertInArticleAds(post.content)` 호출 복원         |
-| `src/layouts/PostLayout.astro` (template)              | ~98행 | `<FixedAdsense variant="post-top" />` 주석 해제      |
-| `src/shared/components/layout/RightSidebar.astro`      | ~24행 | `<FixedAdsense variant="sidebar" />` 주석 해제       |
-| `src/features/post-feed/components/PostCardGrid.astro` | ~48행 | `<InFeedAdsense ...>` 주석 해제, `return null;` 제거 |
-| `src/shared/components/layout/SponsoredPostList.astro` | ~34행 | `<InFeedAdsense class="h-[104px] my-4" />` 주석 해제 |
+| 파일                                                   | 위치   | 복원 내용                                                         |
+| ------------------------------------------------------ | ------ | ----------------------------------------------------------------- |
+| `src/layouts/PostLayout.astro` (frontmatter)           | ~60행  | `insertInArticleAds(post.content)` 호출 복원                      |
+| `src/layouts/PostLayout.astro` (template)              | ~98행  | `<FixedAdsense variant="post-top" />` 주석 해제                   |
+| `src/shared/components/layout/RightSidebar.astro`      | ~24행  | `<FixedAdsense variant="sidebar" />` 주석 해제                    |
+| `src/features/post-feed/components/PostCardGrid.astro` | ~48행  | `<InFeedAdsense ...>` 주석 해제, `return null;` 제거              |
+| `src/features/post-feed/components/PostCardGrid.astro` | ~179행 | 무한스크롤 `createAdSlot()` 호출 주석 해제 (2페이지+ 인피드 광고) |
+| `src/shared/components/layout/SponsoredPostList.astro` | ~34행  | `<InFeedAdsense class="h-[104px] my-4" />` 주석 해제              |
 
 ### 5. In-Article 광고 (본문 H2 섹션 경계)
 

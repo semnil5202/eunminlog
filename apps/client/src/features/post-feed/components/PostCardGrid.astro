@@ -176,13 +176,14 @@ for (let i = 0; i < posts.length; i++) {
 
           let localIndex = 0;
           for (const post of posts) {
-            if (localIndex === 1 || localIndex === 3) {
-              const adSlot = createAdSlot();
-              feed.appendChild(adSlot);
-              if ((window as any).__observeNewAdSlot) {
-                (window as any).__observeNewAdSlot(adSlot);
-              }
-            }
+            // TODO: 애드센스 되돌리기 — 무한스크롤 인피드 광고 삽입
+            // if (localIndex === 1 || localIndex === 3) {
+            //   const adSlot = createAdSlot();
+            //   feed.appendChild(adSlot);
+            //   if ((window as any).__observeNewAdSlot) {
+            //     (window as any).__observeNewAdSlot(adSlot);
+            //   }
+            // }
             feed.appendChild(createPostCard(post));
             localIndex++;
           }
