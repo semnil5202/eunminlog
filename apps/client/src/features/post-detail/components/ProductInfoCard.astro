@@ -58,8 +58,6 @@ const products = (displayProductNames ?? []).map((name, i) => ({
 
 <div
   class="bg-gray-50 border border-gray-200 p-5 mb-6"
-  itemscope
-  itemtype="https://schema.org/Product"
 >
   <dl class="space-y-3 text-sm">
     <div class="flex items-baseline gap-3">
@@ -77,7 +75,7 @@ const products = (displayProductNames ?? []).map((name, i) => ({
         <div class="space-y-1.5">
           <div class="flex items-baseline gap-3">
             <dt class="shrink-0 w-20 text-gray-500 font-medium">{t("product.name", locale)}</dt>
-            <dd class="text-gray-900 font-semibold" itemprop="name">
+            <dd class="text-gray-900 font-semibold">
               {product.name}
             </dd>
           </div>
