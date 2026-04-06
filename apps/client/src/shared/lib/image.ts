@@ -2,7 +2,8 @@
 
 const RESIZED_SUFFIX = '_688';
 const RESIZED_MAX_WIDTH = 688;
-const SKIP_BLOCKS_REGEX =
+const SKIP_BOOKMARK_REGEX = /<aside[^>]*data-type="link-bookmark"[^>]*>[\s\S]*?<\/aside>/gi;
+const SKIP_ZOOM_BLOCKS_REGEX =
   /<div[^>]*data-type="image-carousel"[^>]*>[\s\S]*?<\/div>|<aside[^>]*data-type="link-bookmark"[^>]*>[\s\S]*?<\/aside>/gi;
 
 export function optimizedUrl(original: string): string {
@@ -12,7 +13,7 @@ export function optimizedUrl(original: string): string {
 
 export function injectOptimizedUrls(html: string): string {
   const preserved: string[] = [];
-  let processed = html.replace(SKIP_BLOCKS_REGEX, (match) => {
+  let processed = html.replace(SKIP_BOOKMARK_REGEX, (match) => {
     preserved.push(match);
     return `<!--OPT_SKIP_${preserved.length - 1}-->`;
   });
@@ -55,7 +56,7 @@ const ZOOM_ICON =
 
 export function injectZoomIcons(html: string): string {
   const preserved: string[] = [];
-  let processed = html.replace(SKIP_BLOCKS_REGEX, (match) => {
+  let processed = html.replace(SKIP_ZOOM_BLOCKS_REGEX, (match) => {
     preserved.push(match);
     return `<!--ZOOM_SKIP_${preserved.length - 1}-->`;
   });
