@@ -42,7 +42,8 @@ export function useImageUpload() {
 
     await uploadBlob(presignedUrl, original.blob);
 
-    const resized = await toWebP(file, { maxWidth: RESIZED_MAX_WIDTH, quality: 0.75 });
+    const resizedQuality = options?.og ? 0.75 : 0.85;
+    const resized = await toWebP(file, { maxWidth: RESIZED_MAX_WIDTH, quality: resizedQuality });
     const ext = blobType === 'image/jpeg' ? 'jpg' : 'webp';
     const resizedKey = key.replace(/\.(webp|jpg)$/, `${RESIZED_SUFFIX}.${ext}`);
     const { presignedUrl: resizedUrl } = await getPresignedUrl(
