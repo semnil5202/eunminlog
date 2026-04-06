@@ -48,7 +48,13 @@ export function UploadImage({ editor }: EditorProps) {
 
     // Case 1: multiple files selected → create carousel directly
     if (results.length > 1) {
-      const images = results.map(({ url, width, height }) => ({ src: url, width: '90%', height: 'auto', naturalWidth: width, naturalHeight: height }));
+      const images = results.map(({ url, width, height }) => ({
+        src: url,
+        width: '90%',
+        height: 'auto',
+        naturalWidth: width,
+        naturalHeight: height,
+      }));
 
       const nodeBefore = saved$from.nodeBefore;
       if (nodeBefore?.type.name === 'image') {
@@ -63,7 +69,16 @@ export function UploadImage({ editor }: EditorProps) {
           const existingWidth = curNodeBefore.attrs.width as number | undefined;
           const existingHeight = curNodeBefore.attrs.height as number | undefined;
           const carouselNode = editor.schema.nodes.imageCarousel.create({
-            images: [{ src: curNodeBefore.attrs.src as string, width: '90%', height: 'auto', naturalWidth: existingWidth, naturalHeight: existingHeight }, ...images],
+            images: [
+              {
+                src: curNodeBefore.attrs.src as string,
+                width: '90%',
+                height: 'auto',
+                naturalWidth: existingWidth,
+                naturalHeight: existingHeight,
+              },
+              ...images,
+            ],
           });
 
           const { tr } = editor.state;
@@ -117,8 +132,20 @@ export function UploadImage({ editor }: EditorProps) {
         const existingHeight = curNodeBefore.attrs.height as number | undefined;
         const carouselNode = editor.schema.nodes.imageCarousel.create({
           images: [
-            { src: curNodeBefore.attrs.src as string, width: '90%', height: 'auto', naturalWidth: existingWidth, naturalHeight: existingHeight },
-            { src: results[0].url, width: '90%', height: 'auto', naturalWidth: results[0].width, naturalHeight: results[0].height },
+            {
+              src: curNodeBefore.attrs.src as string,
+              width: '90%',
+              height: 'auto',
+              naturalWidth: existingWidth,
+              naturalHeight: existingHeight,
+            },
+            {
+              src: results[0].url,
+              width: '90%',
+              height: 'auto',
+              naturalWidth: results[0].width,
+              naturalHeight: results[0].height,
+            },
           ],
         });
 
@@ -176,7 +203,7 @@ export function UploadImage({ editor }: EditorProps) {
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/jpeg,image/png,image/jpg,image/gif,image/webp"
+        accept="image/jpeg,image/png,image/jpg,image/gif,image/webp,image/heic,image/heif,.heic,.heif"
         multiple
         onChange={handleFileChange}
         className="hidden"

@@ -1,3 +1,11 @@
+import { isHeic, heicTo } from 'heic-to';
+
+async function convertHeicToJpeg(file: File): Promise<File> {
+  if (!(await isHeic(file))) return file;
+  const blob = await heicTo({ blob: file, type: 'image/jpeg', quality: 0.92 });
+  return new File([blob], file.name.replace(/\.hei[cf]$/i, '.jpg'), { type: 'image/jpeg' });
+}
+
 function drawWatermark(ctx: CanvasRenderingContext2D, width: number, height: number) {
   const fontSize = Math.max(14, Math.min(width, height) * 0.03);
   const gap = fontSize * 12;
@@ -26,8 +34,9 @@ type ToWebPOptions = {
 
 export type WebPResult = { blob: Blob; width: number; height: number };
 
-export function toWebP(file: File, options: ToWebPOptions = {}): Promise<WebPResult> {
+export async function toWebP(file: File, options: ToWebPOptions = {}): Promise<WebPResult> {
   const { maxWidth, maxHeight, quality = 1 } = options;
+  const source = await convertHeicToJpeg(file);
 
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -85,6 +94,6 @@ export function toWebP(file: File, options: ToWebPOptions = {}): Promise<WebPRes
       );
     };
     img.onerror = reject;
-    img.src = URL.createObjectURL(file);
+    img.src = URL.createObjectURL(source);
   });
 }

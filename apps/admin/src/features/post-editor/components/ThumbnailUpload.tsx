@@ -64,7 +64,7 @@ export function ThumbnailUpload({ thumbnail, onThumbnailChange }: ThumbnailUploa
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/jpeg,image/png,image/jpg,image/gif,image/webp"
+        accept="image/jpeg,image/png,image/jpg,image/gif,image/webp,image/heic,image/heif,.heic,.heif"
         onChange={handleFileChange}
         className="hidden"
       />

@@ -34,7 +34,7 @@ export function useImageUpload() {
     const original = await toWebP(file, { maxWidth: ORIGINAL_MAX_WIDTH });
     const blobType = original.blob.type || 'image/webp';
     const { presignedUrl, cdnUrl, key } = await getPresignedUrl(
-      file.type,
+      blobType,
       original.blob.size,
       undefined,
       blobType,
@@ -46,7 +46,7 @@ export function useImageUpload() {
     const ext = blobType === 'image/jpeg' ? 'jpg' : 'webp';
     const resizedKey = key.replace(/\.(webp|jpg)$/, `${RESIZED_SUFFIX}.${ext}`);
     const { presignedUrl: resizedUrl } = await getPresignedUrl(
-      file.type,
+      blobType,
       resized.blob.size,
       resizedKey,
       blobType,
@@ -57,7 +57,7 @@ export function useImageUpload() {
       const og = await toWebP(file, { maxWidth: OG_MAX_WIDTH, maxHeight: 630 });
       const ogKey = key.replace(/\.(webp|jpg)$/, `${OG_SUFFIX}.${ext}`);
       const { presignedUrl: ogPresignedUrl } = await getPresignedUrl(
-        file.type,
+        blobType,
         og.blob.size,
         ogKey,
         blobType,
