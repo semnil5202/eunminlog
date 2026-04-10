@@ -75,10 +75,17 @@ jobs:
             --cache-control "no-cache" \
             --delete
 
+      - name: Deploy to S3 (feed JSON — no-cache)
+        run: |
+          aws s3 sync apps/client/dist/api/feed/ s3://${{ env.S3_BUCKET }}/api/feed/ \
+            --cache-control "no-cache" \
+            --delete
+
       - name: Deploy to S3 (static assets — long cache)
         run: |
           aws s3 sync apps/client/dist/ s3://${{ env.S3_BUCKET }} \
             --exclude "*.html" \
+            --exclude "api/feed/*" \
             --cache-control "public, max-age=31536000, immutable" \
             --delete
 
