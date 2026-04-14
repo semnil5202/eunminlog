@@ -62,6 +62,7 @@ import type { PostFormType } from '@/shared/types/post';
 import type { ImageAlt, TranslationResult } from '@/features/translation/types';
 import { ManualTranslationSheet } from '@/features/translation/components/ManualTranslationSheet';
 import {
+  fromTranslationResults,
   toTranslationResults,
   type ParsedLocaleResult,
 } from '@/features/translation/lib/prompt-parser';
@@ -235,7 +236,7 @@ function EditPostForm({
   const [isManualTranslationOpen, setIsManualTranslationOpen] = useState(false);
   const [manualTranslationRaw, setManualTranslationRaw] = useState('');
   const [manualTranslationResults, setManualTranslationResults] = useState<ParsedLocaleResult[]>(
-    [],
+    () => (postData.translations.length > 0 ? fromTranslationResults(postData.translations) : []),
   );
   const [translationFormSnapshot, setTranslationFormSnapshot] = useState<string | null>(null);
   const [translationSkipDirtyCheck, setTranslationSkipDirtyCheck] = useState(false);
@@ -291,6 +292,9 @@ function EditPostForm({
       loadDraftId(draft.id);
       if (draft.image_alts.length > 0) {
         setImageAlts(draft.image_alts);
+      }
+      if (draft.translation_data?.results && draft.translation_data.results.length > 0) {
+        setManualTranslationResults(fromTranslationResults(draft.translation_data.results));
       }
     });
   }, [searchParams, reset, loadDraftId]);

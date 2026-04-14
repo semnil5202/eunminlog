@@ -50,6 +50,7 @@ import type { PostFormType } from '@/shared/types/post';
 import type { ImageAlt } from '@/features/translation/types';
 import { ManualTranslationSheet } from '@/features/translation/components/ManualTranslationSheet';
 import {
+  fromTranslationResults,
   toTranslationResults,
   type ParsedLocaleResult,
 } from '@/features/translation/lib/prompt-parser';
@@ -153,6 +154,9 @@ function NewPostContent() {
       loadDraftId(draft.id);
       if (draft.image_alts.length > 0) {
         setImageAlts(draft.image_alts);
+      }
+      if (draft.translation_data?.results && draft.translation_data.results.length > 0) {
+        setManualTranslationResults(fromTranslationResults(draft.translation_data.results));
       }
     });
   }, [searchParams, reset, loadDraftId]);

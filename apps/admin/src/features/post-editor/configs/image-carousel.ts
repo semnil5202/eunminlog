@@ -1,6 +1,12 @@
 import { Node, mergeAttributes } from '@tiptap/core';
 
-type ImageItem = { src: string; width: string; height: string; naturalWidth?: number; naturalHeight?: number };
+type ImageItem = {
+  src: string;
+  width: string;
+  height: string;
+  naturalWidth?: number;
+  naturalHeight?: number;
+};
 
 const DEFAULT_WIDTH = '90%';
 const DEFAULT_HEIGHT = 'auto';
@@ -11,7 +17,12 @@ declare module '@tiptap/core' {
   interface Commands<ReturnType> {
     imageCarousel: {
       setImageCarousel: (attrs: { images: ImageItem[]; style?: string }) => ReturnType;
-      addImageToCarousel: (pos: number, src: string, naturalWidth?: number, naturalHeight?: number) => ReturnType;
+      addImageToCarousel: (
+        pos: number,
+        src: string,
+        naturalWidth?: number,
+        naturalHeight?: number,
+      ) => ReturnType;
       removeImageFromCarousel: (pos: number, imageIndex: number) => ReturnType;
     };
   }
@@ -37,7 +48,9 @@ export const CustomImageCarousel = Node.create({
             width: img.getAttribute('data-width') ?? DEFAULT_WIDTH,
             height: img.getAttribute('data-height') ?? DEFAULT_HEIGHT,
             naturalWidth: img.getAttribute('width') ? Number(img.getAttribute('width')) : undefined,
-            naturalHeight: img.getAttribute('height') ? Number(img.getAttribute('height')) : undefined,
+            naturalHeight: img.getAttribute('height')
+              ? Number(img.getAttribute('height'))
+              : undefined,
           }));
         },
         renderHTML: () => ({}),
@@ -58,7 +71,11 @@ export const CustomImageCarousel = Node.create({
 
   renderHTML({ node, HTMLAttributes }) {
     const images = (node.attrs.images as ImageItem[]).map((img) => {
-      const attrs: Record<string, string> = { src: img.src, 'data-width': img.width, 'data-height': img.height };
+      const attrs: Record<string, string> = {
+        src: img.src,
+        'data-width': img.width,
+        'data-height': img.height,
+      };
       if (img.naturalWidth) attrs.width = String(img.naturalWidth);
       if (img.naturalHeight) attrs.height = String(img.naturalHeight);
       return ['img', attrs];
@@ -110,9 +127,15 @@ export const CustomImageCarousel = Node.create({
               const remaining = currentImages[0];
               tr.delete(pos, pos + node.nodeSize);
               if (remaining) {
+                const heightStyle =
+                  remaining.height === 'auto'
+                    ? 'height: auto;'
+                    : remaining.height.startsWith('ratio:')
+                      ? `aspect-ratio: ${remaining.height.slice(6)}; object-fit: cover; height: auto;`
+                      : `height: ${remaining.height}; object-fit: cover;`;
                 const imageNode = editor.schema.nodes.image.create({
                   src: remaining.src,
-                  style: `width: ${remaining.width}; height: ${remaining.height};${remaining.height !== 'auto' ? ' object-fit: cover;' : ''}`,
+                  style: `width: ${remaining.width}; ${heightStyle}`,
                 });
                 const paragraph = editor.schema.nodes.paragraph.create(null, imageNode);
                 tr.insert(pos, paragraph);
@@ -162,7 +185,11 @@ export const CustomImageCarousel = Node.create({
         if (img.naturalWidth) $img.setAttribute('width', String(img.naturalWidth));
         if (img.naturalHeight) $img.setAttribute('height', String(img.naturalHeight));
         const heightCss =
-          img.height === 'auto' ? 'height: auto' : `height: ${img.height}; object-fit: cover`;
+          img.height === 'auto'
+            ? 'height: auto'
+            : img.height.startsWith('ratio:')
+              ? `aspect-ratio: ${img.height.slice(6)}; object-fit: cover; height: auto`
+              : `height: ${img.height}; object-fit: cover`;
         $img.style.cssText = `width: 100%; ${heightCss}; display: block;`;
 
         $wrapper.appendChild($img);
@@ -357,9 +384,10 @@ export const CustomImageCarousel = Node.create({
 
             const deltaY = isTop ? startY - cy : cy - startY;
             const newH = Math.max(startHeight + deltaY, 60);
+            const cropRatio = (newImgPx / newH).toFixed(4);
 
             const newImages = images.map((img, idx) =>
-              idx === i ? { ...img, width: `${widthPct}%`, height: `${newH}px` } : img,
+              idx === i ? { ...img, width: `${widthPct}%`, height: `ratio:${cropRatio}` } : img,
             );
             pendingScrollIndex = i;
             updateImages(newImages);

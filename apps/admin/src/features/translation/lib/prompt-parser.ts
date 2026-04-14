@@ -69,6 +69,23 @@ export function parseTranslationResult(rawInput: string): ParsedLocaleResult[] {
   return results;
 }
 
+export function fromTranslationResults(results: TranslationResult[]): ParsedLocaleResult[] {
+  return results.map((result) => ({
+    locale: result.locale,
+    title: result.title,
+    description: result.description,
+    placeName: result.place_name,
+    address: result.address,
+    pricePrefix: result.price_prefix?.[0] ?? '',
+    productNames: result.product_name,
+    purchaseSources: result.purchase_source,
+    pricePrefixes: result.price_prefix,
+    thumbnailAlt: result.thumbnail_alt,
+    imageAlts: result.image_alts.map((item) => item.alt),
+    content: result.content,
+  }));
+}
+
 export function toTranslationResults(parsed: ParsedLocaleResult[]): TranslationResult[] {
   return parsed.map((r) => ({
     locale: r.locale,

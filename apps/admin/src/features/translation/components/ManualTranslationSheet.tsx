@@ -193,22 +193,24 @@ export function ManualTranslationSheet({
 
           {results.length > 0 && (
             <div>
-              <h3 className="text-sm font-semibold text-gray-900 mb-2">3. 적용 결과</h3>
-              <div className="flex gap-1 overflow-x-auto pb-2">
-                {results.map((r) => (
-                  <button
-                    key={r.locale}
-                    type="button"
-                    onClick={() => setActiveLocale(r.locale)}
-                    className={`shrink-0 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                      activeLocale === r.locale
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    {LOCALE_FILTER_LABELS[r.locale]}
-                  </button>
-                ))}
+              <div className="sticky top-0 z-10 bg-white pb-2 pt-1">
+                <h3 className="text-sm font-semibold text-gray-900 mb-2">3. 적용 결과</h3>
+                <div className="flex gap-1 overflow-x-auto">
+                  {results.map((r) => (
+                    <button
+                      key={r.locale}
+                      type="button"
+                      onClick={() => setActiveLocale(r.locale)}
+                      className={`shrink-0 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                        activeLocale === r.locale
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      {LOCALE_FILTER_LABELS[r.locale]}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {activeResult && (

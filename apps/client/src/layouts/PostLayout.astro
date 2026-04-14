@@ -271,8 +271,16 @@ const gaPageParams = {
         const w = img.getAttribute('data-width') || '90%';
         const h = img.getAttribute('data-height') || 'auto';
         slide.style.flex = `0 0 ${w}`;
-        img.style.height = h === 'auto' ? 'auto' : h;
-        if (h !== 'auto') img.style.objectFit = 'cover';
+        if (h === 'auto') {
+          img.style.height = 'auto';
+        } else if (h.startsWith('ratio:')) {
+          img.style.aspectRatio = h.slice(6);
+          img.style.objectFit = 'cover';
+          img.style.height = 'auto';
+        } else {
+          img.style.height = h;
+          img.style.objectFit = 'cover';
+        }
         img.style.cursor = 'pointer';
         slide.appendChild(img);
 
