@@ -136,9 +136,8 @@ img[data-lightbox] {
   right: 8px;
 }
 
-[itemprop='articleBody'] table {
+[itemprop='articleBody'] .tableWrapper {
   overflow-x: auto;
-  display: block;
   -webkit-overflow-scrolling: touch;
 }
 

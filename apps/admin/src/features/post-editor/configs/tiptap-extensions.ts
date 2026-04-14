@@ -125,6 +125,7 @@ const CustomTextAlign = TextAlign.configure({
 
 const CustomTable = Table.configure({
   resizable: true,
+  renderWrapper: true,
   HTMLAttributes: {
     style: 'border-collapse: collapse; width: 100%; margin: 12px 0;',
   },
