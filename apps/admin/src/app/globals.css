@@ -165,6 +165,10 @@
 }
 
 /* Tiptap Table */
+.ProseMirror .tableWrapper {
+  overflow-x: auto;
+}
+
 .ProseMirror table {
   border-collapse: collapse;
   width: 100%;
@@ -178,7 +182,7 @@
   border: 1px solid #d1d5db;
   padding: 8px 12px;
   position: relative;
-  vertical-align: top;
+  vertical-align: middle;
   min-width: 50px;
 }
 

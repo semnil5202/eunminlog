@@ -136,12 +136,15 @@ img[data-lightbox] {
   right: 8px;
 }
 
-@media (max-width: 640px) {
-  [itemprop='articleBody'] table {
-    display: block;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
+[itemprop='articleBody'] table {
+  overflow-x: auto;
+  display: block;
+  -webkit-overflow-scrolling: touch;
+}
+
+[itemprop='articleBody'] td,
+[itemprop='articleBody'] th {
+  vertical-align: middle;
 }
 
 [data-type='link-bookmark'] {
