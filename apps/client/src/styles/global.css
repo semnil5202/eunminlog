@@ -141,14 +141,10 @@ img[data-lightbox] {
   -webkit-overflow-scrolling: touch;
 }
 
-[itemprop='articleBody'] table {
-  min-width: 100%;
-  width: max-content;
-}
-
 [itemprop='articleBody'] td,
 [itemprop='articleBody'] th {
   vertical-align: middle;
+  min-width: 120px;
 }
 
 [data-type='link-bookmark'] {

@@ -51,6 +51,52 @@ export function injectOptimizedUrls(html: string): string {
   return processed;
 }
 
+export function processTableHtml(html: string): string {
+  const EDITOR_WIDTH = 688;
+
+  return html.replace(/<table(\b[^>]*)>([\s\S]*?)<\/table>/gi, (match, attrs, inner) => {
+    const colWidths: number[] = [];
+    const colRegex = /<col[^>]*>/gi;
+    let colMatch;
+    while ((colMatch = colRegex.exec(match)) !== null) {
+      const widthMatch = colMatch[0].match(/width:\s*(\d+)px/);
+      colWidths.push(widthMatch ? parseInt(widthMatch[1]) : 0);
+    }
+
+    let processedContent = `<table${attrs}>${inner}</table>`;
+    const totalFixed = colWidths.reduce((sum, width) => sum + width, 0);
+    const hasAnyFixed = totalFixed > 0;
+
+    if (hasAnyFixed) {
+      const base = Math.max(totalFixed, EDITOR_WIDTH);
+      const unfixedCount = colWidths.filter((width) => width === 0).length;
+      const fixedPercent = (totalFixed / base) * 100;
+      const unfixedEach = unfixedCount > 0 ? (100 - fixedPercent) / unfixedCount : 0;
+
+      let colIndex = 0;
+      processedContent = processedContent.replace(/<col([^>]*)>/gi, (_colTag, colAttrs) => {
+        const width = colWidths[colIndex] ?? 0;
+        colIndex++;
+
+        if (width > 0) {
+          const percent = ((width / base) * 100).toFixed(2);
+          const newStyle = (colAttrs as string).replace(/width:\s*\d+px/, `width: ${percent}%`);
+          return `<col${newStyle}>`;
+        }
+        return `<col style="width: ${unfixedEach.toFixed(2)}%">`;
+      });
+    }
+
+    processedContent = processedContent.replace(
+      /(<table[^>]*style="[^"]*)\bwidth:\s*100%/,
+      '$1min-width: 100%',
+    );
+
+    const hasWrapper = match.includes('class="tableWrapper"');
+    return hasWrapper ? processedContent : `<div class="tableWrapper">${processedContent}</div>`;
+  });
+}
+
 const ZOOM_ICON =
   '<span class="img-zoom-hint" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg></span>';
 
