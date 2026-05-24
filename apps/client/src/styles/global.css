@@ -142,8 +142,7 @@ img[data-lightbox] {
 }
 
 [itemprop='articleBody'] table {
-  min-width: 100%;
-  width: max-content;
+  width: auto !important;
 }
 
 [itemprop='articleBody'] td,
