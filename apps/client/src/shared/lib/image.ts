@@ -51,49 +51,10 @@ export function injectOptimizedUrls(html: string): string {
   return processed;
 }
 
-export function processTableHtml(html: string): string {
-  const EDITOR_WIDTH = 688;
-
+export function wrapTablesWithScrollContainer(html: string): string {
   return html.replace(/<table(\b[^>]*)>([\s\S]*?)<\/table>/gi, (match, attrs, inner) => {
-    const colWidths: number[] = [];
-    const colRegex = /<col[^>]*>/gi;
-    let colMatch;
-    while ((colMatch = colRegex.exec(match)) !== null) {
-      const widthMatch = colMatch[0].match(/width:\s*(\d+)px/);
-      colWidths.push(widthMatch ? parseInt(widthMatch[1]) : 0);
-    }
-
-    let processedContent = `<table${attrs}>${inner}</table>`;
-    const totalFixed = colWidths.reduce((sum, width) => sum + width, 0);
-    const hasAnyFixed = totalFixed > 0;
-
-    if (hasAnyFixed) {
-      const base = Math.max(totalFixed, EDITOR_WIDTH);
-      const unfixedCount = colWidths.filter((width) => width === 0).length;
-      const fixedPercent = (totalFixed / base) * 100;
-      const unfixedEach = unfixedCount > 0 ? (100 - fixedPercent) / unfixedCount : 0;
-
-      let colIndex = 0;
-      processedContent = processedContent.replace(/<col([^>]*)>/gi, (_colTag, colAttrs) => {
-        const width = colWidths[colIndex] ?? 0;
-        colIndex++;
-
-        if (width > 0) {
-          const percent = ((width / base) * 100).toFixed(2);
-          const newStyle = (colAttrs as string).replace(/width:\s*\d+px/, `width: ${percent}%`);
-          return `<col${newStyle}>`;
-        }
-        return `<col style="width: ${unfixedEach.toFixed(2)}%">`;
-      });
-    }
-
-    processedContent = processedContent.replace(
-      /(<table[^>]*style="[^"]*)\bwidth:\s*100%/,
-      '$1min-width: 100%',
-    );
-
-    const hasWrapper = match.includes('class="tableWrapper"');
-    return hasWrapper ? processedContent : `<div class="tableWrapper">${processedContent}</div>`;
+    if (match.includes('class="tableWrapper"')) return match;
+    return `<div class="tableWrapper"><table${attrs}>${inner}</table></div>`;
   });
 }
 
