@@ -77,9 +77,11 @@ jobs:
 
       - name: Deploy to S3 (feed JSON — no-cache)
         run: |
-          aws s3 sync apps/client/dist/api/feed/ s3://${{ env.S3_BUCKET }}/api/feed/ \
-            --cache-control "no-cache" \
-            --delete
+          if [ -d "apps/client/dist/api/feed/" ]; then
+            aws s3 sync apps/client/dist/api/feed/ s3://${{ env.S3_BUCKET }}/api/feed/ \
+              --cache-control "no-cache" \
+              --delete
+          fi
 
       - name: Deploy to S3 (static assets — long cache)
         run: |
