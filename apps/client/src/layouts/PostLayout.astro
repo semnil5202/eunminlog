@@ -21,6 +21,7 @@ import { formatDate } from "@/shared/lib/date";
 import { insertInArticleAds } from "@/features/post-detail/lib/ads";
 import { buildBlogPostingSchema } from "@/features/post-detail/lib/schema";
 import { optimizedUrl, injectOptimizedUrls, injectZoomIcons, wrapTablesWithScrollContainer } from "@/shared/lib/image";
+import { injectSponsoredRel } from "@/shared/lib/sponsored-link";
 import { injectLocalizedBookmarks } from "@/shared/lib/bookmark";
 import type { LocalizedPost } from "@/shared/types/post";
 import type { Locale } from "@/shared/types/common";
@@ -70,7 +71,8 @@ const contentWithAlts = post.image_alts?.length
 const contentOptimized = injectOptimizedUrls(contentWithAlts);
 const contentWithBookmarks = await injectLocalizedBookmarks(contentOptimized, locale);
 const contentWithTables = wrapTablesWithScrollContainer(contentWithBookmarks);
-const contentWithAds = injectZoomIcons(contentWithTables);
+const contentWithSponsored = post.is_coupang_partners ? injectSponsoredRel(contentWithTables) : contentWithTables;
+const contentWithAds = injectZoomIcons(contentWithSponsored);
 const blogPosting = buildBlogPostingSchema(post, canonical);
 const sponsoredLabel = t("post.sponsored", locale);
 
@@ -141,6 +143,12 @@ const gaPageParams = {
                 <span class="text-gray-400">{t("post.sponsoredDisclosure", locale)}</span>
               </>
             )}
+            {post.is_coupang_partners && (
+              <>
+                <span aria-hidden="true" class="text-gray-300">|</span>
+                <span class="text-gray-400">{t("post.coupangPartnersDisclosure", locale)}</span>
+              </>
+            )}
           </div>
 
           <div class="aspect-video w-full overflow-hidden mb-6 bg-gray-100 relative img-zoom-parent">
@@ -195,6 +203,7 @@ const gaPageParams = {
               pricePrefixes={post.price_prefix}
               translatedPricePrefixes={post.translated_price_prefix}
               description={post.description}
+              isCoupangPartners={post.is_coupang_partners}
               locale={locale}
             />
           )}

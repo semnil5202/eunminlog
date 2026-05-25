@@ -19,6 +19,7 @@ interface Props {
   pricePrefixes?: string[] | null;
   translatedPricePrefixes?: string[] | null;
   description: string;
+  isCoupangPartners: boolean;
   locale: Locale;
 }
 
@@ -36,12 +37,14 @@ const {
   pricePrefixes,
   translatedPricePrefixes,
   description,
+  isCoupangPartners,
   locale,
 } = Astro.props;
 
 const summaryLabel = t("post.summary", locale);
 const summaryLines = description ? description.split('\n').filter(Boolean) : [];
 const targetCurrency = t("place.targetCurrency", locale);
+const purchaseLinkRel = isCoupangPartners ? "sponsored noopener noreferrer" : "noopener noreferrer";
 
 const displayProductNames = translatedProductNames ?? productNames;
 const displayPurchaseSources = translatedPurchaseSources ?? purchaseSources;
@@ -88,7 +91,7 @@ const products = (displayProductNames ?? []).map((name, i) => ({
                   <a
                     href={product.link}
                     target="_blank"
-                    rel="noopener noreferrer"
+                    rel={purchaseLinkRel}
                     class="shrink-0 translate-y-px text-gray-400 hover:text-gray-600 transition-colors"
                     aria-label={product.source}
                   >

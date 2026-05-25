@@ -10,6 +10,8 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'pagination.next': '다음',
     'post.sponsored': '추천',
     'post.sponsoredDisclosure': '이 글은 협찬을 받아 작성되었습니다.',
+    'post.coupangPartnersDisclosure':
+      '이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.',
     'post.summary': '3줄 요약',
     'footer.copyright': `© ${SITE_NAME_EN}`,
     'footer.privacy': '개인정보처리방침',
@@ -106,6 +108,8 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'pagination.next': 'Next',
     'post.sponsored': 'Recommended',
     'post.sponsoredDisclosure': 'This post was created with sponsorship.',
+    'post.coupangPartnersDisclosure':
+      'This post contains Coupang Partners affiliate links, through which a small commission may be earned.',
     'post.summary': '3-Line Summary',
     'footer.copyright': `© ${SITE_NAME_EN}`,
     'footer.privacy': 'Privacy Policy',
@@ -202,6 +206,8 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'pagination.next': '次へ',
     'post.sponsored': 'おすすめ',
     'post.sponsoredDisclosure': 'この記事は協賛を受けて作成されました。',
+    'post.coupangPartnersDisclosure':
+      'この記事にはCoupang Partnersのアフィリエイトリンクが含まれており、それにより一定の手数料を受け取る場合があります。',
     'post.summary': '3行要約',
     'footer.copyright': `© ${SITE_NAME_EN}`,
     'footer.privacy': 'プライバシーポリシー',
@@ -298,6 +304,7 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'pagination.next': '下一页',
     'post.sponsored': '推荐',
     'post.sponsoredDisclosure': '本文由赞助商赞助撰写。',
+    'post.coupangPartnersDisclosure': '本文包含酷澎合作伙伴联盟链接，可能因此获得一定的佣金。',
     'post.summary': '3行摘要',
     'footer.copyright': `© ${SITE_NAME_EN}`,
     'footer.privacy': '隐私政策',
@@ -390,6 +397,7 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'pagination.next': '下一頁',
     'post.sponsored': '推薦',
     'post.sponsoredDisclosure': '本文由贊助商贊助撰寫。',
+    'post.coupangPartnersDisclosure': '本文包含酷澎合作夥伴聯盟連結，可能因此獲得一定的佣金。',
     'post.summary': '3行摘要',
     'footer.copyright': `© ${SITE_NAME_EN}`,
     'footer.privacy': '隱私權政策',
@@ -482,6 +490,8 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'pagination.next': 'Selanjutnya',
     'post.sponsored': 'Rekomendasi',
     'post.sponsoredDisclosure': 'Artikel ini dibuat dengan dukungan sponsor.',
+    'post.coupangPartnersDisclosure':
+      'Postingan ini mengandung tautan afiliasi Coupang Partners dan komisi kecil mungkin diperoleh.',
     'post.summary': 'Ringkasan 3 Baris',
     'footer.copyright': `© ${SITE_NAME_EN}`,
     'footer.privacy': 'Kebijakan Privasi',
@@ -578,6 +588,8 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'pagination.next': 'Tiếp',
     'post.sponsored': 'Đề xuất',
     'post.sponsoredDisclosure': 'Bài viết này được viết với sự tài trợ.',
+    'post.coupangPartnersDisclosure':
+      'Bài viết này chứa liên kết liên kết Coupang Partners và có thể nhận được một khoản hoa hồng nhỏ.',
     'post.summary': 'Tóm tắt 3 dòng',
     'footer.copyright': `© ${SITE_NAME_EN}`,
     'footer.privacy': 'Chính sách bảo mật',
@@ -674,6 +686,8 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'pagination.next': 'ถัดไป',
     'post.sponsored': 'แนะนำ',
     'post.sponsoredDisclosure': 'บทความนี้เขียนโดยได้รับการสนับสนุน',
+    'post.coupangPartnersDisclosure':
+      'โพสต์นี้มีลิงก์พันธมิตร Coupang Partners ซึ่งอาจได้รับค่าคอมมิชชั่นเล็กน้อย',
     'post.summary': 'สรุป 3 บรรทัด',
     'footer.copyright': `© ${SITE_NAME_EN}`,
     'footer.privacy': 'นโยบายความเป็นส่วนตัว',

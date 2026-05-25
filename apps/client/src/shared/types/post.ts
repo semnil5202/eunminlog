@@ -14,6 +14,7 @@ export type Post = {
   thumbnail: string;
   thumbnail_alt: string | null;
   is_sponsored: boolean;
+  is_coupang_partners: boolean;
   is_recommended: boolean;
   is_multilingual: boolean;
   rating: number;

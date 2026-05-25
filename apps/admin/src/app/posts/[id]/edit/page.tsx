@@ -83,6 +83,7 @@ export default function EditPostPage() {
       sub_category: string;
       thumbnail: string;
       thumbnail_alt: string | null;
+      is_coupang_partners: boolean;
       is_multilingual: boolean;
       place_name: string | null;
       address: string | null;
@@ -146,6 +147,7 @@ function EditPostForm({
       sub_category: string;
       thumbnail: string;
       thumbnail_alt: string | null;
+      is_coupang_partners: boolean;
       is_multilingual: boolean;
       place_name: string | null;
       address: string | null;
@@ -169,6 +171,7 @@ function EditPostForm({
       formType: (post.product_name && post.product_name.length > 0
         ? 'product-review'
         : 'visit') as PostFormType,
+      isCoupangPartners: post.is_coupang_partners ?? false,
       title: post.title,
       content: post.content,
       category: post.category,

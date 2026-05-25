@@ -23,7 +23,17 @@ export function ProductReviewFields({ control, setValue }: ProductReviewFieldsPr
 
   return (
     <div className="mt-8 space-y-4">
-      <label className="block text-base font-bold">제품 목록</label>
+      <div className="flex items-center justify-between">
+        <label className="block text-base font-bold">제품 목록</label>
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            {...control.register('isCoupangPartners')}
+            className="size-4 accent-primary-600"
+          />
+          <span className="text-sm font-medium">쿠팡 파트너스 여부</span>
+        </label>
+      </div>
       <div className="space-y-3">
         {fields.map((field, index) => (
           <div key={field.id} className="space-y-2 border border-input p-3">

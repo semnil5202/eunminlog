@@ -74,6 +74,7 @@ export async function fetchPost(id: string) {
       sub_category: string;
       thumbnail: string;
       is_sponsored: boolean;
+      is_coupang_partners: boolean;
       is_recommended: boolean;
       is_multilingual: boolean;
       rating: number | null;
@@ -96,9 +97,21 @@ export async function fetchPost(id: string) {
       content: t.content,
       place_name: t.place_name ?? '',
       address: t.address ?? '',
-      product_name: Array.isArray(t.product_name) ? t.product_name : (t.product_name ? [t.product_name] : []),
-      purchase_source: Array.isArray(t.purchase_source) ? t.purchase_source : (t.purchase_source ? [t.purchase_source] : []),
-      price_prefix: Array.isArray(t.price_prefix) ? t.price_prefix : (t.price_prefix ? [t.price_prefix] : []),
+      product_name: Array.isArray(t.product_name)
+        ? t.product_name
+        : t.product_name
+          ? [t.product_name]
+          : [],
+      purchase_source: Array.isArray(t.purchase_source)
+        ? t.purchase_source
+        : t.purchase_source
+          ? [t.purchase_source]
+          : [],
+      price_prefix: Array.isArray(t.price_prefix)
+        ? t.price_prefix
+        : t.price_prefix
+          ? [t.price_prefix]
+          : [],
       image_alts: (t.image_alts ?? []) as ImageAlt[],
       thumbnail_alt: t.thumbnail_alt ?? '',
     })) as TranslationResult[],
@@ -117,9 +130,7 @@ export async function createPost(params: {
   const validProducts = fv.products.filter((p) => p.name.trim());
 
   const isProductReview = fv.formType === 'product-review';
-  const productPricePrefixes = isProductReview
-    ? validProducts.map((p) => p.pricePrefix)
-    : null;
+  const productPricePrefixes = isProductReview ? validProducts.map((p) => p.pricePrefix) : null;
   const productPrices = isProductReview
     ? validProducts.map((p) => (p.price ? Number(p.price) : 0))
     : null;
@@ -139,15 +150,24 @@ export async function createPost(params: {
       place_name: fv.placeName || null,
       address: fv.address || null,
       price_prefix: isProductReview
-        ? (productPricePrefixes && productPricePrefixes.some(Boolean) ? productPricePrefixes : null)
-        : (fv.pricePrefix ? [fv.pricePrefix] : null),
+        ? productPricePrefixes && productPricePrefixes.some(Boolean)
+          ? productPricePrefixes
+          : null
+        : fv.pricePrefix
+          ? [fv.pricePrefix]
+          : null,
       price: isProductReview
-        ? (productPrices && productPrices.some(Boolean) ? productPrices : null)
-        : (fv.price ? [Number(fv.price)] : null),
+        ? productPrices && productPrices.some(Boolean)
+          ? productPrices
+          : null
+        : fv.price
+          ? [Number(fv.price)]
+          : null,
       product_name: validProducts.length > 0 ? validProducts.map((p) => p.name) : null,
       purchase_source: validProducts.length > 0 ? validProducts.map((p) => p.source) : null,
       purchase_link: validProducts.length > 0 ? validProducts.map((p) => p.link) : null,
       image_alts: params.imageAlts ?? [],
+      is_coupang_partners: fv.isCoupangPartners,
     })
     .select('id')
     .single();
@@ -212,9 +232,7 @@ export async function updatePost(params: {
 
   const validProducts = fv.products.filter((p) => p.name.trim());
   const isProductReview = fv.formType === 'product-review';
-  const productPricePrefixes = isProductReview
-    ? validProducts.map((p) => p.pricePrefix)
-    : null;
+  const productPricePrefixes = isProductReview ? validProducts.map((p) => p.pricePrefix) : null;
   const productPrices = isProductReview
     ? validProducts.map((p) => (p.price ? Number(p.price) : 0))
     : null;
@@ -231,15 +249,24 @@ export async function updatePost(params: {
     place_name: fv.placeName || null,
     address: fv.address || null,
     price_prefix: isProductReview
-      ? (productPricePrefixes && productPricePrefixes.some(Boolean) ? productPricePrefixes : null)
-      : (fv.pricePrefix ? [fv.pricePrefix] : null),
+      ? productPricePrefixes && productPricePrefixes.some(Boolean)
+        ? productPricePrefixes
+        : null
+      : fv.pricePrefix
+        ? [fv.pricePrefix]
+        : null,
     price: isProductReview
-      ? (productPrices && productPrices.some(Boolean) ? productPrices : null)
-      : (fv.price ? [Number(fv.price)] : null),
+      ? productPrices && productPrices.some(Boolean)
+        ? productPrices
+        : null
+      : fv.price
+        ? [Number(fv.price)]
+        : null,
     product_name: validProducts.length > 0 ? validProducts.map((p) => p.name) : null,
     purchase_source: validProducts.length > 0 ? validProducts.map((p) => p.source) : null,
     purchase_link: validProducts.length > 0 ? validProducts.map((p) => p.link) : null,
     image_alts: params.imageAlts ?? [],
+    is_coupang_partners: fv.isCoupangPartners,
     updated_at: new Date().toISOString(),
   };
 

@@ -13,6 +13,7 @@ const productSchema = z.object({
 export const postFormSchema = z
   .object({
     formType: z.enum(['visit', 'product-review']),
+    isCoupangPartners: z.boolean(),
     title: z.string().min(1, '제목을 입력해주세요.').max(TITLE_MAX_LENGTH),
     content: z
       .string()
@@ -43,6 +44,7 @@ export type PostFormValues = z.infer<typeof postFormSchema>;
 
 export const POST_FORM_DEFAULTS: PostFormValues = {
   formType: 'visit',
+  isCoupangPartners: false,
   title: '',
   content: '',
   category: '',
