@@ -1,18 +1,3 @@
 {
-  "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Bash",
-        "if": "Bash(git push *)",
-        "hooks": [
-          {
-            "type": "agent",
-            "prompt": "git diff --name-only origin/main...HEAD 로 변경 파일을 확인하고, CLAUDE.md의 'Docs 동기화 규칙' 매핑에 따라 관련 docs/*.md 파일이 업데이트 필요한지 확인하세요. 업데이트가 필요하면 해당 docs를 수정하고 git add 하세요. 코드 파일은 사용자 확인 없이 절대 수정하지 마세요.",
-            "timeout": 120,
-            "statusMessage": "docs 동기화 확인 중..."
-          }
-        ]
-      }
-    ]
-  }
+  "hooks": {}
 }
