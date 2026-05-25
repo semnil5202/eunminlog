@@ -49,3 +49,7 @@ infra/cf-functions/viewer-request.js
 
 # claude code note
 check.md
+HANDOFF.md
+
+# superset
+.superset/
