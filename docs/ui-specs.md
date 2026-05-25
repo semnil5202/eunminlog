@@ -278,7 +278,7 @@
 - **제품 1개**: 심플 레이아웃 (그리드/보더 없음)
 - 제품명: `translatedProductNames` 우선 표시, `font-semibold`, `itemprop="name"`
 - 구매처: 텍스트 + 구매 링크가 있으면 외부 링크 아이콘 (`target="_blank" rel="noopener noreferrer"`)
-- 가격 표시: `pricePrefix + price.toLocaleString()` 조합
+- 가격 표시: `pricePrefix + price.toLocaleString() + '원'` 조합 (한국 원화 단위 명시)
 - dt 라벨 폭: 제품 섹션 내부 `w-16` (64px), 카테고리/요약 `w-20` (80px)
 - 필드 라벨 i18n: `place.category`, `product.name`, `product.source`, `place.price`, `post.summary`
 - 3줄 요약: `description`을 개행 분할하여 `⋅` 접두사 리스트로 표시
@@ -301,6 +301,7 @@ Admin에서 `data-type="image-carousel"`로 마크업된 연속 이미지를 Cli
 본문 내 URL을 OG 태그 기반 카드 형태로 표시하는 기능.
 
 **Admin (에디터)**:
+
 - Tiptap 커스텀 노드 `CustomLinkBookmark` (`features/post-editor/configs/link-bookmark.ts`)
 - HTML 출력: `<aside data-type="link-bookmark">` + `data-url`, `data-title`, `data-description`, `data-image`, `data-favicon` 속성
 - 내부 구조: `<a>` 래퍼 안에 `<figure>` (이미지) + `<figcaption>` (제목/설명/도메인)
@@ -309,6 +310,7 @@ Admin에서 `data-type="image-carousel"`로 마크업된 연속 이미지를 Cli
 - 북마크 이미지는 ImageAltSheet에서 제외
 
 **Client (렌더링)**:
+
 - CSS: `global.css`에서 `[data-type='link-bookmark']` 스타일 정의
 - hover 효과: `background-color: #f9fafb`
 - 모바일 (`max-width: 640px`): `flex-direction: column` 세로 배치, figure `max-height: 200px`
@@ -398,6 +400,21 @@ Admin에서 `data-type="image-carousel"`로 마크업된 연속 이미지를 Cli
 - **위치**: `features/search/api/search-data.ts`
 - LocalizedPost 배열을 검색용 JSON(`SearchItem[]`)과 추천 키워드(`string[]`)로 변환
 - 검색 페이지의 데이터 준비 로직을 단일 함수로 통합
+
+#### `wrapTablesWithScrollContainer(html)`
+
+- **위치**: `shared/lib/image.ts`
+- 게시글 본문 HTML에서 `div.tableWrapper`로 감싸지지 않은 `<table>`을 자동으로 래퍼로 감싼다
+- Admin에서 `renderWrapper: true` 설정으로 저장된 HTML에는 이미 `div.tableWrapper`가 포함되어 있으므로 이중 래핑하지 않음
+- `PostLayout.astro` 빌드 타임에 호출하여 기존 포스트 데이터도 일관되게 처리
+
+**테이블 가로스크롤 처리 규칙:**
+
+| 레이어        | 처리 방식                                                                                    |
+| ------------- | -------------------------------------------------------------------------------------------- |
+| Admin         | Tiptap `Table.configure({ renderWrapper: true })`로 저장 HTML에 `div.tableWrapper` 포함      |
+| Client (빌드) | `wrapTablesWithScrollContainer()`로 래퍼 미포함 테이블 처리                                  |
+| CSS           | `.tableWrapper { overflow-x: auto }` + `td, th { min-width: 120px; vertical-align: middle }` |
 
 ---
 

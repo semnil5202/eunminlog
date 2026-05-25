@@ -205,9 +205,9 @@ features/auth/
 
 포스트 작성/편집 폼은 **폼 형식**에 따라 입력 필드가 달라진다. 폼 형식은 UI 전용 개념으로, DB에 별도 컬럼으로 저장하지 않는다 (체험 방문 전용 필드의 nullable 여부로 구분).
 
-| 폼 형식 값       | 라벨      | 설명                                               | 상태      |
-| ---------------- | --------- | -------------------------------------------------- | --------- |
-| `visit`          | 체험 방문 | 장소/주소/가격대 필드 표시 + 공통 필드             | 구현 완료 |
+| 폼 형식 값       | 라벨      | 설명                                                             | 상태      |
+| ---------------- | --------- | ---------------------------------------------------------------- | --------- |
+| `visit`          | 체험 방문 | 장소/주소/가격대 필드 표시 + 공통 필드                           | 구현 완료 |
 | `product-review` | 제품 리뷰 | 제품 목록(제품명/구매처/구매링크/가격설명/가격) 표시 + 공통 필드 | 구현 완료 |
 
 **공통 필드** (모든 폼 형식에 공유):
@@ -291,26 +291,26 @@ features/auth/
 
 #### 포스트 메타데이터 폼 필드
 
-| 필드         | 입력 타입     | 필수 | DB 컬럼           | 폼 형식    | 비고                                                  |
-| ------------ | ------------- | ---- | ----------------- | ---------- | ----------------------------------------------------- |
-| 제목         | text input    | Y    | `title`           | 공통       | 40자 제한 + 글자수 카운터                             |
-| 설명         | textarea      | Y    | `description`     | 공통       | 3줄 요약 + AI 생성 버튼                               |
-| Slug         | text input    | Y    | `slug`            | 공통       | URL slug, unique. 자동 생성 + 수동 편집 가능 (미구현) |
-| 카테고리     | select        | Y    | `category`        | 공통       | `delicious`, `cafe`, `travel`                         |
-| 서브카테고리 | select        | Y    | `sub_category`    | 공통       | 카테고리에 따라 동적 변경                             |
-| 썸네일       | 이미지 업로드 | Y    | `thumbnail`       | 공통       | WebP 변환, blob URL 미리보기                          |
-| 썸네일 alt   | text input    | Y    | `thumbnail_alt`   | 공통       | SEO용 alt 텍스트, 다국어 번역 파이프라인 연동         |
-| 협찬 여부    | toggle        | N    | `is_sponsored`    | 공통       | 기본값 `false` (미구현)                               |
-| 추천 여부    | toggle        | N    | `is_recommended`  | 공통       | 기본값 `false` (미구현)                               |
-| 다국어 제공  | toggle        | N    | `is_multilingual` | 공통       | 기본값 `true` (미구현)                                |
-| 평점         | number input  | N    | `rating`          | 공통       | 1.0-5.0, 0.5 단위 (미구현)                            |
-| 장소명       | text input    | N    | `place_name`      | visit 전용          | Schema.org `itemReviewed`                             |
-| 주소         | text input    | N    | `address`         | visit 전용          | Schema.org                                            |
-| 가격 접두어  | text input    | N    | `price_prefix[]`  | visit / product 공용 | PriceInputRow 컴포넌트. 배열 (제품별 가격 설명)       |
-| 가격         | number input  | N    | `price[]`         | visit / product 공용 | PriceInputRow 컴포넌트. 배열 (제품별 가격)            |
-| 제품명       | text input    | N    | `product_name[]`  | product 전용        | useFieldArray 동적 행. 배열                           |
-| 구매처       | text input    | N    | `purchase_source[]` | product 전용      | 배열                                                  |
-| 구매 링크    | url input     | N    | `purchase_link[]` | product 전용        | 배열                                                  |
+| 필드         | 입력 타입     | 필수 | DB 컬럼             | 폼 형식              | 비고                                                  |
+| ------------ | ------------- | ---- | ------------------- | -------------------- | ----------------------------------------------------- |
+| 제목         | text input    | Y    | `title`             | 공통                 | 40자 제한 + 글자수 카운터                             |
+| 설명         | textarea      | Y    | `description`       | 공통                 | 3줄 요약 + AI 생성 버튼                               |
+| Slug         | text input    | Y    | `slug`              | 공통                 | URL slug, unique. 자동 생성 + 수동 편집 가능 (미구현) |
+| 카테고리     | select        | Y    | `category`          | 공통                 | `delicious`, `cafe`, `travel`                         |
+| 서브카테고리 | select        | Y    | `sub_category`      | 공통                 | 카테고리에 따라 동적 변경                             |
+| 썸네일       | 이미지 업로드 | Y    | `thumbnail`         | 공통                 | WebP 변환, blob URL 미리보기                          |
+| 썸네일 alt   | text input    | Y    | `thumbnail_alt`     | 공통                 | SEO용 alt 텍스트, 다국어 번역 파이프라인 연동         |
+| 협찬 여부    | toggle        | N    | `is_sponsored`      | 공통                 | 기본값 `false` (미구현)                               |
+| 추천 여부    | toggle        | N    | `is_recommended`    | 공통                 | 기본값 `false` (미구현)                               |
+| 다국어 제공  | toggle        | N    | `is_multilingual`   | 공통                 | 기본값 `true` (미구현)                                |
+| 평점         | number input  | N    | `rating`            | 공통                 | 1.0-5.0, 0.5 단위 (미구현)                            |
+| 장소명       | text input    | N    | `place_name`        | visit 전용           | Schema.org `itemReviewed`                             |
+| 주소         | text input    | N    | `address`           | visit 전용           | Schema.org                                            |
+| 가격 접두어  | text input    | N    | `price_prefix[]`    | visit / product 공용 | PriceInputRow 컴포넌트. 배열 (제품별 가격 설명)       |
+| 가격         | number input  | N    | `price[]`           | visit / product 공용 | PriceInputRow 컴포넌트. 배열 (제품별 가격)            |
+| 제품명       | text input    | N    | `product_name[]`    | product 전용         | useFieldArray 동적 행. 배열                           |
+| 구매처       | text input    | N    | `purchase_source[]` | product 전용         | 배열                                                  |
+| 구매 링크    | url input     | N    | `purchase_link[]`   | product 전용         | 배열                                                  |
 
 #### 카테고리-서브카테고리 매핑
 
@@ -324,17 +324,17 @@ travel (여행)    → domestic (국내), overseas (해외), accommodation (숙�
 
 **Extension 구성** (`features/post-editor/configs/tiptap-extensions.ts`):
 
-| Extension              | 구성                                                                                                                                                                                                                                 | 상태      |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------- |
-| `CustomStarterKit`     | StarterKit에서 `bulletList`, `heading`, `codeBlock`, `code` 비활성화. listItem, blockquote, bold, italic, strike, orderedList, horizontalRule에 인라인 스타일 적용                                                                   | 구현 완료 |
-| `CustomBulletList`     | `list-style-position: outside; list-style-type: revert;`                                                                                                                                                                             | 구현 완료 |
-| `CustomHeading`        | h2-h6 지원 (h1 비활성화). 레벨별 font-size/line-height/font-weight/color/margin 인라인 스타일. Markdown 입력 규칙 (`## ` ~ `###### `)                                                                                                | 구현 완료 |
-| `CustomLink`           | `openOnClick: false`. 색상 `#5e83fe`, 밑줄, URL `https?://` 검증                                                                                                                                                                     | 구현 완료 |
-| `CustomUnderline`      | `class="underline"` 적용                                                                                                                                                                                                             | 구현 완료 |
-| `CustomResizableImage` | `@tiptap/extension-image` 기반 커스텀 확장. DOM NodeView로 4코너 리사이즈 핸들 구현. 드래그로 에디터 너비 대비 % 단위 리사이즈. `style` 속성에 `width: X%` 저장. HTML `width`/`height` 속성으로 실제 이미지 치수 출력 (CLS 방지). `inline: true` | 구현 완료 |
+| Extension              | 구성                                                                                                                                                                                                                                                             | 상태      |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
+| `CustomStarterKit`     | StarterKit에서 `bulletList`, `heading`, `codeBlock`, `code` 비활성화. listItem, blockquote, bold, italic, strike, orderedList, horizontalRule에 인라인 스타일 적용                                                                                               | 구현 완료 |
+| `CustomBulletList`     | `list-style-position: outside; list-style-type: revert;`                                                                                                                                                                                                         | 구현 완료 |
+| `CustomHeading`        | h2-h6 지원 (h1 비활성화). 레벨별 font-size/line-height/font-weight/color/margin 인라인 스타일. Markdown 입력 규칙 (`## ` ~ `###### `)                                                                                                                            | 구현 완료 |
+| `CustomLink`           | `openOnClick: false`. 색상 `#5e83fe`, 밑줄, URL `https?://` 검증                                                                                                                                                                                                 | 구현 완료 |
+| `CustomUnderline`      | `class="underline"` 적용                                                                                                                                                                                                                                         | 구현 완료 |
+| `CustomResizableImage` | `@tiptap/extension-image` 기반 커스텀 확장. DOM NodeView로 4코너 리사이즈 핸들 구현. 드래그로 에디터 너비 대비 % 단위 리사이즈. `style` 속성에 `width: X%` 저장. HTML `width`/`height` 속성으로 실제 이미지 치수 출력 (CLS 방지). `inline: true`                 | 구현 완료 |
 | `CustomLinkBookmark`   | `@tiptap/core` Node 확장. OG 태그 기반 북마크 카드. `<aside data-type="link-bookmark">` HTML 출력. `data-url/title/description/image/favicon` 속성. DOM NodeView로 에디터 내 카드 미리보기 + 선택 outline. URL 붙여넣기 시 `LinkPastePopup`으로 링크/북마크 선택 | 구현 완료 |
-| `CustomTable`          | `@tiptap/extension-table` 기반. 리사이즈 가능. border-collapse 스타일                                                                                                                                                                | 구현 완료 |
-| `Placeholder`          | 빈 에디터 placeholder 텍스트                                                                                                                                                                                                         | 미구현    |
+| `CustomTable`          | `@tiptap/extension-table` 기반. 리사이즈 가능. border-collapse 스타일                                                                                                                                                                                            | 구현 완료 |
+| `Placeholder`          | 빈 에디터 placeholder 텍스트                                                                                                                                                                                                                                     | 미구현    |
 
 **에디터 출력 포맷**: HTML 문자열 (인라인 스타일 포함). DB `content` 컬럼에 HTML로 저장.
 
@@ -342,24 +342,24 @@ travel (여행)    → domestic (국내), overseas (해외), accommodation (숙�
 
 **HTML 출력 인라인 스타일 상세**:
 
-| 요소                  | 인라인 스타일                                                                                                                                            |
-| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Bold (`<strong>`)     | `font-family: inherit;`                                                                                                                                  |
-| Italic (`<em>`)       | `font-family: inherit;`                                                                                                                                  |
-| Strikethrough (`<s>`) | `font-family: inherit;`                                                                                                                                  |
-| Underline (`<u>`)     | `class="underline"` (Tailwind 유틸리티)                                                                                                                  |
-| Heading h2            | `font-size: 22px; line-height: 30px; font-weight: 600; color: #111827; margin: 1rem 0 0.5rem 0;`                                                         |
-| Heading h3            | `font-size: 20px; line-height: 28px; font-weight: 600; color: #111827; margin: 0.875rem 0 0.5rem 0;`                                                     |
-| Heading h4            | `font-size: 18px; line-height: 26px; font-weight: 600; color: #111827; margin: 0.75rem 0 0.5rem 0;`                                                      |
-| Heading h5            | `font-size: 16px; line-height: 24px; font-weight: 600; color: #111827; margin: 0.625rem 0 0.5rem 0;`                                                     |
-| Heading h6            | `font-size: 14px; line-height: 20px; font-weight: 600; color: #111827; margin: 0.5rem 0 0.5rem 0;`                                                       |
-| Link (`<a>`)          | `color: #5e83fe; text-decoration: underline; text-underline-offset: 2px; cursor: pointer;`                                                               |
-| BulletList (`<ul>`)   | `list-style-position: outside; list-style-type: revert;`                                                                                                 |
-| OrderedList (`<ol>`)  | `list-style-position: outside;`                                                                                                                          |
-| ListItem (`<li>`)     | `margin: 0; padding: 0; list-style-type: revert; margin-left: 22px;`                                                                                     |
-| Blockquote            | `padding-left: 17px; border-left: 3px solid #ddd; color: #555;`                                                                                          |
+| 요소                  | 인라인 스타일                                                                                                                                                                                                             |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Bold (`<strong>`)     | `font-family: inherit;`                                                                                                                                                                                                   |
+| Italic (`<em>`)       | `font-family: inherit;`                                                                                                                                                                                                   |
+| Strikethrough (`<s>`) | `font-family: inherit;`                                                                                                                                                                                                   |
+| Underline (`<u>`)     | `class="underline"` (Tailwind 유틸리티)                                                                                                                                                                                   |
+| Heading h2            | `font-size: 22px; line-height: 30px; font-weight: 600; color: #111827; margin: 1rem 0 0.5rem 0;`                                                                                                                          |
+| Heading h3            | `font-size: 20px; line-height: 28px; font-weight: 600; color: #111827; margin: 0.875rem 0 0.5rem 0;`                                                                                                                      |
+| Heading h4            | `font-size: 18px; line-height: 26px; font-weight: 600; color: #111827; margin: 0.75rem 0 0.5rem 0;`                                                                                                                       |
+| Heading h5            | `font-size: 16px; line-height: 24px; font-weight: 600; color: #111827; margin: 0.625rem 0 0.5rem 0;`                                                                                                                      |
+| Heading h6            | `font-size: 14px; line-height: 20px; font-weight: 600; color: #111827; margin: 0.5rem 0 0.5rem 0;`                                                                                                                        |
+| Link (`<a>`)          | `color: #5e83fe; text-decoration: underline; text-underline-offset: 2px; cursor: pointer;`                                                                                                                                |
+| BulletList (`<ul>`)   | `list-style-position: outside; list-style-type: revert;`                                                                                                                                                                  |
+| OrderedList (`<ol>`)  | `list-style-position: outside;`                                                                                                                                                                                           |
+| ListItem (`<li>`)     | `margin: 0; padding: 0; list-style-type: revert; margin-left: 22px;`                                                                                                                                                      |
+| Blockquote            | `padding-left: 17px; border-left: 3px solid #ddd; color: #555;`                                                                                                                                                           |
 | Image (`<img>`)       | `style="width: X%; height: auto;"` (X는 에디터 너비 대비 퍼센트, 기본값 100%). HTML `width`/`height` 속성으로 리사이즈(688px) 이미지의 실제 치수를 출력 (CLS 방지). CSS `width: 100%; height: auto;`와 조합하여 비율 유지 |
-| HorizontalRule        | `margin: 16px 0;`                                                                                                                                        |
+| HorizontalRule        | `margin: 16px 0;`                                                                                                                                                                                                         |
 
 **ProseMirror CSS** (`globals.css`에 추가됨 -- 에디터 내부 전용):
 
@@ -409,7 +409,7 @@ travel (여행)    → domestic (국내), overseas (해외), accommodation (숙�
 - **허용 포맷**: jpeg, png, jpg, gif, webp
 - **리사이즈**: 이미지 클릭 시 4코너에 파란색 리사이즈 핸들 표시. 핸들 드래그로 에디터 `.ProseMirror` 너비 대비 % 단위 리사이즈 (최소 50px, 최대 에디터 너비). 선택 시 파선 테두리(`1px dashed #4a90d9`) 표시.
 - **HTML 출력**: `<img style="width: X%; height: auto;" src="..." width="W" height="H" />` (X는 에디터 너비 대비 퍼센트, 기본값 100%). HTML `width`/`height` 속성에 리사이즈(688px) 이미지의 실제 치수를 기록하여 CLS 방지. `style`에 `height: auto`가 없으면 자동 추가 (세로 이미지 비율 보존)
-- **현재 제한**: 드래그앤드롭/붙여넣기 이미지 처리 미구현. 이미지 크롭 미구현.
+- **현재 제한**: 드래그앤드롭/붙여넣기 이미지 처리 미구현.
 
 **에디터 페이지 구성** (`/posts/new`):
 
@@ -534,6 +534,14 @@ react-hook-form + Zod 기반 폼 검증. "작성 완료" / "번역본 생성하�
 - Tiptap 에디터에서는 이미지를 개별 노드로 삽입/삭제/순서 변경만 관리.
 - Client(Astro) 렌더링 시 HTML 내 연속 `<img>` 태그를 감지하여 CSS snap 갤러리(`scroll-snap-type: x mandatory`)로 자동 변환.
 - Admin 에디터에서는 별도의 갤러리 UI를 구현하지 않는다. 이미지를 순서대로 삽입하면 Client에서 갤러리로 표시됨.
+
+#### 캐러셀 이미지 크롭 (image-carousel.ts)
+
+- **크롭 비율 저장 방식**: 캐러셀 이미지 리사이즈(크롭) 시 높이를 고정 `px` 값 대신 `ratio:X.XXXX` 형식의 aspect-ratio 비율로 저장한다.
+  - 예: `height: "ratio:0.7500"` → `aspect-ratio: 0.7500; object-fit: cover; height: auto;`로 렌더링
+  - 고정 px로 저장하면 모바일 너비 변화 시 비율이 깨지는 문제를 방지
+- **HTML 출력**: `<img style="width: X%; aspect-ratio: R; object-fit: cover; height: auto;" ...>`
+- **기존 포맷 하위 호환**: `height: auto` (비크롭)와 `height: Npx` (기존 고정 px) 모두 정상 처리
 
 #### Server Action vs CSR 구분
 
@@ -774,19 +782,19 @@ features/media/
 
 #### 기능 요구사항
 
-| ID   | 요구사항                                                         | 우선순위 |
-| ---- | ---------------------------------------------------------------- | -------- |
-| TR-1 | GPT-5 Mini 번역 호출 (Server Action에서 언어별 병렬 호출)        | P0       |
-| TR-2 | 번역 대상 locale 7개: en, ja, zh-CN, zh-TW, id, vi, th           | P0       |
-| TR-3 | 번역 대상 필드: title, description, content, place_name, address | P0       |
-| TR-4 | 번역 진행 상태 표시 (locale별 진행/완료/실패)                    | P0       |
-| TR-5 | 번역 결과 `post_translations` 테이블에 저장                      | P0       |
-| TR-6 | `is_multilingual === false`이면 번역 스킵                        | P0       |
-| TR-7 | 번역 재시도 (실패 시)                                            | P1       |
-| TR-8 | 개별 locale 번역 실행 (선택적 재번역)                            | P2       |
-| TR-9 | 섹션 기반 선택적 번역 — 본문 HTML을 top-level 블록 노드 단위로 분할, 체크된 필드/섹션만 GPT 요청 (output 토큰 비용 절감) | P0 |
-| TR-10 | 체크박스 시스템 — 전체 선택, 본문 부모 indeterminate, 개별 필드/섹션 체크 (`useTranslationCheckState` 훅) | P0 |
-| TR-11 | 선택적 번역 결과 머지 — `content_sections` 형식 응답을 기존 번역 content에 섹션별 교체 (`mergeSelectiveResult`) | P0 |
+| ID    | 요구사항                                                                                                                 | 우선순위 |
+| ----- | ------------------------------------------------------------------------------------------------------------------------ | -------- |
+| TR-1  | GPT-5 Mini 번역 호출 (Server Action에서 언어별 병렬 호출)                                                                | P0       |
+| TR-2  | 번역 대상 locale 7개: en, ja, zh-CN, zh-TW, id, vi, th                                                                   | P0       |
+| TR-3  | 번역 대상 필드: title, description, content, place_name, address                                                         | P0       |
+| TR-4  | 번역 진행 상태 표시 (locale별 진행/완료/실패)                                                                            | P0       |
+| TR-5  | 번역 결과 `post_translations` 테이블에 저장                                                                              | P0       |
+| TR-6  | `is_multilingual === false`이면 번역 스킵                                                                                | P0       |
+| TR-7  | 번역 재시도 (실패 시)                                                                                                    | P1       |
+| TR-8  | 개별 locale 번역 실행 (선택적 재번역)                                                                                    | P2       |
+| TR-9  | 섹션 기반 선택적 번역 — 본문 HTML을 top-level 블록 노드 단위로 분할, 체크된 필드/섹션만 GPT 요청 (output 토큰 비용 절감) | P0       |
+| TR-10 | 체크박스 시스템 — 전체 선택, 본문 부모 indeterminate, 개별 필드/섹션 체크 (`useTranslationCheckState` 훅)                | P0       |
+| TR-11 | 선택적 번역 결과 머지 — `content_sections` 형식 응답을 기존 번역 content에 섹션별 교체 (`mergeSelectiveResult`)          | P0       |
 
 #### GPT 번역 Flow (브라우저 직접 호출)
 
@@ -1066,18 +1074,18 @@ features/build-trigger/
 
 #### 기능 요구사항
 
-| ID    | 요구사항                                                 | 우선순위 | 상태                    |
-| ----- | -------------------------------------------------------- | -------- | ----------------------- |
-| CM-1  | 카테고리 목록 테이블 (대분류-소분류 그룹 구조)           | P0       | 구현 완료               |
-| CM-2  | 검색 필터 (카테고리명 검색 -- SearchFilter.Query만 사용) | P1       | 구현 완료               |
-| CM-3  | 새 카테고리 생성 버튼 + 생성 페이지                      | P1       | 구현 완료               |
-| CM-4  | 다국어 지원 여부 표시 (대분류 + 소분류 모두)             | P2       | 구현 완료               |
-| CM-5  | 카테고리 수정 페이지 (대분류/소분류 모두)                | P0       | 미구현                  |
-| CM-6  | 수정 진입점 -- 테이블 카테고리명 하이퍼링크              | P0       | 미구현                  |
-| CM-7  | slug 변경 경고 모달                                      | P0       | 미구현                  |
-| CM-8  | 카테고리명만 변경 확인 모달                              | P0       | 미구현                  |
-| CM-9  | 다국어 지원 체크박스 수정 불가 (disabled)                | P0       | 미구현                  |
-| CM-10 | 생성 페이지 다국어 체크박스 클릭 시 경고 토스트          | P1       | 미구현                  |
+| ID    | 요구사항                                                 | 우선순위 | 상태      |
+| ----- | -------------------------------------------------------- | -------- | --------- |
+| CM-1  | 카테고리 목록 테이블 (대분류-소분류 그룹 구조)           | P0       | 구현 완료 |
+| CM-2  | 검색 필터 (카테고리명 검색 -- SearchFilter.Query만 사용) | P1       | 구현 완료 |
+| CM-3  | 새 카테고리 생성 버튼 + 생성 페이지                      | P1       | 구현 완료 |
+| CM-4  | 다국어 지원 여부 표시 (대분류 + 소분류 모두)             | P2       | 구현 완료 |
+| CM-5  | 카테고리 수정 페이지 (대분류/소분류 모두)                | P0       | 미구현    |
+| CM-6  | 수정 진입점 -- 테이블 카테고리명 하이퍼링크              | P0       | 미구현    |
+| CM-7  | slug 변경 경고 모달                                      | P0       | 미구현    |
+| CM-8  | 카테고리명만 변경 확인 모달                              | P0       | 미구현    |
+| CM-9  | 다국어 지원 체크박스 수정 불가 (disabled)                | P0       | 미구현    |
+| CM-10 | 생성 페이지 다국어 체크박스 클릭 시 경고 토스트          | P1       | 미구현    |
 
 #### 카테고리 목록 페이지 (`/categories`) -- 구현 완료
 
@@ -1640,23 +1648,23 @@ src/features/
 
 ## 10. 구현 순서
 
-| Phase | Feature             | 작업                                                                                                 | 우선순위 | 상태                                                             |
-| ----- | ------------------- | ---------------------------------------------------------------------------------------------------- | -------- | ---------------------------------------------------------------- |
-| 1     | shared + infra      | Supabase 클라이언트, 타입 정의, HTTPS 로컬 dev 서버, 사이드바, 핵심 지표 페이지 (mock), SearchFilter | P0       | **완료**                                                         |
-| 2     | auth                | 로그인/로그아웃, 인증 가드                                                                           | P0       | 미착수                                                           |
-| 3     | post-editor         | Tiptap 에디터, 폼 형식, 메타 폼, 썸네일, 카테고리, 체험방문 필드, 3줄 요약, 포스트 저장(생성)        | P0       | **에디터 + 폼 형식 + 메타 폼 구현 완료** (저장/S3 업로드 미구현) |
-| 3-1   | translation         | 고유명사 추출, GPT-5 Mini 번역 실행 (병렬), 미리보기 Sheet, 실패 fallback, locale 재시도             | P0       | **구현 완료** (DB 저장 미연동)                                   |
-| 4     | media               | Pre-signed URL, S3 업로드, 에디터 이미지 삽입                                                        | P0       | 미착수                                                           |
-| 5     | post-management     | 게시글 목록, 삭제                                                                                    | P0       | **목록 구현 완료** (삭제 미구현)                                 |
-| 5-1   | shared (리팩토링)   | SearchFilter 컴파운드 컴포넌트 리팩토링 + Pagination 공유 컴포넌트 구현                              | P0       | 미착수                                                           |
+| Phase | Feature             | 작업                                                                                                            | 우선순위 | 상태                                                             |
+| ----- | ------------------- | --------------------------------------------------------------------------------------------------------------- | -------- | ---------------------------------------------------------------- |
+| 1     | shared + infra      | Supabase 클라이언트, 타입 정의, HTTPS 로컬 dev 서버, 사이드바, 핵심 지표 페이지 (mock), SearchFilter            | P0       | **완료**                                                         |
+| 2     | auth                | 로그인/로그아웃, 인증 가드                                                                                      | P0       | 미착수                                                           |
+| 3     | post-editor         | Tiptap 에디터, 폼 형식, 메타 폼, 썸네일, 카테고리, 체험방문 필드, 3줄 요약, 포스트 저장(생성)                   | P0       | **에디터 + 폼 형식 + 메타 폼 구현 완료** (저장/S3 업로드 미구현) |
+| 3-1   | translation         | 고유명사 추출, GPT-5 Mini 번역 실행 (병렬), 미리보기 Sheet, 실패 fallback, locale 재시도                        | P0       | **구현 완료** (DB 저장 미연동)                                   |
+| 4     | media               | Pre-signed URL, S3 업로드, 에디터 이미지 삽입                                                                   | P0       | 미착수                                                           |
+| 5     | post-management     | 게시글 목록, 삭제                                                                                               | P0       | **목록 구현 완료** (삭제 미구현)                                 |
+| 5-1   | shared (리팩토링)   | SearchFilter 컴파운드 컴포넌트 리팩토링 + Pagination 공유 컴포넌트 구현                                         | P0       | 미착수                                                           |
 | 5-2   | category-management | 카테고리 관리 페이지 (`/categories`) — 검색 + 그룹 테이블 + DB 연동 + 대분류 다국어 표시 + 소분류 다국어 정합성 | P1       | **구현 완료**                                                    |
-| 5-3   | post-management     | `/posts` + `/` 페이지에 Pagination 적용 (pageSize 10, URL `page` 쿼리 연동)                          | P0       | 미착수                                                           |
-| 6     | post-editor         | 포스트 편집 (기존 데이터 로드 + 수정)                                                                | P0       | 미착수                                                           |
-| 7     | translation (완성)  | 번역 결과 DB 저장 (post_translations UPSERT)                                                         | P0       | 미착수                                                           |
-| 8     | build-trigger       | GitHub Actions 자동 트리거 (`triggerClientBuild()` + 기존 Server Action 연동)                        | P1       | 미착수                                                           |
-| 9     | post-editor         | 이미지 순서 변경, rating 입력                                                                        | P1       | 미착수                                                           |
-| 10    | post-management     | 필터링, 검색                                                                                         | P2       | 미착수                                                           |
-| 11    | metrics             | GA4 API 연동 (mock → 실제 데이터)                                                                    | P2       | 미착수                                                           |
+| 5-3   | post-management     | `/posts` + `/` 페이지에 Pagination 적용 (pageSize 10, URL `page` 쿼리 연동)                                     | P0       | 미착수                                                           |
+| 6     | post-editor         | 포스트 편집 (기존 데이터 로드 + 수정)                                                                           | P0       | 미착수                                                           |
+| 7     | translation (완성)  | 번역 결과 DB 저장 (post_translations UPSERT)                                                                    | P0       | 미착수                                                           |
+| 8     | build-trigger       | GitHub Actions 자동 트리거 (`triggerClientBuild()` + 기존 Server Action 연동)                                   | P1       | 미착수                                                           |
+| 9     | post-editor         | 이미지 순서 변경, rating 입력                                                                                   | P1       | 미착수                                                           |
+| 10    | post-management     | 필터링, 검색                                                                                                    | P2       | 미착수                                                           |
+| 11    | metrics             | GA4 API 연동 (mock → 실제 데이터)                                                                               | P2       | 미착수                                                           |
 
 ---
 

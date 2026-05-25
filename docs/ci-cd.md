@@ -140,23 +140,32 @@ Job: deploy
 파일 유형별 `Cache-Control` 분리 배포:
 
 ```yaml
-- name: Deploy to S3 (HTML — no-cache)
+- name: Deploy to S3 (HTML + ads.txt — no-cache)
   run: |
     aws s3 sync apps/client/dist/ s3://${{ env.S3_BUCKET }} \
-      --exclude "*" --include "*.html" \
+      --exclude "*" --include "*.html" --include "ads.txt" \
       --cache-control "no-cache" \
       --delete
 
 - name: Deploy to S3 (static assets — long cache)
   run: |
     aws s3 sync apps/client/dist/ s3://${{ env.S3_BUCKET }} \
-      --exclude "*.html" \
+      --exclude "*.html" --exclude "ads.txt" \
       --cache-control "public, max-age=31536000, immutable" \
       --delete
+
+- name: Deploy feed JSON (no-cache)
+  run: |
+    if [ -d "apps/client/dist/api/feed/" ]; then
+      aws s3 sync apps/client/dist/api/feed/ s3://${{ env.S3_BUCKET }}/api/feed/ \
+        --cache-control "no-cache" \
+        --delete
+    fi
 ```
 
-- **HTML** (`no-cache`): 브라우저가 매번 서버에 재검증. SSG 빌드마다 내용이 바뀌므로 장기 캐시하면 안 됨.
+- **HTML + ads.txt** (`no-cache`): 브라우저가 매번 서버에 재검증. SSG 빌드마다 내용이 바뀌므로 장기 캐시하면 안 됨. ads.txt는 Google 크롤러가 주기적으로 재검증하므로 no-cache 필수.
 - **정적 에셋** (`max-age=1년, immutable`): Astro가 파일명에 해시를 포함하므로 내용 변경 시 URL이 바뀜. 장기 캐시 안전.
+- **feed JSON** (`no-cache`): 무한스크롤 추가 로드에 사용되는 JSON 피드. 브라우저 stale 캐시 방지. `if [ -d ... ]` 조건으로 디렉토리 미존재 시 스텝 skip.
 - `--delete`: S3에 있지만 로컬 dist에 없는 파일 삭제. 이전 빌드의 잔여 파일 정리.
 
 #### Step 9: Invalidate CloudFront cache
