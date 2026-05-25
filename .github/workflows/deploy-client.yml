@@ -68,10 +68,10 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-northeast-2
 
-      - name: Deploy to S3 (HTML — no-cache)
+      - name: Deploy to S3 (HTML + ads.txt — no-cache)
         run: |
           aws s3 sync apps/client/dist/ s3://${{ env.S3_BUCKET }} \
-            --exclude "*" --include "*.html" \
+            --exclude "*" --include "*.html" --include "ads.txt" \
             --cache-control "no-cache" \
             --delete
 
@@ -87,6 +87,7 @@ jobs:
         run: |
           aws s3 sync apps/client/dist/ s3://${{ env.S3_BUCKET }} \
             --exclude "*.html" \
+            --exclude "ads.txt" \
             --exclude "api/feed/*" \
             --cache-control "public, max-age=31536000, immutable" \
             --delete
