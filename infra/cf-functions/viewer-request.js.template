@@ -8,6 +8,15 @@ var LOCALES = ['en', 'ja', 'zh-CN', 'zh-TW', 'id', 'vi', 'th'];
 function handler(event) {
   var request = event.request;
   var uri = request.uri;
+  var host = request.headers.host && request.headers.host.value;
+
+  if (host === 'eunminlog.site') {
+    return {
+      statusCode: 301,
+      statusDescription: 'Moved Permanently',
+      headers: { location: { value: 'https://www.eunminlog.site' + uri } },
+    };
+  }
 
   var parts = uri.split('/').filter(function (p) {
     return p !== '';
