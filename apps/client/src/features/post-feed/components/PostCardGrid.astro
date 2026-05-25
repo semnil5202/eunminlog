@@ -230,8 +230,6 @@ for (let i = 0; i < posts.length; i++) {
 
   const skeletonCard = `<div class="animate-pulse max-w-[640px] max-h-[404px] lg:max-w-none lg:max-h-none"><div class="w-full aspect-7/3 bg-gray-200"></div><div class="mt-4 flex flex-col gap-2"><div class="h-5 bg-gray-200 rounded w-3/4"></div><div class="h-4 bg-gray-200 rounded w-full"></div><div class="h-4 bg-gray-200 rounded w-2/3"></div><div class="flex items-center gap-1.5"><div class="h-3 bg-gray-200 rounded w-20"></div><div class="h-3 bg-gray-200 rounded w-16"></div><div class="h-3 bg-gray-200 rounded w-12"></div></div></div></div>`;
 
-  const subCategoryTabSkeleton = `<nav class="block lg:hidden -mx-4 mb-4 border-b border-gray-200"><div class="flex items-center gap-4 px-4 pt-2 pb-3.5 animate-pulse"><div class="h-[22px] bg-gray-200 rounded-md w-11 shrink-0"></div><div class="h-[22px] bg-gray-200 rounded-md w-11 shrink-0"></div><div class="h-[22px] bg-gray-200 rounded-md w-11 shrink-0"></div><div class="h-[22px] bg-gray-200 rounded-md w-11 shrink-0"></div></div></nav>`;
-
   if (feed) {
     document.addEventListener("click", (e) => {
       const link = (e.target as HTMLElement).closest<HTMLAnchorElement>(
@@ -241,13 +239,6 @@ for (let i = 0; i < posts.length; i++) {
 
       e.preventDefault();
       if (sentinel) sentinel.classList.add("hidden");
-
-      const subCategoryNav = feed.previousElementSibling;
-      if (subCategoryNav?.tagName === "NAV") {
-        subCategoryNav.outerHTML = subCategoryTabSkeleton;
-      } else {
-        feed.insertAdjacentHTML("beforebegin", subCategoryTabSkeleton);
-      }
 
       feed.style.width = `${feed.offsetWidth}px`;
       feed.innerHTML = skeletonCard + skeletonCard + skeletonCard;
