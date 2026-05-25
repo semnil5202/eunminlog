@@ -270,14 +270,14 @@
 #### `ProductInfoCard.astro`
 
 - **위치**: `features/post-detail/components/ProductInfoCard.astro`
-- Props: `categoryLabel`, `subCategoryLabel`, `productNames` (`string[]`), `translatedProductNames?`, `purchaseSources` (`string[]`), `translatedPurchaseSources?`, `purchaseLinks` (`string[]`), `prices?` (`number[]`), `pricePrefixes?` (`string[]`), `translatedPricePrefixes?`, `description`, `locale`
+- Props: `categoryLabel`, `subCategoryLabel`, `productNames` (`string[]`), `translatedProductNames?`, `purchaseSources` (`string[]`), `translatedPurchaseSources?`, `purchaseLinks` (`string[]`), `prices?` (`number[]`), `pricePrefixes?` (`string[]`), `translatedPricePrefixes?`, `description`, `isCoupangPartners`, `locale`
 - Schema.org `Product` 마이크로데이터 포함
 - `border-radius` 없음 (`bg-gray-50 border border-gray-200 p-5 mb-6`)
 - `<dl>` 기반 키-값 레이아웃: 카테고리, 제품별(제품명/구매처/가격), 3줄 요약
 - **제품 2개 이상**: PC 2열 그리드 (`grid-cols-1 lg:grid-cols-2`), `border-t border-b border-gray-200 py-3` 구분선
 - **제품 1개**: 심플 레이아웃 (그리드/보더 없음)
 - 제품명: `translatedProductNames` 우선 표시, `font-semibold`, `itemprop="name"`
-- 구매처: 텍스트 + 구매 링크가 있으면 외부 링크 아이콘 (`target="_blank" rel="noopener noreferrer"`)
+- 구매처: 텍스트 + 구매 링크가 있으면 외부 링크 아이콘. `isCoupangPartners`이면 `rel="sponsored noopener noreferrer"`, 아니면 `rel="noopener noreferrer"`
 - 가격 표시: `pricePrefix + price.toLocaleString() + '원'` 조합 (한국 원화 단위 명시)
 - dt 라벨 폭: 제품 섹션 내부 `w-16` (64px), 카테고리/요약 `w-20` (80px)
 - 필드 라벨 i18n: `place.category`, `product.name`, `product.source`, `place.price`, `post.summary`

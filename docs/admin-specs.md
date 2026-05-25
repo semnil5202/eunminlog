@@ -278,6 +278,7 @@ features/auth/
 | PE-7A | slug 변경 경고 모달 (게시글 수정 시 slug 변경 시 표시). 상세: Section 4-2-A, redirect-specs.md | P0       | 미구현               |
 | PE-8  | is_multilingual 토글 (기본값 `true`)                                                           | P0       | 미구현               |
 | PE-9  | is_sponsored / is_recommended 토글                                                             | P0       | 미구현               |
+| PE-9A | is_coupang_partners 체크박스 (제품 리뷰 폼 전용, 제품 목록 우측 배치)                          | P0       | 구현 완료            |
 | PE-10 | rating 입력 (1.0-5.0, 0.5 단위)                                                                | P1       | 미구현               |
 | PE-11 | place_name, address, price_prefix, price 입력 (체험 방문 전용)                                 | P1       | 구현 완료            |
 | PE-12 | 3줄 요약 AI 생성 (Server Action, GPT-5 Mini)                                                   | P0       | 구현 완료            |
@@ -291,26 +292,27 @@ features/auth/
 
 #### 포스트 메타데이터 폼 필드
 
-| 필드         | 입력 타입     | 필수 | DB 컬럼             | 폼 형식              | 비고                                                  |
-| ------------ | ------------- | ---- | ------------------- | -------------------- | ----------------------------------------------------- |
-| 제목         | text input    | Y    | `title`             | 공통                 | 40자 제한 + 글자수 카운터                             |
-| 설명         | textarea      | Y    | `description`       | 공통                 | 3줄 요약 + AI 생성 버튼                               |
-| Slug         | text input    | Y    | `slug`              | 공통                 | URL slug, unique. 자동 생성 + 수동 편집 가능 (미구현) |
-| 카테고리     | select        | Y    | `category`          | 공통                 | `delicious`, `cafe`, `travel`                         |
-| 서브카테고리 | select        | Y    | `sub_category`      | 공통                 | 카테고리에 따라 동적 변경                             |
-| 썸네일       | 이미지 업로드 | Y    | `thumbnail`         | 공통                 | WebP 변환, blob URL 미리보기                          |
-| 썸네일 alt   | text input    | Y    | `thumbnail_alt`     | 공통                 | SEO용 alt 텍스트, 다국어 번역 파이프라인 연동         |
-| 협찬 여부    | toggle        | N    | `is_sponsored`      | 공통                 | 기본값 `false` (미구현)                               |
-| 추천 여부    | toggle        | N    | `is_recommended`    | 공통                 | 기본값 `false` (미구현)                               |
-| 다국어 제공  | toggle        | N    | `is_multilingual`   | 공통                 | 기본값 `true` (미구현)                                |
-| 평점         | number input  | N    | `rating`            | 공통                 | 1.0-5.0, 0.5 단위 (미구현)                            |
-| 장소명       | text input    | N    | `place_name`        | visit 전용           | Schema.org `itemReviewed`                             |
-| 주소         | text input    | N    | `address`           | visit 전용           | Schema.org                                            |
-| 가격 접두어  | text input    | N    | `price_prefix[]`    | visit / product 공용 | PriceInputRow 컴포넌트. 배열 (제품별 가격 설명)       |
-| 가격         | number input  | N    | `price[]`           | visit / product 공용 | PriceInputRow 컴포넌트. 배열 (제품별 가격)            |
-| 제품명       | text input    | N    | `product_name[]`    | product 전용         | useFieldArray 동적 행. 배열                           |
-| 구매처       | text input    | N    | `purchase_source[]` | product 전용         | 배열                                                  |
-| 구매 링크    | url input     | N    | `purchase_link[]`   | product 전용         | 배열                                                  |
+| 필드          | 입력 타입     | 필수 | DB 컬럼               | 폼 형식              | 비고                                                  |
+| ------------- | ------------- | ---- | --------------------- | -------------------- | ----------------------------------------------------- |
+| 제목          | text input    | Y    | `title`               | 공통                 | 40자 제한 + 글자수 카운터                             |
+| 설명          | textarea      | Y    | `description`         | 공통                 | 3줄 요약 + AI 생성 버튼                               |
+| Slug          | text input    | Y    | `slug`                | 공통                 | URL slug, unique. 자동 생성 + 수동 편집 가능 (미구현) |
+| 카테고리      | select        | Y    | `category`            | 공통                 | `delicious`, `cafe`, `travel`                         |
+| 서브카테고리  | select        | Y    | `sub_category`        | 공통                 | 카테고리에 따라 동적 변경                             |
+| 썸네일        | 이미지 업로드 | Y    | `thumbnail`           | 공통                 | WebP 변환, blob URL 미리보기                          |
+| 썸네일 alt    | text input    | Y    | `thumbnail_alt`       | 공통                 | SEO용 alt 텍스트, 다국어 번역 파이프라인 연동         |
+| 협찬 여부     | toggle        | N    | `is_sponsored`        | 공통                 | 기본값 `false` (미구현)                               |
+| 쿠팡 파트너스 | checkbox      | N    | `is_coupang_partners` | product-review 전용  | 기본값 `false`. 제품 목록 라벨 우측 배치              |
+| 추천 여부     | toggle        | N    | `is_recommended`      | 공통                 | 기본값 `false` (미구현)                               |
+| 다국어 제공   | toggle        | N    | `is_multilingual`     | 공통                 | 기본값 `true` (미구현)                                |
+| 평점          | number input  | N    | `rating`              | 공통                 | 1.0-5.0, 0.5 단위 (미구현)                            |
+| 장소명        | text input    | N    | `place_name`          | visit 전용           | Schema.org `itemReviewed`                             |
+| 주소          | text input    | N    | `address`             | visit 전용           | Schema.org                                            |
+| 가격 접두어   | text input    | N    | `price_prefix[]`      | visit / product 공용 | PriceInputRow 컴포넌트. 배열 (제품별 가격 설명)       |
+| 가격          | number input  | N    | `price[]`             | visit / product 공용 | PriceInputRow 컴포넌트. 배열 (제품별 가격)            |
+| 제품명        | text input    | N    | `product_name[]`      | product 전용         | useFieldArray 동적 행. 배열                           |
+| 구매처        | text input    | N    | `purchase_source[]`   | product 전용         | 배열                                                  |
+| 구매 링크     | url input     | N    | `purchase_link[]`     | product 전용         | 배열                                                  |
 
 #### 카테고리-서브카테고리 매핑
 
