@@ -75,11 +75,17 @@ const webSiteSchema: Record<string, unknown> = {
       gtag('config', GA_MEASUREMENT_ID, gaPageParams);
     </script>
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8569467907518315" crossorigin="anonymous"></script>
-    <script async src="https://wcs.pstatic.net/wcslog.js"></script>
     <script is:inline>
-      if (!window.wcs_add) window.wcs_add = {};
-      wcs_add["wa"] = "c8876b6e46c848";
-      if (window.wcs) wcs_do();
+      window.addEventListener('DOMContentLoaded', function() {
+        var script = document.createElement('script');
+        script.src = 'https://wcs.pstatic.net/wcslog.js';
+        script.onload = function() {
+          if (!window.wcs_add) window.wcs_add = {};
+          wcs_add["wa"] = "c8876b6e46c848";
+          if (window.wcs) wcs_do();
+        };
+        document.head.appendChild(script);
+      });
     </script>
   </head>
   <body class="flex min-h-screen flex-col bg-white text-gray-900 antialiased font-pretendard">
