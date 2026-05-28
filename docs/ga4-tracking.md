@@ -19,7 +19,7 @@
 
 - **Astro 5 SSG**: 서버 런타임 없음. 모든 트래킹은 클라이언트 JavaScript로 처리.
 - **gtag.js 지연 로딩**: `Layout.astro`에서 첫 사용자 인터랙션(scroll/click/touchstart/keydown) 후 동적 삽입. `dataLayer`와 `gtag()` 함수는 즉시 선언되어 인터랙션 전 호출도 큐에 쌓이고 스크립트 로딩 후 일괄 처리됨.
-- **애드센스 스크립트 설치 완료**: `Layout.astro`의 `<head>`에 `adsbygoogle.js` 스크립트 태그가 추가되어 있다.
+- **애드센스 스크립트 설치 완료**: `Layout.astro`의 `<head>`에 `adsbygoogle.js` 스크립트 태그가 `fetchpriority="high"`로 추가되어 있다.
 - **IntersectionObserver 사용 중**: 무한스크롤 피드에서 이미 사용. 광고 뷰포트 감지에 동일 패턴 활용 가능.
 - **react-ga4 미사용**: Astro SSG에서는 gtag API 직접 호출이 적합. React island에서도 `window.gtag()` 직접 호출.
 
