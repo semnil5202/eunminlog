@@ -64,24 +64,35 @@ const webSiteSchema: Record<string, unknown> = {
     <meta name="robots" content={robotsContent} />
     <JsonLd schema={webSiteSchema} />
     <slot name="head" />
-    <script async src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}></script>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8569467907518315" crossorigin="anonymous"></script>
     <script is:inline define:vars={{ GA_MEASUREMENT_ID, gaPageParams }}>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
-      gtag('config', GA_MEASUREMENT_ID, gaPageParams);
-    </script>
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8569467907518315" crossorigin="anonymous"></script>
-    <script is:inline>
-      window.addEventListener('DOMContentLoaded', function() {
-        var script = document.createElement('script');
-        script.src = 'https://wcs.pstatic.net/wcslog.js';
-        script.onload = function() {
+
+      var analyticsLoaded = false;
+      function loadAnalytics() {
+        if (analyticsLoaded) return;
+        analyticsLoaded = true;
+
+        var gtagScript = document.createElement('script');
+        gtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA_MEASUREMENT_ID;
+        gtagScript.async = true;
+        document.head.appendChild(gtagScript);
+        gtag('config', GA_MEASUREMENT_ID, gaPageParams);
+
+        var wcsScript = document.createElement('script');
+        wcsScript.src = 'https://wcs.pstatic.net/wcslog.js';
+        wcsScript.onload = function() {
           if (!window.wcs_add) window.wcs_add = {};
           wcs_add["wa"] = "c8876b6e46c848";
           if (window.wcs) wcs_do();
         };
-        document.head.appendChild(script);
+        document.head.appendChild(wcsScript);
+      }
+
+      ['scroll', 'click', 'touchstart', 'keydown'].forEach(function(event) {
+        window.addEventListener(event, loadAnalytics, { once: true, passive: true });
       });
     </script>
   </head>
