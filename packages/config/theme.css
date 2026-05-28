@@ -1,24 +1,3 @@
-@font-face {
-  font-family: 'Pretendard';
-  font-weight: 400;
-  font-display: swap;
-  src: url('https://media.eunminlog.site/fonts/Pretendard-Regular.subset.woff2') format('woff2');
-}
-
-@font-face {
-  font-family: 'Pretendard';
-  font-weight: 600;
-  font-display: swap;
-  src: url('https://media.eunminlog.site/fonts/Pretendard-SemiBold.subset.woff2') format('woff2');
-}
-
-@font-face {
-  font-family: 'Pretendard';
-  font-weight: 700;
-  font-display: swap;
-  src: url('https://media.eunminlog.site/fonts/Pretendard-Bold.subset.woff2') format('woff2');
-}
-
 @theme inline {
   /* Primary — Sage Green (base: #A6BAA1) */
   --color-primary-50: #f5f7f4;
@@ -111,12 +90,7 @@
   --color-background-dimmer: --alpha(var(--color-gray-800) / 30%);
 
   /* Font Family */
-  --font-pretendard: 'Pretendard', system-ui, -apple-system, sans-serif;
-
-  /* Font Weight — subset 3종만 사용 */
-  --font-weight-regular: 400;
-  --font-weight-semibold: 600;
-  --font-weight-bold: 700;
+  --font-pretendard: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 }
 
 @theme {
