@@ -18,7 +18,7 @@
 ### 기술 환경 제약
 
 - **Astro 5 SSG**: 서버 런타임 없음. 모든 트래킹은 클라이언트 JavaScript로 처리.
-- **gtag.js 설치 완료**: `Layout.astro`에 `gtag('config', GA_MEASUREMENT_ID)` 이미 존재. GA4 기본 `page_view`는 자동 수집됨.
+- **gtag.js 지연 로딩**: `Layout.astro`에서 첫 사용자 인터랙션(scroll/click/touchstart/keydown) 후 동적 삽입. `dataLayer`와 `gtag()` 함수는 즉시 선언되어 인터랙션 전 호출도 큐에 쌓이고 스크립트 로딩 후 일괄 처리됨.
 - **애드센스 스크립트 설치 완료**: `Layout.astro`의 `<head>`에 `adsbygoogle.js` 스크립트 태그가 추가되어 있다.
 - **IntersectionObserver 사용 중**: 무한스크롤 피드에서 이미 사용. 광고 뷰포트 감지에 동일 패턴 활용 가능.
 - **react-ga4 미사용**: Astro SSG에서는 gtag API 직접 호출이 적합. React island에서도 `window.gtag()` 직접 호출.
@@ -524,7 +524,7 @@ GA4 관리 콘솔에서 다음 커스텀 디멘션을 등록해야 한다.
 
 | 파일                                                                  | 변경 내용                                                                                                                                                                              |
 | --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `layouts/Layout.astro`                                                | `gaPageParams` prop 추가, `gtag('config')` 호출에 파라미터 주입, 애드센스 스크립트 태그 추가, 네이버 애널리틱스 스크립트를 DOMContentLoaded 후 동적 로드로 변경 (`wcs_do()` 호출 보장) |
+| `layouts/Layout.astro`                                                | `gaPageParams` prop 추가, `gtag('config')` 호출에 파라미터 주입, 애드센스 스크립트 태그 추가, GA4/네이버 애널리틱스를 첫 인터랙션(scroll/click/touchstart/keydown) 후 동적 로드로 변경 |
 | `layouts/PostLayout.astro`                                            | `gaPageParams` 생성 및 Layout에 전달                                                                                                                                                   |
 | `layouts/ListLayout.astro`                                            | `gaPageParams` 생성 및 Layout에 전달                                                                                                                                                   |
 | `pages/index.astro`                                                   | `gaPageParams` 생성                                                                                                                                                                    |
