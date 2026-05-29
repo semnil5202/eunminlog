@@ -12,3 +12,4 @@ export { AlignCenterIcon } from './AlignCenterIcon';
 export { AlignRightIcon } from './AlignRightIcon';
 export { AlignJustifyIcon } from './AlignJustifyIcon';
 export { TableIcon } from './TableIcon';
+export { CodeIcon } from './CodeIcon';

@@ -1,6 +1,6 @@
 'use client';
 
-import { type ReactNode, useEffect, useState } from 'react';
+import { type ReactNode, useCallback, useEffect, useState } from 'react';
 
 import { cn } from '@/lib/utils';
 import { useTiptapEditor } from '../hooks/useTiptapEditor';
@@ -8,6 +8,7 @@ import { Toolbar } from '../components/Toolbar';
 import { TiptapEditor } from '../components/TiptapEditor';
 import { TiptapEditorSkeleton } from '../components/TiptapEditorSkeleton';
 import { LinkPastePopup } from '../components/LinkPastePopup';
+import { HtmlSourceEditor } from '../components/HtmlSourceEditor';
 
 type TiptapEditorContainerProps = {
   content: string;
@@ -25,11 +26,26 @@ export function TiptapEditorContainer({
   children,
 }: TiptapEditorContainerProps) {
   const [isMounted, setIsMounted] = useState(false);
+  const [isHtmlMode, setIsHtmlMode] = useState(false);
+  const [htmlSource, setHtmlSource] = useState('');
   const { editor, pastedUrl, clearPastedUrl } = useTiptapEditor({ content, onChange });
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  const handleToggleHtmlMode = useCallback(() => {
+    if (!editor) return;
+
+    if (!isHtmlMode) {
+      setHtmlSource(editor.getHTML());
+      setIsHtmlMode(true);
+    } else {
+      editor.commands.setContent(htmlSource);
+      onChange(htmlSource);
+      setIsHtmlMode(false);
+    }
+  }, [isHtmlMode, htmlSource, editor, onChange]);
 
   if (!isMounted || !editor) {
     return <TiptapEditorSkeleton />;
@@ -47,17 +63,23 @@ export function TiptapEditorContainer({
 
   return (
     <div className={cn('border-t border-b', className)}>
-      <Toolbar editor={editor} />
+      <Toolbar editor={editor} isHtmlMode={isHtmlMode} onToggleHtmlMode={handleToggleHtmlMode} />
       {children}
       <div className="relative">
-        <TiptapEditor editor={editor} placeholder={placeholder} />
-        {pastedUrl && popupPosition && (
-          <LinkPastePopup
-            editor={editor}
-            url={pastedUrl.url}
-            position={popupPosition}
-            onClose={clearPastedUrl}
-          />
+        {isHtmlMode ? (
+          <HtmlSourceEditor value={htmlSource} onChange={setHtmlSource} />
+        ) : (
+          <>
+            <TiptapEditor editor={editor} placeholder={placeholder} />
+            {pastedUrl && popupPosition && (
+              <LinkPastePopup
+                editor={editor}
+                url={pastedUrl.url}
+                position={popupPosition}
+                onClose={clearPastedUrl}
+              />
+            )}
+          </>
         )}
       </div>
     </div>
