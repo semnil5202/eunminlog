@@ -134,14 +134,38 @@
     {
       "original": "존맛탱",
       "suggestions": [
-        { "en": "Super delicious", "ja": "超おいしい", "zh-CN": "超好吃", "zh-TW": "超好吃", "id": "Sangat lezat", "vi": "Cực ngon", "th": "อร่อยมาก" },
-        { "en": "Incredibly tasty", "ja": "めちゃうま", "zh-CN": "特别好吃", "zh-TW": "特別好吃", "id": "Luar biasa enak", "vi": "Ngon tuyệt", "th": "อร่อยสุดๆ" }
+        {
+          "en": "Super delicious",
+          "ja": "超おいしい",
+          "zh-CN": "超好吃",
+          "zh-TW": "超好吃",
+          "id": "Sangat lezat",
+          "vi": "Cực ngon",
+          "th": "อร่อยมาก"
+        },
+        {
+          "en": "Incredibly tasty",
+          "ja": "めちゃうま",
+          "zh-CN": "特别好吃",
+          "zh-TW": "特別好吃",
+          "id": "Luar biasa enak",
+          "vi": "Ngon tuyệt",
+          "th": "อร่อยสุดๆ"
+        }
       ]
     },
     {
       "original": "가성비",
       "suggestions": [
-        { "en": "Great value", "ja": "コスパ", "zh-CN": "性价比高", "zh-TW": "CP值高", "id": "Nilai terbaik", "vi": "Giá trị tốt", "th": "คุ้มค่า" }
+        {
+          "en": "Great value",
+          "ja": "コスパ",
+          "zh-CN": "性价比高",
+          "zh-TW": "CP值高",
+          "id": "Nilai terbaik",
+          "vi": "Giá trị tốt",
+          "th": "คุ้มค่า"
+        }
       ]
     }
   ]
@@ -155,103 +179,85 @@ JSON 배열 파싱 -> `FlaggedTerm[]` 타입으로 변환.
 
 ---
 
-## 4. 본문 번역 (`fetchTranslatePost`)
+## 4. 수동 번역 (`buildTranslationPrompt`)
 
-트리거: 용어 검토 완료 후 "번역 요청" 또는 flagged 용어 없을 때 자동 실행
-입력: `title`, `content` (HTML), `placeName?`, `address?`, `confirmedTerms[]`, `imageAlts?`, `thumbnailAlt?`
-출력: `TranslationResult[]` -- 7개 언어 번역 결과 (언어별 개별 호출, `Promise.allSettled` 병렬)
+> 자동 번역 API(`fetchTranslatePost`)는 품질 이슈로 비활성화. 현재는 프롬프트 복사 → 외부 AI 결과 붙여넣기 방식으로 운영.
+
+트리거: ManualTranslationSheet에서 "프롬프트 복사" 버튼 클릭
+소스: `features/translation/lib/prompt-builder.ts` → `buildTranslationPrompt()`
+파서: `features/translation/lib/prompt-parser.ts` → `parseTranslationResult()`
 
 대상 언어: `en`, `ja`, `zh-CN`, `zh-TW`, `id`, `vi`, `th`
 
-### System Prompt (언어별 동적 생성 -- `buildTranslateSystemPrompt(locale)`)
+### 프롬프트 구조
+
+`buildTranslationPrompt()`가 시스템 프롬프트 + 원문 데이터를 하나의 문자열로 조합하여 클립보드에 복사한다. 사용자가 외부 AI에 붙여넣고 결과를 받아온다.
+
+### 최우선 엄수 규칙 (8개)
+
+1. **HTML 태그 보호** — 태그명, 속성, 구조, style 속성값, 따옴표 원본 유지. 텍스트 콘텐츠만 번역
+2. **100% 번역** — 한국어 잔류 금지
+3. **고유명사 처리** — 음역 또는 "음역(보충설명)" 형태
+4. **신조어/밈 처리** — 웹 검색으로 의미 파악 후 자연스럽게 번역
+5. **어조** — 현지 인기 블로그 문체 참고, 동일 형용사/관용구 2회 이상 반복 금지
+6. **한국 음식/메뉴명 번역** — 직역 금지, 해당 언어권 통용 표현으로 의역. 한국 고유 음식은 설명 덧붙이기
+7. **이미지 alt 텍스트** — SEO 최적화 번역
+8. **장소명/주소/시간/날짜 표기** — 언어별 표기 규칙 적용
+
+### 언어별 장소명/주소/시간 표기 규칙
+
+| locale     | 표기                                                              |
+| ---------- | ----------------------------------------------------------------- |
+| `en`       | 로마자. 주소 역순(번지→도로→구→시→국가). 12시간제, Month DD, YYYY |
+| `ja`       | 카타카나/한자. 일본식 주소 순서. 24시간제, YYYY年MM月DD日         |
+| `zh-CN/TW` | 한자. 중국식 주소 순서. 24시간제, YYYY年MM月DD日                  |
+| `th`       | 태국 문자 음차. 태국식 주소/날짜                                  |
+| `id`       | 로마자. 인도네시아식 순서. DD Bulan YYYY                          |
+| `vi`       | 로마자. 베트남식 순서. DD tháng MM năm YYYY                       |
+
+### 출력 규칙
+
+- 코드블록(```)이나 마크다운 포맷으로 감싸지 않고 plain text로 즉시 반환
+- 번역 결과 외의 텍스트(설명, 인사, 이모지 등) 출력 금지
+- `---LOCALE:en---`부터 바로 시작, 마지막 CONTENT 종료 시 즉시 종료
+- 원문에 없는 필드 추가 금지
+
+### 응답 형식 (구분자 기반)
 
 ```
-당신은 전문 번역가입니다. 한국어 본문을 {언어명}({locale})로 완벽하게 번역하세요.
-
-최우선 엄수 규칙:
-1. HTML 태그 보호: 모든 HTML 태그(h1, h2, h3, h4, h5, p, ul, ol, li, table, thead, tbody, tr, td, th, div, span, img, a, br, hr, blockquote, figure, figcaption 등)는 원본 그대로 유지하세요. 태그 내부의 속성값(src, href, style, class, width, height 등의 URL이나 수치)은 절대 수정하거나 이스케이프(예: &quot;, \) 처리하지 마세요. 따옴표는 반드시 원본 형태 그대로 유지해야 합니다.
-2. 100% 번역: 단 한 문장도 한국어로 남겨두지 마세요. 본문의 시작부터 끝까지 반드시 {언어명}로 출력해야 합니다.
-3. 이미지/썸네일 alt: 이미지의 설명(alt)도 해당 언어의 문맥에 맞게 SEO 최적화하여 번역하세요.
-4. 플레이스홀더: {{IMG_0}} 형태의 문자열은 절대 건드리지 마세요.
-5. 어조: 블로그 특유의 친근한 어조를 유지하되, 해당 언어권 사용자가 읽기에 자연스러운 문장 구조를 사용하세요.
-6. 확정 번역 용어가 제공됩니다. 각 언어별 확정 번역이 제공된 경우 해당 언어의 확정 번역을 그대로 사용하세요.
-7. 장소명(place_name)과 주소(address)가 제공되면 언어별 규칙에 따라 표기해주세요.
-8. 3줄 요약(description)은 plain text입니다. 줄바꿈(\n)을 유지하고 텍스트만 번역해주세요.
-
-응답은 반드시 순수 JSON 객체여야 합니다.
-형식: {"title": "...", "content": "...", "description": "...", "place_name": "...", "address": "...", "image_alts": ["..."], "thumbnail_alt": "..."}
+---LOCALE:{locale}---
+---TITLE---
+(번역된 제목)
+---DESCRIPTION---
+(번역된 3줄 요약, 줄바꿈 유지)
+---PLACE_NAME---
+(번역된 장소명)
+---ADDRESS---
+(번역된 주소)
+---PRICE_PREFIX---
+(번역된 가격설명)
+---THUMBNAIL_ALT---
+(번역된 썸네일 alt)
+---IMAGE_ALTS---
+(번역된 이미지 alt, 번호순)
+---CONTENT---
+(번역된 HTML 본문)
 ```
 
-**언어별 장소명/주소 표기 규칙** (프롬프트 내에서 locale에 따라 동적 삽입):
-
-| locale  | 규칙                                            |
-| ------- | ----------------------------------------------- |
-| `ja`    | 카타카나 또는 한자. 주소는 일본식 순서          |
-| `zh-CN` | 한자. 주소는 중국식 순서                        |
-| `zh-TW` | 한자. 주소는 중국식 순서                        |
-| `th`    | 태국 문자 음차 또는 원어 유지. 태국식 주소 순서 |
-| `en`    | 로마자. 주소는 영어권 역순 표기                 |
-| 기타    | 로마자. 해당 언어권 자연스러운 순서             |
-
-### 응답 형식 (JSON)
-
-```json
-{
-  "title": "Gangnam Hidden Gem Pasta Restaurant",
-  "content": "<p>Today I visited a pasta restaurant...</p>",
-  "description": "Line 1\nLine 2\nLine 3",
-  "place_name": "Pasta Lab",
-  "address": "123 Gangnam-daero, Gangnam-gu, Seoul",
-  "image_alts": ["Alt text 1", "Alt text 2"],
-  "thumbnail_alt": "Thumbnail alt text"
-}
-```
+필드는 원문에 존재하는 것만 포함. `formType === 'product-review'`일 때는 PLACE_NAME/ADDRESS/PRICE_PREFIX 대신 PRODUCT_NAMES/PURCHASE_SOURCES/PRICE_PREFIXES가 포함된다.
 
 ### 파싱
 
-JSON 객체 파싱 -> `TranslationResult` 타입으로 변환.
-`place_name`, `address`는 원본에 없으면 응답에서도 생략.
+`parseTranslationResult(rawInput)`:
 
-### 선택적 번역 모드 (2026-03-09 추가)
+1. `---LOCALE:{locale}---` 구분자로 locale별 블록 분할
+2. 각 블록에서 `---FIELD---` 마커로 필드 추출
+3. 번호 리스트 필드(IMAGE_ALTS 등)는 `parseNumberedList()`로 배열 변환
+4. `ParsedLocaleResult[]` 반환 → `toTranslationResults()`로 DB 저장 형식 변환
 
-> `buildTranslateSystemPrompt(locale)` 함수에서 `selectiveOptions`가 전달될 때 프롬프트에 추가되는 규칙.
+### 자동 번역 API (비활성화)
 
-선택적 번역 시, 체크된 필드와 본문 섹션만 GPT에 전달한다. 본문이 섹션 단위로 전달되면 응답도 `content_sections` 형식으로 반환해야 한다.
-
-#### 추가 프롬프트 규칙
-
-```
---- 선택적 번역 모드 ---
-아래에 제공된 필드와 본문 섹션만 번역하세요.
-
-본문이 content_sections 형식으로 제공됩니다:
-[{"index": 0, "html": "<p>...</p>"}, {"index": 3, "html": "<h2>...</h2>"}]
-
-응답도 동일한 content_sections 형식으로 반환하세요:
-{"content_sections": [{"index": 0, "html": "<p>번역된 내용</p>"}, {"index": 3, "html": "<h2>번역된 제목</h2>"}]}
-
-각 섹션의 index는 원본과 동일하게 유지하세요.
-```
-
-#### 선택적 번역 응답 형식 (JSON)
-
-```json
-{
-  "title": "...",
-  "content_sections": [
-    { "index": 0, "html": "<p>Translated paragraph...</p>" },
-    { "index": 3, "html": "<h2>Translated heading</h2>" }
-  ],
-  "description": "..."
-}
-```
-
-#### 머지 로직
-
-1. GPT 응답의 `content_sections`를 파싱
-2. 기존 번역 content를 `splitHtmlToSections()`로 분할
-3. 응답의 각 `{ index, html }`로 해당 인덱스의 섹션을 교체
-4. `reassembleSections()`로 재조립하여 최종 content 생성
+`features/translation/api/client.ts`의 `fetchTranslatePost()`는 GPT-5 Mini API를 직접 호출하는 자동 번역이다. JSON 응답 형식, 선택적 번역 모드(섹션 단위 재번역) 지원. 품질 이슈(한국어 잔류, 태그 누락 등)로 현재 비활성화 상태이며, 코드는 재도입 시를 위해 유지.
 
 ---
 
