@@ -126,11 +126,11 @@ const gaPageParams = {
             {post.title}
           </h1>
 
-          <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-gray-500 mb-5">
+          <p class="text-sm text-gray-500 mb-5">
             <time
               datetime={post.created_at}
               itemprop="datePublished"
-              class="flex items-center gap-1"
+              class="inline-flex items-center gap-1 align-middle"
             >
               <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                 <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" />
@@ -139,17 +139,17 @@ const gaPageParams = {
             </time>
             {post.is_sponsored && (
               <>
-                <span aria-hidden="true" class="text-gray-300">|</span>
+                <span aria-hidden="true" class="mx-2 text-gray-300">|</span>
                 <span class="text-gray-500">{t("post.sponsoredDisclosure", locale)}</span>
               </>
             )}
             {post.is_coupang_partners && (
               <>
-                <span aria-hidden="true" class="text-gray-300">|</span>
+                <span aria-hidden="true" class="mx-2 text-gray-300">|</span>
                 <span class="text-gray-500">{t("post.coupangPartnersDisclosure", locale)}</span>
               </>
             )}
-          </div>
+          </p>
 
           <div class="aspect-video w-full overflow-hidden mb-6 bg-gray-100 relative img-zoom-parent">
             <img

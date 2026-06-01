@@ -43,7 +43,7 @@ const { activeCategory, activeSubCategory } = getActiveSegments(Astro.url.pathna
   <ul class="space-y-4" role="list">
     {
       categories.map((category) => (
-        <li class="py-2 pr-2 pl-4 -mx-2 transition-colors duration-150 [&:has(>a:hover)]:bg-primary-100">
+        <li class="py-2 pr-2 pl-2 transition-colors duration-150 [&:has(>a:hover)]:bg-primary-100">
           <a
             href={getLocalePath(`/${category.slug}/`, locale)}
             class:list={[
@@ -63,7 +63,7 @@ const { activeCategory, activeSubCategory } = getActiveSegments(Astro.url.pathna
                 <a
                   href={getLocalePath(`/${category.slug}/${sub.slug}/`, locale)}
                   class:list={[
-                    "block text-body2 transition-colors duration-150 py-0.5 px-2 -mx-2 hover:bg-primary-100",
+                    "block text-body2 transition-colors duration-150 py-0.5 px-2 hover:bg-primary-100",
                     activeCategory === category.slug && activeSubCategory === sub.slug
                       ? "text-primary-600 font-semibold"
                       : "text-gray-600 hover:text-primary-500",
