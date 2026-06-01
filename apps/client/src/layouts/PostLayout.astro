@@ -126,32 +126,20 @@ const gaPageParams = {
             {post.title}
           </h1>
 
-          <p class="text-sm text-gray-500 mb-5">
+          <div class="flex items-center gap-1 text-sm text-gray-500 mb-5">
             <time
               datetime={post.created_at}
               itemprop="datePublished"
-              class="inline-flex items-center gap-1 align-middle"
+              class="flex items-center gap-1"
             >
               <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                 <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" />
               </svg>
               {publishDate}
             </time>
-            {post.is_sponsored && (
-              <>
-                <span aria-hidden="true" class="mx-2 text-gray-300">|</span>
-                <span class="text-gray-500">{t("post.sponsoredDisclosure", locale)}</span>
-              </>
-            )}
-            {post.is_coupang_partners && (
-              <>
-                <span aria-hidden="true" class="mx-2 text-gray-300">|</span>
-                <span class="text-gray-500">{t("post.coupangPartnersDisclosure", locale)}</span>
-              </>
-            )}
-          </p>
+          </div>
 
-          <div class="aspect-video w-full overflow-hidden mb-6 bg-gray-100 relative img-zoom-parent">
+          <div class="aspect-video w-full overflow-hidden mb-5 bg-gray-100 relative img-zoom-parent">
             <img
               src={optimizedUrl(post.thumbnail)}
               data-full={post.thumbnail}
@@ -169,6 +157,17 @@ const gaPageParams = {
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg>
             </span>
           </div>
+
+          {(post.is_sponsored || post.is_coupang_partners) && (
+            <div class="bg-gray-50 border border-gray-200 p-5 mb-5 text-sm text-gray-500 space-y-1">
+              {post.is_sponsored && (
+                <p>{t("post.sponsoredDisclosure", locale)}</p>
+              )}
+              {post.is_coupang_partners && (
+                <p>{t("post.coupangPartnersDisclosure", locale)}</p>
+              )}
+            </div>
+          )}
 
           {post.place_name && (
             <PlaceInfoCard
