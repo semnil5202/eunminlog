@@ -317,6 +317,14 @@ Admin에서 `data-type="image-carousel"`로 마크업된 연속 이미지를 Cli
 - 내부 링크(`eunminlog.site`) 북마크: 빌드 타임에 다국어 URL/title/description 자동 변환 (`shared/lib/bookmark.ts` — `injectLocalizedBookmarks()`)
 - 번역 파이프라인: 북마크 영역(`data-type="link-bookmark"`)은 번역 skip (`html-sections.ts`)
 
+#### 협찬/쿠팡 파트너스 공시 배너
+
+- **위치**: `PostLayout.astro` 내 썸네일과 PlaceInfoCard/ProductInfoCard 사이
+- `is_sponsored` 또는 `is_coupang_partners`가 true일 때 조건부 렌더링
+- 스타일: `bg-gray-50 border border-gray-200 p-5 mb-5 text-sm text-gray-500` (메타 박스와 동일 톤)
+- 둘 다 true인 경우 박스 안에 두 줄로 표시 (`space-y-1`)
+- 번역 키: `post.sponsoredDisclosure`, `post.coupangPartnersDisclosure` (8개 locale별)
+
 #### AI 번역 안내 문구
 
 - **위치**: `PostLayout.astro` 내 본문과 NearbyPostList 사이
