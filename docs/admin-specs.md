@@ -133,7 +133,7 @@ RootLayout (app/layout.tsx)
 | `metrics`         | 핵심 지표 (조회수/추천수/댓글수)       | `/`                               | Mock 구현 완료                                                                       |
 | `auth`            | 로그인/로그아웃, 세션 관리             | TBD (로그인 페이지)               | 미구현                                                                               |
 | `post-editor`     | Tiptap 에디터, 포스트 생성/편집 폼     | `/posts/new`, `/posts/[id]/edit`  | 에디터 + 폼 형식 + 메타 폼 + 썸네일 + 번역 연동 구현 완료 (저장/S3 업로드 미구현)    |
-| `post-management` | 포스트 목록, 삭제, 발행 상태 관리      | `/posts`                          | 목록 구현 완료 (삭제 미구현)                                                         |
+| `post-management` | 포스트 목록, 삭제, 추천 게시글 관리    | `/posts`                          | 목록/삭제/추천 수정 모드 구현 완료                                                   |
 | `media`           | 이미지 업로드, Pre-signed URL          | 에디터 내 사용                    | 구현 완료 (S3 presigned URL + WebP 변환 + 워터마크 + 688px 리사이징 + CDN URL)       |
 | `translation`     | GPT-5 Mini 다국어 번역 (API 연동 완료) | 에디터 내 사용                    | 구현 완료 (고유명사 추출 + 번역 + 미리보기 + 실패 fallback + 재시도). DB 저장 미연동 |
 | `build-trigger`   | GitHub Actions 빌드 자동 트리거        | UI 없음 (Server Action 내부 호출) | 미구현                                                                               |
@@ -277,7 +277,8 @@ features/auth/
 | PE-7  | 포스트 편집 (기존 데이터 로드 → 폼/에디터 반영 → 수정). 상세: Section 4-2-A 참조               | P0       | 미구현               |
 | PE-7A | slug 변경 경고 모달 (게시글 수정 시 slug 변경 시 표시). 상세: Section 4-2-A, redirect-specs.md | P0       | 미구현               |
 | PE-8  | is_multilingual 토글 (기본값 `true`)                                                           | P0       | 미구현               |
-| PE-9  | is_sponsored / is_recommended 토글                                                             | P0       | 미구현               |
+| PE-9  | is_sponsored 토글                                                                              | P0       | 미구현               |
+| PE-9B | is_recommended 관리 (`/posts` 목록의 추천 게시글 수정 모드)                                    | P0       | 구현 완료            |
 | PE-9A | is_coupang_partners 체크박스 (제품 리뷰 폼 전용, 제품 목록 우측 배치)                          | P0       | 구현 완료            |
 | PE-10 | rating 입력 (1.0-5.0, 0.5 단위)                                                                | P1       | 미구현               |
 | PE-11 | place_name, address, price_prefix, price 입력 (체험 방문 전용)                                 | P1       | 구현 완료            |
@@ -303,7 +304,7 @@ features/auth/
 | 썸네일 alt    | text input    | Y    | `thumbnail_alt`       | 공통                 | SEO용 alt 텍스트, 다국어 번역 파이프라인 연동         |
 | 협찬 여부     | toggle        | N    | `is_sponsored`        | 공통                 | 기본값 `false` (미구현)                               |
 | 쿠팡 파트너스 | checkbox      | N    | `is_coupang_partners` | product-review 전용  | 기본값 `false`. 제품 목록 라벨 우측 배치              |
-| 추천 여부     | toggle        | N    | `is_recommended`      | 공통                 | 기본값 `false` (미구현)                               |
+| 추천 여부     | checkbox      | N    | `is_recommended`      | 목록 관리            | `/posts` 추천 게시글 수정 모드에서 일괄 변경          |
 | 다국어 제공   | toggle        | N    | `is_multilingual`     | 공통                 | 기본값 `true` (미구현)                                |
 | 평점          | number input  | N    | `rating`              | 공통                 | 1.0-5.0, 0.5 단위 (미구현)                            |
 | 장소명        | text input    | N    | `place_name`          | visit 전용           | Schema.org `itemReviewed`                             |
@@ -610,16 +611,17 @@ features/post-editor/
 
 #### 기능 요구사항
 
-| ID   | 요구사항                                            | 우선순위 | 상태      |
-| ---- | --------------------------------------------------- | -------- | --------- |
-| PM-1 | 포스트 목록 테이블 (제목, 발행일, 수정일 표시)      | P0       | 구현 완료 |
-| PM-2 | 포스트 삭제 (확인 다이얼로그 포함)                  | P0       | 미구현    |
-| PM-3 | 포스트 편집 페이지로 이동 — 테이블 제목 하이퍼링크  | P0       | 미구현    |
-| PM-4 | 카테고리/서브카테고리 필터링                        | P1       | 미구현    |
-| PM-5 | 검색 (제목, slug 기준)                              | P2       | 미구현    |
-| PM-6 | 빌드 트리거 버튼 (대시보드 레벨)                    | P1       | 미구현    |
-| PM-7 | 정렬 드롭다운 (최신 발행순 / 최신 수정순)           | P0       | 구현 완료 |
-| PM-8 | SearchFilter (날짜 범위 + 검색) + "새 글 작성" 버튼 | P0       | 구현 완료 |
+| ID   | 요구사항                                                  | 우선순위 | 상태      |
+| ---- | --------------------------------------------------------- | -------- | --------- |
+| PM-1 | 포스트 목록 테이블 (제목, 발행일, 수정일 표시)            | P0       | 구현 완료 |
+| PM-2 | 포스트 삭제 (확인 다이얼로그 포함)                        | P0       | 구현 완료 |
+| PM-3 | 포스트 편집 페이지로 이동 — 테이블 제목 하이퍼링크        | P0       | 구현 완료 |
+| PM-4 | 카테고리/서브카테고리 필터링                              | P1       | 미구현    |
+| PM-5 | 검색 (제목 기준)                                          | P2       | 구현 완료 |
+| PM-6 | 빌드 트리거 버튼 (대시보드 레벨)                          | P1       | 미구현    |
+| PM-7 | 정렬 드롭다운 (최신 발행순 / 최신 수정순)                 | P0       | 구현 완료 |
+| PM-8 | SearchFilter (날짜 범위 + 검색) + "새 글 작성" 버튼       | P0       | 구현 완료 |
+| PM-9 | 추천 게시글 수정 모드 (우측 체크박스 + 완료 시 일괄 저장) | P0       | 구현 완료 |
 
 #### 게시글 목록 페이지 (`/posts`) — 구현 완료
 
@@ -628,14 +630,18 @@ features/post-editor/
 - 정렬 드롭다운: 최신 발행순 (기본) / 최신 수정순
 - "새 글 작성" 버튼: `/posts/new`로 이동
 - 검색 버튼: `variant="outline"` (아웃라인 스타일)
+- "추천 게시글 수정" 버튼: 수정 모드 진입 시 테이블 우측에 추천 체크박스를 표시하고, "완료" 클릭 시 변경된 행만 Server Action으로 일괄 저장
+- 추천 수정 모드에서는 삭제 선택 체크박스를 숨겨 추천 체크박스와 혼동하지 않도록 처리
 
 #### 포스트 목록 테이블 컬럼 (현재 구현)
 
-| 컬럼   | 표시 내용    | 비고             |
-| ------ | ------------ | ---------------- |
-| 제목   | `title`      | 텍스트           |
-| 발행일 | `created_at` | 포맷: YYYY-MM-DD |
-| 수정일 | `updated_at` | 포맷: YYYY-MM-DD |
+| 컬럼   | 표시 내용        | 비고                                |
+| ------ | ---------------- | ----------------------------------- |
+| 선택   | `id`             | 삭제 대상 선택. 추천 수정 모드 숨김 |
+| 제목   | `title`          | 클릭 시 편집 페이지 이동            |
+| 발행일 | `created_at`     | 포맷: YYYY-MM-DD                    |
+| 수정일 | `updated_at`     | 포맷: YYYY-MM-DD                    |
+| 추천   | `is_recommended` | 추천 수정 모드에서만 우측 표시      |
 
 #### 포스트 목록 테이블 컬럼 (향후 확장 예정)
 
@@ -644,7 +650,6 @@ features/post-editor/
 | 제목     | `title`                     | 클릭 시 편집 페이지 이동 |
 | 카테고리 | `category` / `sub_category` | 뱃지 형태                |
 | 협찬     | `is_sponsored`              | 아이콘 또는 뱃지         |
-| 추천     | `is_recommended`            | 아이콘 또는 뱃지         |
 | 다국어   | `is_multilingual`           | 아이콘 또는 뱃지         |
 | 작성일   | `created_at`                | 포맷: YYYY-MM-DD         |
 | 수정일   | `updated_at`                | 포맷: YYYY-MM-DD         |
@@ -652,11 +657,12 @@ features/post-editor/
 
 #### Server Action vs CSR 구분
 
-| 작업             | 처리 위치                                  | 이유                                                               |
-| ---------------- | ------------------------------------------ | ------------------------------------------------------------------ |
-| 포스트 목록 조회 | Server Action                              | Supabase 통신                                                      |
-| 포스트 삭제      | Server Action                              | Supabase 통신                                                      |
-| 필터링/검색      | CSR (클라이언트 필터링) 또는 Server Action | 데이터 규모에 따라 결정. 초기에는 전체 로드 후 CSR 필터링으로 충분 |
+| 작업             | 처리 위치     | 이유                                                            |
+| ---------------- | ------------- | --------------------------------------------------------------- |
+| 포스트 목록 조회 | Server Action | Supabase 통신                                                   |
+| 포스트 삭제      | Server Action | Supabase 통신 + 삭제 후 client 빌드 트리거                      |
+| 추천 게시글 수정 | Server Action | 변경된 `is_recommended` 값만 일괄 업데이트 + client 빌드 트리거 |
+| 필터링/검색      | Server Action | 날짜 범위, 제목 검색, 정렬, 페이지네이션을 DB 쿼리로 처리       |
 
 #### 폴더 구조
 

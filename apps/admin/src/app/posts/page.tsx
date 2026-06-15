@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Plus, Trash2 } from 'lucide-react';
+import { Check, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 import SearchFilter from '@/shared/components/filter/SearchFilter';
@@ -38,7 +38,12 @@ import {
   TableRow,
 } from '@/components/ui/table';
 
-import { deletePosts, fetchPosts, type PostListItem } from '@/features/post-management/api/actions';
+import {
+  deletePosts,
+  fetchPosts,
+  updatePostRecommendations,
+  type PostListItem,
+} from '@/features/post-management/api/actions';
 
 type SortKey = 'publishedAt' | 'updatedAt';
 
@@ -65,8 +70,8 @@ function getDefaultDateRange() {
   };
 }
 
-function truncateTitle(title: string, max = 30) {
-  return title.length > max ? title.slice(0, max) + '...' : title;
+function truncateTitle(title: string, maxLength = 30) {
+  return title.length > maxLength ? title.slice(0, maxLength) + '...' : title;
 }
 
 export default function PostsPage() {
@@ -98,6 +103,9 @@ function PostsContent() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isRecommendationEditMode, setIsRecommendationEditMode] = useState(false);
+  const [recommendedPostIds, setRecommendedPostIds] = useState<Set<string>>(new Set());
+  const [isUpdatingRecommendations, setIsUpdatingRecommendations] = useState(false);
 
   const [posts, setPosts] = useState<PostListItem[]>([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -106,25 +114,31 @@ function PostsContent() {
   const [currentFilter, setCurrentFilter] = useState<FilterFormValues>(getValues());
   const [currentSort, setCurrentSort] = useState<SortKey>(sortBy);
 
-  const loadPosts = useCallback(async (filter: FilterFormValues, sort: SortKey, p: number) => {
-    setIsLoading(true);
-    try {
-      const result = await fetchPosts({
-        page: p,
-        pageSize: PAGE_SIZE,
-        sortBy: sort,
-        from: filter.from || undefined,
-        to: filter.to || undefined,
-        search: filter.query || undefined,
-      });
-      setPosts(result.posts);
-      setTotalCount(result.totalCount);
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : '게시글 조회에 실패했습니다.');
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const loadPosts = useCallback(
+    async (filter: FilterFormValues, sort: SortKey, pageNumber: number) => {
+      setIsLoading(true);
+      try {
+        const result = await fetchPosts({
+          page: pageNumber,
+          pageSize: PAGE_SIZE,
+          sortBy: sort,
+          from: filter.from || undefined,
+          to: filter.to || undefined,
+          search: filter.query || undefined,
+        });
+        setPosts(result.posts);
+        setTotalCount(result.totalCount);
+        setRecommendedPostIds(
+          new Set(result.posts.filter((post) => post.is_recommended).map((post) => post.id)),
+        );
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : '게시글 조회에 실패했습니다.');
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [],
+  );
 
   useEffect(() => {
     loadPosts(currentFilter, currentSort, page);
@@ -132,16 +146,19 @@ function PostsContent() {
 
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
-  const buildQueryString = useCallback((filter: FilterFormValues, sort: SortKey, p: number) => {
-    const params = new URLSearchParams();
-    if (p > 1) params.set('page', String(p));
-    if (filter.from) params.set('from', filter.from);
-    if (filter.to) params.set('to', filter.to);
-    if (filter.query) params.set('q', filter.query);
-    if (sort !== 'publishedAt') params.set('sort', sort);
-    const qs = params.toString();
-    return qs ? `/posts?${qs}` : '/posts';
-  }, []);
+  const buildQueryString = useCallback(
+    (filter: FilterFormValues, sort: SortKey, pageNumber: number) => {
+      const params = new URLSearchParams();
+      if (pageNumber > 1) params.set('page', String(pageNumber));
+      if (filter.from) params.set('from', filter.from);
+      if (filter.to) params.set('to', filter.to);
+      if (filter.query) params.set('q', filter.query);
+      if (sort !== 'publishedAt') params.set('sort', sort);
+      const queryString = params.toString();
+      return queryString ? `/posts?${queryString}` : '/posts';
+    },
+    [],
+  );
 
   const handleSearch = () => {
     const current = getValues();
@@ -149,6 +166,7 @@ function PostsContent() {
     setCurrentSort(sortBy);
     setPage(1);
     setSelectedIds(new Set());
+    setIsRecommendationEditMode(false);
     router.replace(buildQueryString(current, sortBy, 1), { scroll: false });
   };
 
@@ -158,37 +176,99 @@ function PostsContent() {
     setCurrentSort(newSort);
     setPage(1);
     setSelectedIds(new Set());
+    setIsRecommendationEditMode(false);
     router.replace(buildQueryString(currentFilter, newSort, 1), { scroll: false });
   };
 
-  const handlePageChange = (p: number) => {
-    setPage(p);
+  const handlePageChange = (pageNumber: number) => {
+    setPage(pageNumber);
     setSelectedIds(new Set());
-    router.replace(buildQueryString(currentFilter, currentSort, p), { scroll: false });
+    setIsRecommendationEditMode(false);
+    router.replace(buildQueryString(currentFilter, currentSort, pageNumber), { scroll: false });
   };
 
-  const isAllSelected = posts.length > 0 && posts.every((p) => selectedIds.has(p.id));
+  const isAllSelected = posts.length > 0 && posts.every((post) => selectedIds.has(post.id));
 
   const toggleSelectAll = () => {
+    if (isRecommendationEditMode) return;
     if (isAllSelected) {
       setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(posts.map((p) => p.id)));
+      setSelectedIds(new Set(posts.map((post) => post.id)));
     }
   };
 
   const toggleSelect = (id: string) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
+    if (isRecommendationEditMode) return;
+    setSelectedIds((previousSelectedIds) => {
+      const nextSelectedIds = new Set(previousSelectedIds);
+      if (nextSelectedIds.has(id)) nextSelectedIds.delete(id);
+      else nextSelectedIds.add(id);
+      return nextSelectedIds;
     });
   };
 
   const selectedTitles = posts
-    .filter((p) => selectedIds.has(p.id))
-    .map((p) => truncateTitle(p.title));
+    .filter((post) => selectedIds.has(post.id))
+    .map((post) => truncateTitle(post.title));
+
+  const toggleRecommendation = (id: string) => {
+    setRecommendedPostIds((previousRecommendedPostIds) => {
+      const nextRecommendedPostIds = new Set(previousRecommendedPostIds);
+      if (nextRecommendedPostIds.has(id)) nextRecommendedPostIds.delete(id);
+      else nextRecommendedPostIds.add(id);
+      return nextRecommendedPostIds;
+    });
+  };
+
+  const getRecommendationChanges = () =>
+    posts
+      .filter((post) => post.is_recommended !== recommendedPostIds.has(post.id))
+      .map((post) => ({
+        id: post.id,
+        isRecommended: recommendedPostIds.has(post.id),
+      }));
+
+  const handleStartRecommendationEdit = () => {
+    setSelectedIds(new Set());
+    setRecommendedPostIds(
+      new Set(posts.filter((post) => post.is_recommended).map((post) => post.id)),
+    );
+    setIsRecommendationEditMode(true);
+  };
+
+  const handleCancelRecommendationEdit = () => {
+    setRecommendedPostIds(
+      new Set(posts.filter((post) => post.is_recommended).map((post) => post.id)),
+    );
+    setIsRecommendationEditMode(false);
+  };
+
+  const handleSaveRecommendations = async () => {
+    const recommendationChanges = getRecommendationChanges();
+
+    if (recommendationChanges.length === 0) {
+      toast.info('변경된 추천 게시글이 없습니다.');
+      setIsRecommendationEditMode(false);
+      return;
+    }
+
+    setIsUpdatingRecommendations(true);
+    try {
+      const result = await updatePostRecommendations(recommendationChanges);
+      if (result.buildFailed) {
+        toast.warning('추천 게시글을 수정했지만 배포에 실패했습니다.');
+      } else {
+        toast.success('추천 게시글이 수정되었습니다.');
+      }
+      setIsRecommendationEditMode(false);
+      await loadPosts(currentFilter, currentSort, page);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : '추천 게시글 수정에 실패했습니다.');
+    } finally {
+      setIsUpdatingRecommendations(false);
+    }
+  };
 
   const handleDelete = async () => {
     setIsDeleting(true);
@@ -204,8 +284,8 @@ function PostsContent() {
         setIsDeleteDialogOpen(false);
         await loadPosts(currentFilter, currentSort, page);
       }
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : '게시글 삭제에 실패했습니다.');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : '게시글 삭제에 실패했습니다.');
     } finally {
       setIsDeleting(false);
     }
@@ -231,7 +311,7 @@ function PostsContent() {
                 <Plus className="mr-1 h-4 w-4 max-md:h-3.5 max-md:w-3.5" />새 글 작성
               </Link>
             </Button>
-            {selectedIds.size > 0 && (
+            {selectedIds.size > 0 && !isRecommendationEditMode && (
               <Button
                 variant="destructive"
                 onClick={() => setIsDeleteDialogOpen(true)}
@@ -242,35 +322,75 @@ function PostsContent() {
               </Button>
             )}
           </div>
-          <Select value={sortBy} onValueChange={handleSortChange}>
-            <SelectTrigger className="w-[150px] max-md:h-8 max-md:w-[130px] max-md:text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {SORT_OPTIONS.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-2">
+            {isRecommendationEditMode ? (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={handleCancelRecommendationEdit}
+                  disabled={isUpdatingRecommendations}
+                  className="max-md:h-8 max-md:px-3 max-md:text-xs"
+                >
+                  <X className="mr-1 h-4 w-4 max-md:h-3.5 max-md:w-3.5" />
+                  취소
+                </Button>
+                <Button
+                  onClick={handleSaveRecommendations}
+                  disabled={isUpdatingRecommendations}
+                  className="max-md:h-8 max-md:px-3 max-md:text-xs"
+                >
+                  <Check className="mr-1 h-4 w-4 max-md:h-3.5 max-md:w-3.5" />
+                  {isUpdatingRecommendations ? '저장 중...' : '완료'}
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={handleStartRecommendationEdit}
+                  disabled={posts.length === 0 || isLoading}
+                  className="max-md:h-8 max-md:px-3 max-md:text-xs"
+                >
+                  <Pencil className="mr-1 h-4 w-4 max-md:h-3.5 max-md:w-3.5" />
+                  추천 게시글 수정
+                </Button>
+                <Select value={sortBy} onValueChange={handleSortChange}>
+                  <SelectTrigger className="w-[150px] max-md:h-8 max-md:w-[130px] max-md:text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SORT_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </>
+            )}
+          </div>
         </div>
 
         <div className="rounded-lg border">
           <Table>
             <TableHeader>
               <TableRow className="bg-primary-600 hover:bg-primary-600">
-                <TableHead className="w-[52px] px-4">
-                  <Checkbox
-                    checked={isAllSelected}
-                    onCheckedChange={toggleSelectAll}
-                    disabled={posts.length === 0}
-                    className="border-white"
-                  />
-                </TableHead>
+                {!isRecommendationEditMode && (
+                  <TableHead className="w-[52px] px-4">
+                    <Checkbox
+                      checked={isAllSelected}
+                      onCheckedChange={toggleSelectAll}
+                      disabled={posts.length === 0}
+                      className="border-white"
+                    />
+                  </TableHead>
+                )}
                 <TableHead className="w-[55%] font-bold text-white">게시글 제목</TableHead>
                 <TableHead className="text-center font-bold text-white">발행일</TableHead>
                 <TableHead className="text-center font-bold text-white">마지막 수정일</TableHead>
+                {isRecommendationEditMode && (
+                  <TableHead className="w-[92px] text-center font-bold text-white">추천</TableHead>
+                )}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -289,12 +409,14 @@ function PostsContent() {
               ) : (
                 posts.map((post) => (
                   <TableRow key={post.id}>
-                    <TableCell className="px-4 py-3">
-                      <Checkbox
-                        checked={selectedIds.has(post.id)}
-                        onCheckedChange={() => toggleSelect(post.id)}
-                      />
-                    </TableCell>
+                    {!isRecommendationEditMode && (
+                      <TableCell className="px-4 py-3">
+                        <Checkbox
+                          checked={selectedIds.has(post.id)}
+                          onCheckedChange={() => toggleSelect(post.id)}
+                        />
+                      </TableCell>
+                    )}
                     <TableCell className="py-3 font-medium">
                       <Link href={`/posts/${post.id}/edit`} className="text-blue-600 underline">
                         {post.title}
@@ -306,6 +428,14 @@ function PostsContent() {
                     <TableCell className="py-3 text-center">
                       {post.updated_at.slice(0, 10)}
                     </TableCell>
+                    {isRecommendationEditMode && (
+                      <TableCell className="py-3 text-center">
+                        <Checkbox
+                          checked={recommendedPostIds.has(post.id)}
+                          onCheckedChange={() => toggleRecommendation(post.id)}
+                        />
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))
               )}
@@ -334,7 +464,12 @@ function PostsContent() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>취소</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" onClick={handleDelete} onSelect={(e) => e.preventDefault()} disabled={isDeleting}>
+            <AlertDialogAction
+              variant="destructive"
+              onClick={handleDelete}
+              onSelect={(event) => event.preventDefault()}
+              disabled={isDeleting}
+            >
               {isDeleting ? '삭제 중...' : '삭제'}
             </AlertDialogAction>
           </AlertDialogFooter>

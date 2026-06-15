@@ -11,6 +11,7 @@ export type PostListItem = {
   slug: string;
   category: string;
   sub_category: string;
+  is_recommended: boolean;
   created_at: string;
   updated_at: string;
 };
@@ -27,7 +28,9 @@ export async function fetchPosts(params: {
 
   let query = supabaseServer
     .from('posts')
-    .select('id, title, slug, category, sub_category, created_at, updated_at', { count: 'exact' });
+    .select('id, title, slug, category, sub_category, is_recommended, created_at, updated_at', {
+      count: 'exact',
+    });
 
   if (params.from) query = query.gte(orderColumn, params.from);
   if (params.to) query = query.lte(orderColumn, params.to + 'T23:59:59.999Z');
@@ -45,6 +48,46 @@ export async function fetchPosts(params: {
     posts: (data ?? []) as PostListItem[],
     totalCount: count ?? 0,
   };
+}
+
+export async function updatePostRecommendations(
+  recommendations: { id: string; isRecommended: boolean }[],
+) {
+  if (recommendations.length === 0) return { success: true, updatedCount: 0, buildFailed: false };
+
+  const recommendedPostIds = recommendations
+    .filter((recommendation) => recommendation.isRecommended)
+    .map((recommendation) => recommendation.id);
+  const unrecommendedPostIds = recommendations
+    .filter((recommendation) => !recommendation.isRecommended)
+    .map((recommendation) => recommendation.id);
+
+  if (recommendedPostIds.length > 0) {
+    const { error } = await supabaseServer
+      .from('posts')
+      .update({ is_recommended: true, updated_at: new Date().toISOString() })
+      .in('id', recommendedPostIds);
+
+    if (error) throw new Error(`추천 게시글 설정 실패: ${error.message}`);
+  }
+
+  if (unrecommendedPostIds.length > 0) {
+    const { error } = await supabaseServer
+      .from('posts')
+      .update({ is_recommended: false, updated_at: new Date().toISOString() })
+      .in('id', unrecommendedPostIds);
+
+    if (error) throw new Error(`추천 게시글 해제 실패: ${error.message}`);
+  }
+
+  let buildFailed = false;
+  try {
+    await triggerClientBuild();
+  } catch {
+    buildFailed = true;
+  }
+
+  return { success: true, updatedCount: recommendations.length, buildFailed };
 }
 
 export async function fetchPost(id: string) {
@@ -90,30 +133,30 @@ export async function fetchPost(id: string) {
       created_at: string;
       updated_at: string;
     },
-    translations: (translations ?? []).map((t) => ({
-      locale: t.locale,
-      title: t.title,
-      description: t.description,
-      content: t.content,
-      place_name: t.place_name ?? '',
-      address: t.address ?? '',
-      product_name: Array.isArray(t.product_name)
-        ? t.product_name
-        : t.product_name
-          ? [t.product_name]
+    translations: (translations ?? []).map((translation) => ({
+      locale: translation.locale,
+      title: translation.title,
+      description: translation.description,
+      content: translation.content,
+      place_name: translation.place_name ?? '',
+      address: translation.address ?? '',
+      product_name: Array.isArray(translation.product_name)
+        ? translation.product_name
+        : translation.product_name
+          ? [translation.product_name]
           : [],
-      purchase_source: Array.isArray(t.purchase_source)
-        ? t.purchase_source
-        : t.purchase_source
-          ? [t.purchase_source]
+      purchase_source: Array.isArray(translation.purchase_source)
+        ? translation.purchase_source
+        : translation.purchase_source
+          ? [translation.purchase_source]
           : [],
-      price_prefix: Array.isArray(t.price_prefix)
-        ? t.price_prefix
-        : t.price_prefix
-          ? [t.price_prefix]
+      price_prefix: Array.isArray(translation.price_prefix)
+        ? translation.price_prefix
+        : translation.price_prefix
+          ? [translation.price_prefix]
           : [],
-      image_alts: (t.image_alts ?? []) as ImageAlt[],
-      thumbnail_alt: t.thumbnail_alt ?? '',
+      image_alts: (translation.image_alts ?? []) as ImageAlt[],
+      thumbnail_alt: translation.thumbnail_alt ?? '',
     })) as TranslationResult[],
     imageAlts: (post.image_alts ?? []) as ImageAlt[],
   };
@@ -125,49 +168,52 @@ export async function createPost(params: {
   imageAlts?: ImageAlt[];
   draftId?: string | null;
 }): Promise<{ id: string }> {
-  const fv = params.formValues;
+  const formValues = params.formValues;
 
-  const validProducts = fv.products.filter((p) => p.name.trim());
+  const validProducts = formValues.products.filter((product) => product.name.trim());
 
-  const isProductReview = fv.formType === 'product-review';
-  const productPricePrefixes = isProductReview ? validProducts.map((p) => p.pricePrefix) : null;
+  const isProductReview = formValues.formType === 'product-review';
+  const productPricePrefixes = isProductReview
+    ? validProducts.map((product) => product.pricePrefix)
+    : null;
   const productPrices = isProductReview
-    ? validProducts.map((p) => (p.price ? Number(p.price) : 0))
+    ? validProducts.map((product) => (product.price ? Number(product.price) : 0))
     : null;
 
   const { data: post, error } = await supabaseServer
     .from('posts')
     .insert({
-      slug: fv.slug,
-      title: fv.title,
-      description: fv.description,
-      content: fv.content,
-      category: fv.category,
-      sub_category: fv.subCategory,
-      thumbnail: fv.thumbnail,
-      thumbnail_alt: fv.thumbnailAlt || null,
+      slug: formValues.slug,
+      title: formValues.title,
+      description: formValues.description,
+      content: formValues.content,
+      category: formValues.category,
+      sub_category: formValues.subCategory,
+      thumbnail: formValues.thumbnail,
+      thumbnail_alt: formValues.thumbnailAlt || null,
       is_multilingual: params.translations.length > 0,
-      place_name: fv.placeName || null,
-      address: fv.address || null,
+      place_name: formValues.placeName || null,
+      address: formValues.address || null,
       price_prefix: isProductReview
         ? productPricePrefixes && productPricePrefixes.some(Boolean)
           ? productPricePrefixes
           : null
-        : fv.pricePrefix
-          ? [fv.pricePrefix]
+        : formValues.pricePrefix
+          ? [formValues.pricePrefix]
           : null,
       price: isProductReview
         ? productPrices && productPrices.some(Boolean)
           ? productPrices
           : null
-        : fv.price
-          ? [Number(fv.price)]
+        : formValues.price
+          ? [Number(formValues.price)]
           : null,
-      product_name: validProducts.length > 0 ? validProducts.map((p) => p.name) : null,
-      purchase_source: validProducts.length > 0 ? validProducts.map((p) => p.source) : null,
-      purchase_link: validProducts.length > 0 ? validProducts.map((p) => p.link) : null,
+      product_name: validProducts.length > 0 ? validProducts.map((product) => product.name) : null,
+      purchase_source:
+        validProducts.length > 0 ? validProducts.map((product) => product.source) : null,
+      purchase_link: validProducts.length > 0 ? validProducts.map((product) => product.link) : null,
       image_alts: params.imageAlts ?? [],
-      is_coupang_partners: fv.isCoupangPartners,
+      is_coupang_partners: formValues.isCoupangPartners,
     })
     .select('id')
     .single();
@@ -177,21 +223,24 @@ export async function createPost(params: {
     throw new Error(`게시글 생성 실패: ${error.message}`);
   }
 
-  const successfulTranslations = params.translations.filter((t) => !t.failed);
+  const successfulTranslations = params.translations.filter((translation) => !translation.failed);
   if (successfulTranslations.length > 0) {
-    const translationRows = successfulTranslations.map((t) => ({
+    const translationRows = successfulTranslations.map((translation) => ({
       post_id: post!.id,
-      locale: t.locale,
-      title: t.title,
-      description: t.description,
-      content: t.content,
-      place_name: t.place_name || null,
-      address: t.address || null,
-      product_name: t.product_name || null,
-      purchase_source: t.purchase_source || null,
-      price_prefix: t.price_prefix && t.price_prefix.length > 0 ? t.price_prefix : null,
-      image_alts: t.image_alts ?? [],
-      thumbnail_alt: t.thumbnail_alt || null,
+      locale: translation.locale,
+      title: translation.title,
+      description: translation.description,
+      content: translation.content,
+      place_name: translation.place_name || null,
+      address: translation.address || null,
+      product_name: translation.product_name || null,
+      purchase_source: translation.purchase_source || null,
+      price_prefix:
+        translation.price_prefix && translation.price_prefix.length > 0
+          ? translation.price_prefix
+          : null,
+      image_alts: translation.image_alts ?? [],
+      thumbnail_alt: translation.thumbnail_alt || null,
     }));
 
     const { error: transError } = await supabaseServer
@@ -220,7 +269,7 @@ export async function updatePost(params: {
   translations: TranslationResult[];
   imageAlts?: ImageAlt[];
 }): Promise<void> {
-  const fv = params.formValues;
+  const formValues = params.formValues;
 
   const { data: existing, error: fetchError } = await supabaseServer
     .from('posts')
@@ -230,53 +279,56 @@ export async function updatePost(params: {
 
   if (fetchError) throw new Error(`게시글 조회 실패: ${fetchError.message}`);
 
-  const validProducts = fv.products.filter((p) => p.name.trim());
-  const isProductReview = fv.formType === 'product-review';
-  const productPricePrefixes = isProductReview ? validProducts.map((p) => p.pricePrefix) : null;
+  const validProducts = formValues.products.filter((product) => product.name.trim());
+  const isProductReview = formValues.formType === 'product-review';
+  const productPricePrefixes = isProductReview
+    ? validProducts.map((product) => product.pricePrefix)
+    : null;
   const productPrices = isProductReview
-    ? validProducts.map((p) => (p.price ? Number(p.price) : 0))
+    ? validProducts.map((product) => (product.price ? Number(product.price) : 0))
     : null;
 
   const updateData: Record<string, unknown> = {
-    slug: fv.slug,
-    title: fv.title,
-    description: fv.description,
-    content: fv.content,
-    category: fv.category,
-    sub_category: fv.subCategory,
-    thumbnail: fv.thumbnail,
-    thumbnail_alt: fv.thumbnailAlt || null,
-    place_name: fv.placeName || null,
-    address: fv.address || null,
+    slug: formValues.slug,
+    title: formValues.title,
+    description: formValues.description,
+    content: formValues.content,
+    category: formValues.category,
+    sub_category: formValues.subCategory,
+    thumbnail: formValues.thumbnail,
+    thumbnail_alt: formValues.thumbnailAlt || null,
+    place_name: formValues.placeName || null,
+    address: formValues.address || null,
     price_prefix: isProductReview
       ? productPricePrefixes && productPricePrefixes.some(Boolean)
         ? productPricePrefixes
         : null
-      : fv.pricePrefix
-        ? [fv.pricePrefix]
+      : formValues.pricePrefix
+        ? [formValues.pricePrefix]
         : null,
     price: isProductReview
       ? productPrices && productPrices.some(Boolean)
         ? productPrices
         : null
-      : fv.price
-        ? [Number(fv.price)]
+      : formValues.price
+        ? [Number(formValues.price)]
         : null,
-    product_name: validProducts.length > 0 ? validProducts.map((p) => p.name) : null,
-    purchase_source: validProducts.length > 0 ? validProducts.map((p) => p.source) : null,
-    purchase_link: validProducts.length > 0 ? validProducts.map((p) => p.link) : null,
+    product_name: validProducts.length > 0 ? validProducts.map((product) => product.name) : null,
+    purchase_source:
+      validProducts.length > 0 ? validProducts.map((product) => product.source) : null,
+    purchase_link: validProducts.length > 0 ? validProducts.map((product) => product.link) : null,
     image_alts: params.imageAlts ?? [],
-    is_coupang_partners: fv.isCoupangPartners,
+    is_coupang_partners: formValues.isCoupangPartners,
     updated_at: new Date().toISOString(),
   };
 
-  if (existing.slug !== fv.slug) {
+  if (existing.slug !== formValues.slug) {
     updateData.prev_slug = existing.slug;
   }
-  if (existing.category !== fv.category) {
+  if (existing.category !== formValues.category) {
     updateData.prev_category = existing.category;
   }
-  if (existing.sub_category !== fv.subCategory) {
+  if (existing.sub_category !== formValues.subCategory) {
     updateData.prev_sub_category = existing.sub_category;
   }
 
@@ -290,28 +342,32 @@ export async function updatePost(params: {
     throw new Error(`게시글 수정 실패: ${updateError.message}`);
   }
 
-  const successfulTranslations = params.translations.filter((t) => !t.failed);
-  for (const t of successfulTranslations) {
+  const successfulTranslations = params.translations.filter((translation) => !translation.failed);
+  for (const translation of successfulTranslations) {
     const { error: upsertError } = await supabaseServer.from('post_translations').upsert(
       {
         post_id: params.id,
-        locale: t.locale,
-        title: t.title,
-        description: t.description,
-        content: t.content,
-        place_name: t.place_name || null,
-        address: t.address || null,
-        product_name: t.product_name || null,
-        purchase_source: t.purchase_source || null,
-        price_prefix: t.price_prefix && t.price_prefix.length > 0 ? t.price_prefix : null,
-        image_alts: t.image_alts ?? [],
-        thumbnail_alt: t.thumbnail_alt || null,
+        locale: translation.locale,
+        title: translation.title,
+        description: translation.description,
+        content: translation.content,
+        place_name: translation.place_name || null,
+        address: translation.address || null,
+        product_name: translation.product_name || null,
+        purchase_source: translation.purchase_source || null,
+        price_prefix:
+          translation.price_prefix && translation.price_prefix.length > 0
+            ? translation.price_prefix
+            : null,
+        image_alts: translation.image_alts ?? [],
+        thumbnail_alt: translation.thumbnail_alt || null,
         updated_at: new Date().toISOString(),
       },
       { onConflict: 'post_id,locale' },
     );
 
-    if (upsertError) throw new Error(`번역 저장 실패 (${t.locale}): ${upsertError.message}`);
+    if (upsertError)
+      throw new Error(`번역 저장 실패 (${translation.locale}): ${upsertError.message}`);
   }
 
   try {
