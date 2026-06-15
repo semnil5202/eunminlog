@@ -2,6 +2,7 @@
 /** 추천 포스트 단일 아이템. 현재 글과 slug가 일치하면 active 스타일을 적용한다. */
 
 import { getLocalePath } from "@/shared/lib/i18n/locales";
+import { optimizedUrl } from "@/shared/lib/image";
 import type { Locale } from "@/shared/types/common";
 import type { LocalizedPost } from "@/shared/types/post";
 
@@ -52,7 +53,7 @@ const href = getLocalePath(
     </div>
     <div class="shrink-0 w-20 h-20 overflow-hidden bg-gray-100">
       <img
-        src={post.thumbnail}
+        src={optimizedUrl(post.thumbnail)}
         alt={post.thumbnail_alt ?? post.title}
         width={80}
         height={80}

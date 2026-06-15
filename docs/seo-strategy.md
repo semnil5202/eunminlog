@@ -67,6 +67,7 @@ Sitemap: {site}/sitemap-index.xml
 - `srcset` + explicit `width`/`height`
 - 첫 번째 PostCard thumbnail: LCP Priority (`loading="eager"`)
 - 나머지: `loading="lazy"`
+- PostCard, 상세 대표 이미지, 우측 추천/인근글 80x80 썸네일은 `optimizedUrl()`로 `_688.webp` 리사이즈본을 사용
 - OG 이미지: 썸네일 업로드 시 1200px 너비 `_og.webp` 변형을 자동 생성. `OpenGraph.astro`에서 `thumbnail.webp` → `thumbnail_og.webp`로 변환하여 `og:image`에 사용. `og:image:width`(1200) / `og:image:height`(630) 메타태그 포함
 
 ### CLS 방지 (Cumulative Layout Shift)

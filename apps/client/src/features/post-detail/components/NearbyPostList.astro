@@ -2,6 +2,7 @@
 /** 같은 서브카테고리의 인근 포스트 목록. */
 
 import { getLocalePath } from "@/shared/lib/i18n/locales";
+import { optimizedUrl } from "@/shared/lib/image";
 import type { LocalizedPost } from "@/shared/types/post";
 import type { Locale } from "@/shared/types/common";
 
@@ -79,7 +80,7 @@ const {
               </div>
               <div class="shrink-0 w-20 h-20 overflow-hidden bg-gray-100">
                 <img
-                  src={item.thumbnail}
+                  src={optimizedUrl(item.thumbnail)}
                   alt={item.thumbnail_alt ?? item.title}
                   width={80}
                   height={80}

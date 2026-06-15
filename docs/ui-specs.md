@@ -250,6 +250,7 @@
 - Props: `post` (LocalizedPost), `currentSlug?`, `locale`
 - 현재 글과 slug 일치 시 `border-l-primary-500` active 스타일 적용
 - 썸네일(80x80) + 제목(truncate) + 설명(line-clamp-2) 레이아웃
+- 썸네일은 `optimizedUrl()`로 `_688.webp` 리사이즈본을 사용
 
 ### Feature Components: Post Detail (`features/post-detail/`)
 
@@ -338,6 +339,7 @@ Admin에서 `data-type="image-carousel"`로 마크업된 연속 이미지를 Cli
 - Props: `posts`, `currentSlug`, `categoryLabel`, `subCategoryLabel`, `moreLabel`, `subCategoryHref`, `locale`
 - 같은 서브카테고리의 인근 포스트를 썸네일 + 제목 + 설명 리스트로 표시
 - 현재 포스트는 `border-l-primary-500` + `aria-current="page"`로 구분
+- 썸네일은 `optimizedUrl()`로 `_688.webp` 리사이즈본을 사용
 
 #### `PostBadges.astro`
 
