@@ -185,7 +185,9 @@ Job: deploy
 
 ### 6-1. SITE_URL 환경변수 대응 (P1)
 
-`astro.config.mjs`에서 `process.env.SITE_URL`을 읽어 Astro의 `site` 옵션에 전달. `packages/config/site.ts`의 하드코딩 값은 기본값(fallback)으로 유지. 구체적인 도메인은 [`secrets-reference.md`](secrets-reference.md) 섹션 3을 참조.
+`astro.config.mjs`에서 `getSiteUrlFromEnv(process.env.PUBLIC_STAGE)`를 읽어 Astro의 `site` 옵션에 전달. `packages/config/site.ts`의 production 기본값은 `https://eunminlog.site`(apex)로 유지한다. 구체적인 도메인은 [`secrets-reference.md`](secrets-reference.md) 섹션 3을 참조.
+
+운영 환경에서는 CloudFront Function이 `www.eunminlog.site/*` 요청을 path/query string 보존 상태로 `eunminlog.site/*`에 301 리다이렉트한다.
 
 ### 6-2. Workflow 파일 생성 (P0)
 

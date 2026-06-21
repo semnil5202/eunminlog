@@ -273,18 +273,18 @@ infra/
 
 빌드 스크립트가 `__POST_REDIRECTS__`, `__CATEGORY_REDIRECTS__` 플레이스홀더를 실제 매핑 데이터로 치환하여 최종 JS 파일을 생성한다.
 
-### 7.1 non-www → www 301 리다이렉트
+### 7.1 www → apex 301 리다이렉트
 
-CF Function 템플릿(`infra/cf-functions/viewer-request.js.template`)에 host 체크 로직이 추가되어 있다. `http.host`가 `www.eunminlog.site`가 아닌 경우(예: `eunminlog.site`) `https://www.eunminlog.site`로 301 리다이렉트한다.
+CF Function 템플릿(`infra/cf-functions/viewer-request.js.template`)에 host 체크 로직이 추가되어 있다. `http.host`가 `www.eunminlog.site`인 경우 `https://eunminlog.site`로 301 리다이렉트한다. 이때 path와 query string을 보존한다.
 
 ```
 Viewer Request 처리 순서:
-  1. non-www → www 301 리다이렉트 (host 체크)
+  1. www → apex 301 리다이렉트 (host 체크)
   2. 슬러그 리다이렉트 확인 → 매칭되면 301 반환
   3. 기존 URI → index.html 매핑 로직 실행
 ```
 
-**Canonical URL**: `https://www.eunminlog.site` (www 포함)
+**Canonical URL**: `https://eunminlog.site` (apex)
 
 ## 8. 엣지 케이스
 

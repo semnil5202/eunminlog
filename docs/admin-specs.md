@@ -1022,7 +1022,7 @@ features/translation/
 
 | `VERCEL_ENV` 값 | 트리거 대상 브랜치 | Client 배포 환경     |
 | --------------- | ------------------ | -------------------- |
-| `production`    | `main`             | `www.eunminlog.site` |
+| `production`    | `main`             | `eunminlog.site`     |
 | `preview`       | `develop`          | `dev.eunminlog.site` |
 | `development`   | `develop`          | `dev.eunminlog.site` |
 | 미설정 (로컬)   | 트리거 스킵        | -                    |

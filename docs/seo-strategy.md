@@ -55,6 +55,7 @@ Sitemap: {site}/sitemap-index.xml
 - 모든 페이지: `<title>`, `<meta description>`, Open Graph (`og:title`, `og:description`, `og:image`, `og:image:width`, `og:image:height`)
 - Canonical Tag 필수 (중복 URL 방지)
 - Trailing slash 일관성 유지
+- 운영 canonical host는 `https://eunminlog.site`(apex)로 통일. `https://www.eunminlog.site/*` 요청은 CloudFront Function에서 path/query string을 보존해 apex로 301 리다이렉트
 
 ## Mobile SEO
 
