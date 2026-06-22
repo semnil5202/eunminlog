@@ -81,7 +81,7 @@ src/
 │   │   ├── components/
 │   │   │   ├── PostCard.astro              # 단일 포스트 카드
 │   │   │   ├── PostCardGrid.astro          # 카드 그리드 + InFeedAdsense + 페이지네이션
-│   │   │   └── SponsoredCard.astro         # 협찬 포스트 카드
+│   │   │   └── SponsoredCard.astro         # 협찬글/인기글 상태 카드
 │   │   ├── api/
 │   │   │   ├── posts.ts                    # 포스트 데이터 fetch (빌드 타임, Supabase)
 │   │   │   ├── translations.ts             # 번역 데이터 fetch (빌드 타임, Supabase)
@@ -91,7 +91,7 @@ src/
 │   │   ├── components/
 │   │   │   ├── PlaceInfoCard.astro         # 장소 정보 카드 (Schema.org LocalBusiness)
 │   │   │   ├── NearbyPostList.astro        # 같은 서브카테고리 인근 포스트 목록
-│   │   │   └── PostBadges.astro            # 협찬/추천 뱃지 조합
+│   │   │   └── PostBadges.astro            # 협찬글/인기글 뱃지 조합
 │   │   └── lib/
 │   │       ├── ads.ts                      # insertInArticleAds() — H2 섹션 경계 광고 삽입
 │   │       └── schema.ts                   # buildBlogPostingSchema() JSON-LD
@@ -116,8 +116,8 @@ src/
 │   │   │   ├── LeftSidebar.astro           # 좌측 사이드바 (CategoryTree 포함)
 │   │   │   ├── RightSidebar.astro          # 우측 사이드바 (FixedAdsense + SponsoredPostList)
 │   │   │   ├── ThreeColumnLayout.astro     # 3-Column 그리드 레이아웃
-│   │   │   ├── SponsoredPostList.astro     # 협찬 포스트 리스트
-│   │   │   ├── SponsoredPostItem.astro     # 협찬 포스트 단일 아이템
+│   │   │   ├── SponsoredPostList.astro     # 페이지 범위별 제목을 받는 인기글 리스트
+│   │   │   ├── SponsoredPostItem.astro     # 인기글 단일 아이템
 │   │   │   ├── BloggerProfile.astro        # 블로거 프로필 (LeftSidebar 하단)
 │   │   │   └── BaseHead.astro              # <head> 메타/SEO 공통 요소
 │   │   ├── navigation/
@@ -134,7 +134,7 @@ src/
 │   │   └── ui/
 │   │       ├── ImageLightbox.astro         # 전역 이미지 라이트박스 (Layout에 1회 삽입)
 │   │       ├── StarRating.astro            # 별점 SVG (Schema.org Rating 포함)
-│   │       ├── SponsoredBadge.astro        # 협찬 라벨 뱃지
+│   │       ├── PostBadge.astro             # 협찬글/인기글 상태 뱃지
 │   │       └── Toast.astro                 # 전역 토스트 알림 (Layout에 1회 삽입)
 │   ├── constants/
 │   │   └── consent.ts                      # CONSENT_REQUIRED_LOCALES, CONSENT_COOKIE_NAME, CONSENT_COOKIE_MAX_AGE

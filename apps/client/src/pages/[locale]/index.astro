@@ -46,6 +46,7 @@ const path = "/";
 
 const homeLabel = t("nav.home", locale);
 const breadcrumbItems = [{ name: homeLabel, url: "/" }];
+const popularTitle = t("sidebar.allPopular", locale);
 ---
 
 <ListLayout
@@ -56,6 +57,7 @@ const breadcrumbItems = [{ name: homeLabel, url: "/" }];
   locale={locale}
   ogImage="https://media.eunminlog.site/statics/images/og_image_main.webp"
   sponsoredPosts={sponsoredLocalized}
+  popularTitle={popularTitle}
   gaPageParams={{ page_type: 'list', content_category: 'all', content_sub_category: 'all', content_locale: locale }}
 >
   <BreadcrumbJsonLd slot="head" items={breadcrumbItems} />
@@ -67,6 +69,7 @@ const breadcrumbItems = [{ name: homeLabel, url: "/" }];
     locale={locale}
     feedEndpoint={`/api/feed/${locale}/all/`}
     hasNextPage={totalPages > 1}
-    sponsoredLabel={t("post.sponsored", locale)}
+    sponsoredLabel={t("post.sponsoredBadge", locale)}
+    popularLabel={t("post.popularBadge", locale)}
   />
 </ListLayout>

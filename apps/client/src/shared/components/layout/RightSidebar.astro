@@ -1,5 +1,5 @@
 ---
-/** PC 전용 우측 사이드바. 애드센스 영역과 협찬 포스트를 표시한다. */
+/** PC 전용 우측 사이드바. 애드센스 영역과 인기글 리스트를 표시한다. */
 
 import SponsoredPostList from "@/shared/components/layout/SponsoredPostList.astro";
 import FixedAdsense from "@/shared/components/ad/FixedAdsense.astro";
@@ -11,9 +11,10 @@ interface Props {
   locale: Locale;
   sponsoredPosts?: LocalizedPost[];
   currentSlug?: string;
+  popularTitle?: string;
 }
 
-const { locale, sponsoredPosts = [], currentSlug } = Astro.props;
+const { locale, sponsoredPosts = [], currentSlug, popularTitle } = Astro.props;
 ---
 
 <aside
@@ -28,6 +29,7 @@ const { locale, sponsoredPosts = [], currentSlug } = Astro.props;
       locale={locale}
       posts={sponsoredPosts}
       currentSlug={currentSlug}
+      title={popularTitle}
     />
 
   </div>

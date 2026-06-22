@@ -4,7 +4,7 @@ import type { LocalizedPost } from "@/shared/types/post";
 import type { Locale } from "@/shared/types/common";
 import { getCategoryLabel } from "@/shared/lib/i18n/categories";
 import { getLocalePath } from "@/shared/lib/i18n/locales";
-import SponsoredBadge from "@/shared/components/ui/SponsoredBadge.astro";
+import PostBadge from "@/shared/components/ui/PostBadge.astro";
 import { optimizedUrl } from "@/shared/lib/image";
 
 interface Props {
@@ -12,11 +12,12 @@ interface Props {
   locale: Locale;
   index: number;
   sponsoredLabel?: string;
+  popularLabel?: string;
   class?: string;
 }
 
-const { post, locale, index, sponsoredLabel, class: className } = Astro.props;
-const showBadge = sponsoredLabel && post.is_recommended;
+const { post, locale, index, sponsoredLabel, popularLabel, class: className } = Astro.props;
+const badgeLabel = post.is_sponsored ? sponsoredLabel : post.is_recommended ? popularLabel : undefined;
 
 const isLcp = index === 0;
 const postPath = `/${post.category}/${post.sub_category}/${post.slug}/`;
@@ -49,7 +50,7 @@ const dateStr = new Date(post.created_at).toLocaleDateString(locale, {
         fetchpriority={isLcp ? "high" : "auto"}
         decoding={isLcp ? "sync" : "async"}
       />
-      {showBadge && <SponsoredBadge label={sponsoredLabel} class="absolute top-3 left-3" />}
+      {badgeLabel && <PostBadge label={badgeLabel} class="absolute top-3 left-3" />}
     </div>
 
     <div class="mt-4 flex flex-col gap-2">

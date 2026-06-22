@@ -25,6 +25,7 @@ const posts: LocalizedPost[] = rawPosts.map((p) => ({ ...p, translated_place_nam
 const sponsoredLocalized: LocalizedPost[] = sponsored.map((p) => ({ ...p, translated_place_name: null, translated_address: null, translated_product_name: null, translated_purchase_source: null, translated_price_prefix: null, locale }));
 
 const breadcrumbItems = [{ name: "홈", url: "/" }];
+const popularTitle = t("sidebar.allPopular", locale);
 ---
 
 <ListLayout
@@ -35,6 +36,7 @@ const breadcrumbItems = [{ name: "홈", url: "/" }];
   locale={locale}
   ogImage="https://media.eunminlog.site/statics/images/og_image_main.webp"
   sponsoredPosts={sponsoredLocalized}
+  popularTitle={popularTitle}
   gaPageParams={{ page_type: 'list', content_category: 'all', content_sub_category: 'all', content_locale: locale }}
 >
   <BreadcrumbJsonLd slot="head" items={breadcrumbItems} />
@@ -46,6 +48,7 @@ const breadcrumbItems = [{ name: "홈", url: "/" }];
     locale={locale}
     feedEndpoint={`/api/feed/${locale}/all/`}
     hasNextPage={totalPages > 1}
-    sponsoredLabel={t("post.sponsored", locale)}
+    sponsoredLabel={t("post.sponsoredBadge", locale)}
+    popularLabel={t("post.popularBadge", locale)}
   />
 </ListLayout>

@@ -248,6 +248,8 @@
 
 - **위치**: `shared/components/layout/SponsoredPostItem.astro`
 - Props: `post` (LocalizedPost), `currentSlug?`, `locale`
+- `SponsoredPostList.astro`는 `title?`을 받아 우측/하단 인기글 섹션 제목을 표시. 미전달 시 `인기글` fallback.
+- 인기글 섹션 제목은 페이지 범위에 맞춰 root/search는 `전체 인기글`, 대분류는 `{대분류} 인기글`, 소분류/상세는 `{소분류} 인기글`로 표시
 - 현재 글과 slug 일치 시 `border-l-primary-500` active 스타일 적용
 - 썸네일(80x80) + 제목(truncate) + 설명(line-clamp-2) 레이아웃
 - 썸네일은 `optimizedUrl()`로 `_688.webp` 리사이즈본을 사용
@@ -344,8 +346,9 @@ Admin에서 `data-type="image-carousel"`로 마크업된 연속 이미지를 Cli
 #### `PostBadges.astro`
 
 - **위치**: `features/post-detail/components/PostBadges.astro`
-- Props: `isSponsored`, `isRecommended`, `label`
-- 협찬/추천 SponsoredBadge를 조건부 렌더링
+- Props: `isSponsored`, `isRecommended`, `sponsoredLabel`, `popularLabel`
+- `is_sponsored`가 true이면 `협찬글`, 아니고 `is_recommended`가 true이면 `인기글` `PostBadge`를 렌더링
+- `is_sponsored`와 `is_recommended`가 동시에 true이면 `협찬글`만 표시
 
 ### Feature Components: Search (`features/search/`)
 

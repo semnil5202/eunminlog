@@ -14,6 +14,7 @@ interface Props {
   resultsText: string;
   suggestedText: string;
   sponsoredLabel: string;
+  popularLabel: string;
   locale: Locale;
 }
 
@@ -26,6 +27,7 @@ const {
   resultsText,
   suggestedText,
   sponsoredLabel,
+  popularLabel,
   locale,
 } = Astro.props;
 
@@ -123,7 +125,7 @@ const advertisementLabel = t("a11y.advertisement", locale);
   set:html={JSON.stringify(searchData)}
 />
 
-<script define:vars={{ sponsoredLabel, resultsText, advertisementLabel }}>
+<script define:vars={{ sponsoredLabel, popularLabel, resultsText, advertisementLabel }}>
   const dataEl = document.getElementById('search-data');
   const form = document.getElementById('search-form');
   const input = document.getElementById('search-input');
@@ -176,9 +178,12 @@ const advertisementLabel = t("a11y.advertisement", locale);
     article.dataset.postSubCategory = post.subCategory;
     article.dataset.postSponsored = String(post.isSponsored);
 
+    const badgeLabel = post.isSponsored ? sponsoredLabel : post.isRecommended ? popularLabel : '';
+    const showBadge = Boolean(badgeLabel);
+
     let badgeHtml = '';
-    if (post.isRecommended) {
-      badgeHtml = `<span class="absolute top-3 left-3 inline-flex items-center text-xs font-semibold bg-primary-600 text-white rounded-md px-2.5 py-0.5">${sponsoredLabel}</span>`;
+    if (showBadge) {
+      badgeHtml = `<span class="absolute top-3 left-3 inline-flex items-center text-xs font-semibold bg-primary-600 text-white rounded-md px-2.5 py-0.5">${badgeLabel}</span>`;
     }
 
     const placeHtml = post.placeName
@@ -187,7 +192,7 @@ const advertisementLabel = t("a11y.advertisement", locale);
 
     article.innerHTML = `
       <a href="${post.href}" class="block">
-        <div class="${post.isRecommended ? 'relative ' : ''}w-full aspect-7/3 overflow-hidden bg-gray-100">
+        <div class="${showBadge ? 'relative ' : ''}w-full aspect-7/3 overflow-hidden bg-gray-100">
           <img
             src="${post.thumbnail}"
             alt="${post.thumbnailAlt}"

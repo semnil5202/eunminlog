@@ -14,9 +14,10 @@ interface Props {
   feedEndpoint?: string;
   hasNextPage?: boolean;
   sponsoredLabel?: string;
+  popularLabel?: string;
 }
 
-const { posts, locale, feedEndpoint, hasNextPage = false, sponsoredLabel = "" } = Astro.props;
+const { posts, locale, feedEndpoint, hasNextPage = false, sponsoredLabel = "", popularLabel = "" } = Astro.props;
 
 type FeedItem =
   | { type: "post"; post: LocalizedPost; cardIndex: number }
@@ -26,13 +27,13 @@ const feedItems: FeedItem[] = [];
 let cardIndex = 0;
 let adIndex = 0;
 
-for (let i = 0; i < posts.length; i++) {
+for (let index = 0; index < posts.length; index++) {
   if (cardIndex === 1 || cardIndex === 3) {
     adIndex++;
     feedItems.push({ type: "ad", adIndex });
   }
 
-  feedItems.push({ type: "post", post: posts[i]!, cardIndex });
+  feedItems.push({ type: "post", post: posts[index]!, cardIndex });
   cardIndex++;
 }
 ---
@@ -44,6 +45,7 @@ for (let i = 0; i < posts.length; i++) {
   data-next-page="2"
   data-has-next={String(hasNextPage)}
   data-sponsored-label={sponsoredLabel}
+  data-popular-label={popularLabel}
   data-ad-label={t("a11y.advertisement", locale)}
 >
   {feedItems.map((item) => {
@@ -52,7 +54,7 @@ for (let i = 0; i < posts.length; i++) {
       return null;
     }
 
-    if (item.post.is_recommended) {
+    if (item.post.is_sponsored || item.post.is_recommended) {
       return (
         <SponsoredCard
           post={item.post}
@@ -68,6 +70,7 @@ for (let i = 0; i < posts.length; i++) {
         locale={locale}
         index={item.cardIndex}
         sponsoredLabel={sponsoredLabel}
+        popularLabel={popularLabel}
       />
     );
   })}
@@ -89,6 +92,7 @@ for (let i = 0; i < posts.length; i++) {
       let loading = false;
       let dynamicAdCounter = 2;
       const sponsoredLabel = feed.dataset.sponsoredLabel || "";
+      const popularLabel = feed.dataset.popularLabel || "";
       const adLabel = feed.dataset.adLabel || "Advertisement";
 
       const createAdSlot = (): HTMLDivElement => {
@@ -115,11 +119,12 @@ for (let i = 0; i < posts.length; i++) {
         article.dataset.postSubCategory = post.subCategory;
         article.dataset.postSponsored = String(post.isSponsored);
 
-        const showBadge = post.isRecommended;
+        const badgeLabel = post.isSponsored ? sponsoredLabel : post.isRecommended ? popularLabel : "";
+        const showBadge = Boolean(badgeLabel);
 
         let badgeHtml = "";
         if (showBadge) {
-          badgeHtml = `<span class="absolute top-3 left-3 inline-flex items-center text-xs font-semibold bg-primary-600 text-white rounded-md px-2.5 py-0.5">${sponsoredLabel}</span>`;
+          badgeHtml = `<span class="absolute top-3 left-3 inline-flex items-center text-xs font-semibold bg-primary-600 text-white rounded-md px-2.5 py-0.5">${badgeLabel}</span>`;
         }
 
         const placeHtml = post.placeName

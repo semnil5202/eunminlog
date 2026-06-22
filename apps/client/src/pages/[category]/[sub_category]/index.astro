@@ -68,6 +68,7 @@ const pageTitle = `${t("meta.subCategoryTitle", locale).replaceAll("{0}", catego
 const pageDescription = t("meta.subCategoryDescription", locale)
   .replaceAll("{0}", categoryLabel)
   .replaceAll("{1}", subCategoryLabel);
+const popularTitle = t("sidebar.scopedPopular", locale).replaceAll("{0}", subCategoryLabel);
 ---
 
 <ListLayout
@@ -77,6 +78,7 @@ const pageDescription = t("meta.subCategoryDescription", locale)
   path={path}
   locale={locale}
   sponsoredPosts={sponsoredLocalized}
+  popularTitle={popularTitle}
   ogImage="https://media.eunminlog.site/statics/images/og_image_main.webp"
   gaPageParams={{ page_type: 'list', content_category: category, content_sub_category: sub_category, content_locale: locale }}
   isMultilingual={isMultilingual}
@@ -92,6 +94,7 @@ const pageDescription = t("meta.subCategoryDescription", locale)
     locale={locale}
     feedEndpoint={`/api/feed/${locale}/${category}/${sub_category}/`}
     hasNextPage={totalPages > 1}
-    sponsoredLabel={t("post.sponsored", locale)}
+    sponsoredLabel={t("post.sponsoredBadge", locale)}
+    popularLabel={t("post.popularBadge", locale)}
   />
 </ListLayout>

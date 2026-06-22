@@ -1,5 +1,5 @@
 ---
-/** 추천 포스트 리스트. RightSidebar(PC)와 게시글 하단(모바일) 공용. */
+/** 인기글 리스트. RightSidebar(PC)와 게시글 하단(모바일) 공용. */
 
 import { t } from "@/shared/lib/i18n/translations";
 import type { Locale } from "@/shared/types/common";
@@ -11,16 +11,17 @@ interface Props {
   locale: Locale;
   posts: LocalizedPost[];
   currentSlug?: string;
+  title?: string;
 }
 
-const { locale, posts, currentSlug } = Astro.props;
-const sponsoredLabel = t("sidebar.sponsored", locale);
-const emptyLabel = t("sidebar.empty", locale);
+const { locale, posts, currentSlug, title } = Astro.props;
+const popularLabel = title ?? t("sidebar.popular", locale);
+const emptyLabel = t("sidebar.popularEmpty", locale);
 ---
 
 <section class="sponsored-post-list">
   <h2 class="text-[16px] font-bold text-primary-600 pb-2 border-b border-gray-200">
-    {sponsoredLabel}
+    {popularLabel}
   </h2>
 
   {posts.length > 0 ? (

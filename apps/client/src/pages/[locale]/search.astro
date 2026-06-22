@@ -46,7 +46,9 @@ const noResultsText = t("search.noResults", locale);
 const noResultsHintText = t("search.noResultsHint", locale);
 const resultsText = t("search.results", locale);
 const suggestedText = t("search.suggested", locale);
-const sponsoredLabel = t("post.sponsored", locale);
+const sponsoredLabel = t("post.sponsoredBadge", locale);
+const popularLabel = t("post.popularBadge", locale);
+const popularTitle = t("sidebar.allPopular", locale);
 ---
 
 <ListLayout
@@ -56,6 +58,7 @@ const sponsoredLabel = t("post.sponsored", locale);
   path={path}
   locale={locale}
   sponsoredPosts={sponsoredLocalized}
+  popularTitle={popularTitle}
   gaPageParams={{ page_type: 'search', content_category: 'all', content_sub_category: 'all', content_locale: locale }}
 >
   <Fragment slot="head">
@@ -71,6 +74,7 @@ const sponsoredLabel = t("post.sponsored", locale);
     resultsText={resultsText}
     suggestedText={suggestedText}
     sponsoredLabel={sponsoredLabel}
+    popularLabel={popularLabel}
     locale={locale}
   />
 </ListLayout>

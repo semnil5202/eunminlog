@@ -74,7 +74,9 @@ const contentWithTables = wrapTablesWithScrollContainer(contentWithBookmarks);
 const contentWithSponsored = post.is_coupang_partners ? injectSponsoredRel(contentWithTables) : contentWithTables;
 const contentWithAds = injectZoomIcons(contentWithSponsored);
 const blogPosting = buildBlogPostingSchema(post, canonical);
-const sponsoredLabel = t("post.sponsored", locale);
+const sponsoredLabel = t("post.sponsoredBadge", locale);
+const popularLabel = t("post.popularBadge", locale);
+const popularTitle = t("sidebar.scopedPopular", locale).replaceAll("{0}", subCategoryLabel);
 
 const gaPageParams = {
   page_type: 'post',
@@ -115,8 +117,10 @@ const gaPageParams = {
         <article itemscope itemtype="https://schema.org/BlogPosting">
 
           <PostBadges
+            isSponsored={post.is_sponsored}
             isRecommended={post.is_recommended}
-            label={sponsoredLabel}
+            sponsoredLabel={sponsoredLabel}
+            popularLabel={popularLabel}
           />
 
           <h1
@@ -240,6 +244,7 @@ const gaPageParams = {
             locale={locale}
             posts={sponsoredLocalized}
             currentSlug={post.slug}
+            title={popularTitle}
           />
         </div>
 
@@ -249,6 +254,7 @@ const gaPageParams = {
         locale={locale}
         sponsoredPosts={sponsoredLocalized}
         currentSlug={post.slug}
+        popularTitle={popularTitle}
       />
 
     </div>
