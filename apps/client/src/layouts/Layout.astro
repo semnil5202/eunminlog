@@ -81,18 +81,13 @@ const webSiteSchema: Record<string, unknown> = {
         document.head.appendChild(gtagScript);
         gtag('config', GA_MEASUREMENT_ID, gaPageParams);
 
+        if (window.location.hostname !== 'eunminlog.site') return;
+
         var wcsScript = document.createElement('script');
         wcsScript.src = 'https://wcs.pstatic.net/wcslog.js';
         wcsScript.onload = function() {
-          var naverAnalyticsSiteIds = {
-            // 301 전환이 완료될 때까지 유지하는 레거시 www 사이트 ID
-            'www.eunminlog.site': 'c8876b6e46c848',
-            'eunminlog.site': '1a207fed1244f40'
-          };
-          var naverAnalyticsSiteId = naverAnalyticsSiteIds[window.location.hostname];
-          if (!naverAnalyticsSiteId) return;
           if (!window.wcs_add) window.wcs_add = {};
-          wcs_add["wa"] = naverAnalyticsSiteId;
+          wcs_add["wa"] = "1a207fed1244f40";
           if (window.wcs) wcs_do();
         };
         document.head.appendChild(wcsScript);
