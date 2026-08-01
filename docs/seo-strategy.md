@@ -176,7 +176,7 @@ OpenAI GPT-5 Mini로 자동 번역. 한국어가 기본 언어.
 
 게시글 또는 카테고리/서브카테고리의 slug가 변경되면, 이전 URL에서 새 URL로 301 리다이렉트를 수행한다.
 
-정적 페이지 URL 변경도 동일한 CloudFront Function에서 처리한다. 현재 고정 리다이렉트는 `/sponsor/` → `/about/`, `/{locale}/sponsor/` → `/{locale}/about/`이다.
+정적 페이지 URL 변경도 동일한 CloudFront Function의 `STATIC_PAGE_REDIRECTS` 매핑에서 처리한다. 현재 매핑은 `/sponsor/` → `/about/`, `/{locale}/sponsor/` → `/{locale}/about/`이다.
 
 ### 목적
 

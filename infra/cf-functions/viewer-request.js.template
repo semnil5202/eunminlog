@@ -2,6 +2,7 @@
 var POST_REDIRECTS = __POST_REDIRECTS__;
 var CATEGORY_REDIRECTS = __CATEGORY_REDIRECTS__;
 var POST_CATEGORY_REDIRECTS = __POST_CATEGORY_REDIRECTS__;
+var STATIC_PAGE_REDIRECTS = { sponsor: 'about' };
 
 var LOCALES = ['en', 'ja', 'zh-CN', 'zh-TW', 'id', 'vi', 'th'];
 
@@ -26,16 +27,21 @@ function getQueryString(request) {
   return pairs.length > 0 ? '?' + pairs.join('&') : '';
 }
 
-function getAboutRedirectUri(pathParts) {
-  if (pathParts.length === 1 && pathParts[0] === 'sponsor') {
-    return '/about/';
+function getStaticPageRedirectUri(pathParts) {
+  var locale = '';
+  var sourcePage = '';
+
+  if (pathParts.length === 1) {
+    sourcePage = pathParts[0];
+  } else if (pathParts.length === 2 && LOCALES.indexOf(pathParts[0]) !== -1) {
+    locale = pathParts[0] + '/';
+    sourcePage = pathParts[1];
+  } else {
+    return null;
   }
 
-  if (pathParts.length === 2 && LOCALES.indexOf(pathParts[0]) !== -1 && pathParts[1] === 'sponsor') {
-    return '/' + pathParts[0] + '/about/';
-  }
-
-  return null;
+  var destinationPage = STATIC_PAGE_REDIRECTS[sourcePage];
+  return destinationPage ? '/' + locale + destinationPage + '/' : null;
 }
 
 function handler(event) {
@@ -55,12 +61,12 @@ function handler(event) {
     return p !== '';
   });
 
-  var aboutRedirectUri = getAboutRedirectUri(parts);
-  if (aboutRedirectUri) {
+  var staticPageRedirectUri = getStaticPageRedirectUri(parts);
+  if (staticPageRedirectUri) {
     return {
       statusCode: 301,
       statusDescription: 'Moved Permanently',
-      headers: { location: { value: aboutRedirectUri + getQueryString(request) } },
+      headers: { location: { value: staticPageRedirectUri + getQueryString(request) } },
     };
   }
 

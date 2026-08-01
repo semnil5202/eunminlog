@@ -59,6 +59,7 @@
 
 - 블로그 소개 및 협찬 문의 페이지의 canonical URL을 `/sponsor/`에서 `/about/`으로 변경한다.
 - 기존 외부 링크와 북마크 보존을 위해 CloudFront Function에서 301 리다이렉트한다.
+- 정적 페이지 변경은 `STATIC_PAGE_REDIRECTS` 매핑에 이전 경로와 새 경로를 추가해 확장한다.
 - 쿼리스트링은 그대로 보존한다.
 
 **영향 URL 패턴:**
@@ -98,7 +99,7 @@
 
 ```
 Viewer Request
-  1. 정적 페이지 URL 변경 확인 → 매칭되면 301 반환
+  1. STATIC_PAGE_REDIRECTS에서 정적 페이지 URL 변경 확인 → 매칭되면 301 반환
   2. 리다이렉트 매핑 확인 → 매칭되면 301 반환
   3. 기존 URI → index.html 매핑 로직 실행
 ```
