@@ -56,6 +56,7 @@ Sitemap: {site}/sitemap-index.xml
 - Canonical Tag 필수 (중복 URL 방지)
 - Trailing slash 일관성 유지
 - 운영 canonical host는 `https://eunminlog.site`(apex)로 통일. `https://www.eunminlog.site/*` 요청은 CloudFront Function에서 path/query string을 보존해 apex로 301 리다이렉트
+- 블로그 소개 및 협찬 문의 페이지의 canonical URL은 `/about/` 및 `/{locale}/about/`이다. 기존 `/sponsor/` 및 `/{locale}/sponsor/` 요청은 CloudFront Function에서 path/query string을 보존해 301 리다이렉트한다.
 
 ## Mobile SEO
 
@@ -174,6 +175,8 @@ OpenAI GPT-5 Mini로 자동 번역. 한국어가 기본 언어.
 > 상세 스펙: [`docs/redirect-specs.md`](redirect-specs.md)
 
 게시글 또는 카테고리/서브카테고리의 slug가 변경되면, 이전 URL에서 새 URL로 301 리다이렉트를 수행한다.
+
+정적 페이지 URL 변경도 동일한 CloudFront Function에서 처리한다. 현재 고정 리다이렉트는 `/sponsor/` → `/about/`, `/{locale}/sponsor/` → `/{locale}/about/`이다.
 
 ### 목적
 

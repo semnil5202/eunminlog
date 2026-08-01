@@ -55,6 +55,19 @@
 /{locale}/{category}/{prev_sub}/...       → /{locale}/{category}/{new_sub}/...
 ```
 
+### 2.3 정적 페이지 URL 변경
+
+- 블로그 소개 및 협찬 문의 페이지의 canonical URL을 `/sponsor/`에서 `/about/`으로 변경한다.
+- 기존 외부 링크와 북마크 보존을 위해 CloudFront Function에서 301 리다이렉트한다.
+- 쿼리스트링은 그대로 보존한다.
+
+**영향 URL 패턴:**
+
+```
+/sponsor/                 → /about/
+/{locale}/sponsor/        → /{locale}/about/
+```
+
 ## 3. 아키텍처
 
 ```
@@ -85,8 +98,9 @@
 
 ```
 Viewer Request
-  1. 리다이렉트 매핑 확인 → 매칭되면 301 반환
-  2. 기존 URI → index.html 매핑 로직 실행
+  1. 정적 페이지 URL 변경 확인 → 매칭되면 301 반환
+  2. 리다이렉트 매핑 확인 → 매칭되면 301 반환
+  3. 기존 URI → index.html 매핑 로직 실행
 ```
 
 **우선순위:** 리다이렉트 체크가 index.html 매핑보다 먼저 실행되어야 함. 이전 slug 경로에 index.html을 매핑하면 404가 되므로.

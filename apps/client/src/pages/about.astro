@@ -1,48 +1,32 @@
 ---
-/** 다국어 협찬 문의 페이지 (/{locale}/sponsor/) */
+/** 한국어 블로그 소개 페이지 (/about/) */
 
 import Layout from "@/layouts/Layout.astro";
 import JsonLd from "@/shared/components/seo/JsonLd.astro";
 import { SITE_URL } from "@eunminlog/config/site";
-import { LOCALES, DEFAULT_LOCALE } from "@/shared/types/common";
-import type { Locale } from "@/shared/types/common";
+import { DEFAULT_LOCALE } from "@/shared/types/common";
 import { getSponsorContent, buildMailtoHref } from "@/features/sponsor/content";
 import { t } from "@/shared/lib/i18n/translations";
 
-export const getStaticPaths = async () => {
-  const nonDefaultLocales = LOCALES.filter((l) => l !== DEFAULT_LOCALE);
-
-  return nonDefaultLocales.map((locale) => ({
-    params: { locale },
-    props: { locale },
-  }));
-};
-
-interface Props {
-  locale: Locale;
-}
-
-const { locale } = Astro.props;
+const locale = DEFAULT_LOCALE;
 const sponsor = getSponsorContent(locale);
 const mailtoHref = buildMailtoHref(sponsor);
-const canonical = `/${locale}/sponsor/`;
-const isCjk = ['ja', 'zh-CN', 'zh-TW'].includes(locale);
 
 const jsonLd = {
   "@context": "https://schema.org",
-  "@type": "ContactPage",
+  "@type": "AboutPage",
   name: sponsor.meta.title,
   description: sponsor.meta.description,
-  url: `${SITE_URL}${canonical}`,
-  inLanguage: locale,
+  url: `${SITE_URL}/about/`,
+  inLanguage: "ko",
 };
 ---
 
 <Layout
   title={`${t("meta.sponsorTitle", locale)} | ${t("meta.siteName", locale)}`}
   description={t("meta.sponsorDescription", locale)}
-  canonical={canonical}
-  path="/sponsor/"
+  canonical="/about/"
+  path="/about/"
   locale={locale}
   ogImage="https://media.eunminlog.site/statics/images/og_image_main.webp"
 >
@@ -50,7 +34,7 @@ const jsonLd = {
     <JsonLd schema={jsonLd} />
   </Fragment>
 
-  <main class:list={['grow', isCjk ? 'break-all' : 'break-keep']}>
+  <main class="grow break-keep">
     <section class="bg-primary-50 py-16 lg:py-24">
       <div class="mx-auto max-w-screen-md px-4 lg:px-6 text-center">
         <h1 class="text-3xl lg:text-4xl font-bold text-gray-900 whitespace-pre-line">
@@ -60,7 +44,7 @@ const jsonLd = {
           {sponsor.hero.subtext}
         </p>
         <a
-          href={mailtoHref}
+          href="/"
           class="mt-8 inline-block bg-primary-600 text-white px-8 py-3 text-sm font-semibold hover:bg-primary-700 transition-colors"
         >
           {sponsor.hero.cta}
@@ -71,8 +55,8 @@ const jsonLd = {
     <section class="py-12 lg:py-16">
       <div class="mx-auto max-w-screen-md px-4 lg:px-6">
         <h2 class="text-2xl font-bold text-gray-900">{sponsor.blogIntro.heading}</h2>
-        {sponsor.blogIntro.paragraphs.map((p) => (
-          <p class="mt-4 text-gray-700 leading-relaxed">{p}</p>
+        {sponsor.blogIntro.paragraphs.map((paragraph) => (
+          <p class="mt-4 text-gray-700 leading-relaxed">{paragraph}</p>
         ))}
         <p class="mt-3 text-xs text-gray-400">{sponsor.blogIntro.note}</p>
       </div>
@@ -103,31 +87,18 @@ const jsonLd = {
       </div>
     </section>
 
-    <section class="py-12 lg:py-16">
-      <div class="mx-auto max-w-screen-md px-4 lg:px-6 text-center">
-        <h2 class="text-2xl font-bold text-gray-900">{sponsor.stats.heading}</h2>
-        <p class="mt-2 text-xs text-gray-400">{sponsor.stats.note}</p>
-        <div class="mt-8 grid grid-cols-2 gap-6 sm:grid-cols-4">
-          {sponsor.stats.items.map((stat) => (
-            <div>
-              <p class="text-2xl lg:text-3xl font-bold text-primary-600">{stat.value}</p>
-              <p class="mt-1 text-sm text-gray-500">{stat.label}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
+    {/* TODO: Google Analytics 연동 후 신뢰 가능한 방문자 및 콘텐츠 지표가 준비되면 노출한다. */}
 
     <section class="bg-gray-50 py-12 lg:py-16">
       <div class="mx-auto max-w-screen-md px-4 lg:px-6">
         <h2 class="text-2xl font-bold text-gray-900">{sponsor.collaboration.heading}</h2>
         <p class="mt-2 text-gray-600">{sponsor.collaboration.subtext}</p>
-        <div class="mt-8 grid gap-4 sm:grid-cols-3">
-          {sponsor.collaboration.types.map((collab) => (
+        <div class="mt-8 grid gap-4 sm:grid-cols-2">
+          {sponsor.collaboration.types.map((collaborationType) => (
             <div class="border border-gray-200 bg-white p-6 text-center">
-              <span class="text-3xl" aria-hidden="true">{collab.icon}</span>
-              <p class="mt-3 font-semibold text-gray-900">{collab.title}</p>
-              <p class="mt-2 text-sm text-gray-600">{collab.description}</p>
+              <span class="text-3xl" aria-hidden="true">{collaborationType.icon}</span>
+              <p class="mt-3 font-semibold text-gray-900">{collaborationType.title}</p>
+              <p class="mt-2 text-sm text-gray-600">{collaborationType.description}</p>
             </div>
           ))}
         </div>

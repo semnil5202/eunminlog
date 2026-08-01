@@ -67,50 +67,52 @@ const CONTACT_EMAIL = 'eunminlog@gmail.com';
 const SPONSOR: Record<Locale, SponsorContent> = {
   ko: {
     meta: {
-      title: '협찬 문의',
-      description: `${SITE_NAME_KO}는 맛집, 카페, 여행 콘텐츠를 8개 언어로 제공하는 커플 블로그입니다. 협찬 및 광고 문의를 받고 있습니다.`,
+      title: '은민로그 소개',
+      description: `${SITE_NAME_KO}는 개발자와 마케터 커플이 맛집, 술집, 카페, 여행지, 야구장 등 직접 경험한 곳을 기록하는 블로그입니다.`,
     },
     hero: {
-      headline: '당신의 공간과 브랜드를\n더 많은 사람에게 알리세요',
-      subtext: `${SITE_NAME_KO}는 맛집, 카페, 여행 콘텐츠를 8개 언어로 전 세계에 전달하는 블로그입니다.`,
-      cta: '이메일로 문의하기',
+      headline: '개발자·마케터 커플이 운영하는 일상 블로그',
+      subtext:
+        '맛집과 술집, 분위기 좋은 카페, 여행지, 야구장까지 직접 가보고 경험한 것들을 기록합니다.',
+      cta: '기록 둘러보기',
     },
     blogIntro: {
       heading: '은민로그를 소개합니다',
       paragraphs: [
-        '서울과 전국 각지의 맛집, 카페, 여행지를 직접 방문해, 경험을 바탕으로 리뷰 콘텐츠를 제작하는 커플 블로거입니다.',
-        '단순한 후기 작성이 아닌, 검색 결과에서 잘 보이는 콘텐츠로 제작해 더 많은 사람에게 노출하고 다국어 지원을 통해 해외 독자에게도 당신의 이야기를 전달합니다.',
+        '은민로그는 개발자와 마케터로 일하는 커플이 함께 운영합니다. 쉬는 날이면 맛있는 곳과 걷기 좋은 동네를 찾아다닙니다.',
+        '식당, 술집, 카페, 여행지, 야구장 등 직접 다녀온 곳의 분위기와 동선, 가격대처럼 그날 경험한 것들을 기록합니다. 한국인 커플의 시선으로 찾은 로컬한 장소를 널리 알리고자 일부 글을 여러 언어로 번역합니다.',
       ],
-      note: '* 다국어 적용은 카테고리에 따라 상이할 수 있으므로 문의 부탁드립니다.',
+      note: '* 다국어 지원 여부는 글과 카테고리에 따라 다를 수 있습니다.',
     },
     seoStrengths: {
-      heading: '글로벌 도달, 검색에 강한 콘텐츠',
+      heading: '은민로그의 블로그 운영 방식',
       subtext:
-        '단순히 글을 올리는 블로그가 아니라, 검색 결과에서 더 잘 노출되도록 설계된 기술 기반 콘텐츠 플랫폼입니다.',
+        '읽는 사람은 편하게 둘러보고, 검색 엔진은 글의 내용을 잘 이해할 수 있도록 직접 만들고 운영합니다.',
       multilingual: {
-        heading: '🌍 8개 언어 다국어 지원',
-        description: '한국어, 영어, 일본어, 중국어(간체/번체), 인도네시아어, 베트남어, 태국어',
+        heading: '🌍 8개 언어로 만나는 은민로그',
+        description:
+          '한국어로 작성한 일부 글을 영어, 일본어, 중국어(간체/번체), 인도네시아어, 베트남어, 태국어로도 소개합니다.',
       },
       features: [
         {
-          title: '⚡ 정적 사이트 생성 (SSG)',
+          title: '⚡ 빠르게 열리는 블로그 (SSG)',
           description:
-            '모든 페이지를 미리 생성해 빠른 로딩 속도와 안정적인 사용자 경험을 제공합니다.',
+            '글 페이지를 미리 만들어 두는 정적 사이트 생성 방식을 사용해 빠르고 안정적으로 볼 수 있습니다.',
         },
         {
-          title: '🧩 JSON-LD 구조화 데이터',
+          title: '🧩 검색과 AI가 읽기 쉬운 글 (JSON-LD)',
           description:
-            '검색 엔진과 AI가 이해하기 쉬운 구조로 콘텐츠를 구성해, 검색 결과는 물론 AI 기반 검색 환경에서도 리뷰와 정보가 더 잘 노출되도록 합니다.',
+            '장소와 리뷰 정보를 구조화해 검색 엔진과 AI가 글의 내용을 더 정확하게 이해하도록 돕습니다.',
         },
         {
-          title: '🔗 Hreflang 태그',
+          title: '🔗 언어에 맞게 연결되는 번역 글 (Hreflang)',
           description:
-            '각 언어별 콘텐츠가 해당 국가 검색 결과에 잘 노출되도록 구성해, 해외 독자에게도 정확하게 전달됩니다.',
+            '각 언어의 번역 글을 서로 연결해 해외 독자가 자신에게 맞는 언어로 찾을 수 있게 합니다.',
         },
         {
-          title: '🗺 XML Sitemap',
+          title: '🗺 새 글을 알리는 사이트맵 (Sitemap)',
           description:
-            '주요 언어와 콘텐츠 페이지를 중심으로 사이트 구조를 정리해, 검색 엔진이 콘텐츠를 빠르고 효율적으로 인식할 수 있도록 합니다.',
+            '사이트의 글과 카테고리를 정리해 검색 엔진이 새 콘텐츠를 빠르게 발견할 수 있도록 합니다.',
         },
       ],
     },
@@ -127,7 +129,7 @@ const SPONSOR: Record<Locale, SponsorContent> = {
     },
     collaboration: {
       heading: '협업 방식',
-      subtext: '브랜드와 공간의 특성에 맞춰, 목적에 맞는 형태로 협업을 진행합니다.',
+      subtext: '은민로그와 잘 맞는 공간과 브랜드의 협찬 및 제휴 제안을 받고 있습니다.',
       types: [
         {
           title: '제품 리뷰',
@@ -139,24 +141,18 @@ const SPONSOR: Record<Locale, SponsorContent> = {
           description: '매장이나 여행지를 직접 방문하여 생생한 후기를 작성합니다.',
           icon: '📍',
         },
-        {
-          title: '배너 광고',
-          description: '사이트 흐름을 해치지 않는 위치에 자연스럽게 배너를 노출합니다.',
-          icon: '📢',
-        },
       ],
     },
     cta: {
       heading: '협찬 문의하기',
-      subtext:
-        '협업 방식, 다국어 적용, 일정 등 자세한 사항은 이메일로 문의해주세요. 빠르게 검토 후 안내드리겠습니다.',
+      subtext: '함께 소개하고 싶은 공간이나 제품이 있다면 이메일로 제안해주세요.',
       buttonLabel: '이메일로 문의하기',
       mailto: {
         subject: `[${SITE_NAME_EN}] 협찬 문의`,
         body:
           `안녕하세요, ${SITE_NAME_KO} 팀에게 협찬 문의드립니다.\n\n` +
           '1. 업체명/브랜드명:\n' +
-          '2. 협업 유형 (제품 리뷰 / 체험 방문 / 배너 광고 / 기타):\n' +
+          '2. 협업 유형 (제품 리뷰 / 체험 방문 / 기타):\n' +
           '3. 예산 범위:\n' +
           '4. 희망 일정:\n' +
           '5. 기타 전달 사항:\n',
@@ -165,51 +161,52 @@ const SPONSOR: Record<Locale, SponsorContent> = {
   },
   en: {
     meta: {
-      title: 'Sponsorship Inquiry',
-      description: `${SITE_NAME_EN} is a couples blog offering food, cafe, and travel content in 8 languages. We welcome sponsorship and advertising inquiries.`,
+      title: `About ${SITE_NAME_EN}`,
+      description: `${SITE_NAME_EN} is a daily-life blog run by a developer and marketer couple, sharing firsthand experiences at restaurants, bars, cafes, travel destinations, and baseball stadiums.`,
     },
     hero: {
-      headline: 'Your Space and Brand\nTo More People',
-      subtext: `${SITE_NAME_EN} is a blog delivering food, cafe, and travel content to the world in 8 languages.`,
-      cta: 'Send Email Inquiry',
+      headline: 'A Daily Blog Run by a Developer and Marketer Couple',
+      subtext:
+        'We visit restaurants, bars, atmospheric cafes, travel destinations, and baseball stadiums, and record what we experience there.',
+      cta: 'Browse Our Stories',
     },
     blogIntro: {
       heading: `About ${SITE_NAME_EN}`,
       paragraphs: [
-        'A couple of bloggers who visit restaurants, cafes, and travel destinations across Seoul and Korea, creating review content based on firsthand experience.',
-        'Not just writing reviews, but creating content that ranks well in search results to reach more people, and delivering your story to international readers through multilingual support.',
+        `${SITE_NAME_EN} is run by a couple who work as a developer and a marketer. On our days off, we look for good food and neighborhoods that are pleasant to explore on foot.`,
+        'We record what we experienced that day, including the atmosphere, route, and price range of restaurants, bars, cafes, travel destinations, and baseball stadiums we visit. To share local places from a Korean couple\'s perspective with more people, we translate selected posts into multiple languages.',
       ],
-      note: '* Multilingual availability may vary by category. Please inquire for details.',
+      note: '* Multilingual availability may vary by post and category.',
     },
     seoStrengths: {
-      heading: 'Global Reach, Search-Strong Content',
+      heading: `How We Run ${SITE_NAME_EN}`,
       subtext:
-        'Not just a blog, but a technology-driven content platform designed to rank higher in search results.',
+        'We build and operate the blog so readers can browse comfortably and search engines can understand each post clearly.',
       multilingual: {
-        heading: '🌍 8-Language Multilingual Support',
+        heading: `🌍 Read ${SITE_NAME_EN} in 8 Languages`,
         description:
-          'Korean, English, Japanese, Chinese (Simplified/Traditional), Indonesian, Vietnamese, Thai',
+          'Selected Korean posts are also available in English, Japanese, Chinese (Simplified and Traditional), Indonesian, Vietnamese, and Thai.',
       },
       features: [
         {
-          title: '⚡ Static Site Generation (SSG)',
+          title: '⚡ A Fast-Loading Blog (SSG)',
           description:
-            'All pages are pre-generated, providing fast loading speed and a stable user experience.',
+            'Post pages are generated in advance with static site generation, making them fast and reliable to browse.',
         },
         {
-          title: '🧩 JSON-LD Structured Data',
+          title: '🧩 Posts Search Engines and AI Can Read (JSON-LD)',
           description:
-            'Structures content in a way that search engines and AI can easily understand, ensuring reviews and information are better exposed in both search results and AI-powered search environments.',
+            'Place and review details are structured to help search engines and AI understand each post more accurately.',
         },
         {
-          title: '🔗 Hreflang Tags',
+          title: '🔗 Translations Linked by Language (Hreflang)',
           description:
-            "Configures content for each language to rank well in the corresponding country's search results, accurately reaching international readers.",
+            'Language versions are connected so international readers can find the post in the language that suits them.',
         },
         {
-          title: '🗺 XML Sitemap',
+          title: '🗺 A Sitemap That Shares New Posts (Sitemap)',
           description:
-            'Organizes site structure around key languages and content pages, enabling search engines to recognize content quickly and efficiently.',
+            'Posts and categories are organized so search engines can discover new content quickly.',
         },
       ],
     },
@@ -226,38 +223,31 @@ const SPONSOR: Record<Locale, SponsorContent> = {
     },
     collaboration: {
       heading: 'Collaboration Options',
-      subtext:
-        'We collaborate in formats tailored to the characteristics and goals of your brand and space.',
+      subtext: `We welcome sponsorship and partnership proposals from places and brands that fit ${SITE_NAME_EN}.`,
       types: [
         {
           title: 'Product Review',
           description:
-            'Creates review content focusing on the features and strengths of the product or service.',
+            'We create review content focusing on the features and strengths of the product or service.',
           icon: '📝',
         },
         {
           title: 'Experience Visit',
-          description: 'Visit your venue or destination in person and write a vivid review.',
+          description: 'We visit the venue or destination in person and write a vivid review.',
           icon: '📍',
-        },
-        {
-          title: 'Banner Advertising',
-          description: "Naturally display banners in positions that don't disrupt the site flow.",
-          icon: '📢',
         },
       ],
     },
     cta: {
-      heading: 'Get in Touch',
-      subtext:
-        'For details on collaboration format, multilingual support, schedule, and more, please contact us by email. We will review and respond promptly.',
-      buttonLabel: 'Send Email Inquiry',
+      heading: 'Sponsorship Inquiries',
+      subtext: 'If you have a place or product you would like us to introduce, send us a proposal by email.',
+      buttonLabel: 'Send an Email',
       mailto: {
         subject: `[${SITE_NAME_EN}] Sponsorship Inquiry`,
         body:
           `Hello, I'd like to inquire about sponsorship with ${SITE_NAME_EN}.\n\n` +
           '1. Company/Brand name:\n' +
-          '2. Collaboration type (Product review / Experience visit / Banner ad / Other):\n' +
+          '2. Collaboration type (Product review / Experience visit / Other):\n' +
           '3. Budget range:\n' +
           '4. Preferred timeline:\n' +
           '5. Additional notes:\n',
@@ -266,51 +256,52 @@ const SPONSOR: Record<Locale, SponsorContent> = {
   },
   ja: {
     meta: {
-      title: '協賛お問い合わせ',
-      description: `${SITE_NAME_EN}は、グルメ、カフェ、旅行コンテンツを8言語で提供するカップルブログです。協賛・広告のお問い合わせを受け付けています。`,
+      title: `${SITE_NAME_EN}について`,
+      description: `${SITE_NAME_EN}は、開発者とマーケターのカップルが、飲食店やカフェ、旅行先、野球場などで実際に体験したことを記録する日常ブログです。`,
     },
     hero: {
-      headline: 'あなたの空間とブランドを\nもっと多くの人に届けましょう',
-      subtext: `${SITE_NAME_EN}は、グルメ、カフェ、旅行コンテンツを8言語で世界に届けるブログです。`,
-      cta: 'メールで問い合わせる',
+      headline: '開発者とマーケターのカップルが運営する日常ブログ',
+      subtext:
+        'グルメや居酒屋、雰囲気の良いカフェ、旅行先、野球場まで、実際に訪れて体験したことを記録しています。',
+      cta: '記事を見る',
     },
     blogIntro: {
       heading: `${SITE_NAME_EN}のご紹介`,
       paragraphs: [
-        'ソウルと韓国各地のレストラン、カフェ、観光地を直接訪問し、体験をもとにレビューコンテンツを制作するカップルブロガーです。',
-        '単なるレビュー作成ではなく、検索結果で目立つコンテンツとして制作し、より多くの人に届け、多言語対応を通じて海外の読者にもあなたの物語を伝えます。',
+        `${SITE_NAME_EN}は、開発者とマーケターとして働くカップルが一緒に運営しています。休日には、おいしい店や歩いて楽しい街を探しに出かけます。`,
+        '飲食店や居酒屋、カフェ、旅行先、野球場など、実際に訪れた場所の雰囲気や行き方、価格帯といったその日の体験を記録しています。韓国人カップルの視点で見つけたローカルな場所を広く伝えるため、一部の記事を多言語に翻訳しています。',
       ],
-      note: '* 多言語対応はカテゴリにより異なる場合がございますので、お問い合わせください。',
+      note: '* 多言語対応は記事やカテゴリによって異なる場合があります。',
     },
     seoStrengths: {
-      heading: 'グローバルリーチ、検索に強いコンテンツ',
+      heading: `${SITE_NAME_EN}の運営方法`,
       subtext:
-        '単にブログを書くだけでなく、検索結果でより目立つように設計された技術基盤のコンテンツプラットフォームです。',
+        '読者が快適に閲覧でき、検索エンジンが記事の内容を正しく理解できるよう、自分たちで構築・運営しています。',
       multilingual: {
-        heading: '🌍 8言語多言語対応',
+        heading: `🌍 8言語で読める${SITE_NAME_EN}`,
         description:
-          '韓国語、英語、日本語、中国語（簡体字/繁体字）、インドネシア語、ベトナム語、タイ語',
+          '韓国語で作成した一部の記事を、英語、日本語、中国語（簡体字・繁体字）、インドネシア語、ベトナム語、タイ語でも紹介しています。',
       },
       features: [
         {
-          title: '⚡ 静的サイト生成（SSG）',
+          title: '⚡ すばやく開くブログ（SSG）',
           description:
-            'すべてのページを事前に生成し、速い読み込み速度と安定したユーザー体験を提供します。',
+            '記事ページを事前に生成する静的サイト生成を採用し、速く安定した閲覧を実現しています。',
         },
         {
-          title: '🧩 JSON-LD構造化データ',
+          title: '🧩 検索とAIが理解しやすい記事（JSON-LD）',
           description:
-            '検索エンジンとAIが理解しやすい構造でコンテンツを構成し、検索結果はもちろんAI基盤の検索環境でもレビューと情報がより良く露出されるようにします。',
+            '場所やレビューの情報を構造化し、検索エンジンやAIが記事をより正確に理解できるようにしています。',
         },
         {
-          title: '🔗 Hreflangタグ',
+          title: '🔗 言語ごとにつながる翻訳記事（Hreflang）',
           description:
-            '各言語のコンテンツが該当国の検索結果に適切に表示されるよう構成し、海外の読者にも正確に届けます。',
+            '各言語の翻訳記事を結び、海外の読者が自分に合った言語で見つけられるようにしています。',
         },
         {
-          title: '🗺 XMLサイトマップ',
+          title: '🗺 新しい記事を知らせるサイトマップ（Sitemap）',
           description:
-            '主要な言語とコンテンツページを中心にサイト構造を整理し、検索エンジンがコンテンツを素早く効率的に認識できるようにします。',
+            '記事とカテゴリを整理し、検索エンジンが新しいコンテンツをすばやく見つけられるようにしています。',
         },
       ],
     },
@@ -327,7 +318,7 @@ const SPONSOR: Record<Locale, SponsorContent> = {
     },
     collaboration: {
       heading: 'コラボレーション方法',
-      subtext: 'ブランドと空間の特性に合わせ、目的に合った形でコラボレーションを進めます。',
+      subtext: `${SITE_NAME_EN}に合う場所やブランドからの協賛・提携のご提案を受け付けています。`,
       types: [
         {
           title: '製品レビュー',
@@ -339,24 +330,18 @@ const SPONSOR: Record<Locale, SponsorContent> = {
           description: '店舗や観光地を直接訪問し、生き生きとしたレビューを書きます。',
           icon: '📍',
         },
-        {
-          title: 'バナー広告',
-          description: 'サイトの流れを妨げない位置に自然にバナーを表示します。',
-          icon: '📢',
-        },
       ],
     },
     cta: {
-      heading: 'お問い合わせ',
-      subtext:
-        '協業方式、多言語対応、スケジュールなど、詳しくはメールでお問い合わせください。迅速に検討しご案内いたします。',
+      heading: '協賛のお問い合わせ',
+      subtext: '一緒に紹介したい場所や商品がありましたら、メールでご提案ください。',
       buttonLabel: 'メールで問い合わせる',
       mailto: {
         subject: `[${SITE_NAME_EN}] 協賛お問い合わせ`,
         body:
           `こんにちは、${SITE_NAME_EN}チームに協賛のお問い合わせをいたします。\n\n` +
           '1. 会社名/ブランド名:\n' +
-          '2. コラボレーションの種類（製品レビュー / 体験訪問 / バナー広告 / その他）:\n' +
+          '2. コラボレーションの種類（製品レビュー / 体験訪問 / その他）:\n' +
           '3. 予算範囲:\n' +
           '4. 希望スケジュール:\n' +
           '5. その他の連絡事項:\n',
@@ -365,47 +350,46 @@ const SPONSOR: Record<Locale, SponsorContent> = {
   },
   'zh-CN': {
     meta: {
-      title: '赞助咨询',
-      description: `${SITE_NAME_EN}是一个以8种语言提供美食、咖啡厅、旅行内容的情侣博客。欢迎赞助和广告咨询。`,
+      title: `关于${SITE_NAME_EN}`,
+      description: `${SITE_NAME_EN}是由一对从事开发与营销工作的情侣共同运营的日常博客，记录亲自体验过的餐厅、酒吧、咖啡馆、旅游景点和棒球场。`,
     },
     hero: {
-      headline: '您的空间与品牌\n让更多人了解',
-      subtext: `${SITE_NAME_EN}是一个以8种语言向全世界传递美食、咖啡厅、旅行内容的博客。`,
-      cta: '发送邮件咨询',
+      headline: '由一对从事开发与营销工作的情侣共同运营的日常博客',
+      subtext: '记录我们亲自去过并体验过的餐厅、酒吧、氛围舒适的咖啡馆、旅游景点和棒球场。',
+      cta: '浏览文章',
     },
     blogIntro: {
       heading: `关于${SITE_NAME_EN}`,
       paragraphs: [
-        '走访首尔及韩国各地的餐厅、咖啡厅和旅游景点，基于亲身体验制作评价内容的情侣博主。',
-        '不仅仅是撰写评价，而是制作在搜索结果中更容易被看到的内容，让更多人了解，并通过多语言支持将您的故事传递给海外读者。',
+        `${SITE_NAME_EN}由一对从事开发和营销工作的情侣共同运营。休息日时，我们喜欢寻找美食和适合散步的街区。`,
+        '我们记录亲自去过的餐厅、酒吧、咖啡馆、旅游景点和棒球场，包括当天感受到的氛围、路线与价格区间。为了让更多人认识韩国情侣视角下发现的本地好去处，我们将部分文章翻译成多种语言。',
       ],
-      note: '* 多语言支持因类别而异，请咨询了解详情。',
+      note: '* 多语言支持可能因文章和类别而异。',
     },
     seoStrengths: {
-      heading: '全球覆盖，搜索实力强的内容',
-      subtext:
-        '不只是一个发布文章的博客，而是一个为在搜索结果中获得更好展示而设计的技术驱动内容平台。',
+      heading: `${SITE_NAME_EN}的运营方式`,
+      subtext: '我们亲自搭建并运营博客，让读者轻松浏览，也让搜索引擎清楚理解文章内容。',
       multilingual: {
-        heading: '🌍 8种语言多语言支持',
-        description: '韩语、英语、日语、中文（简体/繁体）、印尼语、越南语、泰语',
+        heading: `🌍 用8种语言阅读${SITE_NAME_EN}`,
+        description:
+          '部分韩语文章也提供英语、日语、中文（简体/繁体）、印尼语、越南语和泰语版本。',
       },
       features: [
         {
-          title: '⚡ 静态站点生成（SSG）',
-          description: '预先生成所有页面，提供快速加载速度和稳定的用户体验。',
+          title: '⚡ 快速打开的博客（SSG）',
+          description: '采用预先生成文章页面的静态站点方式，浏览快速且稳定。',
         },
         {
-          title: '🧩 JSON-LD结构化数据',
-          description:
-            '以搜索引擎和AI易于理解的结构组织内容，使评价和信息不仅在搜索结果中，在AI搜索环境中也能更好地展示。',
+          title: '🧩 搜索引擎和AI易读的文章（JSON-LD）',
+          description: '将地点和评价信息结构化，帮助搜索引擎和AI更准确地理解文章。',
         },
         {
-          title: '🔗 Hreflang标签',
-          description: '配置各语言内容使其在对应国家的搜索结果中良好展示，准确传达给海外读者。',
+          title: '🔗 按语言连接的翻译文章（Hreflang）',
+          description: '连接不同语言的翻译文章，让海外读者能找到适合自己的语言版本。',
         },
         {
-          title: '🗺 XML站点地图',
-          description: '围绕主要语言和内容页面整理站点结构，使搜索引擎能够快速高效地识别内容。',
+          title: '🗺 帮助发现新文章的站点地图（Sitemap）',
+          description: '整理文章与类别，帮助搜索引擎快速发现新内容。',
         },
       ],
     },
@@ -422,7 +406,7 @@ const SPONSOR: Record<Locale, SponsorContent> = {
     },
     collaboration: {
       heading: '合作方式',
-      subtext: '根据品牌和空间的特点，以符合目标的形式进行合作。',
+      subtext: `我们欢迎与${SITE_NAME_EN}调性相符的场所和品牌提出赞助或合作建议。`,
       types: [
         {
           title: '产品评价',
@@ -434,23 +418,18 @@ const SPONSOR: Record<Locale, SponsorContent> = {
           description: '亲自访问店铺或旅游景点，撰写生动的评价。',
           icon: '📍',
         },
-        {
-          title: '横幅广告',
-          description: '在不影响网站流畅度的位置自然地展示横幅广告。',
-          icon: '📢',
-        },
       ],
     },
     cta: {
-      heading: '联系我们',
-      subtext: '合作方式、多语言支持、日程等详细事项，请通过邮件联系我们。我们会尽快审核并回复。',
-      buttonLabel: '发送邮件咨询',
+      heading: '赞助咨询',
+      subtext: '如果有希望我们共同介绍的场所或产品，欢迎通过邮件提出建议。',
+      buttonLabel: '发送邮件',
       mailto: {
         subject: `[${SITE_NAME_EN}] 赞助咨询`,
         body:
           `您好，想向${SITE_NAME_EN}团队咨询赞助事宜。\n\n` +
           '1. 公司名/品牌名:\n' +
-          '2. 合作类型（产品评价 / 体验访问 / 横幅广告 / 其他）:\n' +
+          '2. 合作类型（产品评价 / 体验访问 / 其他）:\n' +
           '3. 预算范围:\n' +
           '4. 期望日程:\n' +
           '5. 其他事项:\n',
@@ -459,47 +438,46 @@ const SPONSOR: Record<Locale, SponsorContent> = {
   },
   'zh-TW': {
     meta: {
-      title: '贊助諮詢',
-      description: `${SITE_NAME_EN}是一個以8種語言提供美食、咖啡廳、旅行內容的情侶部落格。歡迎贊助和廣告諮詢。`,
+      title: `關於${SITE_NAME_EN}`,
+      description: `${SITE_NAME_EN}是由一對從事開發與行銷工作的情侶共同經營的日常部落格，記錄親自體驗過的餐廳、酒吧、咖啡館、旅遊景點和棒球場。`,
     },
     hero: {
-      headline: '您的空間與品牌\n讓更多人了解',
-      subtext: `${SITE_NAME_EN}是一個以8種語言向全世界傳遞美食、咖啡廳、旅行內容的部落格。`,
-      cta: '發送郵件諮詢',
+      headline: '由一對從事開發與行銷工作的情侶共同經營的日常部落格',
+      subtext: '記錄我們親自去過並體驗過的餐廳、酒吧、氣氛舒適的咖啡館、旅遊景點和棒球場。',
+      cta: '瀏覽文章',
     },
     blogIntro: {
       heading: `關於${SITE_NAME_EN}`,
       paragraphs: [
-        '走訪首爾及韓國各地的餐廳、咖啡廳和旅遊景點，基於親身體驗製作評價內容的情侶部落客。',
-        '不僅僅是撰寫評價，而是製作在搜尋結果中更容易被看到的內容，讓更多人了解，並透過多語言支援將您的故事傳遞給海外讀者。',
+        `${SITE_NAME_EN}由一對從事開發和行銷工作的情侶共同經營。休假時，我們喜歡尋找美食和適合散步的街區。`,
+        '我們記錄親自去過的餐廳、酒吧、咖啡館、旅遊景點和棒球場，包括當天感受到的氣氛、路線與價格區間。為了讓更多人認識韓國情侶視角下發現的在地好去處，我們將部分文章翻譯成多種語言。',
       ],
-      note: '* 多語言支援因類別而異，請洽詢了解詳情。',
+      note: '* 多語言支援可能因文章和類別而異。',
     },
     seoStrengths: {
-      heading: '全球覆蓋，搜尋實力強的內容',
-      subtext:
-        '不只是一個發布文章的部落格，而是一個為在搜尋結果中獲得更好展示而設計的技術驅動內容平台。',
+      heading: `${SITE_NAME_EN}的經營方式`,
+      subtext: '我們親自打造並經營部落格，讓讀者輕鬆瀏覽，也讓搜尋引擎清楚理解文章內容。',
       multilingual: {
-        heading: '🌍 8種語言多語言支援',
-        description: '韓語、英語、日語、中文（簡體/繁體）、印尼語、越南語、泰語',
+        heading: `🌍 用8種語言閱讀${SITE_NAME_EN}`,
+        description:
+          '部分韓文文章也提供英文、日文、中文（簡體/繁體）、印尼文、越南文和泰文版本。',
       },
       features: [
         {
-          title: '⚡ 靜態網站生成（SSG）',
-          description: '預先生成所有頁面，提供快速載入速度和穩定的使用者體驗。',
+          title: '⚡ 快速開啟的部落格（SSG）',
+          description: '採用預先生成文章頁面的靜態網站方式，瀏覽快速且穩定。',
         },
         {
-          title: '🧩 JSON-LD結構化資料',
-          description:
-            '以搜尋引擎和AI易於理解的結構組織內容，使評價和資訊不僅在搜尋結果中，在AI搜尋環境中也能更好地展示。',
+          title: '🧩 搜尋引擎和AI易讀的文章（JSON-LD）',
+          description: '將地點和評價資訊結構化，幫助搜尋引擎和AI更準確地理解文章。',
         },
         {
-          title: '🔗 Hreflang標籤',
-          description: '配置各語言內容使其在對應國家的搜尋結果中良好展示，準確傳達給海外讀者。',
+          title: '🔗 依語言連結的翻譯文章（Hreflang）',
+          description: '連結不同語言的翻譯文章，讓海外讀者能找到適合自己的語言版本。',
         },
         {
-          title: '🗺 XML網站地圖',
-          description: '圍繞主要語言和內容頁面整理網站結構，使搜尋引擎能夠快速高效地識別內容。',
+          title: '🗺 幫助發現新文章的網站地圖（Sitemap）',
+          description: '整理文章與類別，幫助搜尋引擎快速發現新內容。',
         },
       ],
     },
@@ -516,7 +494,7 @@ const SPONSOR: Record<Locale, SponsorContent> = {
     },
     collaboration: {
       heading: '合作方式',
-      subtext: '根據品牌和空間的特點，以符合目標的形式進行合作。',
+      subtext: `我們歡迎與${SITE_NAME_EN}調性相符的場所和品牌提出贊助或合作建議。`,
       types: [
         {
           title: '產品評價',
@@ -528,23 +506,18 @@ const SPONSOR: Record<Locale, SponsorContent> = {
           description: '親自訪問店鋪或旅遊景點，撰寫生動的評價。',
           icon: '📍',
         },
-        {
-          title: '橫幅廣告',
-          description: '在不影響網站流暢度的位置自然地展示橫幅廣告。',
-          icon: '📢',
-        },
       ],
     },
     cta: {
-      heading: '聯繫我們',
-      subtext: '合作方式、多語言支援、日程等詳細事項，請透過郵件聯繫我們。我們會盡快審核並回覆。',
-      buttonLabel: '發送郵件諮詢',
+      heading: '贊助諮詢',
+      subtext: '如果有希望我們共同介紹的場所或產品，歡迎透過電子郵件提出建議。',
+      buttonLabel: '發送電子郵件',
       mailto: {
         subject: `[${SITE_NAME_EN}] 贊助諮詢`,
         body:
           `您好，想向${SITE_NAME_EN}團隊諮詢贊助事宜。\n\n` +
           '1. 公司名/品牌名:\n' +
-          '2. 合作類型（產品評價 / 體驗訪問 / 橫幅廣告 / 其他）:\n' +
+          '2. 合作類型（產品評價 / 體驗訪問 / 其他）:\n' +
           '3. 預算範圍:\n' +
           '4. 期望日程:\n' +
           '5. 其他事項:\n',
@@ -553,51 +526,52 @@ const SPONSOR: Record<Locale, SponsorContent> = {
   },
   id: {
     meta: {
-      title: 'Kerja Sama Sponsor',
-      description: `${SITE_NAME_EN} adalah blog pasangan yang menyediakan konten kuliner, kafe, dan wisata dalam 8 bahasa. Kami menerima pertanyaan sponsor dan iklan.`,
+      title: `Tentang ${SITE_NAME_EN}`,
+      description: `${SITE_NAME_EN} adalah blog keseharian yang dikelola pasangan developer dan marketer, berisi pengalaman langsung di restoran, bar, kafe, destinasi wisata, dan stadion bisbol.`,
     },
     hero: {
-      headline: 'Ruang dan Brand Anda\nke Lebih Banyak Orang',
-      subtext: `${SITE_NAME_EN} adalah blog yang menyampaikan konten kuliner, kafe, dan wisata ke seluruh dunia dalam 8 bahasa.`,
-      cta: 'Kirim Email',
+      headline: 'Blog Keseharian oleh Pasangan Developer dan Marketer',
+      subtext:
+        'Kami mengunjungi dan mencatat pengalaman di restoran, bar, kafe dengan suasana nyaman, destinasi wisata, dan stadion bisbol.',
+      cta: 'Lihat Cerita Kami',
     },
     blogIntro: {
       heading: `Tentang ${SITE_NAME_EN}`,
       paragraphs: [
-        'Pasangan blogger yang mengunjungi restoran, kafe, dan destinasi wisata di Seoul dan seluruh Korea, membuat konten ulasan berdasarkan pengalaman langsung.',
-        'Bukan sekadar menulis ulasan, tapi membuat konten yang tampil menonjol di hasil pencarian untuk menjangkau lebih banyak orang, dan menyampaikan cerita Anda kepada pembaca internasional melalui dukungan multibahasa.',
+        `${SITE_NAME_EN} dikelola oleh pasangan yang bekerja sebagai developer dan marketer. Saat libur, kami mencari makanan enak dan lingkungan yang nyaman untuk dijelajahi dengan berjalan kaki.`,
+        'Kami mencatat pengalaman hari itu, termasuk suasana, rute, dan kisaran harga di restoran, bar, kafe, destinasi wisata, serta stadion bisbol yang kami kunjungi. Untuk memperkenalkan tempat-tempat lokal dari sudut pandang pasangan Korea kepada lebih banyak orang, sebagian artikel kami terjemahkan ke beberapa bahasa.',
       ],
-      note: '* Ketersediaan multibahasa dapat berbeda tergantung kategori. Silakan hubungi kami untuk detail.',
+      note: '* Ketersediaan multibahasa dapat berbeda menurut artikel dan kategori.',
     },
     seoStrengths: {
-      heading: 'Jangkauan Global, Konten yang Kuat di Pencarian',
+      heading: `Cara Kami Mengelola ${SITE_NAME_EN}`,
       subtext:
-        'Bukan sekadar blog untuk menulis, tapi platform konten berbasis teknologi yang dirancang agar lebih terlihat di hasil pencarian.',
+        'Kami membangun dan mengelola blog ini agar nyaman dibaca dan mudah dipahami oleh mesin pencari.',
       multilingual: {
-        heading: '🌍 Dukungan 8 Bahasa',
+        heading: `🌍 Baca ${SITE_NAME_EN} dalam 8 Bahasa`,
         description:
-          'Korea, Inggris, Jepang, Mandarin (Sederhana/Tradisional), Indonesia, Vietnam, Thai',
+          'Sebagian artikel berbahasa Korea juga tersedia dalam bahasa Inggris, Jepang, Mandarin (Sederhana dan Tradisional), Indonesia, Vietnam, dan Thai.',
       },
       features: [
         {
-          title: '⚡ Static Site Generation (SSG)',
+          title: '⚡ Blog yang Cepat Dibuka (SSG)',
           description:
-            'Semua halaman dibuat terlebih dahulu, memberikan kecepatan loading yang cepat dan pengalaman pengguna yang stabil.',
+            'Halaman artikel dibuat terlebih dahulu dengan metode static site generation agar cepat dan stabil saat dibuka.',
         },
         {
-          title: '🧩 Data Terstruktur JSON-LD',
+          title: '🧩 Artikel yang Mudah Dibaca Pencarian dan AI (JSON-LD)',
           description:
-            'Menyusun konten dalam struktur yang mudah dipahami oleh mesin pencari dan AI, sehingga ulasan dan informasi lebih terekspos baik di hasil pencarian maupun di lingkungan pencarian berbasis AI.',
+            'Informasi tempat dan ulasan disusun secara terstruktur agar mesin pencari dan AI memahami artikel dengan lebih akurat.',
         },
         {
-          title: '🔗 Tag Hreflang',
+          title: '🔗 Terjemahan yang Terhubung per Bahasa (Hreflang)',
           description:
-            'Mengonfigurasi konten setiap bahasa agar tampil baik di hasil pencarian negara terkait, menjangkau pembaca internasional secara akurat.',
+            'Setiap versi bahasa saling terhubung agar pembaca internasional dapat menemukan bahasa yang sesuai.',
         },
         {
-          title: '🗺 XML Sitemap',
+          title: '🗺 Sitemap untuk Mengenalkan Artikel Baru (Sitemap)',
           description:
-            'Mengatur struktur situs berdasarkan bahasa utama dan halaman konten, memungkinkan mesin pencari mengenali konten dengan cepat dan efisien.',
+            'Artikel dan kategori ditata agar mesin pencari dapat menemukan konten baru dengan cepat.',
         },
       ],
     },
@@ -614,8 +588,7 @@ const SPONSOR: Record<Locale, SponsorContent> = {
     },
     collaboration: {
       heading: 'Opsi Kolaborasi',
-      subtext:
-        'Kami berkolaborasi dalam format yang disesuaikan dengan karakteristik dan tujuan brand serta ruang Anda.',
+      subtext: `Kami menerima proposal sponsor dan kemitraan dari tempat serta brand yang cocok dengan ${SITE_NAME_EN}.`,
       types: [
         {
           title: 'Ulasan Produk',
@@ -624,30 +597,23 @@ const SPONSOR: Record<Locale, SponsorContent> = {
           icon: '📝',
         },
         {
-          title: 'Kunjungan Pengalaman',
+          title: 'Kunjungan Langsung',
           description:
             'Kunjungi tempat atau destinasi Anda secara langsung dan tulis ulasan yang hidup.',
           icon: '📍',
         },
-        {
-          title: 'Iklan Banner',
-          description:
-            'Menampilkan banner secara alami di posisi yang tidak mengganggu alur situs.',
-          icon: '📢',
-        },
       ],
     },
     cta: {
-      heading: 'Hubungi Kami',
-      subtext:
-        'Untuk detail tentang format kolaborasi, dukungan multibahasa, jadwal, dan lainnya, silakan hubungi kami melalui email. Kami akan segera meninjau dan membalas.',
+      heading: 'Pertanyaan Sponsor',
+      subtext: 'Jika ada tempat atau produk yang ingin diperkenalkan bersama kami, kirimkan proposal melalui email.',
       buttonLabel: 'Kirim Email',
       mailto: {
         subject: `[${SITE_NAME_EN}] Kerja Sama Sponsor`,
         body:
           `Halo, saya ingin bertanya tentang sponsorship dengan ${SITE_NAME_EN}.\n\n` +
           '1. Nama perusahaan/merek:\n' +
-          '2. Jenis kolaborasi (Ulasan produk / Kunjungan pengalaman / Iklan banner / Lainnya):\n' +
+          '2. Jenis kolaborasi (Ulasan produk / Kunjungan langsung / Lainnya):\n' +
           '3. Kisaran anggaran:\n' +
           '4. Jadwal yang diinginkan:\n' +
           '5. Catatan tambahan:\n',
@@ -656,50 +622,52 @@ const SPONSOR: Record<Locale, SponsorContent> = {
   },
   vi: {
     meta: {
-      title: 'Hợp Tác Tài Trợ',
-      description: `${SITE_NAME_EN} là blog đôi cung cấp nội dung ẩm thực, quán cà phê và du lịch bằng 8 ngôn ngữ. Chúng tôi chào đón các yêu cầu tài trợ và quảng cáo.`,
+      title: `Giới Thiệu ${SITE_NAME_EN}`,
+      description: `${SITE_NAME_EN} là blog đời sống do một cặp đôi làm nghề phát triển phần mềm và tiếp thị cùng vận hành, ghi lại trải nghiệm tại nhà hàng, quán bar, quán cà phê, điểm du lịch và sân bóng chày.`,
     },
     hero: {
-      headline: 'Không Gian và Thương Hiệu Của Bạn\nĐến Nhiều Người Hơn',
-      subtext: `${SITE_NAME_EN} là blog truyền tải nội dung ẩm thực, quán cà phê và du lịch đến thế giới bằng 8 ngôn ngữ.`,
-      cta: 'Gửi Email Liên Hệ',
+      headline: 'Blog Đời Sống Của Cặp Đôi Lập Trình Viên và Chuyên Viên Tiếp Thị',
+      subtext:
+        'Chúng tôi trực tiếp ghé thăm và ghi lại trải nghiệm tại nhà hàng, quán bar, quán cà phê có không gian đẹp, điểm du lịch và sân bóng chày.',
+      cta: 'Xem Các Bài Viết',
     },
     blogIntro: {
       heading: `Giới Thiệu ${SITE_NAME_EN}`,
       paragraphs: [
-        'Cặp đôi blogger ghé thăm các nhà hàng, quán cà phê và điểm du lịch trên khắp Seoul và Hàn Quốc, tạo nội dung đánh giá dựa trên trải nghiệm thực tế.',
-        'Không chỉ viết đánh giá đơn thuần, mà tạo ra nội dung nổi bật trong kết quả tìm kiếm để tiếp cận nhiều người hơn, và truyền tải câu chuyện của bạn đến độc giả quốc tế thông qua hỗ trợ đa ngôn ngữ.',
+        `${SITE_NAME_EN} được vận hành bởi một cặp đôi làm nghề phát triển phần mềm và tiếp thị. Vào ngày nghỉ, chúng tôi tìm những món ngon và các khu phố thú vị để đi bộ khám phá.`,
+        'Chúng tôi ghi lại trải nghiệm trong ngày, từ không gian, đường đi đến mức giá tại những nhà hàng, quán bar, quán cà phê, điểm du lịch và sân bóng chày đã ghé thăm. Để giới thiệu rộng rãi hơn những địa điểm địa phương được nhìn từ góc độ của một cặp đôi Hàn Quốc, một số bài viết được dịch sang nhiều ngôn ngữ.',
       ],
-      note: '* Hỗ trợ đa ngôn ngữ có thể khác nhau tùy theo danh mục. Vui lòng liên hệ để biết chi tiết.',
+      note: '* Hỗ trợ đa ngôn ngữ có thể khác nhau tùy theo bài viết và danh mục.',
     },
     seoStrengths: {
-      heading: 'Phạm Vi Toàn Cầu, Nội Dung Mạnh Trong Tìm Kiếm',
+      heading: `Cách Chúng Tôi Vận Hành ${SITE_NAME_EN}`,
       subtext:
-        'Không chỉ là blog viết bài đơn thuần, mà là nền tảng nội dung dựa trên công nghệ được thiết kế để nổi bật hơn trong kết quả tìm kiếm.',
+        'Chúng tôi tự xây dựng và vận hành blog để người đọc dễ dàng khám phá, đồng thời giúp công cụ tìm kiếm hiểu rõ nội dung.',
       multilingual: {
-        heading: '🌍 Hỗ Trợ 8 Ngôn Ngữ',
-        description: 'Tiếng Hàn, Anh, Nhật, Trung (Giản thể/Phồn thể), Indonesia, Việt, Thái',
+        heading: `🌍 Đọc ${SITE_NAME_EN} Bằng 8 Ngôn Ngữ`,
+        description:
+          'Một số bài viết tiếng Hàn cũng có bản tiếng Anh, Nhật, Trung (Giản thể và Phồn thể), Indonesia, Việt và Thái.',
       },
       features: [
         {
-          title: '⚡ Tạo Trang Tĩnh (SSG)',
+          title: '⚡ Blog Tải Nhanh (SSG)',
           description:
-            'Tất cả trang được tạo sẵn, cung cấp tốc độ tải nhanh và trải nghiệm người dùng ổn định.',
+            'Các trang bài viết được tạo sẵn bằng phương pháp tạo trang tĩnh, giúp tải nhanh và ổn định.',
         },
         {
-          title: '🧩 Dữ Liệu Cấu Trúc JSON-LD',
+          title: '🧩 Bài Viết Dễ Hiểu Với Tìm Kiếm và AI (JSON-LD)',
           description:
-            'Cấu trúc nội dung theo cách dễ hiểu cho công cụ tìm kiếm và AI, giúp đánh giá và thông tin được hiển thị tốt hơn cả trong kết quả tìm kiếm và môi trường tìm kiếm dựa trên AI.',
+            'Thông tin địa điểm và đánh giá được cấu trúc để công cụ tìm kiếm và AI hiểu bài viết chính xác hơn.',
         },
         {
-          title: '🔗 Thẻ Hreflang',
+          title: '🔗 Bản Dịch Được Kết Nối Theo Ngôn Ngữ (Hreflang)',
           description:
-            'Cấu hình nội dung từng ngôn ngữ để hiển thị tốt trong kết quả tìm kiếm của quốc gia tương ứng, truyền tải chính xác đến độc giả quốc tế.',
+            'Các phiên bản ngôn ngữ được liên kết để độc giả quốc tế tìm thấy ngôn ngữ phù hợp.',
         },
         {
-          title: '🗺 XML Sitemap',
+          title: '🗺 Sitemap Giúp Khám Phá Bài Viết Mới (Sitemap)',
           description:
-            'Tổ chức cấu trúc trang web xoay quanh các ngôn ngữ và trang nội dung chính, giúp công cụ tìm kiếm nhận diện nội dung nhanh chóng và hiệu quả.',
+            'Bài viết và danh mục được sắp xếp để công cụ tìm kiếm nhanh chóng phát hiện nội dung mới.',
         },
       ],
     },
@@ -716,8 +684,7 @@ const SPONSOR: Record<Locale, SponsorContent> = {
     },
     collaboration: {
       heading: 'Hình Thức Hợp Tác',
-      subtext:
-        'Chúng tôi hợp tác theo hình thức phù hợp với đặc điểm và mục tiêu của thương hiệu và không gian của bạn.',
+      subtext: `Chúng tôi chào đón đề xuất tài trợ và hợp tác từ những địa điểm, thương hiệu phù hợp với ${SITE_NAME_EN}.`,
       types: [
         {
           title: 'Đánh Giá Sản Phẩm',
@@ -726,30 +693,23 @@ const SPONSOR: Record<Locale, SponsorContent> = {
           icon: '📝',
         },
         {
-          title: 'Ghé Thăm Trải Nghiệm',
+          title: 'Trải Nghiệm Trực Tiếp',
           description:
             'Trực tiếp ghé thăm cửa hàng hoặc điểm du lịch và viết bài đánh giá sống động.',
           icon: '📍',
         },
-        {
-          title: 'Quảng Cáo Banner',
-          description:
-            'Hiển thị banner một cách tự nhiên ở vị trí không làm gián đoạn luồng trang web.',
-          icon: '📢',
-        },
       ],
     },
     cta: {
-      heading: 'Liên Hệ',
-      subtext:
-        'Để biết chi tiết về hình thức hợp tác, hỗ trợ đa ngôn ngữ, lịch trình và hơn thế nữa, vui lòng liên hệ qua email. Chúng tôi sẽ xem xét và phản hồi nhanh chóng.',
-      buttonLabel: 'Gửi Email Liên Hệ',
+      heading: 'Liên Hệ Tài Trợ',
+      subtext: 'Nếu có địa điểm hoặc sản phẩm muốn cùng chúng tôi giới thiệu, hãy gửi đề xuất qua email.',
+      buttonLabel: 'Gửi Email',
       mailto: {
         subject: `[${SITE_NAME_EN}] Hợp Tác Tài Trợ`,
         body:
           `Xin chào, tôi muốn hỏi về hợp tác tài trợ với ${SITE_NAME_EN}.\n\n` +
           '1. Tên công ty/thương hiệu:\n' +
-          '2. Loại hợp tác (Đánh giá sản phẩm / Ghé thăm trải nghiệm / Quảng cáo banner / Khác):\n' +
+          '2. Loại hợp tác (Đánh giá sản phẩm / Trải nghiệm trực tiếp / Khác):\n' +
           '3. Phạm vi ngân sách:\n' +
           '4. Lịch trình mong muốn:\n' +
           '5. Ghi chú thêm:\n',
@@ -758,50 +718,52 @@ const SPONSOR: Record<Locale, SponsorContent> = {
   },
   th: {
     meta: {
-      title: 'สอบถามสปอนเซอร์',
-      description: `${SITE_NAME_EN} เป็นบล็อกคู่รักที่นำเสนอเนื้อหาร้านอาหาร คาเฟ่ และท่องเที่ยวใน 8 ภาษา ยินดีรับสอบถามสปอนเซอร์และโฆษณา`,
+      title: `เกี่ยวกับ ${SITE_NAME_EN}`,
+      description: `${SITE_NAME_EN} เป็นบล็อกไลฟ์สไตล์ที่ดูแลโดยคู่รักนักพัฒนาและนักการตลาด บันทึกประสบการณ์จริงจากร้านอาหาร บาร์ คาเฟ่ สถานที่ท่องเที่ยว และสนามเบสบอล`,
     },
     hero: {
-      headline: 'พื้นที่และแบรนด์ของคุณ\nให้คนรู้จักมากขึ้น',
-      subtext: `${SITE_NAME_EN} เป็นบล็อกที่ส่งมอบเนื้อหาร้านอาหาร คาเฟ่ และท่องเที่ยวไปทั่วโลกใน 8 ภาษา`,
-      cta: 'ส่งอีเมลสอบถาม',
+      headline: 'บล็อกไลฟ์สไตล์ของคู่รักนักพัฒนาและนักการตลาด',
+      subtext:
+        'เราไปสัมผัสและบันทึกเรื่องราวจากร้านอาหาร บาร์ คาเฟ่บรรยากาศดี สถานที่ท่องเที่ยว และสนามเบสบอลด้วยตัวเอง',
+      cta: 'ดูเรื่องราวของเรา',
     },
     blogIntro: {
       heading: `เกี่ยวกับ ${SITE_NAME_EN}`,
       paragraphs: [
-        'คู่รักบล็อกเกอร์ที่ไปเยือนร้านอาหาร คาเฟ่ และสถานที่ท่องเที่ยวทั่วโซลและเกาหลีด้วยตนเอง สร้างเนื้อหารีวิวจากประสบการณ์จริง',
-        'ไม่ใช่แค่เขียนรีวิวธรรมดา แต่สร้างเนื้อหาที่โดดเด่นในผลการค้นหาเพื่อเข้าถึงคนมากขึ้น และส่งมอบเรื่องราวของคุณให้ผู้อ่านต่างประเทศผ่านการรองรับหลายภาษา',
+        `${SITE_NAME_EN} ดูแลร่วมกันโดยคู่รักที่ทำงานเป็นนักพัฒนาและนักการตลาด ในวันหยุดเรามักออกตามหาอาหารอร่อยและย่านที่เดินเที่ยวได้อย่างเพลิดเพลิน`,
+        'เราบันทึกประสบการณ์ในวันนั้น ทั้งบรรยากาศ เส้นทาง และช่วงราคา จากร้านอาหาร บาร์ คาเฟ่ สถานที่ท่องเที่ยว และสนามเบสบอลที่ไปเยือน เพื่อแนะนำสถานที่ท้องถิ่นจากมุมมองของคู่รักชาวเกาหลีให้ผู้คนรู้จักมากขึ้น เราจึงแปลบทความบางส่วนเป็นหลายภาษา',
       ],
-      note: '* การรองรับหลายภาษาอาจแตกต่างกันตามหมวดหมู่ กรุณาสอบถามรายละเอียด',
+      note: '* การรองรับหลายภาษาอาจแตกต่างกันตามบทความและหมวดหมู่',
     },
     seoStrengths: {
-      heading: 'เข้าถึงทั่วโลก, เนื้อหาที่แข็งแกร่งในการค้นหา',
+      heading: `วิธีที่เราดูแล ${SITE_NAME_EN}`,
       subtext:
-        'ไม่ใช่แค่บล็อกเขียนบทความ แต่เป็นแพลตฟอร์มเนื้อหาที่ขับเคลื่อนด้วยเทคโนโลยีที่ออกแบบมาให้โดดเด่นในผลการค้นหา',
+        'เราสร้างและดูแลบล็อกด้วยตัวเอง เพื่อให้ผู้อ่านใช้งานสะดวกและเครื่องมือค้นหาเข้าใจเนื้อหาได้ชัดเจน',
       multilingual: {
-        heading: '🌍 รองรับ 8 ภาษา',
-        description: 'เกาหลี, อังกฤษ, ญี่ปุ่น, จีน (ตัวย่อ/ตัวเต็ม), อินโดนีเซีย, เวียดนาม, ไทย',
+        heading: `🌍 อ่าน ${SITE_NAME_EN} ได้ใน 8 ภาษา`,
+        description:
+          'บทความภาษาเกาหลีบางส่วนมีฉบับภาษาอังกฤษ ญี่ปุ่น จีน (ตัวย่อและตัวเต็ม) อินโดนีเซีย เวียดนาม และไทย',
       },
       features: [
         {
-          title: '⚡ การสร้างเว็บไซต์แบบสถิต (SSG)',
+          title: '⚡ บล็อกที่เปิดได้รวดเร็ว (SSG)',
           description:
-            'สร้างทุกหน้าล่วงหน้า ให้ความเร็วในการโหลดที่รวดเร็วและประสบการณ์ผู้ใช้ที่เสถียร',
+            'หน้าบทความถูกสร้างไว้ล่วงหน้าด้วยระบบเว็บไซต์แบบสถิต จึงเปิดได้รวดเร็วและเสถียร',
         },
         {
-          title: '🧩 ข้อมูลโครงสร้าง JSON-LD',
+          title: '🧩 บทความที่ระบบค้นหาและ AI เข้าใจง่าย (JSON-LD)',
           description:
-            'จัดโครงสร้างเนื้อหาในรูปแบบที่เครื่องมือค้นหาและ AI เข้าใจได้ง่าย ทำให้รีวิวและข้อมูลแสดงผลได้ดีขึ้นทั้งในผลการค้นหาและสภาพแวดล้อมการค้นหาที่ขับเคลื่อนด้วย AI',
+            'ข้อมูลสถานที่และรีวิวถูกจัดโครงสร้างเพื่อให้เครื่องมือค้นหาและ AI เข้าใจบทความได้แม่นยำยิ่งขึ้น',
         },
         {
-          title: '🔗 แท็ก Hreflang',
+          title: '🔗 บทความแปลที่เชื่อมโยงตามภาษา (Hreflang)',
           description:
-            'กำหนดค่าเนื้อหาแต่ละภาษาให้แสดงผลดีในผลการค้นหาของประเทศที่เกี่ยวข้อง ส่งมอบถึงผู้อ่านต่างประเทศอย่างแม่นยำ',
+            'บทความแต่ละภาษาถูกเชื่อมโยงกัน เพื่อให้ผู้อ่านต่างประเทศพบภาษาที่เหมาะกับตนเอง',
         },
         {
-          title: '🗺 XML Sitemap',
+          title: '🗺 Sitemap ที่ช่วยให้พบเรื่องใหม่ (Sitemap)',
           description:
-            'จัดระเบียบโครงสร้างเว็บไซต์รอบภาษาหลักและหน้าเนื้อหา ช่วยให้เครื่องมือค้นหารับรู้เนื้อหาได้อย่างรวดเร็วและมีประสิทธิภาพ',
+            'บทความและหมวดหมู่ถูกจัดระเบียบเพื่อให้เครื่องมือค้นหาพบเนื้อหาใหม่ได้อย่างรวดเร็ว',
         },
       ],
     },
@@ -818,7 +780,7 @@ const SPONSOR: Record<Locale, SponsorContent> = {
     },
     collaboration: {
       heading: 'รูปแบบความร่วมมือ',
-      subtext: 'ร่วมมือในรูปแบบที่เหมาะกับลักษณะและเป้าหมายของแบรนด์และพื้นที่ของคุณ',
+      subtext: `เรายินดีรับข้อเสนอสนับสนุนและความร่วมมือจากสถานที่หรือแบรนด์ที่เหมาะกับ ${SITE_NAME_EN}`,
       types: [
         {
           title: 'รีวิวสินค้า',
@@ -830,24 +792,18 @@ const SPONSOR: Record<Locale, SponsorContent> = {
           description: 'ไปเยือนร้านค้าหรือสถานที่ท่องเที่ยวด้วยตนเองและเขียนรีวิวที่มีชีวิตชีวา',
           icon: '📍',
         },
-        {
-          title: 'โฆษณาแบนเนอร์',
-          description: 'แสดงแบนเนอร์อย่างเป็นธรรมชาติในตำแหน่งที่ไม่รบกวนการไหลของเว็บไซต์',
-          icon: '📢',
-        },
       ],
     },
     cta: {
-      heading: 'ติดต่อเรา',
-      subtext:
-        'สำหรับรายละเอียดเกี่ยวกับรูปแบบความร่วมมือ การรองรับหลายภาษา กำหนดการ และอื่นๆ กรุณาติดต่อทางอีเมล เราจะตรวจสอบและตอบกลับอย่างรวดเร็ว',
-      buttonLabel: 'ส่งอีเมลสอบถาม',
+      heading: 'สอบถามเรื่องสปอนเซอร์',
+      subtext: 'หากมีสถานที่หรือผลิตภัณฑ์ที่อยากให้เราแนะนำร่วมกัน กรุณาส่งข้อเสนอทางอีเมล',
+      buttonLabel: 'ส่งอีเมล',
       mailto: {
         subject: `[${SITE_NAME_EN}] สอบถามสปอนเซอร์`,
         body:
           `สวัสดีครับ/ค่ะ ต้องการสอบถามเรื่องสปอนเซอร์กับ ${SITE_NAME_EN}\n\n` +
           '1. ชื่อบริษัท/แบรนด์:\n' +
-          '2. ประเภทความร่วมมือ (รีวิวสินค้า / เยี่ยมชมสถานที่ / โฆษณาแบนเนอร์ / อื่นๆ):\n' +
+          '2. ประเภทความร่วมมือ (รีวิวสินค้า / เยี่ยมชมสถานที่ / อื่นๆ):\n' +
           '3. ช่วงงบประมาณ:\n' +
           '4. กำหนดการที่ต้องการ:\n' +
           '5. หมายเหตุเพิ่มเติม:\n',

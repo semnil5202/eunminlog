@@ -26,6 +26,18 @@ function getQueryString(request) {
   return pairs.length > 0 ? '?' + pairs.join('&') : '';
 }
 
+function getAboutRedirectUri(pathParts) {
+  if (pathParts.length === 1 && pathParts[0] === 'sponsor') {
+    return '/about/';
+  }
+
+  if (pathParts.length === 2 && LOCALES.indexOf(pathParts[0]) !== -1 && pathParts[1] === 'sponsor') {
+    return '/' + pathParts[0] + '/about/';
+  }
+
+  return null;
+}
+
 function handler(event) {
   var request = event.request;
   var uri = request.uri;
@@ -42,6 +54,15 @@ function handler(event) {
   var parts = uri.split('/').filter(function (p) {
     return p !== '';
   });
+
+  var aboutRedirectUri = getAboutRedirectUri(parts);
+  if (aboutRedirectUri) {
+    return {
+      statusCode: 301,
+      statusDescription: 'Moved Permanently',
+      headers: { location: { value: aboutRedirectUri + getQueryString(request) } },
+    };
+  }
 
   if (parts.length >= 1) {
     var offset = 0;

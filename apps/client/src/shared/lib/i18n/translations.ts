@@ -99,9 +99,9 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'meta.errorTitle': '페이지를 찾을 수 없습니다',
     'meta.errorDescription':
       '요청하신 페이지를 찾을 수 없습니다. 은민로그의 다른 게시글을 확인해보세요.',
-    'meta.sponsorTitle': '협찬 문의',
+    'meta.sponsorTitle': '은민로그 소개',
     'meta.sponsorDescription':
-      '은민로그 협찬 및 비즈니스 제휴 문의 페이지입니다. 생생한 경험을 검색에 잘 노출되는 콘텐츠로 작성하고, 8개 국어 다국어 번역 서비스를 제공합니다.',
+      '개발자와 마케터 커플이 맛집, 술집, 카페, 여행지, 야구장 등 직접 경험한 곳을 기록하는 은민로그를 소개합니다.',
   },
   en: {
     'nav.home': 'Home',
@@ -200,9 +200,9 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'meta.errorTitle': 'Page Not Found',
     'meta.errorDescription':
       'The page you requested could not be found. Check out other posts on eunminlog.',
-    'meta.sponsorTitle': 'Sponsorship Inquiry',
+    'meta.sponsorTitle': 'About eunminlog',
     'meta.sponsorDescription':
-      'This is the sponsorship and business partnership inquiry page for eunminlog. We create search-optimized content from real experiences and offer translation services in 8 languages.',
+      'Meet eunminlog, a daily-life blog run by a developer and marketer couple sharing firsthand experiences at restaurants, bars, cafes, travel destinations, and baseball stadiums.',
   },
   ja: {
     'nav.home': 'ホーム',
@@ -301,9 +301,9 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'meta.errorTitle': 'ページが見つかりません',
     'meta.errorDescription':
       'お探しのページが見つかりませんでした。eunminlogの他の記事をご覧ください。',
-    'meta.sponsorTitle': '協賛お問い合わせ',
+    'meta.sponsorTitle': 'eunminlogについて',
     'meta.sponsorDescription':
-      'eunminlogの協賛・ビジネス提携のお問い合わせページです。リアルな体験を検索に強いコンテンツとして作成し、8言語の翻訳サービスを提供しています。',
+      '開発者とマーケターのカップルが、飲食店やカフェ、旅行先、野球場などで実際に体験したことを記録する日常ブログ、eunminlogをご紹介します。',
   },
   'zh-CN': {
     'nav.home': '首页',
@@ -397,9 +397,9 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'meta.searchDescription': '可搜索美食、咖啡、旅行、评测相关文章。',
     'meta.errorTitle': '找不到页面',
     'meta.errorDescription': '您请求的页面未找到，请浏览eunminlog的其他文章。',
-    'meta.sponsorTitle': '赞助咨询',
+    'meta.sponsorTitle': '关于eunminlog',
     'meta.sponsorDescription':
-      '这是eunminlog的赞助及商务合作咨询页面。我们将真实体验撰写为搜索优化内容，并提供8种语言的翻译服务。',
+      '认识eunminlog：由一对从事开发与营销工作的情侣共同运营的日常博客，记录亲自体验过的餐厅、酒吧、咖啡馆、旅游景点和棒球场。',
   },
   'zh-TW': {
     'nav.home': '首頁',
@@ -493,9 +493,9 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'meta.searchDescription': '可搜尋美食、咖啡、旅行、評測相關文章。',
     'meta.errorTitle': '找不到頁面',
     'meta.errorDescription': '您請求的頁面未找到，請瀏覽eunminlog的其他文章。',
-    'meta.sponsorTitle': '贊助諮詢',
+    'meta.sponsorTitle': '關於eunminlog',
     'meta.sponsorDescription':
-      '這是eunminlog的贊助及商務合作諮詢頁面。我們將真實體驗撰寫為搜尋優化內容，並提供8種語言的翻譯服務。',
+      '認識eunminlog：由一對從事開發與行銷工作的情侶共同經營的日常部落格，記錄親自體驗過的餐廳、酒吧、咖啡館、旅遊景點和棒球場。',
   },
   id: {
     'nav.home': 'Beranda',
@@ -594,9 +594,9 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'meta.errorTitle': 'Halaman Tidak Ditemukan',
     'meta.errorDescription':
       'Halaman yang Anda cari tidak ditemukan. Lihat artikel lain di eunminlog.',
-    'meta.sponsorTitle': 'Kerjasama Sponsor',
+    'meta.sponsorTitle': 'Tentang eunminlog',
     'meta.sponsorDescription':
-      'Halaman pertanyaan sponsorship dan kemitraan bisnis eunminlog. Kami membuat konten yang dioptimalkan untuk pencarian dari pengalaman nyata dan menawarkan layanan terjemahan dalam 8 bahasa.',
+      'Kenali eunminlog, blog keseharian yang dikelola pasangan developer dan marketer dengan cerita pengalaman langsung di restoran, bar, kafe, destinasi wisata, dan stadion bisbol.',
   },
   vi: {
     'nav.home': 'Trang chủ',
@@ -695,9 +695,9 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'meta.errorTitle': 'Không Tìm Thấy Trang',
     'meta.errorDescription':
       'Trang bạn tìm kiếm không tồn tại. Hãy xem các bài viết khác trên eunminlog.',
-    'meta.sponsorTitle': 'Hợp Tác Tài Trợ',
+    'meta.sponsorTitle': 'Giới Thiệu eunminlog',
     'meta.sponsorDescription':
-      'Đây là trang liên hệ tài trợ và hợp tác kinh doanh của eunminlog. Chúng tôi tạo nội dung tối ưu hóa tìm kiếm từ trải nghiệm thực tế và cung cấp dịch vụ dịch thuật 8 ngôn ngữ.',
+      'Giới thiệu eunminlog, blog đời sống do một cặp đôi làm nghề phát triển phần mềm và tiếp thị vận hành, ghi lại trải nghiệm tại nhà hàng, quán bar, quán cà phê, điểm du lịch và sân bóng chày.',
   },
   th: {
     'nav.home': 'หน้าแรก',
@@ -795,9 +795,9 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'meta.searchDescription': 'ค้นหาบทความร้านอาหาร, คาเฟ่, ท่องเที่ยว และรีวิว',
     'meta.errorTitle': 'ไม่พบหน้าเว็บ',
     'meta.errorDescription': 'ไม่พบหน้าเว็บที่คุณค้นหา ลองดูบทความอื่นๆ บน eunminlog',
-    'meta.sponsorTitle': 'สอบถามสปอนเซอร์',
+    'meta.sponsorTitle': 'เกี่ยวกับ eunminlog',
     'meta.sponsorDescription':
-      'หน้าสอบถามสปอนเซอร์และความร่วมมือทางธุรกิจของ eunminlog เราสร้างเนื้อหาที่เหมาะกับการค้นหาจากประสบการณ์จริง และให้บริการแปลภาษา 8 ภาษา',
+      'ทำความรู้จัก eunminlog บล็อกไลฟ์สไตล์ที่ดูแลโดยคู่รักนักพัฒนาและนักการตลาด บันทึกประสบการณ์จริงจากร้านอาหาร บาร์ คาเฟ่ สถานที่ท่องเที่ยว และสนามเบสบอล',
   },
 };
 
