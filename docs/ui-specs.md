@@ -103,7 +103,7 @@
    - 우측 끝 fade-out (`mask-image`) 처리로 스크롤 힌트
    - **햄버거 메뉴 금지, Drawer Sidebar 금지**
 
-2. **In-Feed Ad Pattern** (승인 후 활성화 예정)
+2. **In-Feed Ad Pattern**
 
    ```
    [Post Card 1]
@@ -117,8 +117,9 @@
    ...
    ```
 
-   - 현재 `feed.first`, `feed.second`, `search.first`, `search.second` 슬롯 키의 `enabled=false`로 Feed·Search 슬롯 DOM, AdSense 요청, 쿠팡 fallback을 모두 생성하지 않는다.
-   - AdSense 실제 노출 확인 후 필요한 슬롯 키를 활성화하면 SSG와 추가 페이지의 index 1, 4(2번째·5번째 카드 직전)에 광고를 삽입한다.
+   - 현재 `feed.first`, `feed.second`는 `enabled=false`로 Feed 슬롯 DOM, AdSense 요청, 쿠팡 fallback을 모두 생성하지 않는다.
+   - `search.first`, `search.second`는 활성 상태로 검색 결과의 index 1, 4(2번째·5번째 카드 직전)에 광고를 삽입한다. 최소 250px을 예약하고 뷰포트 근접 시 AdSense를 요청하며 `unfilled`이면 식품·뷰티 쿠팡 다이나믹 위젯으로 전환한다.
+   - Feed는 AdSense 실제 노출 확인 후 필요한 슬롯 키를 활성화하면 SSG와 추가 페이지의 같은 index에 광고를 삽입한다.
    - CSS `lg:hidden` / `hidden lg:block`으로 visibility 토글 (별도 HTML 구조 금지)
 
 3. **피드 로딩**: IntersectionObserver 페이지네이션 (SSG 첫 페이지 + Static JSON fetch로 추가 로드)
@@ -434,18 +435,18 @@ Admin에서 `data-type="image-carousel"`로 마크업된 연속 이미지를 Cli
 
 ## 광고 미디에이션 Specifications
 
-| 배치                       | 사이즈 (Mobile) | 사이즈 (PC)        | 위치                                   | 컴포넌트                          |
-| -------------------------- | --------------- | ------------------ | -------------------------------------- | --------------------------------- |
-| PostLayout Fixed Adsense   | 300x50          | 468x60 (중앙 정렬) | 게시글 상세 본문 상단                  | `FixedAdsense variant="post-top"` |
-| RightSidebar Fixed Adsense | --              | 300x250            | PC 우측 사이드바 상단 (sticky)         | `FixedAdsense variant="sidebar"`  |
-| Native In-Article          | fluid           | fluid              | 게시글 본문 중간 (H2 헤딩 앞에 삽입)   | `insertInArticleAds()`            |
-| Native In-feed             | fluid           | fluid              | 현재 비활성, 승인 후 index 1, 4에 삽입 | `InFeedAdsense`                   |
+| 배치                       | 사이즈 (Mobile) | 사이즈 (PC)        | 위치                                 | 컴포넌트                          |
+| -------------------------- | --------------- | ------------------ | ------------------------------------ | --------------------------------- |
+| PostLayout Fixed Adsense   | 300x50          | 468x60 (중앙 정렬) | 게시글 상세 본문 상단                | `FixedAdsense variant="post-top"` |
+| RightSidebar Fixed Adsense | --              | 300x250            | PC 우측 사이드바 상단 (sticky)       | `FixedAdsense variant="sidebar"`  |
+| Native In-Article          | fluid           | fluid              | 게시글 본문 중간 (H2 헤딩 앞에 삽입) | `insertInArticleAds()`            |
+| Native In-feed             | fluid           | fluid              | Search index 1, 4 (Feed는 비활성)    | `InFeedAdsense`                   |
 
-피드·검색용 Native In-feed unit(`6392269057`, layout key `-6t+ed+2i-1n-4w`) 설정은 보존하지만 대응 슬롯 키가 비활성인 동안 사용하지 않는다. 본문은 `article.first`, `article.second`가 Native In-article unit(`5322463062`, `fluid`, full-width responsive)을 공유한다. 활성 Native 지면은 `min-h-[250px]`만 예약하고 광고 높이 확장을 허용하며, Core Web Vitals 가드레일은 field p75 CLS 0.1 이하이다.
+피드·검색용 Native In-feed unit(`6392269057`, layout key `-6t+ed+2i-1n-4w`)은 공유한다. Search 슬롯 키는 활성이고 Feed 슬롯 키는 비활성이다. 본문은 `article.first`, `article.second`가 Native In-article unit(`5322463062`, `fluid`, full-width responsive)을 공유한다. 활성 Native 지면은 `min-h-[250px]`만 예약하고 광고 높이 확장을 허용하며, Core Web Vitals 가드레일은 field p75 CLS 0.1 이하이다.
 
 ### Provider 선택과 CLS
 
-- Local·Development에서는 활성 광고 지면에 Google Publisher Tag(GPT) 공식 공개 샘플을 표시한다. 현재 Article은 `/6355419/Travel` fluid, Sidebar는 `/6355419/Travel/Europe/France/Paris` 300×250, PostTop은 `/6355419/Travel/Asia`와 현재 컨테이너 크기를 사용한다. 비활성 Feed/Search는 GPT 슬롯도 만들지 않으며 Production에서는 GPT 분기를 사용하지 않는다.
+- Local·Development에서는 활성 광고 지면에 Google Publisher Tag(GPT) 공식 공개 샘플을 표시한다. 현재 Article은 `/6355419/Travel` fluid, Search는 `/6355419/Travel` Native In-feed, Sidebar는 `/6355419/Travel/Europe/France/Paris` 300×250, PostTop은 `/6355419/Travel/Asia`와 현재 컨테이너 크기를 사용한다. 비활성 Feed는 GPT 슬롯도 만들지 않으며 Production에서는 GPT 분기를 사용하지 않는다.
 - GPT가 정상 응답했지만 빈 슬롯이면 `GPT TEST AD · NO FILL`, SDK 로드·slot 정의·요청 실패면 `GPT TEST AD · LOAD FAILED`를 표시한다. 둘 다 provider `none`이며 Production에는 기술 marker를 표시하지 않는다.
 - Production에서 운영 플래그가 꺼져 있으면 사이트 심사용 AdSense base tag만 로드하고 광고 단위 요청은 만들지 않는다. 지면별 고정 이미지 또는 다이나믹 iframe fallback만 표시한다.
 - Production에서 운영 플래그가 켜져 있으면 AdSense의 `data-ad-status="unfilled"`에서만 해당 지면을 쿠팡으로 전환한다. `filled`와 `unfill-optimized`는 Google이 관리하는 AdSense 지면으로 유지한다.
@@ -467,13 +468,14 @@ Admin에서 `data-type="image-carousel"`로 마크업된 연속 이미지를 Cli
 
 - **위치**: `shared/components/ad/InFeedAdsense.astro`
 - Props: `slotKey`, `slotId`, `position`, `fallbackIndex`, `locale`
-- 현재 Feed·Search에서는 비활성 슬롯 키에 해당하는 컴포넌트를 렌더링하지 않는다. 필요한 키 활성화 시 `w-full min-h-[250px]`로 최소 공간을 예약하고 Native creative의 가변 높이를 허용한다.
+- 현재 Feed에서는 비활성 슬롯 키에 해당하는 컴포넌트를 렌더링하지 않는다. Search는 활성 슬롯 키에 `w-full min-h-[250px]`로 최소 공간을 예약하고 Native creative의 가변 높이를 허용한다.
 - provider가 활성화될 때만 `role="complementary"`와 광고 접근성 라벨을 적용한다.
 - 운영 AdSense unit ID(`6392269057`)는 Feed/Search의 반복 DOM 슬롯에서 재사용한다. `data-ad-slot`과 `data-ad-position`은 각 노출의 논리 슬롯·위치를 고유하게 식별한다.
 
 ### In-Article Adsense 삽입 규칙
 
 - HTML `<h2>` 헤딩 기준으로 섹션 분할
+- 광고 예약 영역의 상하 여백은 각각 40px
 - 첫 광고: 도입부에 `<p>` 2개 이상 또는 텍스트 300자 이상일 때 첫 H2 앞에 삽입
 - 두 번째 광고: 두 후보 사이 600자 이상이며 마지막 H2 이후 300자 이상일 때 마지막 H2 앞에 삽입
 - 조건을 충족하지 않는 후보는 생략하고, 삽입된 슬롯은 같은 In-article unit을 재사용한다.

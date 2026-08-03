@@ -1,15 +1,15 @@
 # AdSense·쿠팡 광고 운영 가이드
 
-> 상태: Display·In-article Production 슬롯 요청 활성화, Feed·Search Native In-feed 비활성, AdSense 승인 대기
+> 상태: Display·In-article·Search Native In-feed Production 슬롯 요청 활성화, Feed Native In-feed 비활성, AdSense 승인 대기
 
 ## 1. 운영 원칙
 
-- Local·Development 빌드는 활성 지면에 Google Publisher Tag(GPT) 공식 공개 샘플을 표시한다. 비활성 Feed·Search에는 슬롯을 만들지 않으며 운영 AdSense·쿠팡 요청과 GA4 광고 이벤트도 만들지 않는다.
+- Local·Development 빌드는 활성 지면에 Google Publisher Tag(GPT) 공식 공개 샘플을 표시한다. 비활성 Feed에는 슬롯을 만들지 않으며 운영 AdSense·쿠팡 요청과 GA4 광고 이벤트도 만들지 않는다.
 - GPT가 정상 응답했지만 빈 슬롯이면 `GPT TEST AD · NO FILL`, SDK 로드·slot 정의·요청 실패면 `GPT TEST AD · LOAD FAILED`를 표시한다. 둘 다 provider `none`이다.
 - Production 빌드는 GPT 샘플 분기를 항상 비활성화한다.
 - Production의 `PUBLIC_AD_MEDIATION_ENABLED=false`는 사이트 심사용 AdSense base tag만 로드하고 광고 단위 요청은 만들지 않는다.
 - Production의 `PUBLIC_AD_MEDIATION_ENABLED=true`는 코드에 정의된 지면별 unit 설정으로 AdSense를 요청한다.
-- `ADVERTISEMENT_MEDIATION_CONFIG.slots`는 실제 노출 위치 키별 활성 상태를 관리한다. 현재 `feed.first`, `feed.second`, `search.first`, `search.second`는 비활성이고 `article.first`, `article.second`, `postTop`, `sidebar`는 활성이다.
+- `ADVERTISEMENT_MEDIATION_CONFIG.slots`는 실제 노출 위치 키별 활성 상태를 관리한다. 현재 `feed.first`, `feed.second`는 비활성이고 `search.first`, `search.second`, `article.first`, `article.second`, `postTop`, `sidebar`는 활성이다.
 - 비활성 슬롯 키는 예약 DOM, AdSense·GPT 요청, 쿠팡 fallback, GA4 광고 이벤트를 모두 생성하지 않는다. 전역 `enabled`는 Production AdSense 요청 여부만 제어하며 슬롯별 활성 상태와 독립적이다.
 - AdSense의 `data-ad-status="unfilled"`만 쿠팡으로 전환한다. `filled`와 `unfill-optimized`는 Google이 관리하는 AdSense 지면으로 유지한다.
 - 시간 초과, 스크립트 오류, 차단, 상태 미확인은 쿠팡으로 전환하지 않고 예약 영역을 비워 둔다.
@@ -42,28 +42,29 @@
 | 게시글 상단     | Display           | Mobile 300×50, PC 468×60 | 즉시      | `5190868026` | `auto`                          |
 | 우측 사이드바   | Display           | PC 300×250               | 지연      | `3048186343` | `auto`                          |
 | 피드 index 1, 4 | Native In-feed    | 현재 DOM 미생성          | 비활성    | `6392269057` | `feed.first`, `feed.second`     |
-| 검색 index 1, 4 | Native In-feed    | 현재 DOM 미생성          | 비활성    | `6392269057` | `search.first`, `search.second` |
+| 검색 index 1, 4 | Native In-feed    | `w-full min-h-[250px]`   | 지연      | `6392269057` | `search.first`, `search.second` |
 | 본문 H2 경계    | Native In-article | `w-full min-h-[250px]`   | 지연      | `5322463062` | `fluid`, full-width responsive  |
 
-Feed/Search 설정은 보존하지만 현재 비활성이다. Article은 같은 Native In-article unit을 최대 2곳에서 반복 사용한다. 활성 지면의 각 DOM 노출은 고유한 logical slot/position을 사용하며 인기글 104px 광고 지면은 사용하지 않는다.
+Feed 설정은 보존하지만 현재 비활성이다. Search는 같은 Native In-feed unit을 index 1, 4에서 사용하고 Article은 같은 Native In-article unit을 최대 2곳에서 반복 사용한다. 활성 지면의 각 DOM 노출은 고유한 logical slot/position을 사용하며 인기글 104px 광고 지면은 사용하지 않는다.
 
-AdSense 실제 노출을 확인한 뒤 필요한 Feed·Search 슬롯 키의 `enabled`를 각각 `true`로 전환하면 2번째·5번째 카드 직전(index 1, 4)에 삽입한다. 그전에는 공백을 포함한 광고 DOM을 만들지 않는다.
+Feed는 AdSense 실제 노출을 확인한 뒤 필요한 슬롯 키의 `enabled`를 각각 `true`로 전환하면 2번째·5번째 카드 직전(index 1, 4)에 삽입한다. 그전에는 공백을 포함한 광고 DOM을 만들지 않는다. Search는 현재 동일 위치에서 활성화되어 Sidebar와 같이 최소 공간을 예약한 뒤 뷰포트 300px 전부터 AdSense를 요청하고 `unfilled`이면 쿠팡 다이나믹 위젯으로 전환한다.
 
 ### 2.1 쿠팡 fallback 지면 구성
 
 쿠팡 파트너스에서 300×250 다이나믹 iframe 지원을 확인하고 지면별 위젯을 생성했다. 동적 상품은 위치별로 다른 카테고리를 사용하지만 실제 노출 상품은 쿠팡 응답에 따라 달라진다.
 
-Feed·Search fallback 설정과 widget ID는 재활성화를 위해 보존하지만 해당 슬롯 키가 비활성인 동안 호출하지 않는다.
+Feed fallback 설정과 widget ID는 재활성화를 위해 보존하지만 해당 슬롯 키가 비활성인 동안 호출하지 않는다. Search fallback은 활성 상태다.
 
-| 지면              | fallback     | 카테고리      | 광고·widget ID | 반응형 조건    |
-| ----------------- | ------------ | ------------- | -------------- | -------------- |
-| PostTop           | 고정 320×50  | 범용          | `1012831`      | PC·Mobile 공통 |
-| Feed index 1      | 동적 300×250 | 식품          | `1013216`      | PC·Mobile 공통 |
-| Feed index 4      | 동적 300×250 | 뷰티          | `1013228`      | PC·Mobile 공통 |
-| Article 1         | 동적 300×250 | 주방용품      | `1013218`      | PC·Mobile 공통 |
-| Article 2         | 동적 300×250 | 생활용품      | `1013219`      | PC·Mobile 공통 |
-| Search index 1, 4 | 고정 300×250 | 범용          | `1012833`      | PC·Mobile 공통 |
-| Sidebar           | 동적 300×250 | 헬스·건강식품 | `1013229`      | PC `lg` 이상만 |
+| 지면           | fallback     | 카테고리      | 광고·widget ID | 반응형 조건    |
+| -------------- | ------------ | ------------- | -------------- | -------------- |
+| PostTop        | 고정 320×50  | 범용          | `1012831`      | PC·Mobile 공통 |
+| Feed index 1   | 동적 300×250 | 주방용품      | `1013218`      | PC·Mobile 공통 |
+| Feed index 4   | 동적 300×250 | 식품          | `1013216`      | PC·Mobile 공통 |
+| Article 1      | 동적 300×250 | 뷰티          | `1013228`      | PC·Mobile 공통 |
+| Article 2      | 동적 300×250 | 생활용품      | `1013219`      | PC·Mobile 공통 |
+| Search index 1 | 동적 300×250 | 식품          | `1013216`      | PC·Mobile 공통 |
+| Search index 4 | 동적 300×250 | 뷰티          | `1013228`      | PC·Mobile 공통 |
+| Sidebar        | 동적 300×250 | 헬스·건강식품 | `1013229`      | PC `lg` 이상만 |
 
 - Production 운영 플래그가 켜진 경로에서는 AdSense가 `data-ad-status="unfilled"`를 확정한 뒤에만 쿠팡 이미지 URL 또는 동적 iframe `src`를 설정한다. `filled`, `unfill-optimized`, 오류, 차단, 상태 미확인에는 쿠팡 네트워크 요청을 만들지 않는다.
 - PostTop은 기존 즉시 로딩 정책을 유지한다. 나머지는 AdSense 지연 요청 범위와 연동하며, `unfilled` 확정 시 슬롯이 아직 호출 범위 밖이면 쿠팡도 계속 지연한다.
@@ -72,7 +73,7 @@ Feed·Search fallback 설정과 widget ID는 재활성화를 위해 보존하지
 - 고정 쿠팡 fallback은 `role="complementary"`, 광고 접근성 라벨, `rel="sponsored noopener"`를 유지한다. 동적 iframe에도 광고 라벨과 제목을 제공하며, 실패 시 다른 쿠팡 광고로 연쇄 요청하지 않고 기존 예약 영역을 provider `none`으로 남긴다.
 - 같은 페이지의 Feed·Article 반복 슬롯은 서로 다른 광고 식별자를 사용한다. 다만 동적 위젯의 실제 상품 다양성은 쿠팡 응답에 따라 달라지므로 ID 분리만으로 서로 다른 상품 노출을 보장하지 않는다.
 - 다이나믹 iframe은 교차 출처이므로 앱의 DOM click listener로 내부 상품 클릭을 감지할 수 없다. 쿠팡 리포트의 클릭·수익을 기준으로 확인하고 GA4 `ad_click`은 고정 anchor fallback에만 기록한다.
-- 모바일 핵심 지면에는 반복 구매 가능성이 높은 식품·뷰티·주방용품·생활용품을 배치한다. 뷰티는 블로그 주제와의 직접 문맥성이 상대적으로 낮으므로 Feed 두 번째 위치에서 탐색적으로 측정하고, 식품과 주방용품을 더 앞선 위치에 유지한다.
+- 모바일 핵심 지면에는 반복 구매 가능성이 높은 주방용품·식품·뷰티·생활용품을 배치한다. Feed는 주방용품, 식품 순서로 재활성화에 대비하고, 활성 Article은 뷰티, 생활용품 순서로 성과를 측정한다.
 - Sidebar의 헬스·건강식품은 PC에서만 노출되므로 모바일 성과와 합산해 카테고리 우열을 판단하지 않는다. 기기·지면별 슬롯 조회 대비 쿠팡 클릭·주문·수익을 비교하며, 쿠팡 리포트가 widget ID 구분을 제공하지 않으면 생성 코드에서 지원하는 별도 추적 식별자를 사용한다.
 - 카테고리 실험 중에는 위치·크기·호출 조건을 고정한다. 총수익보다 슬롯 조회당 클릭률, 주문 전환율, 슬롯 조회 1,000회당 수익을 우선 비교하고 충분한 노출이 쌓이기 전에는 카테고리를 교체하지 않는다.
 
@@ -100,7 +101,7 @@ publisher client ID, unit ID, layout key는 공개 식별자이므로 코드에 
 
 현재 코드·광고 단위·문서 연결과 Local·Development GPT 미리보기는 완료했다. 2026-08-03 기준 Supabase REST 응답 `200`과 Client SSG 86페이지 전체 빌드를 확인했으므로 `fetchCategoryTree: TypeError: fetch failed`는 샌드박스 DNS 제한에 의한 검증 환경 오류로 종결한다.
 
-승인 전에는 긴 게시글 In-article, Mobile/PC Display GPT 미리보기와 다음 Production 배포의 슬롯 요청을 검증한다. Feed·Search는 승인 후 활성화해 검색 결과·무한스크롤을 검증한다. CMP·실제 광고 상태·GA4·field CLS는 AdSense 승인과 Production 트래픽이 있어야 완료할 수 있다.
+승인 전에는 긴 게시글 In-article, Mobile/PC Display GPT 미리보기와 다음 Production 배포의 슬롯 요청을 검증한다. 활성 Search는 검색 결과 변경 시 슬롯 재생성·지연 요청·쿠팡 전환을 검증하고, Feed는 승인 후 활성화해 무한스크롤을 검증한다. CMP·실제 광고 상태·GA4·field CLS는 AdSense 승인과 Production 트래픽이 있어야 완료할 수 있다.
 
 1. 코드의 Display/Native unit ID와 In-feed layout key가 AdSense 콘솔 값과 일치하는지 확인한다.
 2. Google 인증 CMP 메시지가 게시 국가에서 정상 노출되는지 확인한다.

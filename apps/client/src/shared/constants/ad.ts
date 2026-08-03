@@ -102,17 +102,6 @@ const coupangPostTopAdvertisement: CoupangAdvertisementConfig = {
   referrerPolicy: 'unsafe-url',
 };
 
-const coupangRectangleAdvertisement: CoupangAdvertisementConfig = {
-  kind: 'fixed',
-  href: 'https://link.coupang.com/a/fRDrk6SlDo',
-  imageUrl:
-    'https://ads-partners.coupang.com/banners/1012833?trackingCode=AF7680558&subId=&traceId=V0-301-879dd1202e5c73b2-I1012833&w=300&h=250',
-  imageAlt: '쿠팡 카테고리 배너',
-  width: 300,
-  height: 250,
-  referrerPolicy: 'unsafe-url',
-};
-
 const createCoupangDynamicAdvertisement = (
   widgetIdentifier: string,
   title: string,
@@ -126,13 +115,18 @@ const createCoupangDynamicAdvertisement = (
 });
 
 const coupangFeedAdvertisements = [
+  createCoupangDynamicAdvertisement('1013218', '쿠팡 주방용품 베스트 상품'),
   createCoupangDynamicAdvertisement('1013216', '쿠팡 식품 베스트 상품'),
-  createCoupangDynamicAdvertisement('1013228', '쿠팡 뷰티 베스트 상품'),
 ] as const;
 
 const coupangArticleAdvertisements = [
-  createCoupangDynamicAdvertisement('1013218', '쿠팡 주방용품 베스트 상품'),
+  createCoupangDynamicAdvertisement('1013228', '쿠팡 뷰티 베스트 상품'),
   createCoupangDynamicAdvertisement('1013219', '쿠팡 생활용품 베스트 상품'),
+] as const;
+
+const coupangSearchAdvertisements = [
+  createCoupangDynamicAdvertisement('1013216', '쿠팡 식품 베스트 상품'),
+  createCoupangDynamicAdvertisement('1013228', '쿠팡 뷰티 베스트 상품'),
 ] as const;
 
 const coupangSidebarAdvertisements = [
@@ -154,12 +148,12 @@ export const ADVERTISEMENT_MEDIATION_CONFIG: AdvertisementMediationConfig = {
       adsenseUnitKey: ADVERTISEMENT_UNIT_KEY.feed,
     },
     [ADVERTISEMENT_SLOT_KEY.searchFirst]: {
-      enabled: false,
+      enabled: true,
       placement: 'search',
       adsenseUnitKey: ADVERTISEMENT_UNIT_KEY.feed,
     },
     [ADVERTISEMENT_SLOT_KEY.searchSecond]: {
-      enabled: false,
+      enabled: true,
       placement: 'search',
       adsenseUnitKey: ADVERTISEMENT_UNIT_KEY.feed,
     },
@@ -195,7 +189,7 @@ export const ADVERTISEMENT_MEDIATION_CONFIG: AdvertisementMediationConfig = {
   },
   coupang: {
     feed: isProductionBuild ? coupangFeedAdvertisements : [],
-    search: isProductionBuild ? [coupangRectangleAdvertisement] : [],
+    search: isProductionBuild ? coupangSearchAdvertisements : [],
     article: isProductionBuild ? coupangArticleAdvertisements : [],
     postTop: isProductionBuild ? [coupangPostTopAdvertisement] : [],
     sidebar: isProductionBuild ? coupangSidebarAdvertisements : [],
