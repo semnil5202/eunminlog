@@ -130,7 +130,7 @@ AdSense와 쿠팡을 `ad_provider`로 분리한다. 빈 예약 영역(`none`)과
 
 > `N`은 본문 내 삽입 순서 (1, 2, ...).
 
-운영 AdSense unit ID는 placement별 1개를 반복 DOM 슬롯에서 재사용한다. Feed/Search는 같은 Native In-feed unit(`6392269057`), Article은 Native In-article unit(`5322463062`)을 사용한다. 위 `ad_slot`과 `ad_position`은 AdSense unit ID가 아니라 각 DOM 노출·검색 렌더·카드 위치를 구분하는 논리 식별자다.
+운영 AdSense unit ID는 형식별로 반복 DOM 슬롯에서 재사용한다. 현재 `feed.first`, `feed.second`, `search.first`, `search.second`는 비활성이라 이벤트를 만들지 않으며, `article.first`, `article.second`는 Native In-article unit(`5322463062`)을 공유한다. 위 `ad_slot`과 `ad_position`은 AdSense unit ID가 아니라 각 DOM 노출·카드 위치를 구분하는 논리 식별자다.
 
 ---
 
@@ -343,14 +343,14 @@ export function initPostClickTracker(containerId: string): void {
 
 ### 3.5 AdSense Tracking 구현
 
-`Layout.astro`에서 `initAdMediation()` 다음 `initAdTracker(pageType)`을 한 번 실행한다. 정적 슬롯과 이후 생성되는 피드·검색 슬롯은 모두 `ad-slot-created` 이벤트로 같은 observer에 등록한다.
+`Layout.astro`에서 `initAdMediation()` 다음 `initAdTracker(pageType)`을 한 번 실행한다. 현재는 정적 Display·In-article 슬롯만 observer에 등록하고, Feed·Search는 중앙 플래그 활성화 후 `ad-slot-created` 이벤트로 같은 observer에 등록한다.
 
 - 50% 이상 뷰포트 진입 시 현재 `data-ad-active-provider`의 `ad_impression`을 provider별 1회 기록한다.
 - 같은 provider가 1초 이상 유지되면 `ad_view`를 provider별 1회 기록한다.
 - `none` 상태는 기록하지 않으며 provider 전환 시 진행 중인 view 타이머를 취소한다.
 - 쿠팡 고정 anchor 내부의 실제 클릭만 `ad_click`으로 기록한다. AdSense 및 쿠팡 다이나믹 iframe에는 click listener를 두지 않으며 동적 상품 클릭은 쿠팡 리포트에서 확인한다.
 - 슬롯 상태는 element 기준 `WeakMap`/`Map`으로 관리해 동일 이름의 동적 슬롯이 서로 간섭하지 않게 한다.
-- `ad_position`은 실제 카드 위치를 사용한다. 피드·검색의 삽입 위치는 각 페이지·검색 결과의 index 1, 4(2번째·5번째 카드 직전)이며 고유 슬롯 counter와 분리한다.
+- Feed·Search 재활성화 후 `ad_position`은 각 페이지·검색 결과의 index 1, 4(2번째·5번째 카드 직전)를 사용하며 고유 슬롯 counter와 분리한다.
 - `unfill-optimized`는 Google이 관리하는 AdSense 지면으로 추적한다. GPT 샘플의 `NO FILL`·`LOAD FAILED` marker는 provider `none`이므로 impression/view/click 이벤트를 만들지 않는다. Production에는 기술 marker를 렌더링하지 않는다.
 
 ---
@@ -419,25 +419,25 @@ GA4 관리 콘솔에서 다음 커스텀 디멘션을 등록해야 한다.
 
 ### 수정 대상 파일
 
-| 파일                                                                  | 변경 내용                                                                                                                                                                                                                         |
-| --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `layouts/Layout.astro`                                                | `gaPageParams` prop 추가, `gtag('config')` 호출에 파라미터 주입, 애드센스 스크립트 태그 추가, GA4/네이버 애널리틱스를 첫 인터랙션(scroll/click/touchstart/keydown) 후 동적 로드하고 네이버 애널리틱스는 APEX 운영 호스트에서만 로드             |
-| `layouts/PostLayout.astro`                                            | `gaPageParams` 생성 및 Layout에 전달                                                                                                                                                                                              |
-| `layouts/ListLayout.astro`                                            | `gaPageParams` 생성 및 Layout에 전달                                                                                                                                                                                              |
-| `pages/index.astro`                                                   | `gaPageParams` 생성                                                                                                                                                                                                               |
-| `pages/[category]/index.astro`                                        | `gaPageParams` 생성                                                                                                                                                                                                               |
-| `pages/[category]/[sub_category]/index.astro`                         | `gaPageParams` 생성                                                                                                                                                                                                               |
-| `pages/[category]/[sub_category]/[slug].astro`                        | `gaPageParams` 생성                                                                                                                                                                                                               |
-| `pages/[locale]/**` (4개 파일)                                        | 동일 패턴 적용                                                                                                                                                                                                                    |
-| `pages/search.astro`, `pages/[locale]/search.astro`                   | `gaPageParams` 생성                                                                                                                                                                                                               |
-| `features/post-feed/components/PostCard.astro`                        | `data-post-*` 속성 추가                                                                                                                                                                                                           |
-| `features/post-feed/components/SponsoredCard.astro`                   | `data-post-*` 속성 추가                                                                                                                                                                                                           |
-| `features/post-feed/components/PostCardGrid.astro`                    | `listName` prop 추가, 이벤트 위임 스크립트, 동적 카드 data 속성                                                                                                                                                                   |
-| `shared/components/ad/InFeedAdsense.astro`                            | `data-ad-*` 속성 추가                                                                                                                                                                                                             |
-| `shared/components/ad/FixedAdsense.astro`                             | `data-ad-*` 속성 추가                                                                                                                                                                                                             |
-| `features/search/components/SearchUI.astro`                           | 클릭 트래킹 + 동적 광고 data 속성                                                                                                                                                                                                 |
-| `shared/components/layout/NearbyPostList.astro` (경로 주의: features) | 클릭 트래킹                                                                                                                                                                                                                       |
-| `shared/components/layout/SponsoredPostList.astro`                    | 클릭 트래킹                                                                                                                                                                                                                       |
+| 파일                                                                  | 변경 내용                                                                                                                                                                                                                           |
+| --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `layouts/Layout.astro`                                                | `gaPageParams` prop 추가, `gtag('config')` 호출에 파라미터 주입, 애드센스 스크립트 태그 추가, GA4/네이버 애널리틱스를 첫 인터랙션(scroll/click/touchstart/keydown) 후 동적 로드하고 네이버 애널리틱스는 APEX 운영 호스트에서만 로드 |
+| `layouts/PostLayout.astro`                                            | `gaPageParams` 생성 및 Layout에 전달                                                                                                                                                                                                |
+| `layouts/ListLayout.astro`                                            | `gaPageParams` 생성 및 Layout에 전달                                                                                                                                                                                                |
+| `pages/index.astro`                                                   | `gaPageParams` 생성                                                                                                                                                                                                                 |
+| `pages/[category]/index.astro`                                        | `gaPageParams` 생성                                                                                                                                                                                                                 |
+| `pages/[category]/[sub_category]/index.astro`                         | `gaPageParams` 생성                                                                                                                                                                                                                 |
+| `pages/[category]/[sub_category]/[slug].astro`                        | `gaPageParams` 생성                                                                                                                                                                                                                 |
+| `pages/[locale]/**` (4개 파일)                                        | 동일 패턴 적용                                                                                                                                                                                                                      |
+| `pages/search.astro`, `pages/[locale]/search.astro`                   | `gaPageParams` 생성                                                                                                                                                                                                                 |
+| `features/post-feed/components/PostCard.astro`                        | `data-post-*` 속성 추가                                                                                                                                                                                                             |
+| `features/post-feed/components/SponsoredCard.astro`                   | `data-post-*` 속성 추가                                                                                                                                                                                                             |
+| `features/post-feed/components/PostCardGrid.astro`                    | `listName` prop 추가, 이벤트 위임 스크립트, 동적 카드 data 속성                                                                                                                                                                     |
+| `shared/components/ad/InFeedAdsense.astro`                            | `data-ad-*` 속성 추가                                                                                                                                                                                                               |
+| `shared/components/ad/FixedAdsense.astro`                             | `data-ad-*` 속성 추가                                                                                                                                                                                                               |
+| `features/search/components/SearchUI.astro`                           | 클릭 트래킹 + 동적 광고 data 속성                                                                                                                                                                                                   |
+| `shared/components/layout/NearbyPostList.astro` (경로 주의: features) | 클릭 트래킹                                                                                                                                                                                                                         |
+| `shared/components/layout/SponsoredPostList.astro`                    | 클릭 트래킹                                                                                                                                                                                                                         |
 
 ### 신규 파일
 

@@ -1,14 +1,16 @@
 # AdSense·쿠팡 광고 운영 가이드
 
-> 상태: Native/Display 광고 단위 연결 및 Production 슬롯 요청 활성화 완료, AdSense 승인 대기
+> 상태: Display·In-article Production 슬롯 요청 활성화, Feed·Search Native In-feed 비활성, AdSense 승인 대기
 
 ## 1. 운영 원칙
 
-- Local·Development 빌드는 모든 지면에 Google Publisher Tag(GPT) 공식 공개 샘플을 표시한다. 운영 AdSense·쿠팡 요청과 GA4 광고 이벤트는 만들지 않는다.
+- Local·Development 빌드는 활성 지면에 Google Publisher Tag(GPT) 공식 공개 샘플을 표시한다. 비활성 Feed·Search에는 슬롯을 만들지 않으며 운영 AdSense·쿠팡 요청과 GA4 광고 이벤트도 만들지 않는다.
 - GPT가 정상 응답했지만 빈 슬롯이면 `GPT TEST AD · NO FILL`, SDK 로드·slot 정의·요청 실패면 `GPT TEST AD · LOAD FAILED`를 표시한다. 둘 다 provider `none`이다.
 - Production 빌드는 GPT 샘플 분기를 항상 비활성화한다.
 - Production의 `PUBLIC_AD_MEDIATION_ENABLED=false`는 사이트 심사용 AdSense base tag만 로드하고 광고 단위 요청은 만들지 않는다.
 - Production의 `PUBLIC_AD_MEDIATION_ENABLED=true`는 코드에 정의된 지면별 unit 설정으로 AdSense를 요청한다.
+- `ADVERTISEMENT_MEDIATION_CONFIG.slots`는 실제 노출 위치 키별 활성 상태를 관리한다. 현재 `feed.first`, `feed.second`, `search.first`, `search.second`는 비활성이고 `article.first`, `article.second`, `postTop`, `sidebar`는 활성이다.
+- 비활성 슬롯 키는 예약 DOM, AdSense·GPT 요청, 쿠팡 fallback, GA4 광고 이벤트를 모두 생성하지 않는다. 전역 `enabled`는 Production AdSense 요청 여부만 제어하며 슬롯별 활성 상태와 독립적이다.
 - AdSense의 `data-ad-status="unfilled"`만 쿠팡으로 전환한다. `filled`와 `unfill-optimized`는 Google이 관리하는 AdSense 지면으로 유지한다.
 - 시간 초과, 스크립트 오류, 차단, 상태 미확인은 쿠팡으로 전환하지 않고 예약 영역을 비워 둔다.
 - 두 광고가 모두 없더라도 최소 예약 영역을 제거하지 않는다. Native creative의 가변 높이를 허용하며 field p75 CLS 0.1 이하를 가드레일로 삼는다.
@@ -30,36 +32,38 @@
 - 쿠팡 fallback 검증은 Production 운영 플래그가 켜진 상태에서 AdSense가 `data-ad-status="unfilled"`를 반환했을 때 AdSense를 숨기고 쿠팡 배너 하나만 표시하는지 확인하는 테스트다. `unfill-optimized`는 Google 지면을 유지하며 오류, 차단, 상태 미확인에서는 쿠팡을 표시하지 않고 투명한 예약 공간을 유지한다.
 - CMP(Consent Management Platform)는 사용자의 광고·쿠키 동의를 수집하고 Google에 유효한 동의 신호를 전달하는 동의 관리 플랫폼이다. 자체 쿠키 고지 배너와 별개이며, EEA·영국·스위스 대상 Google 인증 CMP 메시지는 AdSense 콘솔에서 관리한다.
 - In-article은 Local·Development에서 GPT 샘플만 사용한다. Production `false`에서는 쿠팡만, Production `true`에서는 AdSense `filled`·`unfill-optimized` → AdSense, `unfilled` → 쿠팡, 오류·차단·미확정 → 투명한 최소 예약 영역 순서로 동작한다.
-- 빈 예약 공간은 AdSense 심사·크롤러 요구사항이 아니라 CLS와 상태 안전성을 위한 구현 선택이다. 현재 모든 지면의 `unfilled`에는 쿠팡 fallback이 있으므로 앱이 임의로 collapse하지 않는다. `unfill-optimized`는 Google 관리 지면을 그대로 표시하고 오류·차단·미확정은 최종 실패 신호가 아니므로 최소 공간을 유지한다.
+- 빈 예약 공간은 AdSense 심사·크롤러 요구사항이 아니라 CLS와 상태 안전성을 위한 구현 선택이다. 현재 활성 지면의 `unfilled`에는 쿠팡 fallback이 있으므로 앱이 임의로 collapse하지 않는다. `unfill-optimized`는 Google 관리 지면을 그대로 표시하고 오류·차단·미확정은 최종 실패 신호가 아니므로 최소 공간을 유지한다.
 - 향후 쿠팡 fallback이 없는 지면을 추가할 때만 `data-ad-status="unfilled"`가 확정되고 슬롯이 viewport 밖인 경우에 한해 지면별 opt-in collapse를 적용한다. 광고 `<ins>`와 위치 메타데이터는 DOM에 유지한다.
 
 ## 2. 지면과 예약 크기
 
-| 지면            | 형식              | 예약/크기                | 호출 시점 | slot ID      | 추가 설정                          |
-| --------------- | ----------------- | ------------------------ | --------- | ------------ | ---------------------------------- |
-| 게시글 상단     | Display           | Mobile 300×50, PC 468×60 | 즉시      | `5190868026` | `auto`                             |
-| 우측 사이드바   | Display           | PC 300×250               | 지연      | `3048186343` | `auto`                             |
-| 피드 index 1, 4 | Native In-feed    | `w-full min-h-[250px]`   | 지연      | `6392269057` | layout key `-6t+ed+2i-1n-4w`       |
-| 검색 index 1, 4 | Native In-feed    | `w-full min-h-[250px]`   | 지연      | `6392269057` | Feed와 같은 unit/layout key 재사용 |
-| 본문 H2 경계    | Native In-article | `w-full min-h-[250px]`   | 지연      | `5322463062` | `fluid`, full-width responsive     |
+| 지면            | 형식              | 예약/크기                | 호출 시점 | slot ID      | 추가 설정                       |
+| --------------- | ----------------- | ------------------------ | --------- | ------------ | ------------------------------- |
+| 게시글 상단     | Display           | Mobile 300×50, PC 468×60 | 즉시      | `5190868026` | `auto`                          |
+| 우측 사이드바   | Display           | PC 300×250               | 지연      | `3048186343` | `auto`                          |
+| 피드 index 1, 4 | Native In-feed    | 현재 DOM 미생성          | 비활성    | `6392269057` | `feed.first`, `feed.second`     |
+| 검색 index 1, 4 | Native In-feed    | 현재 DOM 미생성          | 비활성    | `6392269057` | `search.first`, `search.second` |
+| 본문 H2 경계    | Native In-article | `w-full min-h-[250px]`   | 지연      | `5322463062` | `fluid`, full-width responsive  |
 
-Feed/Search는 같은 Native In-feed unit을 반복 사용하고 Article은 같은 Native In-article unit을 최대 2곳에서 반복 사용한다. 각 DOM 노출의 logical slot/position은 고유하다. 쿠팡 fallback은 PostTop·Search에는 고정 이미지, Feed·Article·Sidebar에는 300×250 다이나믹 iframe을 사용한다. 인기글 104px 광고 지면은 사용하지 않는다.
+Feed/Search 설정은 보존하지만 현재 비활성이다. Article은 같은 Native In-article unit을 최대 2곳에서 반복 사용한다. 활성 지면의 각 DOM 노출은 고유한 logical slot/position을 사용하며 인기글 104px 광고 지면은 사용하지 않는다.
 
-피드와 검색 광고는 각 페이지 또는 검색 결과의 2번째·5번째 카드 직전(index 1, 4)에 삽입한다. 지면별 AdSense unit ID 1개를 해당 지면의 반복 DOM 슬롯에서 재사용하며, 논리 슬롯 ID와 위치 값은 노출마다 고유하게 유지한다.
+AdSense 실제 노출을 확인한 뒤 필요한 Feed·Search 슬롯 키의 `enabled`를 각각 `true`로 전환하면 2번째·5번째 카드 직전(index 1, 4)에 삽입한다. 그전에는 공백을 포함한 광고 DOM을 만들지 않는다.
 
 ### 2.1 쿠팡 fallback 지면 구성
 
 쿠팡 파트너스에서 300×250 다이나믹 iframe 지원을 확인하고 지면별 위젯을 생성했다. 동적 상품은 위치별로 다른 카테고리를 사용하지만 실제 노출 상품은 쿠팡 응답에 따라 달라진다.
 
-| 지면              | fallback     | 카테고리           | 광고·widget ID       | 반응형 조건     |
-| ----------------- | ------------ | ------------------ | -------------------- | --------------- |
-| PostTop           | 고정 320×50  | 범용               | `1012831`            | PC·Mobile 공통  |
-| Feed index 1      | 동적 300×250 | 식품               | `1013216`            | PC·Mobile 공통  |
-| Feed index 4      | 동적 300×250 | 뷰티               | `1013228`            | PC·Mobile 공통  |
-| Article 1         | 동적 300×250 | 주방용품           | `1013218`            | PC·Mobile 공통  |
-| Article 2         | 동적 300×250 | 생활용품           | `1013219`            | PC·Mobile 공통  |
-| Search index 1, 4 | 고정 300×250 | 범용               | `1012833`            | PC·Mobile 공통  |
-| Sidebar           | 동적 300×250 | 헬스·건강식품      | `1013229`            | PC `lg` 이상만 |
+Feed·Search fallback 설정과 widget ID는 재활성화를 위해 보존하지만 해당 슬롯 키가 비활성인 동안 호출하지 않는다.
+
+| 지면              | fallback     | 카테고리      | 광고·widget ID | 반응형 조건    |
+| ----------------- | ------------ | ------------- | -------------- | -------------- |
+| PostTop           | 고정 320×50  | 범용          | `1012831`      | PC·Mobile 공통 |
+| Feed index 1      | 동적 300×250 | 식품          | `1013216`      | PC·Mobile 공통 |
+| Feed index 4      | 동적 300×250 | 뷰티          | `1013228`      | PC·Mobile 공통 |
+| Article 1         | 동적 300×250 | 주방용품      | `1013218`      | PC·Mobile 공통 |
+| Article 2         | 동적 300×250 | 생활용품      | `1013219`      | PC·Mobile 공통 |
+| Search index 1, 4 | 고정 300×250 | 범용          | `1012833`      | PC·Mobile 공통 |
+| Sidebar           | 동적 300×250 | 헬스·건강식품 | `1013229`      | PC `lg` 이상만 |
 
 - Production 운영 플래그가 켜진 경로에서는 AdSense가 `data-ad-status="unfilled"`를 확정한 뒤에만 쿠팡 이미지 URL 또는 동적 iframe `src`를 설정한다. `filled`, `unfill-optimized`, 오류, 차단, 상태 미확인에는 쿠팡 네트워크 요청을 만들지 않는다.
 - PostTop은 기존 즉시 로딩 정책을 유지한다. 나머지는 AdSense 지연 요청 범위와 연동하며, `unfilled` 확정 시 슬롯이 아직 호출 범위 밖이면 쿠팡도 계속 지연한다.
@@ -96,7 +100,7 @@ publisher client ID, unit ID, layout key는 공개 식별자이므로 코드에 
 
 현재 코드·광고 단위·문서 연결과 Local·Development GPT 미리보기는 완료했다. 2026-08-03 기준 Supabase REST 응답 `200`과 Client SSG 86페이지 전체 빌드를 확인했으므로 `fetchCategoryTree: TypeError: fetch failed`는 샌드박스 DNS 제한에 의한 검증 환경 오류로 종결한다.
 
-승인 전에는 긴 게시글 In-article, 검색 결과, 무한스크롤, Mobile/PC 반응형 GPT 미리보기와 다음 Production 배포의 슬롯 요청을 검증한다. CMP·실제 광고 상태·GA4·field CLS는 AdSense 승인과 Production 트래픽이 있어야 완료할 수 있다.
+승인 전에는 긴 게시글 In-article, Mobile/PC Display GPT 미리보기와 다음 Production 배포의 슬롯 요청을 검증한다. Feed·Search는 승인 후 활성화해 검색 결과·무한스크롤을 검증한다. CMP·실제 광고 상태·GA4·field CLS는 AdSense 승인과 Production 트래픽이 있어야 완료할 수 있다.
 
 1. 코드의 Display/Native unit ID와 In-feed layout key가 AdSense 콘솔 값과 일치하는지 확인한다.
 2. Google 인증 CMP 메시지가 게시 국가에서 정상 노출되는지 확인한다.

@@ -103,7 +103,7 @@
    - 우측 끝 fade-out (`mask-image`) 처리로 스크롤 힌트
    - **햄버거 메뉴 금지, Drawer Sidebar 금지**
 
-2. **In-Feed Ad Pattern** (엄격한 순서)
+2. **In-Feed Ad Pattern** (승인 후 활성화 예정)
 
    ```
    [Post Card 1]
@@ -117,7 +117,8 @@
    ...
    ```
 
-   - SSG 빌드 시 index 1, 4(2번째·5번째 카드 직전)에 광고 삽입 (추가 페이지 로드 시에도 페이지별 동일 패턴)
+   - 현재 `feed.first`, `feed.second`, `search.first`, `search.second` 슬롯 키의 `enabled=false`로 Feed·Search 슬롯 DOM, AdSense 요청, 쿠팡 fallback을 모두 생성하지 않는다.
+   - AdSense 실제 노출 확인 후 필요한 슬롯 키를 활성화하면 SSG와 추가 페이지의 index 1, 4(2번째·5번째 카드 직전)에 광고를 삽입한다.
    - CSS `lg:hidden` / `hidden lg:block`으로 visibility 토글 (별도 HTML 구조 금지)
 
 3. **피드 로딩**: IntersectionObserver 페이지네이션 (SSG 첫 페이지 + Static JSON fetch로 추가 로드)
@@ -141,7 +142,7 @@
 #### `PostCardGrid.astro`
 
 - **위치**: `features/post-feed/components/PostCardGrid.astro`
-- PostCard 목록을 그리드 형태로 렌더링 + InFeedAdsense를 index 1, 4(2번째·5번째 카드 직전)에 자동 삽입
+- PostCard 목록을 그리드 형태로 렌더링한다. In-feed 활성화 시에만 index 1, 4(2번째·5번째 카드 직전)에 `InFeedAdsense`를 삽입한다.
 - IntersectionObserver 페이지네이션 지원
 
 #### `MobileHeader.astro`
@@ -358,7 +359,7 @@ Admin에서 `data-type="image-carousel"`로 마크업된 연속 이미지를 Cli
 - Props: `searchData`, `suggestedKeywords`, `placeholderText`, `noResultsText`, `noResultsHintText`, `resultsText`, `suggestedText`, `sponsoredLabel`
 - 검색 폼, 추천 키워드 chip, 결과 리스트, 빈 결과 UI, 클라이언트 검색 스크립트를 하나의 컴포넌트로 통합
 - `<script type="application/json">` 으로 검색 데이터 인라인 삽입
-- 클라이언트 JS가 PostCard DOM을 동적 생성 + Native In-feed 광고를 각 추가 페이지의 index 1, 4(2번째·5번째 카드 직전)에 삽입
+- 클라이언트 JS가 PostCard DOM을 동적으로 생성한다. In-feed 활성화 시에만 각 추가 페이지의 index 1, 4(2번째·5번째 카드 직전)에 광고를 삽입한다.
 
 ### Feature Components: Cookie Consent (`features/consent/`)
 
@@ -433,25 +434,25 @@ Admin에서 `data-type="image-carousel"`로 마크업된 연속 이미지를 Cli
 
 ## 광고 미디에이션 Specifications
 
-| 배치                       | 사이즈 (Mobile) | 사이즈 (PC)        | 위치                                         | 컴포넌트                          |
-| -------------------------- | --------------- | ------------------ | -------------------------------------------- | --------------------------------- |
-| PostLayout Fixed Adsense   | 300x50          | 468x60 (중앙 정렬) | 게시글 상세 본문 상단                        | `FixedAdsense variant="post-top"` |
-| RightSidebar Fixed Adsense | --              | 300x250            | PC 우측 사이드바 상단 (sticky)               | `FixedAdsense variant="sidebar"`  |
-| Native In-Article          | fluid           | fluid              | 게시글 본문 중간 (H2 헤딩 앞에 삽입)         | `insertInArticleAds()`            |
-| Native In-feed             | fluid           | fluid              | 카드 피드·검색 결과 index 1, 4(2·5번째 직전) | `InFeedAdsense`                   |
+| 배치                       | 사이즈 (Mobile) | 사이즈 (PC)        | 위치                                   | 컴포넌트                          |
+| -------------------------- | --------------- | ------------------ | -------------------------------------- | --------------------------------- |
+| PostLayout Fixed Adsense   | 300x50          | 468x60 (중앙 정렬) | 게시글 상세 본문 상단                  | `FixedAdsense variant="post-top"` |
+| RightSidebar Fixed Adsense | --              | 300x250            | PC 우측 사이드바 상단 (sticky)         | `FixedAdsense variant="sidebar"`  |
+| Native In-Article          | fluid           | fluid              | 게시글 본문 중간 (H2 헤딩 앞에 삽입)   | `insertInArticleAds()`            |
+| Native In-feed             | fluid           | fluid              | 현재 비활성, 승인 후 index 1, 4에 삽입 | `InFeedAdsense`                   |
 
-피드·검색은 Native In-feed unit(`6392269057`, layout key `-6t+ed+2i-1n-4w`)을 함께 재사용한다. 본문은 Native In-article unit(`5322463062`, `fluid`, full-width responsive)을 반복 사용한다. 네이티브 지면은 `min-h-[250px]`만 예약하고 광고 높이 확장을 허용하며, Core Web Vitals 가드레일은 field p75 CLS 0.1 이하이다. 쿠팡 fallback은 PostTop·Search에 고정 이미지, Feed·Article·Sidebar에 300×250 다이나믹 iframe을 사용한다.
+피드·검색용 Native In-feed unit(`6392269057`, layout key `-6t+ed+2i-1n-4w`) 설정은 보존하지만 대응 슬롯 키가 비활성인 동안 사용하지 않는다. 본문은 `article.first`, `article.second`가 Native In-article unit(`5322463062`, `fluid`, full-width responsive)을 공유한다. 활성 Native 지면은 `min-h-[250px]`만 예약하고 광고 높이 확장을 허용하며, Core Web Vitals 가드레일은 field p75 CLS 0.1 이하이다.
 
 ### Provider 선택과 CLS
 
-- Local·Development에서는 모든 광고 지면에 Google Publisher Tag(GPT) 공식 공개 샘플을 기본 표시한다. Feed/Search/Article은 `/6355419/Travel` fluid, Sidebar는 `/6355419/Travel/Europe/France/Paris` 300×250, PostTop은 `/6355419/Travel/Asia`와 현재 컨테이너 크기를 사용한다. 운영 AdSense·쿠팡 요청과 GA4 광고 이벤트는 만들지 않으며 Production에서는 GPT 분기를 사용하지 않는다.
+- Local·Development에서는 활성 광고 지면에 Google Publisher Tag(GPT) 공식 공개 샘플을 표시한다. 현재 Article은 `/6355419/Travel` fluid, Sidebar는 `/6355419/Travel/Europe/France/Paris` 300×250, PostTop은 `/6355419/Travel/Asia`와 현재 컨테이너 크기를 사용한다. 비활성 Feed/Search는 GPT 슬롯도 만들지 않으며 Production에서는 GPT 분기를 사용하지 않는다.
 - GPT가 정상 응답했지만 빈 슬롯이면 `GPT TEST AD · NO FILL`, SDK 로드·slot 정의·요청 실패면 `GPT TEST AD · LOAD FAILED`를 표시한다. 둘 다 provider `none`이며 Production에는 기술 marker를 표시하지 않는다.
 - Production에서 운영 플래그가 꺼져 있으면 사이트 심사용 AdSense base tag만 로드하고 광고 단위 요청은 만들지 않는다. 지면별 고정 이미지 또는 다이나믹 iframe fallback만 표시한다.
 - Production에서 운영 플래그가 켜져 있으면 AdSense의 `data-ad-status="unfilled"`에서만 해당 지면을 쿠팡으로 전환한다. `filled`와 `unfill-optimized`는 Google이 관리하는 AdSense 지면으로 유지한다.
 - 다이나믹 iframe `src`는 쿠팡 전환 시점에만 설정하고 Local·Development 및 모바일의 숨겨진 Sidebar에서는 요청하지 않는다.
 - 활성 상태의 ID 누락, 오류, 차단, 상태 미확인은 fallback 없이 예약 영역을 비워 둔다.
 - 고정 Display 지면은 width/height를 유지하고, Native 지면은 `min-height: 250px`를 유지하면서 creative 높이 확장을 허용한다. 래퍼에 `overflow-hidden`을 두지 않아 광고나 AdChoices를 자르지 않는다.
-- 게시글 상단만 즉시 호출한다. 사이드바·피드·검색·본문은 뷰포트 300px 전부터 한 번만 호출한다.
+- 게시글 상단만 즉시 호출한다. 활성 Sidebar·Article은 뷰포트 300px 전부터 한 번만 호출한다.
 
 ### AdSense 컴포넌트
 
@@ -465,8 +466,8 @@ Admin에서 `data-type="image-carousel"`로 마크업된 연속 이미지를 Cli
 #### `InFeedAdsense.astro`
 
 - **위치**: `shared/components/ad/InFeedAdsense.astro`
-- Props: `placement`, `position`, `locale`
-- 피드·검색 모두 `w-full min-h-[250px]`로 최소 공간을 예약하고 Native creative의 가변 높이를 허용한다.
+- Props: `slotKey`, `slotId`, `position`, `fallbackIndex`, `locale`
+- 현재 Feed·Search에서는 비활성 슬롯 키에 해당하는 컴포넌트를 렌더링하지 않는다. 필요한 키 활성화 시 `w-full min-h-[250px]`로 최소 공간을 예약하고 Native creative의 가변 높이를 허용한다.
 - provider가 활성화될 때만 `role="complementary"`와 광고 접근성 라벨을 적용한다.
 - 운영 AdSense unit ID(`6392269057`)는 Feed/Search의 반복 DOM 슬롯에서 재사용한다. `data-ad-slot`과 `data-ad-position`은 각 노출의 논리 슬롯·위치를 고유하게 식별한다.
 
@@ -492,7 +493,7 @@ Admin에서 `data-type="image-carousel"`로 마크업된 연속 이미지를 Cli
 
 1. **검색 입력**: 돋보기 아이콘(좌측) + `<input type="search">`. Enter(form submit)로 검색 실행, 실시간 필터링 아님.
 2. **추천 키워드**: place_name + 카테고리 라벨을 빌드 타임에 추출. 클릭 가능한 chip 형태.
-3. **검색 결과**: 결과 건수 표시 + PostCard 리스트. Native In-feed 광고를 result index 1, 4(2번째·5번째 카드 직전)에 삽입.
+3. **검색 결과**: 결과 건수 표시 + PostCard 리스트. 현재 Native In-feed는 비활성이고 승인 후 result index 1, 4에 삽입.
 4. **결과 없음**: 아이콘 + 안내 메시지 + 힌트 텍스트
 5. **URL**: `history.replaceState`로 `?q=` 파라미터 반영 (페이지 새로고침 없음)
 
@@ -506,10 +507,10 @@ Admin에서 `data-type="image-carousel"`로 마크업된 연속 이미지를 Cli
 
 ## Responsive Strategy
 
-| 요소          | PC (`lg:` 이상)   | Mobile (`lg:` 미만)         |
-| ------------- | ----------------- | --------------------------- |
-| Left Sidebar  | `hidden lg:block` | 숨김 (Footer로 대체)        |
-| Right Sidebar | `hidden lg:block` | In-Feed Ad로 전환           |
-| Header Nav    | 텍스트 메뉴       | Snap Scroll                 |
-| Ad 배치       | Right Sidebar     | Native In-feed (index 1, 4) |
-| Footer Links  | 기본              | Full Sitemap (SEO)          |
+| 요소          | PC (`lg:` 이상)   | Mobile (`lg:` 미만)          |
+| ------------- | ----------------- | ---------------------------- |
+| Left Sidebar  | `hidden lg:block` | 숨김 (Footer로 대체)         |
+| Right Sidebar | `hidden lg:block` | In-Feed Ad로 전환            |
+| Header Nav    | 텍스트 메뉴       | Snap Scroll                  |
+| Ad 배치       | Right Sidebar     | 현재 없음(In-feed 승인 대기) |
+| Footer Links  | 기본              | Full Sitemap (SEO)           |

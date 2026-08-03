@@ -173,7 +173,8 @@ export function setConsentCookie(accepted: boolean): void {
   +-- Production 빌드인가?
         |
         +-- NO: 운영 AdSense·쿠팡·CMP 요청 없음
-        |       모든 광고 지면은 GPT 공식 공개 샘플 사용
+        |       활성 광고 지면은 GPT 공식 공개 샘플 사용
+        |       비활성 Feed·Search는 슬롯 DOM 미생성
         |       NO FILL/LOAD FAILED marker 유지(provider none, GA4 광고 이벤트 제외)
         |
         +-- YES: AdSense base tag와 Google 인증 CMP가 동작
@@ -203,7 +204,7 @@ AdSense 태그는 Google CMP 메시지와 함께 동작하며 Google이 유효�
 
 ### 5.1 AdSense 로드 스크립트 (Layout.astro 변경)
 
-`Layout.astro`는 Production에서 사이트 심사와 Google 인증 CMP를 위해 운영 플래그와 관계없이 AdSense base tag를 로드한다. Local·Development에서는 AdSense 태그를 만들지 않고 모든 지면에 GPT 공식 공개 샘플을 요청한다. 응답 없음은 `GPT TEST AD · NO FILL`, SDK·정의·요청 실패는 `GPT TEST AD · LOAD FAILED`로 표시하며 둘 다 provider `none`으로 GA4 광고 이벤트에서 제외한다. `PUBLIC_AD_MEDIATION_ENABLED`는 Production의 개별 광고 단위 `adsbygoogle.push`만 제어하고 unit ID·layout key는 코드 상수를 사용한다.
+`Layout.astro`는 Production에서 사이트 심사와 Google 인증 CMP를 위해 운영 플래그와 관계없이 AdSense base tag를 로드한다. Local·Development에서는 AdSense 태그를 만들지 않고 활성 지면에 GPT 공식 공개 샘플을 요청한다. `ADVERTISEMENT_MEDIATION_CONFIG.slots`에서 비활성인 Feed·Search 키는 슬롯 DOM 자체를 만들지 않는다. 응답 없음은 `GPT TEST AD · NO FILL`, SDK·정의·요청 실패는 `GPT TEST AD · LOAD FAILED`로 표시하며 둘 다 provider `none`으로 GA4 광고 이벤트에서 제외한다. `PUBLIC_AD_MEDIATION_ENABLED`는 Production의 개별 광고 단위 `adsbygoogle.push`만 제어하고 unit ID·layout key는 코드 상수를 사용한다.
 
 ```html
 <script
