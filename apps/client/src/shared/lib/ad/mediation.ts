@@ -155,33 +155,49 @@ const createCoupangElement = (
   return anchor;
 };
 
-const createAdSenseElement = (clientId: string, unit: AdSenseUnitConfig): HTMLElement => {
+const applyFixedAdSenseSize = (container: HTMLElement, adsenseElement: HTMLElement): void => {
+  if (adsenseElement.dataset.advertisementFixedSize !== 'true') return;
+
+  const containerWidth = container.clientWidth;
+  const containerHeight = container.clientHeight;
+  if (containerWidth === 0 || containerHeight === 0) return;
+
+  adsenseElement.style.width = `${containerWidth}px`;
+  adsenseElement.style.height = `${containerHeight}px`;
+};
+
+const createAdSenseElement = (
+  container: HTMLElement,
+  clientId: string,
+  unit: AdSenseUnitConfig,
+): HTMLElement => {
   const adsenseElement = document.createElement('ins');
   adsenseElement.className = 'adsbygoogle block w-full';
   adsenseElement.style.display = 'block';
   adsenseElement.style.visibility = 'visible';
   adsenseElement.dataset.adClient = clientId;
   adsenseElement.dataset.adSlot = unit.slotId;
-  adsenseElement.dataset.adFormat = unit.format;
   adsenseElement.dataset.adProvider = 'adsense';
 
+  if (unit.format === 'fixed') {
+    adsenseElement.dataset.advertisementFixedSize = 'true';
+    applyFixedAdSenseSize(container, adsenseElement);
+  } else {
+    adsenseElement.dataset.adFormat = unit.format;
+  }
   if (unit.layoutKey) adsenseElement.dataset.adLayoutKey = unit.layoutKey;
   if (unit.layout) {
     adsenseElement.dataset.adLayout = unit.layout;
     adsenseElement.dataset.fullWidthResponsive = 'true';
     adsenseElement.style.textAlign = 'center';
   }
-  if (unit.format === 'auto') {
-    adsenseElement.style.width = '100%';
-    adsenseElement.style.height = '100%';
-  }
-
   return adsenseElement;
 };
 
 const requestAdSense = (container: HTMLElement, adsenseElement: HTMLElement): void => {
   if (requestedSlots.has(container)) return;
   requestedSlots.add(container);
+  applyFixedAdSenseSize(container, adsenseElement);
 
   try {
     const adsenseWindow = window as AdSenseWindow;
@@ -316,7 +332,7 @@ export const registerAdSlot = (container: HTMLElement): void => {
   }
   if (!clientId || !adsenseUnit) return;
 
-  const adsenseElement = createAdSenseElement(clientId, adsenseUnit);
+  const adsenseElement = createAdSenseElement(container, clientId, adsenseUnit);
   container.appendChild(adsenseElement);
   if (coupangElement) container.appendChild(coupangElement);
 

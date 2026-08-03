@@ -16,7 +16,7 @@ const { variant, locale } = Astro.props;
 
 {variant === "post-top" && (
   <AdvertisementSlot
-    class="mb-6 mx-auto w-[300px] h-[50px] lg:w-[468px] lg:h-[60px]"
+    class="mb-6 mx-auto h-[50px] min-h-[50px] w-[300px] lg:h-[60px] lg:min-h-[60px] lg:w-[468px]"
     slotId="post_top"
     format="display"
     position="post_top"
@@ -28,7 +28,7 @@ const { variant, locale } = Astro.props;
 
 {variant === "sidebar" && (
   <AdvertisementSlot
-    class="w-[300px] h-[250px]"
+    class="h-[250px] min-h-[250px] w-[300px]"
     slotId="sidebar"
     format="display"
     position="right_sidebar"

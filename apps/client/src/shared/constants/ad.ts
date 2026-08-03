@@ -54,7 +54,7 @@ type AdSenseConfig = {
 
 export type AdSenseUnitConfig = {
   slotId: string;
-  format: 'auto' | 'fluid';
+  format: 'fixed' | 'fluid';
   layout?: 'in-article';
   layoutKey?: string;
 };
@@ -183,8 +183,8 @@ export const ADVERTISEMENT_MEDIATION_CONFIG: AdvertisementMediationConfig = {
     units: {
       feed: isProductionBuild ? feedAdSenseUnit : null,
       article: isProductionBuild ? articleAdSenseUnit : null,
-      postTop: isProductionBuild ? { slotId: '5190868026', format: 'auto' } : null,
-      sidebar: isProductionBuild ? { slotId: '3048186343', format: 'auto' } : null,
+      postTop: isProductionBuild ? { slotId: '5190868026', format: 'fixed' } : null,
+      sidebar: isProductionBuild ? { slotId: '3048186343', format: 'fixed' } : null,
     },
   },
   coupang: {
