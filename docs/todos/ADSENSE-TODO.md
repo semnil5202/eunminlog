@@ -37,17 +37,20 @@
 
 ## 2. 지면과 예약 크기
 
-| 지면            | 형식              | 예약/크기                | 호출 시점 | slot ID      | 추가 설정                       |
-| --------------- | ----------------- | ------------------------ | --------- | ------------ | ------------------------------- |
-| 게시글 상단     | Display           | Mobile 300×50, PC 468×60 | 즉시      | `5190868026` | breakpoint별 고정 크기          |
-| 우측 사이드바   | Display           | PC 300×250               | 지연      | `3048186343` | 고정 크기                       |
-| 피드 index 1, 4 | Native In-feed    | 현재 DOM 미생성          | 비활성    | `6392269057` | `feed.first`, `feed.second`     |
-| 검색 index 1, 4 | Native In-feed    | `w-full min-h-[250px]`   | 지연      | `6392269057` | `search.first`, `search.second` |
-| 본문 H2 경계    | Native In-article | `w-full min-h-[250px]`   | 지연      | `5322463062` | `fluid`, full-width responsive  |
+| 지면               | 형식              | 예약/크기              | 호출 시점 | slot ID      | 추가 설정                       |
+| ------------------ | ----------------- | ---------------------- | --------- | ------------ | ------------------------------- |
+| 게시글 상단 Mobile | Display           | 300×50                 | 즉시      | `8174224200` | `postTop.mobile`, 고정 크기     |
+| 게시글 상단 PC     | Display           | 468×60                 | 즉시      | `1564849758` | `postTop.desktop`, 고정 크기    |
+| 우측 사이드바      | Display           | PC 300×250             | 지연      | `3939731651` | 고정 크기                       |
+| 피드 index 1, 4    | Native In-feed    | 현재 DOM 미생성        | 비활성    | `6392269057` | `feed.first`, `feed.second`     |
+| 검색 index 1, 4    | Native In-feed    | `w-full min-h-[250px]` | 지연      | `6392269057` | `search.first`, `search.second` |
+| 본문 H2 경계       | Native In-article | `w-full min-h-[250px]` | 지연      | `5322463062` | `fluid`, full-width responsive  |
 
 Feed 설정은 보존하지만 현재 비활성이다. Search는 같은 Native In-feed unit을 index 1, 4에서 사용하고 Article은 같은 Native In-article unit을 최대 2곳에서 반복 사용한다. 활성 지면의 각 DOM 노출은 고유한 logical slot/position을 사용하며 인기글 104px 광고 지면은 사용하지 않는다.
 
-PostTop과 Sidebar는 responsive display unit ID를 유지하되 Google 공식 exact-size 수정 방식에 따라 `data-ad-format="auto"`를 사용하지 않는다. 광고 요청 직전에 현재 예약 컨테이너의 픽셀 크기를 `<ins>` 인라인 스타일로 고정하며, 최소 높이도 동일하게 예약해 `unfilled` 전환 후 쿠팡 fallback에서 컨테이너가 접히지 않게 한다.
+PostTop은 AdSense 콘솔에서 생성한 Mobile 300×50과 PC 468×60 고정형 unit을 `lg` breakpoint로 선택해 한 DOM 슬롯에서 하나만 요청한다. Sidebar도 별도 300×250 고정형 unit을 사용한다. 세 지면 모두 `data-ad-format="auto"`를 사용하지 않고 광고 요청 직전에 현재 예약 컨테이너의 픽셀 크기를 `<ins>` 인라인 스타일로 고정한다. 최소 높이도 동일하게 예약해 `unfilled` 전환 후 쿠팡 fallback에서 컨테이너가 접히지 않게 한다.
+
+기존 responsive display unit `5190868026`(PostTop), `3048186343`(Sidebar)은 코드에서 사용하지 않는다. AdSense 보고서 이력 보존 여부를 확인한 뒤 콘솔에서 보관 처리할 수 있다.
 
 Feed는 AdSense 실제 노출을 확인한 뒤 필요한 슬롯 키의 `enabled`를 각각 `true`로 전환하면 2번째·5번째 카드 직전(index 1, 4)에 삽입한다. 그전에는 공백을 포함한 광고 DOM을 만들지 않는다. Search는 현재 동일 위치에서 활성화되어 Sidebar와 같이 최소 공간을 예약한 뒤 뷰포트 300px 전부터 AdSense를 요청하고 `unfilled`이면 쿠팡 다이나믹 위젯으로 전환한다.
 

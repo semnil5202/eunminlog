@@ -17,7 +17,8 @@ export type AdvertisementSlotKey =
 export const ADVERTISEMENT_UNIT_KEY = {
   feed: 'feed',
   article: 'article',
-  postTop: 'postTop',
+  postTopMobile: 'postTop.mobile',
+  postTopDesktop: 'postTop.desktop',
   sidebar: 'sidebar',
 } as const;
 
@@ -71,6 +72,7 @@ export type AdvertisementSlotConfig = {
   enabled: boolean;
   placement: AdvertisementPlacement;
   adsenseUnitKey: AdvertisementUnitKey;
+  largeScreenAdSenseUnitKey?: AdvertisementUnitKey;
 };
 
 const normalizeAdSenseClientId = (value: string | undefined): string | null =>
@@ -170,7 +172,8 @@ export const ADVERTISEMENT_MEDIATION_CONFIG: AdvertisementMediationConfig = {
     [ADVERTISEMENT_SLOT_KEY.postTop]: {
       enabled: true,
       placement: 'postTop',
-      adsenseUnitKey: ADVERTISEMENT_UNIT_KEY.postTop,
+      adsenseUnitKey: ADVERTISEMENT_UNIT_KEY.postTopMobile,
+      largeScreenAdSenseUnitKey: ADVERTISEMENT_UNIT_KEY.postTopDesktop,
     },
     [ADVERTISEMENT_SLOT_KEY.sidebar]: {
       enabled: true,
@@ -183,8 +186,13 @@ export const ADVERTISEMENT_MEDIATION_CONFIG: AdvertisementMediationConfig = {
     units: {
       feed: isProductionBuild ? feedAdSenseUnit : null,
       article: isProductionBuild ? articleAdSenseUnit : null,
-      postTop: isProductionBuild ? { slotId: '5190868026', format: 'fixed' } : null,
-      sidebar: isProductionBuild ? { slotId: '3048186343', format: 'fixed' } : null,
+      [ADVERTISEMENT_UNIT_KEY.postTopMobile]: isProductionBuild
+        ? { slotId: '8174224200', format: 'fixed' }
+        : null,
+      [ADVERTISEMENT_UNIT_KEY.postTopDesktop]: isProductionBuild
+        ? { slotId: '1564849758', format: 'fixed' }
+        : null,
+      sidebar: isProductionBuild ? { slotId: '3939731651', format: 'fixed' } : null,
     },
   },
   coupang: {

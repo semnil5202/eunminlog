@@ -22,6 +22,8 @@ const statusObservers = new WeakMap<HTMLElement, MutationObserver>();
 let lazySlotObserver: IntersectionObserver | null = null;
 let mediationInitialized = false;
 
+const LARGE_SCREEN_MEDIA_QUERY = '(min-width: 1024px)';
+
 const announceProviderChange = (
   container: HTMLElement,
   provider: 'adsense' | 'coupang' | 'none',
@@ -292,7 +294,7 @@ export const registerAdSlot = (container: HTMLElement): void => {
   if (!slotConfig?.enabled) return;
   registeredSlots.add(container);
 
-  const { placement, adsenseUnitKey } = slotConfig;
+  const { placement } = slotConfig;
 
   if (ADVERTISEMENT_MEDIATION_CONFIG.previewProvider === 'gpt-sample') {
     const googlePublisherTagSampleElement = createGooglePublisherTagSampleElement(placement);
@@ -318,6 +320,10 @@ export const registerAdSlot = (container: HTMLElement): void => {
     : null;
 
   const clientId = ADVERTISEMENT_MEDIATION_CONFIG.adsense.clientId;
+  const adsenseUnitKey =
+    slotConfig.largeScreenAdSenseUnitKey && window.matchMedia(LARGE_SCREEN_MEDIA_QUERY).matches
+      ? slotConfig.largeScreenAdSenseUnitKey
+      : slotConfig.adsenseUnitKey;
   const adsenseUnit = ADVERTISEMENT_MEDIATION_CONFIG.adsense.units[adsenseUnitKey];
   if (!ADVERTISEMENT_MEDIATION_CONFIG.enabled) {
     if (coupangElement) {
