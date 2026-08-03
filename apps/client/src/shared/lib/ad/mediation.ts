@@ -3,6 +3,7 @@ import {
   getCoupangAdvertisementConfig,
   type AdSenseUnitConfig,
   type AdvertisementPlacement,
+  type AdvertisementSlotKey,
   type CoupangAdvertisementConfig,
 } from '@/shared/constants/ad';
 import {
@@ -268,10 +269,14 @@ const getLazyAdvertisementObserver = (): IntersectionObserver => {
 /** 광고 슬롯을 중앙 설정에 따라 초기화한다. */
 export const registerAdSlot = (container: HTMLElement): void => {
   if (registeredSlots.has(container)) return;
+
+  const slotKey = container.dataset.adSlotKey as AdvertisementSlotKey | undefined;
+  if (!slotKey) return;
+  const slotConfig = ADVERTISEMENT_MEDIATION_CONFIG.slots[slotKey];
+  if (!slotConfig?.enabled) return;
   registeredSlots.add(container);
 
-  const placement = container.dataset.adPlacement as AdvertisementPlacement | undefined;
-  if (!placement) return;
+  const { placement, adsenseUnitKey } = slotConfig;
 
   if (ADVERTISEMENT_MEDIATION_CONFIG.previewProvider === 'gpt-sample') {
     const googlePublisherTagSampleElement = createGooglePublisherTagSampleElement(placement);
@@ -297,7 +302,7 @@ export const registerAdSlot = (container: HTMLElement): void => {
     : null;
 
   const clientId = ADVERTISEMENT_MEDIATION_CONFIG.adsense.clientId;
-  const adsenseUnit = ADVERTISEMENT_MEDIATION_CONFIG.adsense.units[placement];
+  const adsenseUnit = ADVERTISEMENT_MEDIATION_CONFIG.adsense.units[adsenseUnitKey];
   if (!ADVERTISEMENT_MEDIATION_CONFIG.enabled) {
     if (coupangElement) {
       container.appendChild(coupangElement);
@@ -364,18 +369,22 @@ export const createAdvertisementSlotElement = (options: {
   slotId: string;
   format: 'display' | 'in_feed';
   position: string;
-  placement: AdvertisementPlacement;
+  slotKey: AdvertisementSlotKey;
   advertisementLabel: string;
   loadStrategy?: 'immediate' | 'lazy';
   fallbackIndex?: number;
-}): HTMLDivElement => {
+}): HTMLDivElement | null => {
+  const slotConfig = ADVERTISEMENT_MEDIATION_CONFIG.slots[options.slotKey];
+  if (!slotConfig.enabled) return null;
+
   const container = document.createElement('div');
   container.className = `relative ${options.className}`;
   container.dataset.advertisementLabel = options.advertisementLabel;
   container.dataset.adSlot = options.slotId;
+  container.dataset.adSlotKey = options.slotKey;
   container.dataset.adFormat = options.format;
   container.dataset.adPosition = options.position;
-  container.dataset.adPlacement = options.placement;
+  container.dataset.adPlacement = slotConfig.placement;
   container.dataset.adLoadStrategy = options.loadStrategy ?? 'lazy';
   container.dataset.adFallbackIndex = String(options.fallbackIndex ?? 0);
   container.dataset.adActiveProvider = 'none';

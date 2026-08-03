@@ -6,6 +6,11 @@ import { t } from "@/shared/lib/i18n/translations";
 import PostCard from "./PostCard.astro";
 import SponsoredCard from "./SponsoredCard.astro";
 import InFeedAdsense from "@/shared/components/ad/InFeedAdsense.astro";
+import {
+  ADVERTISEMENT_SLOT_KEY,
+  isAdvertisementSlotEnabled,
+  type AdvertisementSlotKey,
+} from "@/shared/constants/ad";
 
 interface Props {
   posts: LocalizedPost[];
@@ -20,20 +25,30 @@ const { posts, locale, feedEndpoint, hasNextPage = false, sponsoredLabel = "", p
 
 type FeedItem =
   | { type: "post"; post: LocalizedPost; cardIndex: number }
-  | { type: "advertisement"; positionIndex: number; fallbackIndex: number };
+  | {
+      type: "advertisement";
+      positionIndex: number;
+      fallbackIndex: number;
+      slotKey: AdvertisementSlotKey;
+    };
 
 const feedItems: FeedItem[] = [];
 let cardIndex = 0;
-let advertisementIndex = 0;
 
 for (let index = 0; index < posts.length; index++) {
-  if (cardIndex === 1 || cardIndex === 4) {
+  const slotKey =
+    cardIndex === 1
+      ? ADVERTISEMENT_SLOT_KEY.feedFirst
+      : cardIndex === 4
+        ? ADVERTISEMENT_SLOT_KEY.feedSecond
+        : null;
+  if (slotKey && isAdvertisementSlotEnabled(slotKey)) {
     feedItems.push({
       type: "advertisement",
       positionIndex: cardIndex,
-      fallbackIndex: advertisementIndex,
+      fallbackIndex: slotKey === ADVERTISEMENT_SLOT_KEY.feedFirst ? 0 : 1,
+      slotKey,
     });
-    advertisementIndex++;
   }
 
   feedItems.push({ type: "post", post: posts[index]!, cardIndex });
@@ -50,6 +65,8 @@ for (let index = 0; index < posts.length; index++) {
   data-sponsored-label={sponsoredLabel}
   data-popular-label={popularLabel}
   data-ad-label={t("a11y.advertisement", locale)}
+  data-feed-first-enabled={String(isAdvertisementSlotEnabled(ADVERTISEMENT_SLOT_KEY.feedFirst))}
+  data-feed-second-enabled={String(isAdvertisementSlotEnabled(ADVERTISEMENT_SLOT_KEY.feedSecond))}
   data-initial-post-count={posts.length}
 >
   {feedItems.map((item) => {
@@ -59,7 +76,7 @@ for (let index = 0; index < posts.length; index++) {
           class="w-full min-h-[250px]"
           slotId={`feed_card_index_${item.positionIndex}`}
           position={`feed_card_index_${item.positionIndex}`}
-          placement="feed"
+          slotKey={item.slotKey}
           fallbackIndex={item.fallbackIndex}
           locale={locale}
         />
@@ -105,6 +122,8 @@ for (let index = 0; index < posts.length; index++) {
       let hasNext = feed.dataset.hasNext === "true";
       let loading = false;
       let loadedCardCount = Number.parseInt(feed.dataset.initialPostCount || "0", 10);
+      const feedFirstAdvertisementEnabled = feed.dataset.feedFirstEnabled === "true";
+      const feedSecondAdvertisementEnabled = feed.dataset.feedSecondEnabled === "true";
       const sponsoredLabel = feed.dataset.sponsoredLabel || "";
       const popularLabel = feed.dataset.popularLabel || "";
       const advertisementLabel = feed.dataset.adLabel || "Advertisement";
@@ -112,13 +131,14 @@ for (let index = 0; index < posts.length; index++) {
       const createAdvertisementSlot = (
         positionIndex: number,
         fallbackIndex: number,
-      ): HTMLDivElement => {
+        slotKey: "feed.first" | "feed.second",
+      ): HTMLDivElement | null => {
         return createAdvertisementSlotElement({
           className: "w-full min-h-[250px]",
           slotId: `feed_card_index_${positionIndex}`,
           format: "in_feed",
           position: `feed_card_index_${positionIndex}`,
-          placement: "feed",
+          slotKey,
           advertisementLabel,
           fallbackIndex,
         });
@@ -194,10 +214,24 @@ for (let index = 0; index < posts.length; index++) {
 
           let localIndex = 0;
           for (const post of posts) {
-            if (localIndex === 1 || localIndex === 4) {
-              feed.appendChild(
-                createAdvertisementSlot(loadedCardCount + localIndex, localIndex === 1 ? 0 : 1),
+            const slotKey =
+              localIndex === 1
+                ? "feed.first"
+                : localIndex === 4
+                  ? "feed.second"
+                  : null;
+            const slotEnabled =
+              (slotKey === "feed.first" && feedFirstAdvertisementEnabled) ||
+              (slotKey === "feed.second" && feedSecondAdvertisementEnabled);
+            if (slotKey && slotEnabled) {
+              const advertisementSlot = createAdvertisementSlot(
+                loadedCardCount + localIndex,
+                slotKey === "feed.first" ? 0 : 1,
+                slotKey,
               );
+              if (advertisementSlot) {
+                feed.appendChild(advertisementSlot);
+              }
             }
             feed.appendChild(createPostCard(post));
             localIndex++;

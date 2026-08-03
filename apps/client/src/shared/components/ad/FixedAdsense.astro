@@ -2,6 +2,7 @@
 /** 포스트 상단과 PC 사이드바에 고정 크기 광고 예약 영역을 렌더링한다. */
 
 import AdvertisementSlot from "./AdSlot.astro";
+import { ADVERTISEMENT_SLOT_KEY } from "@/shared/constants/ad";
 import type { Locale } from "@/shared/types/common";
 import { t } from "@/shared/lib/i18n/translations";
 
@@ -19,7 +20,7 @@ const { variant, locale } = Astro.props;
     slotId="post_top"
     format="display"
     position="post_top"
-    placement="postTop"
+    slotKey={ADVERTISEMENT_SLOT_KEY.postTop}
     advertisementLabel={t("a11y.advertisement", locale)}
     loadStrategy="immediate"
   />
@@ -31,7 +32,7 @@ const { variant, locale } = Astro.props;
     slotId="sidebar"
     format="display"
     position="right_sidebar"
-    placement="sidebar"
+    slotKey={ADVERTISEMENT_SLOT_KEY.sidebar}
     advertisementLabel={t("a11y.advertisement", locale)}
   />
 )}

@@ -4,6 +4,10 @@
 import type { SearchItem } from "@/features/search/api/search-data";
 import type { Locale } from "@/shared/types/common";
 import { t } from "@/shared/lib/i18n/translations";
+import {
+  ADVERTISEMENT_SLOT_KEY,
+  isAdvertisementSlotEnabled,
+} from "@/shared/constants/ad";
 
 interface Props {
   searchData: SearchItem[];
@@ -41,6 +45,8 @@ const advertisementLabel = t("a11y.advertisement", locale);
   data-popular-label={popularLabel}
   data-results-text={resultsText}
   data-advertisement-label={advertisementLabel}
+  data-search-first-enabled={String(isAdvertisementSlotEnabled(ADVERTISEMENT_SLOT_KEY.searchFirst))}
+  data-search-second-enabled={String(isAdvertisementSlotEnabled(ADVERTISEMENT_SLOT_KEY.searchSecond))}
 >
   <form id="search-form" class="relative" action="" method="get">
     <svg
@@ -148,6 +154,8 @@ const advertisementLabel = t("a11y.advertisement", locale);
   const popularLabel = searchUi?.dataset.popularLabel ?? '';
   const resultsText = searchUi?.dataset.resultsText ?? '';
   const advertisementLabel = searchUi?.dataset.advertisementLabel ?? 'Advertisement';
+  const searchFirstAdvertisementEnabled = searchUi?.dataset.searchFirstEnabled === 'true';
+  const searchSecondAdvertisementEnabled = searchUi?.dataset.searchSecondEnabled === 'true';
 
   const clearButton = document.getElementById('search-clear');
   const posts = JSON.parse(searchDataElement?.textContent || '[]');
@@ -167,15 +175,21 @@ const advertisementLabel = t("a11y.advertisement", locale);
 
   let searchRenderSequence = 0;
 
-  const createAdvertisementSlot = (renderSequence: number, positionIndex: number) => {
+  const createAdvertisementSlot = (
+    renderSequence: number,
+    positionIndex: number,
+    slotKey: 'search.first' | 'search.second',
+    fallbackIndex: number,
+  ) => {
     const advertisementIdentifier = `search_render_${renderSequence}_card_index_${positionIndex}`;
     return createAdvertisementSlotElement({
       className: 'w-full min-h-[250px]',
       slotId: advertisementIdentifier,
       format: 'in_feed',
       position: advertisementIdentifier,
-      placement: 'search',
+      slotKey,
       advertisementLabel,
+      fallbackIndex,
     });
   };
 
@@ -265,8 +279,25 @@ const advertisementLabel = t("a11y.advertisement", locale);
 
     let cardIndex = 0;
     for (const post of filtered) {
-      if (cardIndex === 1 || cardIndex === 4) {
-        resultsContainer.appendChild(createAdvertisementSlot(searchRenderSequence, cardIndex));
+      const slotKey =
+        cardIndex === 1
+          ? 'search.first'
+          : cardIndex === 4
+            ? 'search.second'
+            : null;
+      const slotEnabled =
+        (slotKey === 'search.first' && searchFirstAdvertisementEnabled) ||
+        (slotKey === 'search.second' && searchSecondAdvertisementEnabled);
+      if (slotKey && slotEnabled) {
+        const advertisementSlot = createAdvertisementSlot(
+          searchRenderSequence,
+          cardIndex,
+          slotKey,
+          slotKey === 'search.first' ? 0 : 1,
+        );
+        if (advertisementSlot) {
+          resultsContainer.appendChild(advertisementSlot);
+        }
       }
       resultsContainer.appendChild(createPostCard(post));
       cardIndex++;

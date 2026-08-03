@@ -1,11 +1,24 @@
-const createAdvertisementPlaceholder = (advertisementLabel: string, sequence: number): string => {
+import {
+  ADVERTISEMENT_SLOT_KEY,
+  ADVERTISEMENT_MEDIATION_CONFIG,
+  type AdvertisementSlotKey,
+} from '@/shared/constants/ad';
+
+const createAdvertisementPlaceholder = (
+  advertisementLabel: string,
+  sequence: number,
+  slotKey: AdvertisementSlotKey,
+): string => {
   const escapedLabel = advertisementLabel
     .replaceAll('&', '&amp;')
     .replaceAll('"', '&quot;')
     .replaceAll('<', '&lt;')
     .replaceAll('>', '&gt;');
 
-  return `\n\n<div class="not-prose relative my-8 w-full min-h-[250px]" data-advertisement-label="${escapedLabel}" data-ad-slot="article_${sequence}" data-ad-format="in_article" data-ad-position="article_section_${sequence}" data-ad-placement="article" data-ad-load-strategy="lazy" data-ad-fallback-index="${sequence - 1}" data-ad-active-provider="none"></div>\n\n`;
+  const slotConfig = ADVERTISEMENT_MEDIATION_CONFIG.slots[slotKey];
+  if (!slotConfig.enabled) return '';
+
+  return `\n\n<div class="not-prose relative my-8 w-full min-h-[250px]" data-advertisement-label="${escapedLabel}" data-ad-slot="article_${sequence}" data-ad-slot-key="${slotKey}" data-ad-format="in_article" data-ad-position="article_section_${sequence}" data-ad-placement="${slotConfig.placement}" data-ad-load-strategy="lazy" data-ad-fallback-index="${sequence - 1}" data-ad-active-provider="none"></div>\n\n`;
 };
 
 const getTextLength = (html: string): number =>
@@ -47,12 +60,16 @@ export const insertInArticleAds = (html: string, advertisementLabel: string): st
   ) {
     insertionIndexes.add(lastSectionIndex);
   }
-  let sequence = 0;
   return sections
     .map((section, sectionIndex) => {
       if (!insertionIndexes.has(sectionIndex)) return section;
-      sequence += 1;
-      return createAdvertisementPlaceholder(advertisementLabel, sequence) + section;
+      const isFirstAdvertisementSlot = sectionIndex === 1;
+      const slotKey = isFirstAdvertisementSlot
+        ? ADVERTISEMENT_SLOT_KEY.articleFirst
+        : ADVERTISEMENT_SLOT_KEY.articleSecond;
+      if (!ADVERTISEMENT_MEDIATION_CONFIG.slots[slotKey].enabled) return section;
+      const logicalSequence = isFirstAdvertisementSlot ? 1 : 2;
+      return createAdvertisementPlaceholder(advertisementLabel, logicalSequence, slotKey) + section;
     })
     .join('');
 };

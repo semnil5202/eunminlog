@@ -1,5 +1,29 @@
 export type AdvertisementPlacement = 'feed' | 'search' | 'article' | 'postTop' | 'sidebar';
 
+export const ADVERTISEMENT_SLOT_KEY = {
+  feedFirst: 'feed.first',
+  feedSecond: 'feed.second',
+  searchFirst: 'search.first',
+  searchSecond: 'search.second',
+  articleFirst: 'article.first',
+  articleSecond: 'article.second',
+  postTop: 'postTop',
+  sidebar: 'sidebar',
+} as const;
+
+export type AdvertisementSlotKey =
+  (typeof ADVERTISEMENT_SLOT_KEY)[keyof typeof ADVERTISEMENT_SLOT_KEY];
+
+export const ADVERTISEMENT_UNIT_KEY = {
+  feed: 'feed',
+  article: 'article',
+  postTop: 'postTop',
+  sidebar: 'sidebar',
+} as const;
+
+export type AdvertisementUnitKey =
+  (typeof ADVERTISEMENT_UNIT_KEY)[keyof typeof ADVERTISEMENT_UNIT_KEY];
+
 export type CoupangFixedAdvertisementConfig = {
   kind: 'fixed';
   href: string;
@@ -25,7 +49,7 @@ export type CoupangAdvertisementConfig =
 
 type AdSenseConfig = {
   clientId: string | null;
-  units: Record<AdvertisementPlacement, AdSenseUnitConfig | null>;
+  units: Record<AdvertisementUnitKey, AdSenseUnitConfig | null>;
 };
 
 export type AdSenseUnitConfig = {
@@ -38,8 +62,15 @@ export type AdSenseUnitConfig = {
 type AdvertisementMediationConfig = {
   enabled: boolean;
   previewProvider: 'gpt-sample' | null;
+  slots: Record<AdvertisementSlotKey, AdvertisementSlotConfig>;
   adsense: AdSenseConfig;
   coupang: Record<AdvertisementPlacement, readonly CoupangAdvertisementConfig[]>;
+};
+
+export type AdvertisementSlotConfig = {
+  enabled: boolean;
+  placement: AdvertisementPlacement;
+  adsenseUnitKey: AdvertisementUnitKey;
 };
 
 const normalizeAdSenseClientId = (value: string | undefined): string | null =>
@@ -111,11 +142,52 @@ const coupangSidebarAdvertisements = [
 export const ADVERTISEMENT_MEDIATION_CONFIG: AdvertisementMediationConfig = {
   enabled: isProductionBuild && import.meta.env.PUBLIC_AD_MEDIATION_ENABLED === 'true',
   previewProvider: isProductionBuild ? null : 'gpt-sample',
+  slots: {
+    [ADVERTISEMENT_SLOT_KEY.feedFirst]: {
+      enabled: false,
+      placement: 'feed',
+      adsenseUnitKey: ADVERTISEMENT_UNIT_KEY.feed,
+    },
+    [ADVERTISEMENT_SLOT_KEY.feedSecond]: {
+      enabled: false,
+      placement: 'feed',
+      adsenseUnitKey: ADVERTISEMENT_UNIT_KEY.feed,
+    },
+    [ADVERTISEMENT_SLOT_KEY.searchFirst]: {
+      enabled: false,
+      placement: 'search',
+      adsenseUnitKey: ADVERTISEMENT_UNIT_KEY.feed,
+    },
+    [ADVERTISEMENT_SLOT_KEY.searchSecond]: {
+      enabled: false,
+      placement: 'search',
+      adsenseUnitKey: ADVERTISEMENT_UNIT_KEY.feed,
+    },
+    [ADVERTISEMENT_SLOT_KEY.articleFirst]: {
+      enabled: true,
+      placement: 'article',
+      adsenseUnitKey: ADVERTISEMENT_UNIT_KEY.article,
+    },
+    [ADVERTISEMENT_SLOT_KEY.articleSecond]: {
+      enabled: true,
+      placement: 'article',
+      adsenseUnitKey: ADVERTISEMENT_UNIT_KEY.article,
+    },
+    [ADVERTISEMENT_SLOT_KEY.postTop]: {
+      enabled: true,
+      placement: 'postTop',
+      adsenseUnitKey: ADVERTISEMENT_UNIT_KEY.postTop,
+    },
+    [ADVERTISEMENT_SLOT_KEY.sidebar]: {
+      enabled: true,
+      placement: 'sidebar',
+      adsenseUnitKey: ADVERTISEMENT_UNIT_KEY.sidebar,
+    },
+  },
   adsense: {
     clientId: isProductionBuild ? normalizeAdSenseClientId(adSenseClientId) : null,
     units: {
       feed: isProductionBuild ? feedAdSenseUnit : null,
-      search: isProductionBuild ? feedAdSenseUnit : null,
       article: isProductionBuild ? articleAdSenseUnit : null,
       postTop: isProductionBuild ? { slotId: '5190868026', format: 'auto' } : null,
       sidebar: isProductionBuild ? { slotId: '3048186343', format: 'auto' } : null,
@@ -129,6 +201,10 @@ export const ADVERTISEMENT_MEDIATION_CONFIG: AdvertisementMediationConfig = {
     sidebar: isProductionBuild ? coupangSidebarAdvertisements : [],
   },
 };
+
+/** 광고 지면 키에 대응하는 활성화 상태를 반환한다. */
+export const isAdvertisementSlotEnabled = (slotKey: AdvertisementSlotKey): boolean =>
+  ADVERTISEMENT_MEDIATION_CONFIG.slots[slotKey].enabled;
 
 /** 지면과 논리 순번에 대응하는 쿠팡 fallback 설정을 반환한다. */
 export const getCoupangAdvertisementConfig = (
