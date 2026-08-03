@@ -48,26 +48,26 @@ const [sponsoredRaw, subCategoryPosts] = await Promise.all([
   getPostsBySubCategory(post.category, post.sub_category),
 ]);
 const sponsoredLocalized = await Promise.all(
-  sponsoredRaw.map((p) => getLocalizedPost(p, locale)),
+  sponsoredRaw.map((sponsoredPost) => getLocalizedPost(sponsoredPost, locale)),
 );
 
-const currentIdx = subCategoryPosts.findIndex((p) => p.slug === post.slug);
-const sliceStart = Math.max(0, currentIdx - 2);
-const sliceEnd = Math.min(subCategoryPosts.length, currentIdx + 3);
+const currentIndex = subCategoryPosts.findIndex((subCategoryPost) => subCategoryPost.slug === post.slug);
+const sliceStart = Math.max(0, currentIndex - 2);
+const sliceEnd = Math.min(subCategoryPosts.length, currentIndex + 3);
 const nearbyPosts = subCategoryPosts.slice(sliceStart, sliceEnd);
 const nearbyLocalized = await Promise.all(
-  nearbyPosts.map((p) => getLocalizedPost(p, locale)),
+  nearbyPosts.map((nearbyPost) => getLocalizedPost(nearbyPost, locale)),
 );
 
 const subCategoryHref = getLocalePath(`/${post.category}/${post.sub_category}/`, locale);
 const publishDate = formatDate(post.created_at, locale);
-// TODO: 애드센스 되돌리기 — insertInArticleAds(post.content)
+const contentWithInArticleAds = insertInArticleAds(post.content, t("a11y.advertisement", locale));
 const contentWithAlts = post.image_alts?.length
   ? post.image_alts.reduce(
       (html, { src, alt }) => html.replaceAll(`src="${src}"`, `src="${src}" alt="${alt.replace(/"/g, '&quot;')}"`),
-      post.content,
+      contentWithInArticleAds,
     )
-  : post.content;
+  : contentWithInArticleAds;
 const contentOptimized = injectOptimizedUrls(contentWithAlts);
 const contentWithBookmarks = await injectLocalizedBookmarks(contentOptimized, locale);
 const contentWithTables = wrapTablesWithScrollContainer(contentWithBookmarks);
@@ -112,7 +112,7 @@ const gaPageParams = {
 
       <main class="min-w-0 py-6">
 
-        {/* TODO: 애드센스 되돌리기 — <FixedAdsense variant="post-top" /> */}
+        <FixedAdsense variant="post-top" locale={locale} />
 
         <article itemscope itemtype="https://schema.org/BlogPosting">
 
@@ -270,9 +270,6 @@ const gaPageParams = {
   />
 
   <script>
-    import { initAdTracker } from "@/shared/lib/analytics/ad-tracker";
-    initAdTracker("post");
-
     document.querySelectorAll<HTMLElement>('[data-type="image-carousel"]').forEach((container) => {
       const imgs = Array.from(container.querySelectorAll<HTMLImageElement>(':scope > img'));
       if (imgs.length === 0) return;

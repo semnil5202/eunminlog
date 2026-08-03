@@ -1,0 +1,39 @@
+---
+/** 고정 크기 예약 영역을 제공하고 광고 중재 런타임에 슬롯 메타데이터를 전달한다. */
+
+import type { AdvertisementPlacement } from "@/shared/constants/ad";
+
+interface Props {
+  class?: string;
+  slotId: string;
+  format: "display" | "in_feed";
+  position: string;
+  placement: AdvertisementPlacement;
+  advertisementLabel: string;
+  loadStrategy?: "immediate" | "lazy";
+  fallbackIndex?: number;
+}
+
+const {
+  class: className,
+  slotId,
+  format,
+  position,
+  placement,
+  advertisementLabel,
+  loadStrategy = "lazy",
+  fallbackIndex = 0,
+} = Astro.props;
+---
+
+<div
+  class:list={["relative", className]}
+  data-advertisement-label={advertisementLabel}
+  data-ad-slot={slotId}
+  data-ad-format={format}
+  data-ad-position={position}
+  data-ad-placement={placement}
+  data-ad-load-strategy={loadStrategy}
+  data-ad-fallback-index={fallbackIndex}
+  data-ad-active-provider="none"
+></div>

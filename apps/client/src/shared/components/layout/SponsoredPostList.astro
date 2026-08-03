@@ -5,7 +5,6 @@ import { t } from "@/shared/lib/i18n/translations";
 import type { Locale } from "@/shared/types/common";
 import type { LocalizedPost } from "@/shared/types/post";
 import SponsoredPostItem from "./SponsoredPostItem.astro";
-import InFeedAdsense from "@/shared/components/ad/InFeedAdsense.astro";
 
 interface Props {
   locale: Locale;
@@ -32,8 +31,6 @@ const emptyLabel = t("sidebar.popularEmpty", locale);
         ))}
       </ul>
 
-      {/* TODO: 애드센스 되돌리기 — <InFeedAdsense class="h-[104px] my-4" /> */}
-
       {posts.length > 2 && (
         <ul role="list" class="border-t border-gray-100">
           {posts.slice(2, 4).map((post) => (
@@ -51,15 +48,15 @@ const emptyLabel = t("sidebar.popularEmpty", locale);
   import { trackEvent } from "@/shared/lib/analytics/gtag";
 
   document.querySelectorAll<HTMLElement>(".sponsored-post-list").forEach((container) => {
-    container.addEventListener("click", (e) => {
-      const el = (e.target as HTMLElement).closest<HTMLElement>("[data-post-slug]");
-      if (!el) return;
+    container.addEventListener("click", (event) => {
+      const postElement = (event.target as HTMLElement).closest<HTMLElement>("[data-post-slug]");
+      if (!postElement) return;
       trackEvent("select_content", {
         content_type: "post",
-        content_slug: el.dataset.postSlug!,
-        content_category: el.dataset.postCategory!,
-        content_sub_category: el.dataset.postSubCategory!,
-        is_sponsored: el.dataset.postSponsored === "true",
+        content_slug: postElement.dataset.postSlug!,
+        content_category: postElement.dataset.postCategory!,
+        content_sub_category: postElement.dataset.postSubCategory!,
+        is_sponsored: postElement.dataset.postSponsored === "true",
       });
     });
   });

@@ -1,43 +1,37 @@
 ---
-/**
- * 고정 위치 애드센스 플레이스홀더.
- * post-top: 포스트 상단 (모바일 300×50 / PC 468×60)
- * sidebar: 우측 사이드바 (300×250)
- */
+/** 포스트 상단과 PC 사이드바에 고정 크기 광고 예약 영역을 렌더링한다. */
 
+import AdvertisementSlot from "./AdSlot.astro";
 import type { Locale } from "@/shared/types/common";
 import { t } from "@/shared/lib/i18n/translations";
 
 interface Props {
-  variant: 'post-top' | 'sidebar';
+  variant: "post-top" | "sidebar";
   locale: Locale;
 }
 
 const { variant, locale } = Astro.props;
 ---
 
-{variant === 'post-top' && (
-  <div
-    class="bg-gray-100 flex items-center justify-center mb-6 mx-auto w-[300px] h-[50px] lg:w-[468px] lg:h-[60px]"
-    role="complementary"
-    aria-label={t("a11y.advertisement", locale)}
-    data-ad-slot="post_top"
-    data-ad-format="fixed"
-    data-ad-position="post_top"
-  >
-    <span class="text-body2 text-gray-400 select-none">Fixed Adsense</span>
-  </div>
+{variant === "post-top" && (
+  <AdvertisementSlot
+    class="mb-6 mx-auto w-[300px] h-[50px] lg:w-[468px] lg:h-[60px]"
+    slotId="post_top"
+    format="display"
+    position="post_top"
+    placement="postTop"
+    advertisementLabel={t("a11y.advertisement", locale)}
+    loadStrategy="immediate"
+  />
 )}
 
-{variant === 'sidebar' && (
-  <div
-    class="w-[300px] h-[250px] bg-gray-100 flex items-center justify-center"
-    role="complementary"
-    aria-label={t("a11y.advertisement", locale)}
-    data-ad-slot="sidebar"
-    data-ad-format="fixed"
-    data-ad-position="right_sidebar"
-  >
-    <span class="text-body2 text-gray-400 select-none">Fixed Adsense</span>
-  </div>
+{variant === "sidebar" && (
+  <AdvertisementSlot
+    class="w-[300px] h-[250px]"
+    slotId="sidebar"
+    format="display"
+    position="right_sidebar"
+    placement="sidebar"
+    advertisementLabel={t("a11y.advertisement", locale)}
+  />
 )}

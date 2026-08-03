@@ -23,7 +23,7 @@ const { locale, sponsoredPosts = [], currentSlug, popularTitle } = Astro.props;
 >
   <div class="sticky top-20 max-h-[calc(100vh-5rem)] overflow-y-auto scrollbar-none pt-2 pb-6 space-y-8">
 
-    {/* TODO: 애드센스 되돌리기 — <FixedAdsense variant="sidebar" /> */}
+    <FixedAdsense variant="sidebar" locale={locale} />
 
     <SponsoredPostList
       locale={locale}

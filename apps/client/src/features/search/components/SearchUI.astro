@@ -34,7 +34,14 @@ const {
 const advertisementLabel = t("a11y.advertisement", locale);
 ---
 
-<div class="w-full max-w-[688px]">
+<div
+  id="search-ui"
+  class="w-full max-w-[688px]"
+  data-sponsored-label={sponsoredLabel}
+  data-popular-label={popularLabel}
+  data-results-text={resultsText}
+  data-advertisement-label={advertisementLabel}
+>
   <form id="search-form" class="relative" action="" method="get">
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -125,49 +132,51 @@ const advertisementLabel = t("a11y.advertisement", locale);
   set:html={JSON.stringify(searchData)}
 />
 
-<script define:vars={{ sponsoredLabel, popularLabel, resultsText, advertisementLabel }}>
-  const dataEl = document.getElementById('search-data');
-  const form = document.getElementById('search-form');
-  const input = document.getElementById('search-input');
+<script>
+  import { createAdvertisementSlotElement } from "@/shared/lib/ad/mediation";
+  import { unobserveAdSlotsWithin } from "@/shared/lib/analytics/ad-tracker";
+
+  const searchUi = document.getElementById('search-ui');
+  const searchDataElement = document.getElementById('search-data');
+  const searchForm = document.getElementById('search-form');
+  const searchInput = document.querySelector<HTMLInputElement>('#search-input');
   const resultsContainer = document.getElementById('search-results');
-  const countEl = document.getElementById('search-count');
-  const emptyEl = document.getElementById('search-empty');
+  const searchCount = document.getElementById('search-count');
+  const emptyState = document.getElementById('search-empty');
   const suggestions = document.getElementById('search-suggestions');
+  const sponsoredLabel = searchUi?.dataset.sponsoredLabel ?? '';
+  const popularLabel = searchUi?.dataset.popularLabel ?? '';
+  const resultsText = searchUi?.dataset.resultsText ?? '';
+  const advertisementLabel = searchUi?.dataset.advertisementLabel ?? 'Advertisement';
 
-  const clearBtn = document.getElementById('search-clear');
-  const posts = JSON.parse(dataEl?.textContent || '[]');
+  const clearButton = document.getElementById('search-clear');
+  const posts = JSON.parse(searchDataElement?.textContent || '[]');
 
-  const toggleClearBtn = () => {
-    if (!clearBtn) return;
-    clearBtn.classList.toggle('hidden', !input?.value);
+  const toggleClearButton = () => {
+    if (!clearButton) return;
+    clearButton.classList.toggle('hidden', !searchInput?.value);
   };
 
-  input?.addEventListener('input', toggleClearBtn);
-  clearBtn?.addEventListener('click', () => {
-    if (input) input.value = '';
-    toggleClearBtn();
+  searchInput?.addEventListener('input', toggleClearButton);
+  clearButton?.addEventListener('click', () => {
+    if (searchInput) searchInput.value = '';
+    toggleClearButton();
     renderResults('');
-    input?.focus();
+    searchInput?.focus();
   });
 
-  let searchAdCounter = 0;
+  let searchRenderSequence = 0;
 
-  const createAdSlot = () => {
-    searchAdCounter++;
-    const wrapper = document.createElement('div');
-    wrapper.setAttribute('role', 'complementary');
-    wrapper.setAttribute('aria-label', advertisementLabel);
-    wrapper.dataset.adSlot = `search_in_feed_${searchAdCounter}`;
-    wrapper.dataset.adFormat = 'in_feed';
-    wrapper.dataset.adPosition = `search_feed_${searchAdCounter}`;
-    const inner = document.createElement('div');
-    inner.className = 'w-full h-[250px] bg-gray-100 flex items-center justify-center';
-    const span = document.createElement('span');
-    span.className = 'text-body2 text-gray-400 select-none';
-    span.textContent = 'In-feed Adsense';
-    inner.appendChild(span);
-    wrapper.appendChild(inner);
-    return wrapper;
+  const createAdvertisementSlot = (renderSequence: number, positionIndex: number) => {
+    const advertisementIdentifier = `search_render_${renderSequence}_card_index_${positionIndex}`;
+    return createAdvertisementSlotElement({
+      className: 'w-full min-h-[250px]',
+      slotId: advertisementIdentifier,
+      format: 'in_feed',
+      position: advertisementIdentifier,
+      placement: 'search',
+      advertisementLabel,
+    });
   };
 
   const createPostCard = (post) => {
@@ -223,38 +232,41 @@ const advertisementLabel = t("a11y.advertisement", locale);
   };
 
   const renderResults = (query) => {
+    if (!resultsContainer || !searchCount || !emptyState) return;
+    unobserveAdSlotsWithin(resultsContainer);
     resultsContainer.innerHTML = '';
-    const q = query.trim().toLowerCase();
+    searchRenderSequence++;
+    const normalizedQuery = query.trim().toLowerCase();
 
-    if (!q) {
-      countEl.classList.add('hidden');
-      emptyEl.classList.add('hidden');
+    if (!normalizedQuery) {
+      searchCount.classList.add('hidden');
+      emptyState.classList.add('hidden');
       suggestions?.classList.remove('hidden');
       return;
     }
 
     suggestions?.classList.add('hidden');
 
-    const filtered = posts.filter((p) =>
-      p.title.toLowerCase().includes(q) ||
-      p.description.toLowerCase().includes(q) ||
-      (p.placeName && p.placeName.toLowerCase().includes(q))
+    const filtered = posts.filter((post) =>
+      post.title.toLowerCase().includes(normalizedQuery) ||
+      post.description.toLowerCase().includes(normalizedQuery) ||
+      (post.placeName && post.placeName.toLowerCase().includes(normalizedQuery))
     );
 
     if (filtered.length === 0) {
-      countEl.classList.add('hidden');
-      emptyEl.classList.remove('hidden');
+      searchCount.classList.add('hidden');
+      emptyState.classList.remove('hidden');
       return;
     }
 
-    emptyEl.classList.add('hidden');
-    countEl.textContent = `${filtered.length}${resultsText}`;
-    countEl.classList.remove('hidden');
+    emptyState.classList.add('hidden');
+    searchCount.textContent = `${filtered.length}${resultsText}`;
+    searchCount.classList.remove('hidden');
 
     let cardIndex = 0;
     for (const post of filtered) {
-      if (cardIndex === 1 || cardIndex === 3) {
-        resultsContainer.appendChild(createAdSlot());
+      if (cardIndex === 1 || cardIndex === 4) {
+        resultsContainer.appendChild(createAdvertisementSlot(searchRenderSequence, cardIndex));
       }
       resultsContainer.appendChild(createPostCard(post));
       cardIndex++;
@@ -262,8 +274,8 @@ const advertisementLabel = t("a11y.advertisement", locale);
   };
 
   const doSearch = (query) => {
-    if (input) input.value = query;
-    toggleClearBtn();
+    if (searchInput) searchInput.value = query;
+    toggleClearButton();
     renderResults(query);
     const url = new URL(window.location.href);
     const trimmed = query.trim();
@@ -278,15 +290,15 @@ const advertisementLabel = t("a11y.advertisement", locale);
     history.replaceState(null, '', url.toString());
   };
 
-  const params = new URLSearchParams(window.location.search);
-  const initialQuery = params.get('q') || '';
-  if (input) input.value = initialQuery;
+  const searchParameters = new URLSearchParams(window.location.search);
+  const initialQuery = searchParameters.get('q') || '';
+  if (searchInput) searchInput.value = initialQuery;
   if (initialQuery) renderResults(initialQuery);
-  toggleClearBtn();
+  toggleClearButton();
 
-  form?.addEventListener('submit', (e) => {
-    e.preventDefault();
-    doSearch(input?.value || '');
+  searchForm?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    doSearch(searchInput?.value || '');
   });
 
   document.querySelectorAll('.search-chip').forEach((chip) => {

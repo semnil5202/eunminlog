@@ -9,6 +9,7 @@ import JsonLd from "@/shared/components/seo/JsonLd.astro";
 import type { Locale } from "@/shared/types/common";
 import { DEFAULT_LOCALE } from "@/shared/types/common";
 import { t } from "@/shared/lib/i18n/translations";
+import { ADVERTISEMENT_MEDIATION_CONFIG, isAdSenseConfigured } from "@/shared/constants/ad";
 
 interface Props {
   title: string;
@@ -64,7 +65,13 @@ const webSiteSchema: Record<string, unknown> = {
     <meta name="robots" content={robotsContent} />
     <JsonLd schema={webSiteSchema} />
     <slot name="head" />
-    <script async fetchpriority="high" src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8569467907518315" crossorigin="anonymous"></script>
+    {isAdSenseConfigured && (
+      <script
+        async
+        src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADVERTISEMENT_MEDIATION_CONFIG.adsense.clientId}`}
+        crossorigin="anonymous"
+      ></script>
+    )}
     <script is:inline define:vars={{ GA_MEASUREMENT_ID, gaPageParams }}>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
@@ -98,11 +105,20 @@ const webSiteSchema: Record<string, unknown> = {
       });
     </script>
   </head>
-  <body class="flex min-h-screen flex-col bg-white text-gray-900 antialiased font-pretendard">
+  <body
+    class="flex min-h-screen flex-col bg-white text-gray-900 antialiased font-pretendard"
+    data-page-type={String(gaPageParams.page_type ?? "website")}
+  >
     <Header locale={locale} path={path} isMultilingual={isMultilingual} />
     <slot />
     <Footer locale={locale} />
     <Toast />
     <ImageLightbox locale={locale} />
+    <script>
+      import { initAdMediation } from "@/shared/lib/ad/mediation";
+      import { initAdTracker } from "@/shared/lib/analytics/ad-tracker";
+      initAdMediation();
+      initAdTracker(document.body.dataset.pageType ?? "website");
+    </script>
   </body>
 </html>

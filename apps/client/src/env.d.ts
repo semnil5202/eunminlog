@@ -1,5 +1,10 @@
 /// <reference types="astro/client" />
 
-type Window = {
-  gtag: (...args: any[]) => void;
-};
+declare global {
+  // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
+  interface Window {
+    gtag: (...arguments_: unknown[]) => void;
+  }
+}
+
+export {};

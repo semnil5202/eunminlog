@@ -5,7 +5,6 @@ import type { Locale } from "@/shared/types/common";
 import { t } from "@/shared/lib/i18n/translations";
 import PostCard from "./PostCard.astro";
 import SponsoredCard from "./SponsoredCard.astro";
-import PostCardSkeleton from "./PostCardSkeleton.astro";
 import InFeedAdsense from "@/shared/components/ad/InFeedAdsense.astro";
 
 interface Props {
@@ -21,16 +20,20 @@ const { posts, locale, feedEndpoint, hasNextPage = false, sponsoredLabel = "", p
 
 type FeedItem =
   | { type: "post"; post: LocalizedPost; cardIndex: number }
-  | { type: "ad"; adIndex: number };
+  | { type: "advertisement"; positionIndex: number; fallbackIndex: number };
 
 const feedItems: FeedItem[] = [];
 let cardIndex = 0;
-let adIndex = 0;
+let advertisementIndex = 0;
 
 for (let index = 0; index < posts.length; index++) {
-  if (cardIndex === 1 || cardIndex === 3) {
-    adIndex++;
-    feedItems.push({ type: "ad", adIndex });
+  if (cardIndex === 1 || cardIndex === 4) {
+    feedItems.push({
+      type: "advertisement",
+      positionIndex: cardIndex,
+      fallbackIndex: advertisementIndex,
+    });
+    advertisementIndex++;
   }
 
   feedItems.push({ type: "post", post: posts[index]!, cardIndex });
@@ -47,11 +50,20 @@ for (let index = 0; index < posts.length; index++) {
   data-sponsored-label={sponsoredLabel}
   data-popular-label={popularLabel}
   data-ad-label={t("a11y.advertisement", locale)}
+  data-initial-post-count={posts.length}
 >
   {feedItems.map((item) => {
-    if (item.type === "ad") {
-      // TODO: 애드센스 되돌리기 — <InFeedAdsense class="max-w-[640px] lg:max-w-none aspect-7/3" slotId={`in_feed_${item.adIndex}`} position={`feed_index_${item.adIndex}`} />
-      return null;
+    if (item.type === "advertisement") {
+      return (
+        <InFeedAdsense
+          class="w-full min-h-[250px]"
+          slotId={`feed_card_index_${item.positionIndex}`}
+          position={`feed_card_index_${item.positionIndex}`}
+          placement="feed"
+          fallbackIndex={item.fallbackIndex}
+          locale={locale}
+        />
+      );
     }
 
     if (item.post.is_sponsored || item.post.is_recommended) {
@@ -82,6 +94,8 @@ for (let index = 0; index < posts.length; index++) {
 
 {feedEndpoint && (
   <script>
+    import { createAdvertisementSlotElement } from "@/shared/lib/ad/mediation";
+
     const feed = document.getElementById("post-feed");
     const sentinel = document.getElementById("feed-sentinel");
 
@@ -90,25 +104,24 @@ for (let index = 0; index < posts.length; index++) {
       let nextPage = parseInt(feed.dataset.nextPage!, 10);
       let hasNext = feed.dataset.hasNext === "true";
       let loading = false;
-      let dynamicAdCounter = 2;
+      let loadedCardCount = Number.parseInt(feed.dataset.initialPostCount || "0", 10);
       const sponsoredLabel = feed.dataset.sponsoredLabel || "";
       const popularLabel = feed.dataset.popularLabel || "";
-      const adLabel = feed.dataset.adLabel || "Advertisement";
+      const advertisementLabel = feed.dataset.adLabel || "Advertisement";
 
-      const createAdSlot = (): HTMLDivElement => {
-        dynamicAdCounter++;
-        const wrapper = document.createElement("div");
-        wrapper.className = "w-full max-w-[640px] lg:max-w-none aspect-7/3 bg-gray-100 flex items-center justify-center";
-        wrapper.setAttribute("role", "complementary");
-        wrapper.setAttribute("aria-label", adLabel);
-        wrapper.dataset.adSlot = `in_feed_${dynamicAdCounter}`;
-        wrapper.dataset.adFormat = "in_feed";
-        wrapper.dataset.adPosition = `feed_index_${dynamicAdCounter}`;
-        const span = document.createElement("span");
-        span.className = "text-body2 text-gray-400 select-none";
-        span.textContent = "In-feed Adsense";
-        wrapper.appendChild(span);
-        return wrapper;
+      const createAdvertisementSlot = (
+        positionIndex: number,
+        fallbackIndex: number,
+      ): HTMLDivElement => {
+        return createAdvertisementSlotElement({
+          className: "w-full min-h-[250px]",
+          slotId: `feed_card_index_${positionIndex}`,
+          format: "in_feed",
+          position: `feed_card_index_${positionIndex}`,
+          placement: "feed",
+          advertisementLabel,
+          fallbackIndex,
+        });
       };
 
       const createPostCard = (post: any): HTMLElement => {
@@ -168,30 +181,28 @@ for (let index = 0; index < posts.length; index++) {
         loading = true;
 
         try {
-          const res = await fetch(`${endpoint}${nextPage}.json`);
-          if (!res.ok) {
+          const response = await fetch(`${endpoint}${nextPage}.json`);
+          if (!response.ok) {
             hasNext = false;
             sentinel.remove();
             return;
           }
 
-          const data = await res.json();
-          const posts: any[] = data.posts;
-          hasNext = data.hasNext;
+          const responseData = await response.json();
+          const posts: any[] = responseData.posts;
+          hasNext = responseData.hasNext;
 
           let localIndex = 0;
           for (const post of posts) {
-            // TODO: 애드센스 되돌리기 — 무한스크롤 인피드 광고 삽입
-            // if (localIndex === 1 || localIndex === 3) {
-            //   const adSlot = createAdSlot();
-            //   feed.appendChild(adSlot);
-            //   if ((window as any).__observeNewAdSlot) {
-            //     (window as any).__observeNewAdSlot(adSlot);
-            //   }
-            // }
+            if (localIndex === 1 || localIndex === 4) {
+              feed.appendChild(
+                createAdvertisementSlot(loadedCardCount + localIndex, localIndex === 1 ? 0 : 1),
+              );
+            }
             feed.appendChild(createPostCard(post));
             localIndex++;
           }
+          loadedCardCount += posts.length;
 
           nextPage++;
 
@@ -225,10 +236,7 @@ for (let index = 0; index < posts.length; index++) {
 
 <script>
   import { initPostClickTracker } from "@/shared/lib/analytics/post-tracker";
-  import { initAdTracker, observeNewAdSlot } from "@/shared/lib/analytics/ad-tracker";
   initPostClickTracker("post-feed");
-  initAdTracker("list");
-  (window as any).__observeNewAdSlot = observeNewAdSlot;
 
   const feed = document.getElementById("post-feed");
   const sentinel = document.getElementById("feed-sentinel");
@@ -236,13 +244,13 @@ for (let index = 0; index < posts.length; index++) {
   const skeletonCard = `<div class="animate-pulse max-w-[640px] max-h-[404px] lg:max-w-none lg:max-h-none"><div class="w-full aspect-7/3 bg-gray-200"></div><div class="mt-4 flex flex-col gap-2"><div class="h-5 bg-gray-200 rounded w-3/4"></div><div class="h-4 bg-gray-200 rounded w-full"></div><div class="h-4 bg-gray-200 rounded w-2/3"></div><div class="flex items-center gap-1.5"><div class="h-3 bg-gray-200 rounded w-20"></div><div class="h-3 bg-gray-200 rounded w-16"></div><div class="h-3 bg-gray-200 rounded w-12"></div></div></div></div>`;
 
   if (feed) {
-    document.addEventListener("click", (e) => {
-      const link = (e.target as HTMLElement).closest<HTMLAnchorElement>(
+    document.addEventListener("click", (event) => {
+      const link = (event.target as HTMLElement).closest<HTMLAnchorElement>(
         "nav a[href]"
       );
       if (!link || link.getAttribute("aria-current")) return;
 
-      e.preventDefault();
+      event.preventDefault();
       if (sentinel) sentinel.classList.add("hidden");
 
       feed.style.width = `${feed.offsetWidth}px`;

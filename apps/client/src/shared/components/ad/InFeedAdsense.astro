@@ -1,6 +1,8 @@
 ---
-/** 인피드 광고 플레이스홀더. class prop으로 높이·grid span 등을 오버라이드한다. */
+/** 피드와 검색 결과에 높이가 유동적인 Native In-feed 광고 예약 영역을 렌더링한다. */
 
+import AdvertisementSlot from "./AdSlot.astro";
+import type { AdvertisementPlacement } from "@/shared/constants/ad";
 import type { Locale } from "@/shared/types/common";
 import { t } from "@/shared/lib/i18n/translations";
 
@@ -8,22 +10,27 @@ interface Props {
   class?: string;
   slotId?: string;
   position?: string;
+  placement?: AdvertisementPlacement;
+  fallbackIndex?: number;
   locale: Locale;
 }
 
-const { class: className, slotId = "in_feed", position = "feed", locale } = Astro.props;
+const {
+  class: className,
+  slotId = "feed",
+  position = "feed",
+  placement = "feed",
+  fallbackIndex = 0,
+  locale,
+} = Astro.props;
 ---
 
-<div
-  class:list={[
-    "w-full bg-gray-100 flex items-center justify-center",
-    className,
-  ]}
-  role="complementary"
-  aria-label={t("a11y.advertisement", locale)}
-  data-ad-slot={slotId}
-  data-ad-format="in_feed"
-  data-ad-position={position}
->
-  <span class="text-body2 text-gray-400 select-none">In-feed Adsense</span>
-</div>
+<AdvertisementSlot
+  class={className}
+  slotId={slotId}
+  format="in_feed"
+  position={position}
+  placement={placement}
+  advertisementLabel={t("a11y.advertisement", locale)}
+  fallbackIndex={fallbackIndex}
+/>
