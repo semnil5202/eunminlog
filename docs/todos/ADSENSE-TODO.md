@@ -9,7 +9,7 @@
 - Production 빌드는 GPT 샘플 분기를 항상 비활성화한다.
 - Production의 `PUBLIC_AD_MEDIATION_ENABLED=false`는 사이트 심사용 AdSense base tag만 로드하고 광고 단위 요청은 만들지 않는다.
 - Production의 `PUBLIC_AD_MEDIATION_ENABLED=true`는 코드에 정의된 지면별 unit 설정으로 AdSense를 요청한다.
-- `ADVERTISEMENT_MEDIATION_CONFIG.slots`는 실제 노출 위치 키별 활성 상태를 관리한다. 현재 `feed.first`, `feed.second`는 비활성이고 `search.first`, `search.second`, `article.first`, `article.second`, `postTop`, `sidebar`는 활성이다.
+- `ADVERTISEMENT_MEDIATION_CONFIG.slots`는 실제 노출 위치 키별 활성 상태를 관리한다. 현재 `feed.first`, `feed.second`는 비활성이고 `search.first`, `search.second`, `article.1`~`article.10`, `postTop`, `sidebar`는 활성이다.
 - 비활성 슬롯 키는 예약 DOM, AdSense·GPT 요청, 쿠팡 fallback, GA4 광고 이벤트를 모두 생성하지 않는다. 전역 `enabled`는 Production AdSense 요청 여부만 제어하며 슬롯별 활성 상태와 독립적이다.
 - AdSense의 `data-ad-status="unfilled"`만 쿠팡으로 전환한다. `filled`와 `unfill-optimized`는 Google이 관리하는 AdSense 지면으로 유지한다.
 - 시간 초과, 스크립트 오류, 차단, 상태 미확인은 쿠팡으로 전환하지 않고 예약 영역을 비워 둔다.
@@ -46,7 +46,7 @@
 | 검색 index 1, 4    | Native In-feed    | `w-full min-h-[250px]` | 지연      | `6392269057` | `search.first`, `search.second` |
 | 본문 H2 경계       | Native In-article | `w-full min-h-[250px]` | 지연      | `5322463062` | `fluid`, full-width responsive  |
 
-Feed 설정은 보존하지만 현재 비활성이다. Search는 같은 Native In-feed unit을 index 1, 4에서 사용하고 Article은 같은 Native In-article unit을 최대 2곳에서 반복 사용한다. 활성 지면의 각 DOM 노출은 고유한 logical slot/position을 사용하며 인기글 104px 광고 지면은 사용하지 않는다.
+Feed 설정은 보존하지만 현재 비활성이다. Search는 같은 Native In-feed unit을 index 1, 4에서 사용하고 Article은 같은 Native In-article unit을 적격 H2 앞 최대 10곳에서 반복 사용한다. 활성 지면의 각 DOM 노출은 고유한 logical slot/position을 사용하며 인기글 104px 광고 지면은 사용하지 않는다.
 
 PostTop은 AdSense 콘솔에서 생성한 Mobile 300×50과 PC 468×60 고정형 unit을 `lg` breakpoint로 선택해 한 DOM 슬롯에서 하나만 요청한다. Sidebar도 별도 300×250 고정형 unit을 사용한다. 세 지면 모두 `data-ad-format="auto"`를 사용하지 않고 광고 요청 직전에 현재 예약 컨테이너의 픽셀 크기를 `<ins>` 인라인 스타일로 고정한다. 최소 높이도 동일하게 예약해 `unfilled` 전환 후 쿠팡 fallback에서 컨테이너가 접히지 않게 한다.
 
@@ -67,8 +67,16 @@ Feed fallback 설정과 widget ID는 재활성화를 위해 보존하지만 해�
 | PostTop        | 고정 320×50  | 범용          | `1012831`      | PC·Mobile 공통 |
 | Feed index 1   | 동적 300×250 | 주방용품      | `1013218`      | PC·Mobile 공통 |
 | Feed index 4   | 동적 300×250 | 식품          | `1013216`      | PC·Mobile 공통 |
-| Article 1      | 동적 300×250 | 뷰티          | `1013228`      | PC·Mobile 공통 |
+| Article 1      | 동적 300×250 | 식품          | `1013216`      | PC·Mobile 공통 |
 | Article 2      | 동적 300×250 | 생활용품      | `1013219`      | PC·Mobile 공통 |
+| Article 3      | 동적 300×250 | 뷰티          | `1013228`      | PC·Mobile 공통 |
+| Article 4      | 동적 300×250 | 헬스·건강식품 | `1013229`      | PC·Mobile 공통 |
+| Article 5      | 동적 300×250 | 주방용품      | `1013218`      | PC·Mobile 공통 |
+| Article 6      | 동적 300×250 | 반려동물용품  | `1013426`      | PC·Mobile 공통 |
+| Article 7      | 동적 300×250 | 출산·유아동   | `1013427`      | PC·Mobile 공통 |
+| Article 8      | 동적 300×250 | 홈인테리어    | `1013428`      | PC·Mobile 공통 |
+| Article 9      | 동적 300×250 | 스포츠·레저   | `1013429`      | PC·Mobile 공통 |
+| Article 10     | 동적 300×250 | 가전디지털    | `1013220`      | PC·Mobile 공통 |
 | Search index 1 | 동적 300×250 | 식품          | `1013216`      | PC·Mobile 공통 |
 | Search index 4 | 동적 300×250 | 뷰티          | `1013228`      | PC·Mobile 공통 |
 | Sidebar        | 동적 300×250 | 헬스·건강식품 | `1013229`      | PC `lg` 이상만 |
@@ -80,7 +88,8 @@ Feed fallback 설정과 widget ID는 재활성화를 위해 보존하지만 해�
 - 고정 쿠팡 fallback은 `role="complementary"`, 광고 접근성 라벨, `rel="sponsored noopener"`를 유지한다. 동적 iframe에도 광고 라벨과 제목을 제공하며, 실패 시 다른 쿠팡 광고로 연쇄 요청하지 않고 기존 예약 영역을 provider `none`으로 남긴다.
 - 같은 페이지의 Feed·Article 반복 슬롯은 서로 다른 광고 식별자를 사용한다. 다만 동적 위젯의 실제 상품 다양성은 쿠팡 응답에 따라 달라지므로 ID 분리만으로 서로 다른 상품 노출을 보장하지 않는다.
 - 다이나믹 iframe은 교차 출처이므로 앱의 DOM click listener로 내부 상품 클릭을 감지할 수 없다. 쿠팡 리포트의 클릭·수익을 기준으로 확인하고 GA4 `ad_click`은 고정 anchor fallback에만 기록한다.
-- 모바일 핵심 지면에는 반복 구매 가능성이 높은 주방용품·식품·뷰티·생활용품을 배치한다. Feed는 주방용품, 식품 순서로 재활성화에 대비하고, 활성 Article은 뷰티, 생활용품 순서로 성과를 측정한다.
+- 모바일 핵심 지면에는 반복 구매 가능성이 높은 식품·생활용품·뷰티·헬스·주방용품을 우선 배치한다. Article 6~10은 반려동물·출산/유아동·홈인테리어·스포츠/레저·가전디지털 순으로 다양성을 확보한다. 이는 공개 시장 자료를 바탕으로 한 성과 가설이며, 실제 순서는 슬롯 조회 대비 쿠팡 클릭·주문·수익으로 재평가한다.
+- 카테고리 후보는 [쿠팡 마켓플레이스 카테고리 노출 안내](https://marketplace.coupang.com/exposure-promotion), [쿠팡 2026 어워즈 16개 카테고리 사례](https://news.coupang.com/archives/54597/), [KISDI 온라인쇼핑 거래 동향](https://www.kisdi.re.kr/report/fileView.do?arrMasterId=4334696&id=1912821&key=m2102058837181)을 참고했다. 쿠팡 파트너스가 카테고리별 전환율·수익률을 공개하지 않으므로 이 순서는 보장 수익 순위가 아니다.
 - Sidebar의 헬스·건강식품은 PC에서만 노출되므로 모바일 성과와 합산해 카테고리 우열을 판단하지 않는다. 기기·지면별 슬롯 조회 대비 쿠팡 클릭·주문·수익을 비교하며, 쿠팡 리포트가 widget ID 구분을 제공하지 않으면 생성 코드에서 지원하는 별도 추적 식별자를 사용한다.
 - 카테고리 실험 중에는 위치·크기·호출 조건을 고정한다. 총수익보다 슬롯 조회당 클릭률, 주문 전환율, 슬롯 조회 1,000회당 수익을 우선 비교하고 충분한 노출이 쌓이기 전에는 카테고리를 교체하지 않는다.
 

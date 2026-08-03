@@ -130,7 +130,7 @@ AdSense와 쿠팡을 `ad_provider`로 분리한다. 빈 예약 영역(`none`)과
 
 > `N`은 본문 내 삽입 순서 (1, 2, ...).
 
-운영 AdSense unit ID는 형식별로 반복 DOM 슬롯에서 재사용한다. 현재 `feed.first`, `feed.second`는 비활성이라 이벤트를 만들지 않는다. 활성 `search.first`, `search.second`는 Native In-feed unit(`6392269057`)을 공유하고, `article.first`, `article.second`는 Native In-article unit(`5322463062`)을 공유한다. 위 `ad_slot`과 `ad_position`은 AdSense unit ID가 아니라 각 DOM 노출·카드 위치를 구분하는 논리 식별자다.
+운영 AdSense unit ID는 형식별로 반복 DOM 슬롯에서 재사용한다. 현재 `feed.first`, `feed.second`는 비활성이라 이벤트를 만들지 않는다. 활성 `search.first`, `search.second`는 Native In-feed unit(`6392269057`)을 공유하고, `article.1`부터 `article.10`까지는 Native In-article unit(`5322463062`)을 공유한다. 위 `ad_slot`과 `ad_position`은 AdSense unit ID가 아니라 각 DOM 노출·카드 위치를 구분하는 논리 식별자다.
 
 ---
 

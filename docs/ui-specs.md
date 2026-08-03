@@ -403,7 +403,7 @@ Admin에서 `data-type="image-carousel"`로 마크업된 연속 이미지를 Cli
 
 - **위치**: `features/post-detail/lib/ads.ts`
 - HTML 본문의 `<h2>` 섹션 경계에 Native In-article 광고 슬롯을 삽입
-- 도입부·광고 사이·마지막 섹션의 문단 및 글자 수 guard를 통과한 후보만 삽입
+- 직전 섹션의 표시 텍스트가 250자 이상이거나 이미지가 1개 이상인 후보를 앞에서부터 최대 10개 삽입
 
 #### `buildBlogPostingSchema(post, canonical)` / `buildReviewSchema(post)`
 
@@ -442,7 +442,7 @@ Admin에서 `data-type="image-carousel"`로 마크업된 연속 이미지를 Cli
 | Native In-Article          | fluid           | fluid              | 게시글 본문 중간 (H2 헤딩 앞에 삽입) | `insertInArticleAds()`            |
 | Native In-feed             | fluid           | fluid              | Search index 1, 4 (Feed는 비활성)    | `InFeedAdsense`                   |
 
-피드·검색용 Native In-feed unit(`6392269057`, layout key `-6t+ed+2i-1n-4w`)은 공유한다. Search 슬롯 키는 활성이고 Feed 슬롯 키는 비활성이다. 본문은 `article.first`, `article.second`가 Native In-article unit(`5322463062`, `fluid`, full-width responsive)을 공유한다. 활성 Native 지면은 `min-h-[250px]`만 예약하고 광고 높이 확장을 허용하며, Core Web Vitals 가드레일은 field p75 CLS 0.1 이하이다.
+피드·검색용 Native In-feed unit(`6392269057`, layout key `-6t+ed+2i-1n-4w`)은 공유한다. Search 슬롯 키는 활성이고 Feed 슬롯 키는 비활성이다. 본문은 `article.1`부터 `article.10`까지 같은 Native In-article unit(`5322463062`, `fluid`, full-width responsive)을 공유한다. 활성 Native 지면은 `min-h-[250px]`만 예약하고 광고 높이 확장을 허용하며, Core Web Vitals 가드레일은 field p75 CLS 0.1 이하이다.
 
 ### Provider 선택과 CLS
 
@@ -478,9 +478,9 @@ Admin에서 `data-type="image-carousel"`로 마크업된 연속 이미지를 Cli
 
 - HTML `<h2>` 헤딩 기준으로 섹션 분할
 - 광고 예약 영역의 상하 여백은 각각 40px
-- 첫 광고: 도입부에 `<p>` 2개 이상 또는 텍스트 300자 이상일 때 첫 H2 앞에 삽입
-- 두 번째 광고: 두 후보 사이 600자 이상이며 마지막 H2 이후 300자 이상일 때 마지막 H2 앞에 삽입
-- 조건을 충족하지 않는 후보는 생략하고, 삽입된 슬롯은 같은 In-article unit을 재사용한다.
+- 각 H2의 직전 섹션에서 태그·HTML 속성·이미지 `alt`를 제외한 표시 텍스트가 250자 이상이거나 `<img>`가 1개 이상이면 해당 H2 앞에 삽입
+- 연속 H2처럼 직전 섹션이 비어 있으면 생략하고, 적격 후보를 문서 순서대로 최대 10개까지만 삽입
+- `article.1`부터 `article.10`까지 같은 In-article unit을 재사용하며, 쿠팡 fallback은 같은 순번의 위젯을 1:1로 사용한다.
 - 삽입 로직: `features/post-detail/lib/ads.ts` -- `insertInArticleAds()`
 
 ---

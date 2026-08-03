@@ -8,7 +8,8 @@
     "setup:local": "bash scripts/setup-local-https.sh",
     "build": "astro build",
     "preview": "astro preview",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test": "node --test src/features/post-detail/lib/article-ad-placement.test.mjs"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.0",

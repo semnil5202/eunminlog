@@ -5,11 +5,32 @@ export const ADVERTISEMENT_SLOT_KEY = {
   feedSecond: 'feed.second',
   searchFirst: 'search.first',
   searchSecond: 'search.second',
-  articleFirst: 'article.first',
-  articleSecond: 'article.second',
+  articleFirst: 'article.1',
+  articleSecond: 'article.2',
+  articleThird: 'article.3',
+  articleFourth: 'article.4',
+  articleFifth: 'article.5',
+  articleSixth: 'article.6',
+  articleSeventh: 'article.7',
+  articleEighth: 'article.8',
+  articleNinth: 'article.9',
+  articleTenth: 'article.10',
   postTop: 'postTop',
   sidebar: 'sidebar',
 } as const;
+
+export const ADVERTISEMENT_ARTICLE_SLOT_KEYS = [
+  ADVERTISEMENT_SLOT_KEY.articleFirst,
+  ADVERTISEMENT_SLOT_KEY.articleSecond,
+  ADVERTISEMENT_SLOT_KEY.articleThird,
+  ADVERTISEMENT_SLOT_KEY.articleFourth,
+  ADVERTISEMENT_SLOT_KEY.articleFifth,
+  ADVERTISEMENT_SLOT_KEY.articleSixth,
+  ADVERTISEMENT_SLOT_KEY.articleSeventh,
+  ADVERTISEMENT_SLOT_KEY.articleEighth,
+  ADVERTISEMENT_SLOT_KEY.articleNinth,
+  ADVERTISEMENT_SLOT_KEY.articleTenth,
+] as const;
 
 export type AdvertisementSlotKey =
   (typeof ADVERTISEMENT_SLOT_KEY)[keyof typeof ADVERTISEMENT_SLOT_KEY];
@@ -122,8 +143,16 @@ const coupangFeedAdvertisements = [
 ] as const;
 
 const coupangArticleAdvertisements = [
-  createCoupangDynamicAdvertisement('1013228', '쿠팡 뷰티 베스트 상품'),
+  createCoupangDynamicAdvertisement('1013216', '쿠팡 식품 베스트 상품'),
   createCoupangDynamicAdvertisement('1013219', '쿠팡 생활용품 베스트 상품'),
+  createCoupangDynamicAdvertisement('1013228', '쿠팡 뷰티 베스트 상품'),
+  createCoupangDynamicAdvertisement('1013229', '쿠팡 헬스/건강식품 베스트 상품'),
+  createCoupangDynamicAdvertisement('1013218', '쿠팡 주방용품 베스트 상품'),
+  createCoupangDynamicAdvertisement('1013426', '쿠팡 반려동물용품 베스트 상품'),
+  createCoupangDynamicAdvertisement('1013427', '쿠팡 출산/유아동 베스트 상품'),
+  createCoupangDynamicAdvertisement('1013428', '쿠팡 홈인테리어 베스트 상품'),
+  createCoupangDynamicAdvertisement('1013429', '쿠팡 스포츠/레저 베스트 상품'),
+  createCoupangDynamicAdvertisement('1013220', '쿠팡 가전디지털 베스트 상품'),
 ] as const;
 
 const coupangSearchAdvertisements = [
@@ -165,6 +194,46 @@ export const ADVERTISEMENT_MEDIATION_CONFIG: AdvertisementMediationConfig = {
       adsenseUnitKey: ADVERTISEMENT_UNIT_KEY.article,
     },
     [ADVERTISEMENT_SLOT_KEY.articleSecond]: {
+      enabled: true,
+      placement: 'article',
+      adsenseUnitKey: ADVERTISEMENT_UNIT_KEY.article,
+    },
+    [ADVERTISEMENT_SLOT_KEY.articleThird]: {
+      enabled: true,
+      placement: 'article',
+      adsenseUnitKey: ADVERTISEMENT_UNIT_KEY.article,
+    },
+    [ADVERTISEMENT_SLOT_KEY.articleFourth]: {
+      enabled: true,
+      placement: 'article',
+      adsenseUnitKey: ADVERTISEMENT_UNIT_KEY.article,
+    },
+    [ADVERTISEMENT_SLOT_KEY.articleFifth]: {
+      enabled: true,
+      placement: 'article',
+      adsenseUnitKey: ADVERTISEMENT_UNIT_KEY.article,
+    },
+    [ADVERTISEMENT_SLOT_KEY.articleSixth]: {
+      enabled: true,
+      placement: 'article',
+      adsenseUnitKey: ADVERTISEMENT_UNIT_KEY.article,
+    },
+    [ADVERTISEMENT_SLOT_KEY.articleSeventh]: {
+      enabled: true,
+      placement: 'article',
+      adsenseUnitKey: ADVERTISEMENT_UNIT_KEY.article,
+    },
+    [ADVERTISEMENT_SLOT_KEY.articleEighth]: {
+      enabled: true,
+      placement: 'article',
+      adsenseUnitKey: ADVERTISEMENT_UNIT_KEY.article,
+    },
+    [ADVERTISEMENT_SLOT_KEY.articleNinth]: {
+      enabled: true,
+      placement: 'article',
+      adsenseUnitKey: ADVERTISEMENT_UNIT_KEY.article,
+    },
+    [ADVERTISEMENT_SLOT_KEY.articleTenth]: {
       enabled: true,
       placement: 'article',
       adsenseUnitKey: ADVERTISEMENT_UNIT_KEY.article,
@@ -214,8 +283,7 @@ export const getCoupangAdvertisementConfig = (
   fallbackIndex: number,
 ): CoupangAdvertisementConfig | null => {
   const advertisements = ADVERTISEMENT_MEDIATION_CONFIG.coupang[placement];
-  if (advertisements.length === 0) return null;
-  return advertisements[fallbackIndex % advertisements.length] ?? advertisements[0] ?? null;
+  return advertisements[fallbackIndex] ?? null;
 };
 
 export const isAdSenseConfigured =
