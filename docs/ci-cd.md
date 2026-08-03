@@ -36,6 +36,10 @@ Client SSG 빌드 시 Supabase에 접속하기 위한 시크릿. 키 목록은 [
 
 > IAM 정책 JSON은 [`secrets-reference.md` 섹션 9-1](secrets-reference.md#9-1-s3--cloudfront-배포-정책)을 참조한다.
 
+### 3-5. 광고 GitHub Variables
+
+Production 빌드는 `PUBLIC_AD_MEDIATION_ENABLED` repository variable만 주입한다. publisher client ID와 지면별 AdSense unit ID·layout key는 공개 식별자이므로 `shared/constants/ad.ts`에 고정한다. Production에서 플래그가 `false`이면 사이트 심사·Google CMP용 AdSense 기본 스크립트는 로드하지만 `adsbygoogle.push` 슬롯 경매 요청은 만들지 않고 쿠팡 배너를 표시한다. Local·Development 빌드는 운영 AdSense·쿠팡 대신 Google Publisher Tag(GPT) 공식 공개 샘플을 사용하며 AdSense 기본 스크립트도 로드하지 않는다. GPT 응답 없음과 로드 실패는 각각 `GPT TEST AD · NO FILL`, `GPT TEST AD · LOAD FAILED`로 구분한다. Production에서는 GPT 샘플과 기술 marker 분기를 항상 비활성화한다. 전환 절차는 [`todos/ADSENSE-TODO.md`](todos/ADSENSE-TODO.md)를 참조한다.
+
 ## 4. Workflow File Structure
 
 ```
@@ -123,6 +127,7 @@ Job: deploy
   run: pnpm --filter @eunminlog/client build
   env:
     SITE_URL: ${{ env.SITE_URL }}
+    PUBLIC_AD_MEDIATION_ENABLED: ${{ env.PUBLIC_AD_MEDIATION_ENABLED }}
 ```
 
 `pnpm --filter @eunminlog/client build`를 사용하는 이유:

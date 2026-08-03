@@ -1,7 +1,7 @@
-# Cookie Consent & AdSense NPA 연동 스펙
+# Cookie Consent & Google CMP 연동 스펙
 
 > 작성일: 2026-03-06
-> 상태: 구현 완료 (배너 UI + 쿠키 저장 + GA4 이벤트). AdSense NPA 연동은 AdSense 실제 연동 시점에 추가 작업 필요.
+> 상태: 자체 배너 UI + 쿠키 저장 + GA4 이벤트 구현 완료. AdSense 동의 신호는 Google 인증 CMP가 전담한다.
 > 관련 문서: [ui-specs.md](ui-specs.md), [ga4-tracking.md](ga4-tracking.md), [seo-strategy.md](seo-strategy.md), [theme.md](theme.md)
 
 ---
@@ -10,14 +10,14 @@
 
 ### 1.1 목적
 
-글로벌 개인정보보호 법규(GDPR, APPI, PIPL, PDPA 등)를 준수하면서 AdSense 광고 수익을 최적화한다. 쿠키 동의 상태에 따라 개인화 광고(PA)와 비개인화 광고(NPA)를 동적으로 전환한다.
+글로벌 개인정보보호 법규(GDPR, APPI, PIPL, PDPA 등)를 준수한다. CMP(Consent Management Platform)는 사용자의 광고·쿠키 동의를 수집해 광고 사업자에 유효한 동의 신호를 전달하는 동의 관리 플랫폼이다. 자체 배너는 사이트의 일반 쿠키 고지에 사용하며 AdSense 개인화·제한적 광고 판단은 AdSense 콘솔에서 활성화한 Google 인증 CMP와 TCF 신호를 기준으로 한다.
 
 ### 1.2 비즈니스 목표
 
 | 목표             | 설명                                                           |
 | ---------------- | -------------------------------------------------------------- |
 | 법규 준수        | GDPR(EU), APPI(일본), PIPL(중국), PDPA(태국) 등 주요 규제 대응 |
-| 광고 수익 최적화 | 동의한 사용자에게 개인화 광고를 노출하여 CPM/CTR 극대화        |
+| 광고 수익 최적화 | Google CMP의 유효한 동의 신호에 따라 광고 요청 처리            |
 | UX 최소 침해     | Sticky Footer Banner로 콘텐츠 가독성을 최대한 보존             |
 | 추적 가능성      | 수락/거부 비율을 GA4로 측정하여 배너 UX 개선에 활용            |
 
@@ -168,71 +168,34 @@ export function setConsentCookie(accepted: boolean): void {
 ```
 페이지 로드
   |
-  +-- locale이 CONSENT_REQUIRED_LOCALES에 포함?
-  |     |
-  |     +-- NO (ko, id, vi, zh-TW)
-  |     |     |
-  |     |     +-- 개인화 광고(PA) 로드
-  |     |     +-- 배너 미표시
-  |     |     +-- [끝]
-  |     |
-  |     +-- YES (en, ja, zh-CN, th)
-  |           |
-  |           +-- cookie_consent 쿠키 확인
-  |                 |
-  |                 +-- 값 없음 (undecided)
-  |                 |     |
-  |                 |     +-- 비개인화 광고(NPA) 로드
-  |                 |     +-- 배너 표시 (slide-up)
-  |                 |     +-- 사용자 선택 대기
-  |                 |           |
-  |                 |           +-- [수락 클릭]
-  |                 |           |     +-- cookie_consent=true 저장 (365일)
-  |                 |           |     +-- 개인화 광고(PA)로 전환
-  |                 |           |     +-- 배너 숨김 (slide-down)
-  |                 |           |     +-- GA4 이벤트 전송 (cookie_consent, action: accept)
-  |                 |           |
-  |                 |           +-- [거부 클릭]
-  |                 |                 +-- cookie_consent=false 저장 (1일)
-  |                 |                 +-- NPA 유지
-  |                 |                 +-- 배너 숨김 (slide-down)
-  |                 |                 +-- GA4 이벤트 전송 (cookie_consent, action: reject)
-  |                 |
-  |                 +-- 값 = "true" (accepted)
-  |                 |     |
-  |                 |     +-- 개인화 광고(PA) 로드
-  |                 |     +-- 배너 미표시
-  |                 |
-  |                 +-- 값 = "false" (rejected)
-  |                       |
-  |                       +-- 비개인화 광고(NPA) 로드
-  |                       +-- 배너 미표시
+  +-- 자체 cookie_consent 배너: 대상 locale의 일반 쿠키 고지와 GA4 이벤트 처리
+  |
+  +-- Production 빌드인가?
+        |
+        +-- NO: 운영 AdSense·쿠팡·CMP 요청 없음
+        |       모든 광고 지면은 GPT 공식 공개 샘플 사용
+        |       NO FILL/LOAD FAILED marker 유지(provider none, GA4 광고 이벤트 제외)
+        |
+        +-- YES: AdSense base tag와 Google 인증 CMP가 동작
+              |
+              +-- 운영 플래그가 true인가?
+                    |
+                    +-- NO: 광고 단위 요청 없음, 크기가 맞는 고정형 쿠팡 배너만 사용
+                    |
+                    +-- YES: 코드의 AdSense unit 설정이 유효한가?
+                          |
+                          +-- NO: 광고 단위 요청 없이 예약 영역 유지
+                          |
+                          +-- YES: Google이 동의 신호에 따라 PA/NPA/제한적 광고 처리
 ```
 
-### 4.2 AdSense NPA 파라미터
+### 4.2 AdSense 요청 파라미터
 
-AdSense의 비개인화 광고 제어는 `adsbygoogle.js` 로드 전에 전역 변수를 설정하는 방식으로 동작한다.
+`window.adsbygoogle.requestNonPersonalizedAds`와 locale별 자체 쿠키 분기는 사용하지 않는다. 자체 쿠키 값은 Google 인증 CMP의 동의 신호가 아니므로 AdSense 요청 모드를 제어하는 근거로 삼지 않는다.
 
-```javascript
-// NPA 모드 (비개인화 광고)
-window.adsbygoogle = window.adsbygoogle || [];
-window.adsbygoogle.requestNonPersonalizedAds = 1;
+### 4.3 동의 처리 전략
 
-// PA 모드 (개인화 광고) -- 기본값이므로 설정 불필요
-// window.adsbygoogle.requestNonPersonalizedAds = 0;
-```
-
-### 4.3 동의 후 PA 전환 전략
-
-사용자가 '수락'을 클릭한 시점에 이미 NPA로 로드된 광고를 PA로 즉시 전환하기는 어렵다. AdSense 슬롯은 한 번 로드되면 동일 세션에서 재요청이 불가하기 때문이다.
-
-**채택 전략**: 다음 페이지 이동 시 PA 적용
-
-1. '수락' 클릭 -> `cookie_consent=true` 쿠키 저장
-2. 현재 페이지의 광고는 NPA 유지 (이미 로드됨)
-3. 다음 페이지 이동(또는 새로고침) 시 쿠키를 읽어 PA로 로드
-
-이 전략은 사용자 경험에 거의 영향이 없다 -- 대부분의 사용자는 배너에 응답한 직후 콘텐츠를 계속 탐색하므로 자연스럽게 다음 페이지에서 PA가 적용된다.
+AdSense 태그는 Google CMP 메시지와 함께 동작하며 Google이 유효한 TCF 신호에 따라 개인화·비개인화·제한적 광고를 처리한다. 운영 전 EEA 위치에서 최초 방문, 동의, 거부 각각의 TC string과 광고 요청 모드를 Network로 확인한다.
 
 ---
 
@@ -240,28 +203,17 @@ window.adsbygoogle.requestNonPersonalizedAds = 1;
 
 ### 5.1 AdSense 로드 스크립트 (Layout.astro 변경)
 
-현재 AdSense는 플레이스홀더 상태이며 `adsbygoogle.js`가 로드되지 않은 상태이다. 실제 AdSense 연동 시 다음 스크립트를 `Layout.astro`의 `<head>`에 추가한다.
+`Layout.astro`는 Production에서 사이트 심사와 Google 인증 CMP를 위해 운영 플래그와 관계없이 AdSense base tag를 로드한다. Local·Development에서는 AdSense 태그를 만들지 않고 모든 지면에 GPT 공식 공개 샘플을 요청한다. 응답 없음은 `GPT TEST AD · NO FILL`, SDK·정의·요청 실패는 `GPT TEST AD · LOAD FAILED`로 표시하며 둘 다 provider `none`으로 GA4 광고 이벤트에서 제외한다. `PUBLIC_AD_MEDIATION_ENABLED`는 Production의 개별 광고 단위 `adsbygoogle.push`만 제어하고 unit ID·layout key는 코드 상수를 사용한다.
 
 ```html
-<!-- Layout.astro <head> 내부, gtag 스크립트 아래 -->
-<script is:inline define:vars={{ locale, consentRequired: isConsentRequired(locale) }}>
-  // 동의 필요 locale에서 동의 전/거부 상태이면 NPA 모드 설정
-  if (consentRequired) {
-    var match = document.cookie.split('; ').find(function(row) {
-      return row.startsWith('cookie_consent=');
-    });
-    var consentValue = match ? match.split('=')[1] : null;
-
-    if (consentValue !== 'true') {
-      window.adsbygoogle = window.adsbygoogle || [];
-      window.adsbygoogle.requestNonPersonalizedAds = 1;
-    }
-  }
-</script>
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
+<script
+  async
+  src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8569467907518315"
+  crossorigin="anonymous"
+></script>
 ```
 
-**핵심 포인트**: NPA 설정은 `adsbygoogle.js` 로드 **전에** 이루어져야 한다. `is:inline` + `define:vars`로 빌드 타임에 locale 정보를 주입하고, 런타임에 쿠키를 읽어 NPA 여부를 결정한다.
+AdSense 콘솔의 Google 인증 CMP 유럽 규정 메시지를 배포 전 활성 상태로 유지한다. 자체 `cookie_consent` 값으로 위 태그를 변형하지 않는다.
 
 ### 5.2 배너 컴포넌트 구조
 
@@ -326,10 +278,10 @@ interface Props {
 
 `isConsentRequired(locale)`는 빌드 타임에 평가되므로, 동의가 필요하지 않은 locale의 페이지에는 배너 HTML 자체가 포함되지 않는다. 이는 불필요한 DOM과 스크립트를 제거하여 번들 크기와 파싱 비용을 절약한다.
 
-| Locale                    | 배너 HTML 포함 | NPA 판별 스크립트 포함 |
-| ------------------------- | -------------- | ---------------------- |
-| `ko`, `id`, `vi`, `zh-TW` | X              | X                      |
-| `en`, `ja`, `zh-CN`, `th` | O              | O                      |
+| Locale                    | 자체 배너 HTML 포함 | AdSense 동의 제어 |
+| ------------------------- | ------------------- | ----------------- |
+| `ko`, `id`, `vi`, `zh-TW` | X                   | Google CMP        |
+| `en`, `ja`, `zh-CN`, `th` | O                   | Google CMP        |
 
 ---
 
@@ -489,37 +441,37 @@ type GtagEvent =
 
 ### 8.2 수정 대상 파일
 
-| 파일                              | 변경 내용                                                                                              |
-| --------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| `layouts/Layout.astro`            | (1) `CookieConsentBanner` import + 렌더링 추가, (2) AdSense 실제 연동 시 NPA 판별 인라인 스크립트 추가 |
-| `shared/lib/i18n/translations.ts` | `consent.*` 번역 키 5개 추가 (8 locale)                                                                |
-| `shared/lib/analytics/gtag.ts`    | `GtagEvent` 타입에 `'cookie_consent'` 추가                                                             |
+| 파일                              | 변경 내용                                                         |
+| --------------------------------- | ----------------------------------------------------------------- |
+| `layouts/Layout.astro`            | `CookieConsentBanner` 렌더링과 운영 플래그 기반 AdSense 태그 로드 |
+| `shared/lib/i18n/translations.ts` | `consent.*` 번역 키 5개 추가 (8 locale)                           |
+| `shared/lib/analytics/gtag.ts`    | `GtagEvent` 타입에 `'cookie_consent'` 추가                        |
 
 ### 8.3 수정 불필요 파일
 
 | 파일                                       | 사유                                                                                    |
 | ------------------------------------------ | --------------------------------------------------------------------------------------- |
-| `shared/components/ad/FixedAdsense.astro`  | AdSense 실제 연동은 별도 작업. 본 스펙은 쿠키 동의 + NPA 제어에만 관여                  |
+| `shared/components/ad/FixedAdsense.astro`  | Google CMP가 AdSense 동의 신호를 전담하므로 자체 쿠키 분기 불필요                       |
 | `shared/components/ad/InFeedAdsense.astro` | 동일 사유                                                                               |
-| `features/post-detail/lib/ads.ts`          | 동일 사유. In-Article 광고 삽입 로직은 NPA/PA 구분과 무관                               |
+| `features/post-detail/lib/ads.ts`          | 동일 사유                                                                               |
 | `features/privacy/content.ts`              | 개인정보처리방침 페이지는 이미 쿠키/AdSense 관련 내용 포함. 배너에서 링크만 연결하면 됨 |
 
 ---
 
 ## 9. 구현 순서 (권장)
 
-| 순서 | 작업                                    | 우선순위 | 관련 파일 | 비고                               |
-| ---- | --------------------------------------- | -------- | --------- | ---------------------------------- |
-| 1    | `shared/constants/consent.ts` 생성      | P0       | 신규      | 상수 정의                          |
-| 2    | `shared/lib/consent.ts` 생성            | P0       | 신규      | 유틸리티 함수                      |
-| 3    | `translations.ts`에 `consent.*` 키 추가 | P0       | 기존 수정 | 5키 x 8locale                      |
-| 4    | `CookieConsentBanner.astro` 생성        | P0       | 신규      | 배너 UI + 스크립트                 |
-| 5    | `Layout.astro`에 배너 삽입              | P0       | 기존 수정 | import + 렌더링                    |
-| 6    | `gtag.ts` 타입 확장                     | P1       | 기존 수정 | `cookie_consent` 추가              |
-| 7    | Layout.astro NPA 판별 스크립트 추가     | P1       | 기존 수정 | AdSense 실제 연동 시점에 함께 작업 |
-| 8    | GA4 관리 콘솔에 커스텀 디멘션 등록      | P1       | GA4 설정  | `action` 디멘션                    |
+| 순서 | 작업                                    | 우선순위 | 관련 파일    | 비고                  |
+| ---- | --------------------------------------- | -------- | ------------ | --------------------- |
+| 1    | `shared/constants/consent.ts` 생성      | P0       | 신규         | 상수 정의             |
+| 2    | `shared/lib/consent.ts` 생성            | P0       | 신규         | 유틸리티 함수         |
+| 3    | `translations.ts`에 `consent.*` 키 추가 | P0       | 기존 수정    | 5키 x 8locale         |
+| 4    | `CookieConsentBanner.astro` 생성        | P0       | 신규         | 배너 UI + 스크립트    |
+| 5    | `Layout.astro`에 배너 삽입              | P0       | 기존 수정    | import + 렌더링       |
+| 6    | `gtag.ts` 타입 확장                     | P1       | 기존 수정    | `cookie_consent` 추가 |
+| 7    | Google CMP 활성 및 EEA 시나리오 검증    | P1       | AdSense 콘솔 | 승인·운영 전 확인     |
+| 8    | GA4 관리 콘솔에 커스텀 디멘션 등록      | P1       | GA4 설정     | `action` 디멘션       |
 
-> 순서 7은 AdSense 실제 연동(`adsbygoogle.js` 로드) 작업과 동시에 진행한다. 현재 광고가 플레이스홀더 상태이므로, 배너 UI와 쿠키 저장 로직을 먼저 구현하고 AdSense 연동은 후속 작업으로 분리할 수 있다.
+> 자체 쿠키 값을 AdSense 요청 파라미터로 변환하지 않는다.
 
 ---
 
@@ -536,7 +488,7 @@ type GtagEvent =
 
 | 사용자 선택 | 쿠키 만료 | 설계 의도                                                                |
 | ----------- | --------- | ------------------------------------------------------------------------ |
-| 수락        | 365일     | 장기간 개인화 광고 유지. 연 1회 재동의 유도                              |
+| 수락        | 365일     | 자체 쿠키 고지 선택을 장기간 유지                                        |
 | 거부        | 1일       | 거부 의사를 단기간만 유지하여 다음 날 배너를 다시 표시. 광고 수익 최적화 |
 
 ---
@@ -547,7 +499,7 @@ type GtagEvent =
 2. **쿠키 저장 확인**: DevTools > Application > Cookies에서 `cookie_consent` 값과 만료일 확인
 3. **재방문 테스트**: 쿠키 저장 후 새 탭에서 동일 페이지 접속 시 배너 미표시 확인
 4. **GA4 DebugView**: 수락/거부 클릭 시 `cookie_consent` 이벤트가 `action: accept/reject`, `content_locale` 파라미터와 함께 전송되는지 확인
-5. **NPA 확인** (AdSense 실제 연동 후): Chrome DevTools Network 탭에서 AdSense 요청의 `npa=1` 파라미터 확인
+5. **Google CMP 확인**: EEA 최초 방문·동의·거부에서 TC string과 제한적/비개인화 요청 동작 확인
 6. **접근성**: 키보드로 배너 버튼 탐색 및 선택 가능 여부 확인
 
 ---

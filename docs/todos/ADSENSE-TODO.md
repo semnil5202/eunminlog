@@ -1,159 +1,110 @@
-# AdSense 지면 복원 가이드
+# AdSense·쿠팡 광고 운영 가이드
 
-> 애드센스 심사 완료 후 이 문서를 따라 실제 광고 코드를 삽입한다.
+> 상태: Native/Display 광고 단위 연결 및 Production 슬롯 요청 활성화 완료, AdSense 승인 대기
 
-## 현재 상태
+## 1. 운영 원칙
 
-모든 애드센스 지면이 **주석 처리**되어 있다. 각 위치에 `TODO: 애드센스 되돌리기`로 표시되어 있으며, `grep -r "애드센스 되돌리기" apps/client/src`로 전체 목록을 확인할 수 있다.
+- Local·Development 빌드는 모든 지면에 Google Publisher Tag(GPT) 공식 공개 샘플을 표시한다. 운영 AdSense·쿠팡 요청과 GA4 광고 이벤트는 만들지 않는다.
+- GPT가 정상 응답했지만 빈 슬롯이면 `GPT TEST AD · NO FILL`, SDK 로드·slot 정의·요청 실패면 `GPT TEST AD · LOAD FAILED`를 표시한다. 둘 다 provider `none`이다.
+- Production 빌드는 GPT 샘플 분기를 항상 비활성화한다.
+- Production의 `PUBLIC_AD_MEDIATION_ENABLED=false`는 사이트 심사용 AdSense base tag만 로드하고 광고 단위 요청은 만들지 않는다.
+- Production의 `PUBLIC_AD_MEDIATION_ENABLED=true`는 코드에 정의된 지면별 unit 설정으로 AdSense를 요청한다.
+- AdSense의 `data-ad-status="unfilled"`만 쿠팡으로 전환한다. `filled`와 `unfill-optimized`는 Google이 관리하는 AdSense 지면으로 유지한다.
+- 시간 초과, 스크립트 오류, 차단, 상태 미확인은 쿠팡으로 전환하지 않고 예약 영역을 비워 둔다.
+- 두 광고가 모두 없더라도 최소 예약 영역을 제거하지 않는다. Native creative의 가변 높이를 허용하며 field p75 CLS 0.1 이하를 가드레일로 삼는다.
+- `postTop`만 즉시 요청하며 나머지 슬롯은 `IntersectionObserver`의 300px 사전 영역에서 요청한다.
+- Display는 고정 크기를 유지하고 Native는 `min-height: 250px`만 예약한다. 광고를 고정 높이로 자르거나 `overflow-hidden`을 적용하지 않는다.
 
-## 광고 컴포넌트 (수정 없이 재활용 가능)
+### 1.1 환경별 실제 네트워크 동작
 
-| 컴포넌트        | 경로                                           | 역할                                |
-| --------------- | ---------------------------------------------- | ----------------------------------- |
-| `FixedAdsense`  | `src/shared/components/ad/FixedAdsense.astro`  | 고정 위치 광고 (post-top, sidebar)  |
-| `InFeedAdsense` | `src/shared/components/ad/InFeedAdsense.astro` | 인피드 광고 (피드 리스트, 사이드바) |
+| 환경/플래그          | AdSense 기본 스크립트                   | AdSense 슬롯 경매 요청           | 기본 표시     |
+| -------------------- | --------------------------------------- | -------------------------------- | ------------- |
+| Local·Development    | 없음                                    | 없음                             | GPT 공개 샘플 |
+| Production + `false` | 사이트 심사·Google CMP 연동을 위해 로드 | 없음 (`adsbygoogle.push` 미실행) | 쿠팡 배너     |
+| Production + `true`  | 로드                                    | 지면이 호출 범위에 들어올 때 1회 | AdSense 우선  |
 
-현재 이 컴포넌트들은 **가짜 플레이스홀더**(회색 박스 + 텍스트)를 렌더링한다. 심사 완료 후 내부 HTML을 실제 애드센스 `<ins>` 태그로 교체해야 한다.
+`PUBLIC_AD_MEDIATION_ENABLED=false`는 모든 Google 네트워크 요청을 차단하는 값이 아니라 실제 광고 슬롯 경매를 중지하는 승인 전 운영 모드다. Local·Development에서만 운영 AdSense 기본 스크립트까지 완전히 제외한다.
 
-## 광고 트래킹 (수정 없이 재활용 가능)
+### 1.2 쿠팡 fallback과 Google CMP
 
-| 파일                                     | 역할                                                                 |
-| ---------------------------------------- | -------------------------------------------------------------------- |
-| `src/shared/lib/analytics/ad-tracker.ts` | `data-ad-slot` 요소에 대한 impression/view/click 이벤트를 GA4로 전송 |
+- 쿠팡 fallback 검증은 Production 운영 플래그가 켜진 상태에서 AdSense가 `data-ad-status="unfilled"`를 반환했을 때 AdSense를 숨기고 쿠팡 배너 하나만 표시하는지 확인하는 테스트다. `unfill-optimized`는 Google 지면을 유지하며 오류, 차단, 상태 미확인에서는 쿠팡을 표시하지 않고 투명한 예약 공간을 유지한다.
+- CMP(Consent Management Platform)는 사용자의 광고·쿠키 동의를 수집하고 Google에 유효한 동의 신호를 전달하는 동의 관리 플랫폼이다. 자체 쿠키 고지 배너와 별개이며, EEA·영국·스위스 대상 Google 인증 CMP 메시지는 AdSense 콘솔에서 관리한다.
+- In-article은 Local·Development에서 GPT 샘플만 사용한다. Production `false`에서는 쿠팡만, Production `true`에서는 AdSense `filled`·`unfill-optimized` → AdSense, `unfilled` → 쿠팡, 오류·차단·미확정 → 투명한 최소 예약 영역 순서로 동작한다.
+- 빈 예약 공간은 AdSense 심사·크롤러 요구사항이 아니라 CLS와 상태 안전성을 위한 구현 선택이다. 현재 모든 지면의 `unfilled`에는 쿠팡 fallback이 있으므로 앱이 임의로 collapse하지 않는다. `unfill-optimized`는 Google 관리 지면을 그대로 표시하고 오류·차단·미확정은 최종 실패 신호가 아니므로 최소 공간을 유지한다.
+- 향후 쿠팡 fallback이 없는 지면을 추가할 때만 `data-ad-status="unfilled"`가 확정되고 슬롯이 viewport 밖인 경우에 한해 지면별 opt-in collapse를 적용한다. 광고 `<ins>`와 위치 메타데이터는 DOM에 유지한다.
 
-`data-ad-slot`, `data-ad-format`, `data-ad-position` 속성이 광고 요소에 있으면 자동으로 트래킹한다. 실제 애드센스 코드에도 이 속성들을 유지하면 된다.
+## 2. 지면과 예약 크기
 
-## 복원 작업 목록
+| 지면            | 형식              | 예약/크기                | 호출 시점 | slot ID      | 추가 설정                          |
+| --------------- | ----------------- | ------------------------ | --------- | ------------ | ---------------------------------- |
+| 게시글 상단     | Display           | Mobile 300×50, PC 468×60 | 즉시      | `5190868026` | `auto`                             |
+| 우측 사이드바   | Display           | PC 300×250               | 지연      | `3048186343` | `auto`                             |
+| 피드 index 1, 4 | Native In-feed    | `w-full min-h-[250px]`   | 지연      | `6392269057` | layout key `-6t+ed+2i-1n-4w`       |
+| 검색 index 1, 4 | Native In-feed    | `w-full min-h-[250px]`   | 지연      | `6392269057` | Feed와 같은 unit/layout key 재사용 |
+| 본문 H2 경계    | Native In-article | `w-full min-h-[250px]`   | 지연      | `5322463062` | `fluid`, full-width responsive     |
 
-### 1. 애드센스 스크립트 추가
+Feed/Search는 같은 Native In-feed unit을 반복 사용하고 Article은 같은 Native In-article unit을 최대 2곳에서 반복 사용한다. 각 DOM 노출의 logical slot/position은 고유하다. 쿠팡 fallback은 PostTop·Search에는 고정 이미지, Feed·Article·Sidebar에는 300×250 다이나믹 iframe을 사용한다. 인기글 104px 광고 지면은 사용하지 않는다.
 
-`src/layouts/Layout.astro`의 `<head>` 안에 애드센스 스크립트를 추가한다:
+피드와 검색 광고는 각 페이지 또는 검색 결과의 2번째·5번째 카드 직전(index 1, 4)에 삽입한다. 지면별 AdSense unit ID 1개를 해당 지면의 반복 DOM 슬롯에서 재사용하며, 논리 슬롯 ID와 위치 값은 노출마다 고유하게 유지한다.
 
-```html
-<script
-  async
-  src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX"
-  crossorigin="anonymous"
-></script>
-```
+### 2.1 쿠팡 fallback 지면 구성
 
-`ca-pub-XXXXXXXXXXXXXXXX`를 실제 퍼블리셔 ID로 교체한다.
+쿠팡 파트너스에서 300×250 다이나믹 iframe 지원을 확인하고 지면별 위젯을 생성했다. 동적 상품은 위치별로 다른 카테고리를 사용하지만 실제 노출 상품은 쿠팡 응답에 따라 달라진다.
 
-### 2. FixedAdsense 컴포넌트 수정
+| 지면              | fallback     | 카테고리           | 광고·widget ID       | 반응형 조건     |
+| ----------------- | ------------ | ------------------ | -------------------- | --------------- |
+| PostTop           | 고정 320×50  | 범용               | `1012831`            | PC·Mobile 공통  |
+| Feed index 1      | 동적 300×250 | 식품               | `1013216`            | PC·Mobile 공통  |
+| Feed index 4      | 동적 300×250 | 뷰티               | `1013228`            | PC·Mobile 공통  |
+| Article 1         | 동적 300×250 | 주방용품           | `1013218`            | PC·Mobile 공통  |
+| Article 2         | 동적 300×250 | 생활용품           | `1013219`            | PC·Mobile 공통  |
+| Search index 1, 4 | 고정 300×250 | 범용               | `1012833`            | PC·Mobile 공통  |
+| Sidebar           | 동적 300×250 | 헬스·건강식품      | `1013229`            | PC `lg` 이상만 |
 
-**파일**: `src/shared/components/ad/FixedAdsense.astro`
+- Production 운영 플래그가 켜진 경로에서는 AdSense가 `data-ad-status="unfilled"`를 확정한 뒤에만 쿠팡 이미지 URL 또는 동적 iframe `src`를 설정한다. `filled`, `unfill-optimized`, 오류, 차단, 상태 미확인에는 쿠팡 네트워크 요청을 만들지 않는다.
+- PostTop은 기존 즉시 로딩 정책을 유지한다. 나머지는 AdSense 지연 요청 범위와 연동하며, `unfilled` 확정 시 슬롯이 아직 호출 범위 밖이면 쿠팡도 계속 지연한다.
+- Mobile에서 숨겨지는 Sidebar는 광고 DOM 등록 여부와 관계없이 AdSense 경매, 쿠팡 이미지, 동적 위젯 스크립트·iframe 요청을 모두 만들지 않는다.
+- 고정 배너는 원본 비율과 명시 크기를 유지한다. 동적 위젯은 공급 코드가 요구하는 최소 크기를 예약하고 `overflow-hidden`으로 상품, CTA, 광고 표기를 자르지 않으며 field p75 CLS 0.1 이하를 검증한다.
+- 고정 쿠팡 fallback은 `role="complementary"`, 광고 접근성 라벨, `rel="sponsored noopener"`를 유지한다. 동적 iframe에도 광고 라벨과 제목을 제공하며, 실패 시 다른 쿠팡 광고로 연쇄 요청하지 않고 기존 예약 영역을 provider `none`으로 남긴다.
+- 같은 페이지의 Feed·Article 반복 슬롯은 서로 다른 광고 식별자를 사용한다. 다만 동적 위젯의 실제 상품 다양성은 쿠팡 응답에 따라 달라지므로 ID 분리만으로 서로 다른 상품 노출을 보장하지 않는다.
+- 다이나믹 iframe은 교차 출처이므로 앱의 DOM click listener로 내부 상품 클릭을 감지할 수 없다. 쿠팡 리포트의 클릭·수익을 기준으로 확인하고 GA4 `ad_click`은 고정 anchor fallback에만 기록한다.
+- 모바일 핵심 지면에는 반복 구매 가능성이 높은 식품·뷰티·주방용품·생활용품을 배치한다. 뷰티는 블로그 주제와의 직접 문맥성이 상대적으로 낮으므로 Feed 두 번째 위치에서 탐색적으로 측정하고, 식품과 주방용품을 더 앞선 위치에 유지한다.
+- Sidebar의 헬스·건강식품은 PC에서만 노출되므로 모바일 성과와 합산해 카테고리 우열을 판단하지 않는다. 기기·지면별 슬롯 조회 대비 쿠팡 클릭·주문·수익을 비교하며, 쿠팡 리포트가 widget ID 구분을 제공하지 않으면 생성 코드에서 지원하는 별도 추적 식별자를 사용한다.
+- 카테고리 실험 중에는 위치·크기·호출 조건을 고정한다. 총수익보다 슬롯 조회당 클릭률, 주문 전환율, 슬롯 조회 1,000회당 수익을 우선 비교하고 충분한 노출이 쌓이기 전에는 카테고리를 교체하지 않는다.
 
-가짜 플레이스홀더 `<div>...<span>Fixed Adsense</span></div>`를 실제 광고 코드로 교체한다:
+## 3. 코드 구성
 
-```astro
-{variant === 'post-top' && (
-  <div
-    class="mb-6 mx-auto w-[300px] h-[50px] lg:w-[468px] lg:h-[60px]"
-    data-ad-slot="post_top"
-    data-ad-format="fixed"
-    data-ad-position="post_top"
-  >
-    <ins class="adsbygoogle"
-      style="display:block"
-      data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
-      data-ad-slot="SLOT_ID_POST_TOP"
-      data-ad-format="auto"
-      data-full-width-responsive="true">
-    </ins>
-    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
-  </div>
-)}
+| 경로                                 | 역할                                          |
+| ------------------------------------ | --------------------------------------------- |
+| `shared/constants/ad.ts`             | 운영 플래그, AdSense ID, 쿠팡 배너 중앙 설정  |
+| `shared/components/ad/AdSlot.astro`  | 최소 예약 영역과 슬롯 메타데이터              |
+| `shared/lib/ad/gpt-sample.ts`        | Local·Development GPT 공개 샘플과 상태 marker |
+| `shared/lib/ad/mediation.ts`         | 단일 요청, 지연 로딩, `data-ad-status` 중재   |
+| `shared/lib/analytics/ad-tracker.ts` | provider별 노출·조회 및 쿠팡 클릭 추적        |
 
-{variant === 'sidebar' && (
-  <div
-    class="w-[300px] h-[250px]"
-    data-ad-slot="sidebar"
-    data-ad-format="fixed"
-    data-ad-position="right_sidebar"
-  >
-    <ins class="adsbygoogle"
-      style="display:block"
-      data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
-      data-ad-slot="SLOT_ID_SIDEBAR"
-      data-ad-format="auto"
-      data-full-width-responsive="true">
-    </ins>
-    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
-  </div>
-)}
-```
+## 4. Production GitHub Variable
 
-### 3. InFeedAdsense 컴포넌트 수정
+| 변수                          | 값/용도                              |
+| ----------------------------- | ------------------------------------ |
+| `PUBLIC_AD_MEDIATION_ENABLED` | 승인 전 `false`, 승인·검증 후 `true` |
 
-**파일**: `src/shared/components/ad/InFeedAdsense.astro`
+publisher client ID, unit ID, layout key는 공개 식별자이므로 코드에 고정한다. Repository Variable은 운영 활성 플래그만 관리한다. Local·Development의 GPT 공개 샘플은 운영 unit ID를 사용하지 않으며 Production에서는 production 빌드 가드로 제거한다.
 
-가짜 플레이스홀더를 실제 인피드 광고 코드로 교체한다:
+2026-08-03 사용자 승인에 따라 `PUBLIC_AD_MEDIATION_ENABLED=true`로 전환했다. 이 값은 다음 Production 빌드·배포부터 적용된다. 기존 `PUBLIC_ADSENSE_*_SLOT_ID` Repository Variables 5개는 workflow에서 더 이상 참조하지 않는 legacy 값이며, 외부 설정 정리 승인을 받은 뒤 삭제할 수 있다.
 
-```astro
-<div
-  class:list={["w-full", className]}
-  data-ad-slot={slotId}
-  data-ad-format="in_feed"
-  data-ad-position={position}
->
-  <ins class="adsbygoogle"
-    style="display:block"
-    data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
-    data-ad-slot="SLOT_ID_IN_FEED"
-    data-ad-format="fluid"
-    data-ad-layout-key="LAYOUT_KEY">
-  </ins>
-  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
-</div>
-```
+## 5. 미결 사항과 승인 후 체크리스트
 
-### 4. 주석 처리된 지면 복원
+현재 코드·광고 단위·문서 연결과 Local·Development GPT 미리보기는 완료했다. 2026-08-03 기준 Supabase REST 응답 `200`과 Client SSG 86페이지 전체 빌드를 확인했으므로 `fetchCategoryTree: TypeError: fetch failed`는 샌드박스 DNS 제한에 의한 검증 환경 오류로 종결한다.
 
-아래 5곳에서 TODO 주석을 해제한다:
+승인 전에는 긴 게시글 In-article, 검색 결과, 무한스크롤, Mobile/PC 반응형 GPT 미리보기와 다음 Production 배포의 슬롯 요청을 검증한다. CMP·실제 광고 상태·GA4·field CLS는 AdSense 승인과 Production 트래픽이 있어야 완료할 수 있다.
 
-| 파일                                                   | 위치   | 복원 내용                                                         |
-| ------------------------------------------------------ | ------ | ----------------------------------------------------------------- |
-| `src/layouts/PostLayout.astro` (frontmatter)           | ~60행  | `insertInArticleAds(post.content)` 호출 복원                      |
-| `src/layouts/PostLayout.astro` (template)              | ~98행  | `<FixedAdsense variant="post-top" />` 주석 해제                   |
-| `src/shared/components/layout/RightSidebar.astro`      | ~24행  | `<FixedAdsense variant="sidebar" />` 주석 해제                    |
-| `src/features/post-feed/components/PostCardGrid.astro` | ~48행  | `<InFeedAdsense ...>` 주석 해제, `return null;` 제거              |
-| `src/features/post-feed/components/PostCardGrid.astro` | ~179행 | 무한스크롤 `createAdSlot()` 호출 주석 해제 (2페이지+ 인피드 광고) |
-| `src/shared/components/layout/SponsoredPostList.astro` | ~34행  | `<InFeedAdsense class="h-[104px] my-4" />` 주석 해제              |
+1. 코드의 Display/Native unit ID와 In-feed layout key가 AdSense 콘솔 값과 일치하는지 확인한다.
+2. Google 인증 CMP 메시지가 게시 국가에서 정상 노출되는지 확인한다.
+3. Local·Development에서 GPT 공식 샘플 외 AdSense·쿠팡 네트워크 요청과 GA4 광고 이벤트가 0건인지 확인한다. GPT `NO FILL`과 `LOAD FAILED`가 구분되고 provider `none`인지 확인한다.
+4. 다음 Production 빌드·배포에서 활성 플래그가 반영되고 각 슬롯의 `adsbygoogle.push`가 정확히 1회인지 확인한다.
+5. `filled`, `unfilled`, `unfill-optimized`(provider `adsense`), 차단/오류 시나리오를 확인하고 무한스크롤·본문 스크롤을 포함한 field p75 CLS가 0.1 이하인지 측정한다.
+6. GA4에서 `ad_provider=adsense|coupang`을 분리하고, AdSense iframe 클릭 이벤트는 수집하지 않는지 확인한다.
 
-### 5. In-Article 광고 (본문 H2 섹션 경계)
+검색 페이지의 `noindex, follow`는 광고 운영과 무관하게 유지한다.
 
-**파일**: `src/features/post-detail/lib/ads.ts`
-
-`AD_PLACEHOLDER` 상수의 가짜 HTML을 실제 애드센스 In-Article 코드로 교체한다:
-
-```ts
-const AD_PLACEHOLDER = `\n\n<div class="not-prose w-full mx-auto my-8" role="complementary" aria-label="Advertisement"><ins class="adsbygoogle" style="display:block; text-align:center" data-ad-layout="in-article" data-ad-format="fluid" data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" data-ad-slot="SLOT_ID_IN_ARTICLE"></ins><script>(adsbygoogle = window.adsbygoogle || []).push({});</script></div>\n\n`;
-```
-
-이 함수(`insertInArticleAds`)는 H2 섹션 2번째와 마지막 앞에 광고를 삽입한다. 로직 수정은 불필요하다.
-
-## 광고 지면 요약
-
-| 지면                | 위치                    | 크기                      | 노출 조건                       |
-| ------------------- | ----------------------- | ------------------------- | ------------------------------- |
-| Post Top            | 포스트 상단 (본문 위)   | 모바일 300x50 / PC 468x60 | 모든 포스트 상세                |
-| Sidebar             | 우측 사이드바 상단      | 300x250                   | PC(lg+)만                       |
-| In-Feed             | 피드 리스트 index 1, 3  | 반응형 (aspect 7/3)       | 메인/카테고리/서브카테고리 피드 |
-| In-Feed (Sponsored) | 추천 포스트 리스트 중간 | 높이 104px                | 추천 포스트 2개 이하 아래       |
-| In-Article          | 포스트 본문 H2 경계     | 반응형 fluid              | H2가 3개 이상인 포스트          |
-
-## 교체해야 할 값
-
-- `ca-pub-XXXXXXXXXXXXXXXX` → 실제 퍼블리셔 ID
-- `SLOT_ID_POST_TOP` → 포스트 상단 광고 슬롯 ID
-- `SLOT_ID_SIDEBAR` → 사이드바 광고 슬롯 ID
-- `SLOT_ID_IN_FEED` → 인피드 광고 슬롯 ID
-- `SLOT_ID_IN_ARTICLE` → 본문 내 광고 슬롯 ID
-- `LAYOUT_KEY` → 인피드 광고 레이아웃 키 (애드센스 콘솔에서 확인)
-
-## noindex 제거
-
-애드센스 심사와 별도로, 공개 전환 시 검색 페이지의 noindex를 유지하고 나머지 페이지에 noindex가 없는지 확인한다:
-
-- `src/pages/search.astro` — `<meta name="robots" content="noindex, follow" />` 유지 (검색 페이지는 항상 noindex)
-- `src/pages/[locale]/search.astro` — 동일하게 유지
+Production에는 `NO FILL`·`LOAD FAILED` 등 기술 marker를 표시하지 않는다.

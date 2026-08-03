@@ -63,14 +63,14 @@ graph LR
 
 ## 외부 서비스
 
-| 서비스                | 용도              |
-| --------------------- | ----------------- |
-| Supabase (PostgreSQL) | 콘텐츠 DB         |
-| OpenAI GPT-5 Mini     | 다국어 번역       |
-| GitHub Actions        | CI/CD, SSG 빌드   |
-| AWS S3 + CloudFront   | 정적 호스팅 + CDN (Client SSG) |
+| 서비스                | 용도                                                                                             |
+| --------------------- | ------------------------------------------------------------------------------------------------ |
+| Supabase (PostgreSQL) | 콘텐츠 DB                                                                                        |
+| OpenAI GPT-5 Mini     | 다국어 번역                                                                                      |
+| GitHub Actions        | CI/CD, SSG 빌드                                                                                  |
+| AWS S3 + CloudFront   | 정적 호스팅 + CDN (Client SSG)                                                                   |
 | AWS S3 + CloudFront   | 미디어 CDN (이미지/폰트, 1년 캐시). 상세: [`secrets-reference.md`](secrets-reference.md) 섹션 12 |
-| @astrojs/sitemap       | Sitemap 자동 생성 (8 locale hreflang alternate, `/search/` 제외) |
+| @astrojs/sitemap      | Sitemap 자동 생성 (8 locale hreflang alternate, `/search/` 제외)                                 |
 
 ## Client App Directory Structure (`apps/client`)
 
@@ -106,8 +106,9 @@ src/
 ├── shared/
 │   ├── components/
 │   │   ├── ad/
-│   │   │   ├── FixedAdsense.astro          # 고정 위치 광고 (variant: 'post-top' | 'sidebar')
-│   │   │   └── InFeedAdsense.astro         # 인피드 광고 (class? prop)
+│   │   │   ├── AdSlot.astro                # provider 중재용 광고 슬롯 메타데이터
+│   │   │   ├── FixedAdsense.astro          # Display 광고 (variant: 'post-top' | 'sidebar')
+│   │   │   └── InFeedAdsense.astro         # Feed/Search Native In-feed 광고
 │   │   ├── layout/
 │   │   │   ├── Header.astro                # 반응형 헤더 (PC/Mobile CSS 토글)
 │   │   │   ├── PCHeader.astro              # PC 헤더 (LanguageSelector + getActiveSegments)

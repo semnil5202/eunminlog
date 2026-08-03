@@ -75,55 +75,62 @@ GA4의 자동 `page_view`는 `page_location`, `page_title`만 수집한다. 게�
 
 ---
 
-### 2.3 AdSense Tracking
+### 2.3 광고 provider Tracking
 
-애드센스 광고의 3단계 사용자 인터랙션을 추적한다.
+AdSense와 쿠팡을 `ad_provider`로 분리한다. 빈 예약 영역(`none`)과 Local·Development의 GPT 공식 샘플·테스트 marker는 이벤트를 보내지 않으며 AdSense iframe 클릭은 수집하지 않는다.
 
 #### 2.3.1 Ad Impression (`ad_impression`)
 
 광고 슬롯이 DOM에 렌더링되어 **뷰포트에 진입한 시점**에 발생한다. IntersectionObserver로 감지한다.
 
-| 파라미터      | 타입   | 예시             | 설명                |
-| ------------- | ------ | ---------------- | ------------------- |
-| `ad_slot`     | string | `"in_feed_1"`    | 광고 슬롯 식별자    |
-| `ad_format`   | string | `"in_feed"`      | 광고 포맷           |
-| `ad_position` | string | `"feed_index_1"` | 페이지 내 배치 위치 |
-| `page_type`   | string | `"list"`         | 현재 페이지 유형    |
+| 파라미터      | 타입   | 예시             | 설명                     |
+| ------------- | ------ | ---------------- | ------------------------ |
+| `ad_slot`     | string | `"feed_1"`       | 광고 슬롯 식별자         |
+| `ad_format`   | string | `"in_feed"`      | 광고 포맷                |
+| `ad_position` | string | `"feed_index_1"` | 페이지 내 배치 위치      |
+| `ad_provider` | string | `"adsense"`      | `adsense` 또는 `coupang` |
+| `page_type`   | string | `"list"`         | 현재 페이지 유형         |
 
 #### 2.3.2 Ad View (`ad_view` -- 커스텀 이벤트)
 
 광고가 뷰포트에서 **1초 이상 체류**한 시점에 발생한다. 스크롤 중 스쳐 지나간 광고와 실제 인지된 광고를 구분하기 위함이다.
 
-| 파라미터           | 타입   | 예시             | 설명                  |
-| ------------------ | ------ | ---------------- | --------------------- |
-| `ad_slot`          | string | `"in_feed_1"`    | 광고 슬롯 식별자      |
-| `ad_format`        | string | `"in_feed"`      | 광고 포맷             |
-| `ad_position`      | string | `"feed_index_1"` | 페이지 내 배치 위치   |
-| `page_type`        | string | `"list"`         | 현재 페이지 유형      |
-| `view_duration_ms` | number | `1000`           | 뷰포트 체류 시간 (ms) |
+| 파라미터           | 타입   | 예시             | 설명                     |
+| ------------------ | ------ | ---------------- | ------------------------ |
+| `ad_slot`          | string | `"feed_1"`       | 광고 슬롯 식별자         |
+| `ad_format`        | string | `"in_feed"`      | 광고 포맷                |
+| `ad_position`      | string | `"feed_index_1"` | 페이지 내 배치 위치      |
+| `ad_provider`      | string | `"coupang"`      | `adsense` 또는 `coupang` |
+| `page_type`        | string | `"list"`         | 현재 페이지 유형         |
+| `view_duration_ms` | number | `1000`           | 뷰포트 체류 시간 (ms)    |
 
 #### 2.3.3 Ad Click (`ad_click` -- 커스텀 이벤트)
 
-사용자가 광고 영역을 클릭한 시점에 발생한다.
+실제 쿠팡 고정 anchor 클릭에만 발생한다. AdSense 및 쿠팡 다이나믹 iframe 내부 클릭은 교차 출처 경계 때문에 신뢰성 있게 감지할 수 없어 추적하지 않는다.
 
 | 파라미터      | 타입   | 예시             | 설명                |
 | ------------- | ------ | ---------------- | ------------------- |
-| `ad_slot`     | string | `"in_feed_1"`    | 광고 슬롯 식별자    |
+| `ad_slot`     | string | `"feed_1"`       | 광고 슬롯 식별자    |
 | `ad_format`   | string | `"in_feed"`      | 광고 포맷           |
 | `ad_position` | string | `"feed_index_1"` | 페이지 내 배치 위치 |
+| `ad_provider` | string | `"coupang"`      | 항상 `coupang`      |
 | `page_type`   | string | `"list"`         | 현재 페이지 유형    |
 
 #### `ad_slot` / `ad_format` / `ad_position` 값 정의
 
-| 광고 유형              | `ad_slot`        | `ad_format`    | `ad_position`         |
-| ---------------------- | ---------------- | -------------- | --------------------- |
-| In-Feed (index 1)      | `"in_feed_1"`    | `"in_feed"`    | `"feed_index_1"`      |
-| In-Feed (index 3)      | `"in_feed_2"`    | `"in_feed"`    | `"feed_index_3"`      |
-| Fixed (게시글 상단)    | `"post_top"`     | `"fixed"`      | `"post_top"`          |
-| Fixed (사이드바)       | `"sidebar"`      | `"fixed"`      | `"right_sidebar"`     |
-| In-Article (본문 중간) | `"in_article_N"` | `"in_article"` | `"article_section_N"` |
+| 광고 유형        | `ad_slot`                        | `ad_format`    | `ad_position`                    |
+| ---------------- | -------------------------------- | -------------- | -------------------------------- |
+| Feed (index 1)   | `"feed_card_index_1"`            | `"in_feed"`    | `"feed_card_index_1"`            |
+| Feed (index 4)   | `"feed_card_index_4"`            | `"in_feed"`    | `"feed_card_index_4"`            |
+| Search (index 1) | `"search_render_N_card_index_1"` | `"in_feed"`    | `"search_render_N_card_index_1"` |
+| Search (index 4) | `"search_render_N_card_index_4"` | `"in_feed"`    | `"search_render_N_card_index_4"` |
+| 게시글 상단      | `"post_top"`                     | `"display"`    | `"post_top"`                     |
+| 사이드바         | `"sidebar"`                      | `"display"`    | `"right_sidebar"`                |
+| 본문 중간        | `"article_N"`                    | `"in_article"` | `"article_section_N"`            |
 
 > `N`은 본문 내 삽입 순서 (1, 2, ...).
+
+운영 AdSense unit ID는 placement별 1개를 반복 DOM 슬롯에서 재사용한다. Feed/Search는 같은 Native In-feed unit(`6392269057`), Article은 Native In-article unit(`5322463062`)을 사용한다. 위 `ad_slot`과 `ad_position`은 AdSense unit ID가 아니라 각 DOM 노출·검색 렌더·카드 위치를 구분하는 논리 식별자다.
 
 ---
 
@@ -336,125 +343,15 @@ export function initPostClickTracker(containerId: string): void {
 
 ### 3.5 AdSense Tracking 구현
 
-#### 전략: IntersectionObserver + Timer
+`Layout.astro`에서 `initAdMediation()` 다음 `initAdTracker(pageType)`을 한 번 실행한다. 정적 슬롯과 이후 생성되는 피드·검색 슬롯은 모두 `ad-slot-created` 이벤트로 같은 observer에 등록한다.
 
-광고 슬롯의 뷰포트 진입/체류를 IntersectionObserver로 감지한다. 이미 무한스크롤에서 동일 패턴을 사용 중이므로 팀에 익숙한 패턴이다.
-
-#### data 속성
-
-각 광고 컴포넌트(`InFeedAdsense.astro`, `FixedAdsense.astro`)에 data 속성을 추가한다.
-
-```html
-<!-- InFeedAdsense -->
-<div
-  class="..."
-  role="complementary"
-  data-ad-slot="in_feed_1"
-  data-ad-format="in_feed"
-  data-ad-position="feed_index_1"
->
-  <!-- FixedAdsense variant="post-top" -->
-  <div
-    class="..."
-    role="complementary"
-    data-ad-slot="post_top"
-    data-ad-format="fixed"
-    data-ad-position="post_top"
-  ></div>
-</div>
-```
-
-#### 트래킹 스크립트 (`ad-tracker.ts`)
-
-```typescript
-import { trackEvent } from './gtag';
-
-export function initAdTracker(pageType: string): void {
-  const adSlots = document.querySelectorAll<HTMLElement>('[data-ad-slot]');
-  if (adSlots.length === 0) return;
-
-  const impressed = new Set<string>();
-  const viewed = new Set<string>();
-  const viewTimers = new Map<string, number>();
-
-  // Impression + View 감지
-  const observer = new IntersectionObserver(
-    (entries) => {
-      for (const entry of entries) {
-        const el = entry.target as HTMLElement;
-        const slot = el.dataset.adSlot!;
-
-        if (entry.isIntersecting) {
-          // Impression (최초 1회)
-          if (!impressed.has(slot)) {
-            impressed.add(slot);
-            trackEvent('ad_impression', {
-              ad_slot: slot,
-              ad_format: el.dataset.adFormat!,
-              ad_position: el.dataset.adPosition!,
-              page_type: pageType,
-            });
-          }
-
-          // View 타이머 시작 (1초 체류)
-          if (!viewed.has(slot)) {
-            const timer = window.setTimeout(() => {
-              viewed.add(slot);
-              trackEvent('ad_view', {
-                ad_slot: slot,
-                ad_format: el.dataset.adFormat!,
-                ad_position: el.dataset.adPosition!,
-                page_type: pageType,
-                view_duration_ms: 1000,
-              });
-            }, 1000);
-            viewTimers.set(slot, timer);
-          }
-        } else {
-          // 뷰포트 이탈 시 타이머 취소
-          const timer = viewTimers.get(slot);
-          if (timer) {
-            window.clearTimeout(timer);
-            viewTimers.delete(slot);
-          }
-        }
-      }
-    },
-    { threshold: 0.5 },
-  );
-
-  adSlots.forEach((el) => observer.observe(el));
-
-  // Click 감지
-  adSlots.forEach((el) => {
-    el.addEventListener('click', () => {
-      trackEvent('ad_click', {
-        ad_slot: el.dataset.adSlot!,
-        ad_format: el.dataset.adFormat!,
-        ad_position: el.dataset.adPosition!,
-        page_type: pageType,
-      });
-    });
-  });
-}
-```
-
-#### 동적 광고 슬롯 처리
-
-무한스크롤로 추가 로드된 In-Feed 광고 슬롯도 트래킹해야 한다. `PostCardGrid.astro`의 기존 `loadNextPage()` 함수에서 동적으로 생성하는 광고 슬롯에도 data 속성을 부여하고, 생성 직후 observer에 등록한다.
-
-**방법**: `ad-tracker.ts`에서 `observeNewAdSlot(element)` 함수를 export하여, `createAdSlot()` 호출 후 바로 observer에 추가한다.
-
-```typescript
-// ad-tracker.ts (추가)
-let sharedObserver: IntersectionObserver | null = null;
-
-export function observeNewAdSlot(el: HTMLElement): void {
-  if (sharedObserver && el.dataset.adSlot) {
-    sharedObserver.observe(el);
-  }
-}
-```
+- 50% 이상 뷰포트 진입 시 현재 `data-ad-active-provider`의 `ad_impression`을 provider별 1회 기록한다.
+- 같은 provider가 1초 이상 유지되면 `ad_view`를 provider별 1회 기록한다.
+- `none` 상태는 기록하지 않으며 provider 전환 시 진행 중인 view 타이머를 취소한다.
+- 쿠팡 고정 anchor 내부의 실제 클릭만 `ad_click`으로 기록한다. AdSense 및 쿠팡 다이나믹 iframe에는 click listener를 두지 않으며 동적 상품 클릭은 쿠팡 리포트에서 확인한다.
+- 슬롯 상태는 element 기준 `WeakMap`/`Map`으로 관리해 동일 이름의 동적 슬롯이 서로 간섭하지 않게 한다.
+- `ad_position`은 실제 카드 위치를 사용한다. 피드·검색의 삽입 위치는 각 페이지·검색 결과의 index 1, 4(2번째·5번째 카드 직전)이며 고유 슬롯 counter와 분리한다.
+- `unfill-optimized`는 Google이 관리하는 AdSense 지면으로 추적한다. GPT 샘플의 `NO FILL`·`LOAD FAILED` marker는 provider `none`이므로 impression/view/click 이벤트를 만들지 않는다. Production에는 기술 marker를 렌더링하지 않는다.
 
 ---
 

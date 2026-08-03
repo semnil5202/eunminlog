@@ -81,6 +81,7 @@ Sitemap: {site}/sitemap-index.xml
 - **반응형 조합**: CSS `width: 100%; height: auto;` + HTML `width`/`height` 속성으로 비율 유지
 - **제한**: 캐러셀 이미지(`data-type="image-carousel"`)는 CSS 레이아웃용 `data-width`/`data-height`와 구조적 충돌로 이번 범위에서 제외
 - **하위 호환**: 기존 게시글(width/height 속성 없는 이미지)은 속성 부재 시 무시하므로 정상 동작
+- **광고 CLS 예산**: Native In-feed/In-article은 `min-height: 250px`를 선점하되 가변 creative 확장을 허용한다. 초기 로드뿐 아니라 무한스크롤·본문 스크롤을 포함한 field p75 CLS 0.1 이하를 운영 가드레일로 측정한다.
 
 ## i18n (다국어)
 
