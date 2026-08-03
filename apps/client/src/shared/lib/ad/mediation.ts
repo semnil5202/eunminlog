@@ -15,10 +15,19 @@ import {
 
 type AdSenseQueue = Array<Record<string, never>>;
 type AdSenseWindow = Window & { adsbygoogle?: AdSenseQueue };
+type RegisteredAdSenseSlot = {
+  clientId: string;
+  unit: AdSenseUnitConfig;
+  coupangElement: HTMLElement | null;
+};
 
 const registeredSlots = new WeakSet<HTMLElement>();
 const requestedSlots = new WeakSet<HTMLElement>();
 const statusObservers = new WeakMap<HTMLElement, MutationObserver>();
+const registeredAdSenseSlots = new WeakMap<HTMLElement, RegisteredAdSenseSlot>();
+const adSenseRequestAcceptanceObservers = new WeakMap<HTMLElement, MutationObserver>();
+const adSenseRequestQueue: HTMLElement[] = [];
+let activeAdSenseRequestContainer: HTMLElement | null = null;
 let lazySlotObserver: IntersectionObserver | null = null;
 let mediationInitialized = false;
 
@@ -196,26 +205,14 @@ const createAdSenseElement = (
   return adsenseElement;
 };
 
-const requestAdSense = (container: HTMLElement, adsenseElement: HTMLElement): void => {
-  if (requestedSlots.has(container)) return;
-  requestedSlots.add(container);
-  applyFixedAdSenseSize(container, adsenseElement);
-
-  try {
-    const adsenseWindow = window as AdSenseWindow;
-    (adsenseWindow.adsbygoogle = adsenseWindow.adsbygoogle || []).push({});
-  } catch {
-    showReservedSpace(
-      container,
-      adsenseElement,
-      container.querySelector<HTMLElement>("[data-ad-provider='coupang']"),
-    );
-  }
-};
-
 const disconnectAdSenseStatusObserver = (container: HTMLElement): void => {
   statusObservers.get(container)?.disconnect();
   statusObservers.delete(container);
+};
+
+const disconnectAdSenseRequestAcceptanceObserver = (container: HTMLElement): void => {
+  adSenseRequestAcceptanceObservers.get(container)?.disconnect();
+  adSenseRequestAcceptanceObservers.delete(container);
 };
 
 const observeAdSenseStatus = (
@@ -254,6 +251,60 @@ const observeAdSenseStatus = (
   statusObservers.set(container, statusObserver);
 };
 
+const processNextAdSenseRequest = (): void => {
+  if (activeAdSenseRequestContainer) return;
+
+  const container = adSenseRequestQueue.shift();
+  if (!container) return;
+  if (!registeredSlots.has(container) || !container.isConnected) {
+    requestedSlots.delete(container);
+    processNextAdSenseRequest();
+    return;
+  }
+
+  const registeredAdSenseSlot = registeredAdSenseSlots.get(container);
+  if (!registeredAdSenseSlot) {
+    requestedSlots.delete(container);
+    processNextAdSenseRequest();
+    return;
+  }
+
+  const { clientId, unit, coupangElement } = registeredAdSenseSlot;
+  const adsenseElement = createAdSenseElement(container, clientId, unit);
+  container.appendChild(adsenseElement);
+  observeAdSenseStatus(container, adsenseElement, coupangElement);
+  activeAdSenseRequestContainer = container;
+
+  const requestAcceptanceObserver = new MutationObserver(() => {
+    if (!adsenseElement.dataset.adsbygoogleStatus) return;
+    disconnectAdSenseRequestAcceptanceObserver(container);
+    activeAdSenseRequestContainer = null;
+    processNextAdSenseRequest();
+  });
+  requestAcceptanceObserver.observe(adsenseElement, {
+    attributes: true,
+    attributeFilter: ['data-adsbygoogle-status'],
+  });
+  adSenseRequestAcceptanceObservers.set(container, requestAcceptanceObserver);
+
+  try {
+    const adsenseWindow = window as AdSenseWindow;
+    (adsenseWindow.adsbygoogle = adsenseWindow.adsbygoogle || []).push({});
+  } catch {
+    disconnectAdSenseRequestAcceptanceObserver(container);
+    showReservedSpace(container, adsenseElement, coupangElement);
+    activeAdSenseRequestContainer = null;
+    processNextAdSenseRequest();
+  }
+};
+
+const enqueueAdSenseRequest = (container: HTMLElement): void => {
+  if (requestedSlots.has(container)) return;
+  requestedSlots.add(container);
+  adSenseRequestQueue.push(container);
+  processNextAdSenseRequest();
+};
+
 const getLazyAdvertisementObserver = (): IntersectionObserver => {
   if (lazySlotObserver) return lazySlotObserver;
 
@@ -266,12 +317,11 @@ const getLazyAdvertisementObserver = (): IntersectionObserver => {
           '[data-google-publisher-tag-sample]',
         );
         const placement = container.dataset.adPlacement as AdvertisementPlacement | undefined;
-        const adsenseElement = container.querySelector<HTMLElement>('.adsbygoogle');
         const coupangElement = container.querySelector<HTMLElement>("[data-ad-provider='coupang']");
         if (googlePublisherTagSampleElement && placement) {
           void displayGooglePublisherTagSample(container, googlePublisherTagSampleElement);
-        } else if (adsenseElement) {
-          requestAdSense(container, adsenseElement);
+        } else if (registeredAdSenseSlots.has(container)) {
+          enqueueAdSenseRequest(container);
         } else if (coupangElement) {
           showCoupang(container, null, coupangElement);
         }
@@ -338,13 +388,15 @@ export const registerAdSlot = (container: HTMLElement): void => {
   }
   if (!clientId || !adsenseUnit) return;
 
-  const adsenseElement = createAdSenseElement(container, clientId, adsenseUnit);
-  container.appendChild(adsenseElement);
   if (coupangElement) container.appendChild(coupangElement);
+  registeredAdSenseSlots.set(container, {
+    clientId,
+    unit: adsenseUnit,
+    coupangElement,
+  });
 
-  observeAdSenseStatus(container, adsenseElement, coupangElement);
   if (container.dataset.adLoadStrategy === 'immediate') {
-    requestAdSense(container, adsenseElement);
+    enqueueAdSenseRequest(container);
   } else {
     getLazyAdvertisementObserver().observe(container);
   }
@@ -353,7 +405,9 @@ export const registerAdSlot = (container: HTMLElement): void => {
 const cleanupAdvertisementSlot = (container: HTMLElement): void => {
   lazySlotObserver?.unobserve(container);
   disconnectAdSenseStatusObserver(container);
+  disconnectAdSenseRequestAcceptanceObserver(container);
   destroyGooglePublisherTagSample(container);
+  registeredAdSenseSlots.delete(container);
   registeredSlots.delete(container);
   requestedSlots.delete(container);
 };

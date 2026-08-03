@@ -50,7 +50,9 @@ Feed 설정은 보존하지만 현재 비활성이다. Search는 같은 Native I
 
 PostTop은 AdSense 콘솔에서 생성한 Mobile 300×50과 PC 468×60 고정형 unit을 `lg` breakpoint로 선택해 한 DOM 슬롯에서 하나만 요청한다. Sidebar도 별도 300×250 고정형 unit을 사용한다. 세 지면 모두 `data-ad-format="auto"`를 사용하지 않고 광고 요청 직전에 현재 예약 컨테이너의 픽셀 크기를 `<ins>` 인라인 스타일로 고정한다. 최소 높이도 동일하게 예약해 `unfilled` 전환 후 쿠팡 fallback에서 컨테이너가 접히지 않게 한다.
 
-기존 responsive display unit `5190868026`(PostTop), `3048186343`(Sidebar)은 코드에서 사용하지 않는다. AdSense 보고서 이력 보존 여부를 확인한 뒤 콘솔에서 보관 처리할 수 있다.
+AdSense `<ins>`는 슬롯 등록 시 미리 생성하지 않는다. 즉시 또는 lazy 진입한 슬롯을 공통 요청 큐에서 하나씩 처리하고, 대상 컨테이너에 `<ins>`를 추가한 직후 `push({})`를 호출한다. Google이 `data-adsbygoogle-status`로 요청 접수를 표시한 뒤 다음 슬롯을 처리해, 상세 페이지의 Article·Sidebar처럼 DOM 순서가 다른 여러 지면에서도 요청 대상이 어긋나지 않게 한다.
+
+기존 responsive display unit `5190868026`(PostTop), `3048186343`(Sidebar)은 코드에서 제거했으며 AdSense 콘솔에서도 보관 처리했다. 보고서 이력 확인이 필요하면 `보관된 단위 포함` 필터로 다시 조회할 수 있다.
 
 Feed는 AdSense 실제 노출을 확인한 뒤 필요한 슬롯 키의 `enabled`를 각각 `true`로 전환하면 2번째·5번째 카드 직전(index 1, 4)에 삽입한다. 그전에는 공백을 포함한 광고 DOM을 만들지 않는다. Search는 현재 동일 위치에서 활성화되어 Sidebar와 같이 최소 공간을 예약한 뒤 뷰포트 300px 전부터 AdSense를 요청하고 `unfilled`이면 쿠팡 다이나믹 위젯으로 전환한다.
 

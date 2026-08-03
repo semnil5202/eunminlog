@@ -455,6 +455,7 @@ Admin에서 `data-type="image-carousel"`로 마크업된 연속 이미지를 Cli
 - 고정 Display 지면은 width/height를 유지하고, Native 지면은 `min-height: 250px`를 유지하면서 creative 높이 확장을 허용한다. 래퍼에 `overflow-hidden`을 두지 않아 광고나 AdChoices를 자르지 않는다.
 - PostTop과 Sidebar는 `data-ad-format="auto"`를 사용하지 않는다. PostTop은 하나의 DOM 컨테이너에서 `lg` 미만이면 Mobile 고정 unit(`8174224200`, 300×50), `lg` 이상이면 PC 고정 unit(`1564849758`, 468×60) 하나만 선택해 요청한다. Sidebar는 PC 고정 unit(`3939731651`, 300×250)을 사용한다. 현재 컨테이너 크기를 광고 `<ins>` 인라인 픽셀 크기로 적용하고 같은 최소 높이를 예약해 AdSense 응답과 쿠팡 fallback 전환 중 CLS를 방지한다.
 - 게시글 상단만 즉시 호출한다. 활성 Sidebar·Article은 뷰포트 300px 전부터 한 번만 호출한다.
+- AdSense `<ins>`는 실제 호출 시점에만 대상 컨테이너에 생성한다. 공통 요청 큐가 `data-adsbygoogle-status` 접수를 확인한 뒤 다음 슬롯을 처리해 여러 lazy 지면의 전역 `push({})` 호출이 DOM상 다른 광고 단위에 연결되지 않게 한다.
 
 ### AdSense 컴포넌트
 
