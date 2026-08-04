@@ -7,6 +7,10 @@ import {
   type CoupangAdvertisementConfig,
 } from '@/shared/constants/ad';
 import {
+  COUPANG_LARGE_SCREEN_MEDIA_QUERY,
+  selectCoupangDynamicAdvertisementVariant,
+} from './coupang-variant';
+import {
   createGooglePublisherTagSampleElement,
   displayGooglePublisherTagSample,
   destroyGooglePublisherTagSample,
@@ -95,14 +99,35 @@ const showCoupang = (
   const coupangFrame = coupangElement.querySelector<HTMLIFrameElement>(
     'iframe[data-advertisement-source]',
   );
-  const frameSource = coupangFrame?.dataset.advertisementSource;
+  const frameSource = coupangFrame
+    ? selectCoupangDynamicAdvertisementVariant(
+        {
+          sourceUrl: coupangFrame.dataset.advertisementSource ?? '',
+          width: Number.parseInt(coupangFrame.dataset.advertisementWidth ?? '0', 10),
+          height: Number.parseInt(coupangFrame.dataset.advertisementHeight ?? '0', 10),
+        },
+        coupangFrame.dataset.largeScreenAdvertisementSource
+          ? {
+              sourceUrl: coupangFrame.dataset.largeScreenAdvertisementSource,
+              width: Number.parseInt(coupangFrame.dataset.largeScreenAdvertisementWidth ?? '0', 10),
+              height: Number.parseInt(
+                coupangFrame.dataset.largeScreenAdvertisementHeight ?? '0',
+                10,
+              ),
+            }
+          : undefined,
+        window.matchMedia(COUPANG_LARGE_SCREEN_MEDIA_QUERY).matches,
+      )
+    : null;
   if (coupangFrame && frameSource && !coupangFrame.hasAttribute('src')) {
     coupangFrame.addEventListener(
       'error',
       () => showReservedSpace(container, adsenseElement, coupangElement),
       { once: true },
     );
-    coupangFrame.src = frameSource;
+    coupangFrame.width = String(frameSource.width);
+    coupangFrame.height = String(frameSource.height);
+    coupangFrame.src = frameSource.sourceUrl;
   }
   coupangElement.hidden = false;
   announceProviderChange(container, 'coupang');
@@ -125,10 +150,19 @@ const createCoupangElement = (
     label.textContent = advertisementLabel;
 
     const frame = document.createElement('iframe');
-    frame.dataset.advertisementSource = coupangConfig.sourceUrl;
+    frame.dataset.advertisementSource = coupangConfig.defaultVariant.sourceUrl;
+    frame.dataset.advertisementWidth = String(coupangConfig.defaultVariant.width);
+    frame.dataset.advertisementHeight = String(coupangConfig.defaultVariant.height);
+    if (coupangConfig.largeScreenVariant) {
+      frame.dataset.largeScreenAdvertisementSource = coupangConfig.largeScreenVariant.sourceUrl;
+      frame.dataset.largeScreenAdvertisementWidth = String(coupangConfig.largeScreenVariant.width);
+      frame.dataset.largeScreenAdvertisementHeight = String(
+        coupangConfig.largeScreenVariant.height,
+      );
+    }
     frame.title = coupangConfig.title;
-    frame.width = String(coupangConfig.width);
-    frame.height = String(coupangConfig.height);
+    frame.width = String(coupangConfig.defaultVariant.width);
+    frame.height = String(coupangConfig.defaultVariant.height);
     frame.loading = 'lazy';
     frame.referrerPolicy = coupangConfig.referrerPolicy;
     frame.scrolling = 'no';

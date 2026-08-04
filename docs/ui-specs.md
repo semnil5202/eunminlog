@@ -450,9 +450,9 @@ Admin에서 `data-type="image-carousel"`로 마크업된 연속 이미지를 Cli
 - GPT가 정상 응답했지만 빈 슬롯이면 `GPT TEST AD · NO FILL`, SDK 로드·slot 정의·요청 실패면 `GPT TEST AD · LOAD FAILED`를 표시한다. 둘 다 provider `none`이며 Production에는 기술 marker를 표시하지 않는다.
 - Production에서 운영 플래그가 꺼져 있으면 사이트 심사용 AdSense base tag만 로드하고 광고 단위 요청은 만들지 않는다. 지면별 고정 이미지 또는 다이나믹 iframe fallback만 표시한다.
 - Production에서 운영 플래그가 켜져 있으면 AdSense의 `data-ad-status="unfilled"`에서만 해당 지면을 쿠팡으로 전환한다. `filled`와 `unfill-optimized`는 Google이 관리하는 AdSense 지면으로 유지한다.
-- 다이나믹 iframe `src`는 쿠팡 전환 시점에만 설정하고 Local·Development 및 모바일의 숨겨진 Sidebar에서는 요청하지 않는다.
+- 다이나믹 iframe `src`는 쿠팡 전환 시점에만 설정한다. Article·Search와 비활성 Feed 설정은 `xl` 미만에서 300×250, `xl` 이상에서 680×140 위젯 하나를 최초 전환 시점의 화면 폭으로 선택하며 resize 중 교체 요청하지 않는다. Sidebar는 300×250을 유지하고 Local·Development 및 모바일의 숨겨진 Sidebar에서는 요청하지 않는다.
 - 활성 상태의 ID 누락, 오류, 차단, 상태 미확인은 fallback 없이 예약 영역을 비워 둔다.
-- 고정 Display 지면은 width/height를 유지하고, Native 지면은 `min-height: 250px`를 유지하면서 creative 높이 확장을 허용한다. 래퍼에 `overflow-hidden`을 두지 않아 광고나 AdChoices를 자르지 않는다.
+- 고정 Display 지면은 width/height를 유지하고, Native 지면은 `min-height: 250px`를 유지하면서 AdSense creative 높이 확장을 허용한다. PC 쿠팡 fallback이 680×140이어도 예약 높이는 줄이지 않으며 래퍼에 `overflow-hidden`을 두지 않아 광고나 AdChoices를 자르지 않는다.
 - PostTop과 Sidebar는 `data-ad-format="auto"`를 사용하지 않는다. PostTop은 하나의 DOM 컨테이너에서 `lg` 미만이면 Mobile 고정 unit(`8174224200`, 300×50), `lg` 이상이면 PC 고정 unit(`1564849758`, 468×60) 하나만 선택해 요청한다. Sidebar는 PC 고정 unit(`3939731651`, 300×250)을 사용한다. 현재 컨테이너 크기를 광고 `<ins>` 인라인 픽셀 크기로 적용하고 같은 최소 높이를 예약해 AdSense 응답과 쿠팡 fallback 전환 중 CLS를 방지한다.
 - 게시글 상단만 즉시 호출한다. 활성 Sidebar·Article은 뷰포트 300px 전부터 한 번만 호출한다.
 - AdSense `<ins>`는 실제 호출 시점에만 대상 컨테이너에 생성한다. 공통 요청 큐가 `data-adsbygoogle-status` 접수를 확인한 뒤 다음 슬롯을 처리해 여러 lazy 지면의 전역 `push({})` 호출이 DOM상 다른 광고 단위에 연결되지 않게 한다.
@@ -481,6 +481,7 @@ Admin에서 `data-type="image-carousel"`로 마크업된 연속 이미지를 Cli
 - 각 H2의 직전 섹션에서 태그·HTML 속성·이미지 `alt`를 제외한 표시 텍스트가 250자 이상이거나 `<img>`가 1개 이상이면 해당 H2 앞에 삽입
 - 연속 H2처럼 직전 섹션이 비어 있으면 생략하고, 적격 후보를 문서 순서대로 최대 10개까지만 삽입
 - `article.1`부터 `article.10`까지 같은 In-article unit을 재사용하며, 쿠팡 fallback은 같은 순번의 위젯을 1:1로 사용한다.
+- 쿠팡 fallback 크기 분기는 AdSense 설정과 독립적이다. AdSense는 Mobile·PC 모두 `fluid` In-article을 유지하고 쿠팡만 `xl` 미만 300×250, `xl` 이상 680×140을 선택한다.
 - 삽입 로직: `features/post-detail/lib/ads.ts` -- `insertInArticleAds()`
 
 ---
@@ -497,7 +498,7 @@ Admin에서 `data-type="image-carousel"`로 마크업된 연속 이미지를 Cli
 
 1. **검색 입력**: 돋보기 아이콘(좌측) + `<input type="search">`. Enter(form submit)로 검색 실행, 실시간 필터링 아님.
 2. **추천 키워드**: place_name + 카테고리 라벨을 빌드 타임에 추출. 클릭 가능한 chip 형태.
-3. **검색 결과**: 결과 건수 표시 + PostCard 리스트. 현재 Native In-feed는 비활성이고 승인 후 result index 1, 4에 삽입.
+3. **검색 결과**: 결과 건수 표시 + PostCard 리스트. Native In-feed를 result index 1, 4에 삽입하며 `unfilled`일 때 반응형 쿠팡 다이나믹 위젯으로 전환.
 4. **결과 없음**: 아이콘 + 안내 메시지 + 힌트 텍스트
 5. **URL**: `history.replaceState`로 `?q=` 파라미터 반영 (페이지 새로고침 없음)
 
