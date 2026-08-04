@@ -117,12 +117,12 @@ const articleAdSenseUnit: AdSenseUnitConfig = {
 
 const coupangPostTopAdvertisement: CoupangAdvertisementConfig = {
   kind: 'fixed',
-  href: 'https://link.coupang.com/a/fRDp3noMFM',
+  href: 'https://link.coupang.com/a/fXfpeQKCAe',
   imageUrl:
-    'https://ads-partners.coupang.com/banners/1012831?trackingCode=AF7680558&subId=&traceId=V0-301-879dd1202e5c73b2-I1012831&w=320&h=50',
-  imageAlt: '쿠팡 카테고리 배너',
-  width: 320,
-  height: 50,
+    'https://ads-partners.coupang.com/banners/1013691?trackingCode=AF7680558&subId=&traceId=V0-301-7e6e8eb8ddfa1bfb-I1013691&w=728&h=90',
+  imageAlt: '쿠팡 로켓 반려동물용품 카테고리 배너',
+  width: 728,
+  height: 90,
   referrerPolicy: 'unsafe-url',
 };
 

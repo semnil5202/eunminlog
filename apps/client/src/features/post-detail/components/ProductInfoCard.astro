@@ -19,7 +19,7 @@ interface Props {
   pricePrefixes?: string[] | null;
   translatedPricePrefixes?: string[] | null;
   description: string;
-  isCoupangPartners: boolean;
+  isPaidPlacement: boolean;
   locale: Locale;
 }
 
@@ -37,14 +37,16 @@ const {
   pricePrefixes,
   translatedPricePrefixes,
   description,
-  isCoupangPartners,
+  isPaidPlacement,
   locale,
 } = Astro.props;
 
 const summaryLabel = t("post.summary", locale);
 const summaryLines = description ? description.split('\n').filter(Boolean) : [];
 const targetCurrency = t("place.targetCurrency", locale);
-const purchaseLinkRel = isCoupangPartners ? "sponsored noopener noreferrer" : "noopener noreferrer";
+const purchaseLinkRel = isPaidPlacement
+  ? "sponsored noopener noreferrer"
+  : "noopener noreferrer";
 
 const displayProductNames = translatedProductNames ?? productNames;
 const displayPurchaseSources = translatedPurchaseSources ?? purchaseSources;

@@ -1,4 +1,4 @@
-/** 쿠팡 파트너스 글의 외부 링크에 rel="sponsored"를 주입한다. */
+/** 협찬·쿠팡 파트너스 글의 외부 링크에 rel="sponsored"를 주입한다. */
 
 const INTERNAL_HOST = 'eunminlog.site';
 

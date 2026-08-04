@@ -18,7 +18,8 @@ interface Props {
 const { locale, path, showLabel = false, isMultilingual = true } = Astro.props;
 ---
 
-<details class="relative group">
+<div class="contents" data-nosnippet>
+  <details class="relative group">
   <summary
     class:list={[
       showLabel
@@ -103,7 +104,8 @@ const { locale, path, showLabel = false, isMultilingual = true } = Astro.props;
       })
     }
   </div>
-</details>
+  </details>
+</div>
 
 <script>
   import { onClickOutside } from "@/shared/lib/click-outside";

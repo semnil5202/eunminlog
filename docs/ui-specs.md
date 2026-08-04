@@ -275,14 +275,14 @@
 #### `ProductInfoCard.astro`
 
 - **위치**: `features/post-detail/components/ProductInfoCard.astro`
-- Props: `categoryLabel`, `subCategoryLabel`, `productNames` (`string[]`), `translatedProductNames?`, `purchaseSources` (`string[]`), `translatedPurchaseSources?`, `purchaseLinks` (`string[]`), `prices?` (`number[]`), `pricePrefixes?` (`string[]`), `translatedPricePrefixes?`, `description`, `isCoupangPartners`, `locale`
+- Props: `categoryLabel`, `subCategoryLabel`, `productNames` (`string[]`), `translatedProductNames?`, `purchaseSources` (`string[]`), `translatedPurchaseSources?`, `purchaseLinks` (`string[]`), `prices?` (`number[]`), `pricePrefixes?` (`string[]`), `translatedPricePrefixes?`, `description`, `isPaidPlacement`, `locale`
 - Schema.org `Product` 마이크로데이터 포함
 - `border-radius` 없음 (`bg-gray-50 border border-gray-200 p-5 mb-6`)
 - `<dl>` 기반 키-값 레이아웃: 카테고리, 제품별(제품명/구매처/가격), 3줄 요약
 - **제품 2개 이상**: PC 2열 그리드 (`grid-cols-1 lg:grid-cols-2`), `border-t border-b border-gray-200 py-3` 구분선
 - **제품 1개**: 심플 레이아웃 (그리드/보더 없음)
 - 제품명: `translatedProductNames` 우선 표시, `font-semibold`, `itemprop="name"`
-- 구매처: 텍스트 + 구매 링크가 있으면 외부 링크 아이콘. `isCoupangPartners`이면 `rel="sponsored noopener noreferrer"`, 아니면 `rel="noopener noreferrer"`
+- 구매처: 텍스트 + 구매 링크가 있으면 외부 링크 아이콘. 협찬 또는 쿠팡 파트너스 글이면 `rel="sponsored noopener noreferrer"`, 아니면 `rel="noopener noreferrer"`
 - 가격 표시: `pricePrefix + price.toLocaleString() + '원'` 조합 (한국 원화 단위 명시)
 - dt 라벨 폭: 제품 섹션 내부 `w-16` (64px), 카테고리/요약 `w-20` (80px)
 - 필드 라벨 i18n: `place.category`, `product.name`, `product.source`, `place.price`, `post.summary`
@@ -454,6 +454,7 @@ Admin에서 `data-type="image-carousel"`로 마크업된 연속 이미지를 Cli
 - 활성 상태의 ID 누락, 오류, 차단, 상태 미확인은 fallback 없이 예약 영역을 비워 둔다.
 - 고정 Display 지면은 width/height를 유지하고, Native 지면은 `min-height: 250px`를 유지하면서 AdSense creative 높이 확장을 허용한다. PC 쿠팡 fallback이 680×140이어도 예약 높이는 줄이지 않으며 래퍼에 `overflow-hidden`을 두지 않아 광고나 AdChoices를 자르지 않는다.
 - PostTop과 Sidebar는 `data-ad-format="auto"`를 사용하지 않는다. PostTop은 하나의 DOM 컨테이너에서 `lg` 미만이면 Mobile 고정 unit(`8174224200`, 300×50), `lg` 이상이면 PC 고정 unit(`1564849758`, 468×60) 하나만 선택해 요청한다. Sidebar는 PC 고정 unit(`3939731651`, 300×250)을 사용한다. 현재 컨테이너 크기를 광고 `<ins>` 인라인 픽셀 크기로 적용하고 같은 최소 높이를 예약해 AdSense 응답과 쿠팡 fallback 전환 중 CLS를 방지한다.
+- PostTop 쿠팡 fallback은 로켓 반려동물용품 고정 배너(`1013691`, 원본 728×90)를 사용한다. Mobile 300×50·PC 468×60 예약 컨테이너 안에서 원본 비율을 보존해 축소하고 중앙 정렬하며 AdSense unit 크기는 변경하지 않는다.
 - 게시글 상단만 즉시 호출한다. 활성 Sidebar·Article은 뷰포트 300px 전부터 한 번만 호출한다.
 - AdSense `<ins>`는 실제 호출 시점에만 대상 컨테이너에 생성한다. 공통 요청 큐가 `data-adsbygoogle-status` 접수를 확인한 뒤 다음 슬롯을 처리해 여러 lazy 지면의 전역 `push({})` 호출이 DOM상 다른 광고 단위에 연결되지 않게 한다.
 

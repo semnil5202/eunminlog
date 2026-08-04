@@ -71,7 +71,10 @@ const contentWithAlts = post.image_alts?.length
 const contentOptimized = injectOptimizedUrls(contentWithAlts);
 const contentWithBookmarks = await injectLocalizedBookmarks(contentOptimized, locale);
 const contentWithTables = wrapTablesWithScrollContainer(contentWithBookmarks);
-const contentWithSponsored = post.is_coupang_partners ? injectSponsoredRel(contentWithTables) : contentWithTables;
+const isPaidPlacement = post.is_sponsored || post.is_coupang_partners;
+const contentWithSponsored = isPaidPlacement
+  ? injectSponsoredRel(contentWithTables)
+  : contentWithTables;
 const contentWithAds = injectZoomIcons(contentWithSponsored);
 const blogPosting = buildBlogPostingSchema(post, canonical);
 const sponsoredLabel = t("post.sponsoredBadge", locale);
@@ -206,7 +209,7 @@ const gaPageParams = {
               pricePrefixes={post.price_prefix}
               translatedPricePrefixes={post.translated_price_prefix}
               description={post.description}
-              isCoupangPartners={post.is_coupang_partners}
+              isPaidPlacement={isPaidPlacement}
               locale={locale}
             />
           )}
