@@ -1,5 +1,3 @@
-import type { CoupangDynamicAdvertisementVariant } from '@/shared/lib/ad/coupang-variant';
-
 export type AdvertisementPlacement = 'feed' | 'search' | 'article' | 'postTop' | 'sidebar';
 
 export const ADVERTISEMENT_SLOT_KEY = {
@@ -61,8 +59,9 @@ export type CoupangFixedAdvertisementConfig = {
 export type CoupangDynamicAdvertisementConfig = {
   kind: 'dynamic';
   title: string;
-  defaultVariant: CoupangDynamicAdvertisementVariant;
-  largeScreenVariant?: CoupangDynamicAdvertisementVariant;
+  sourceUrl: string;
+  width: number;
+  height: number;
   referrerPolicy: 'unsafe-url';
 };
 
@@ -126,55 +125,45 @@ const coupangPostTopAdvertisement: CoupangAdvertisementConfig = {
   referrerPolicy: 'unsafe-url',
 };
 
-const createCoupangDynamicAdvertisementVariant = (
-  widgetIdentifier: string,
-  width: number,
-  height: number,
-): CoupangDynamicAdvertisementVariant => ({
-  sourceUrl: `https://ads-partners.coupang.com/widgets.html?id=${widgetIdentifier}&template=carousel&trackingCode=AF7680558&subId=&width=${width}&height=${height}&tsource=`,
-  width,
-  height,
-});
-
 const createCoupangDynamicAdvertisement = (
   widgetIdentifier: string,
   title: string,
-  largeScreenWidgetIdentifier?: string,
+  width: number,
+  height: number,
 ): CoupangDynamicAdvertisementConfig => ({
   kind: 'dynamic',
   title,
-  defaultVariant: createCoupangDynamicAdvertisementVariant(widgetIdentifier, 300, 250),
-  largeScreenVariant: largeScreenWidgetIdentifier
-    ? createCoupangDynamicAdvertisementVariant(largeScreenWidgetIdentifier, 680, 140)
-    : undefined,
+  sourceUrl: `https://ads-partners.coupang.com/widgets.html?id=${widgetIdentifier}&template=carousel&trackingCode=AF7680558&subId=&width=${width}&height=${height}&tsource=`,
+  width,
+  height,
   referrerPolicy: 'unsafe-url',
 });
 
 const coupangFeedAdvertisements = [
-  createCoupangDynamicAdvertisement('1013218', '쿠팡 주방용품 베스트 상품', '1014089'),
-  createCoupangDynamicAdvertisement('1013216', '쿠팡 식품 베스트 상품', '1014085'),
+  createCoupangDynamicAdvertisement('1014211', '쿠팡 주방용품 베스트 상품', 680, 280),
+  createCoupangDynamicAdvertisement('1014212', '쿠팡 식품 베스트 상품', 680, 280),
 ] as const;
 
 const coupangArticleAdvertisements = [
-  createCoupangDynamicAdvertisement('1013216', '쿠팡 식품 베스트 상품', '1014085'),
-  createCoupangDynamicAdvertisement('1013219', '쿠팡 생활용품 베스트 상품', '1014086'),
-  createCoupangDynamicAdvertisement('1013228', '쿠팡 뷰티 베스트 상품', '1014087'),
-  createCoupangDynamicAdvertisement('1013229', '쿠팡 헬스/건강식품 베스트 상품', '1014088'),
-  createCoupangDynamicAdvertisement('1013218', '쿠팡 주방용품 베스트 상품', '1014089'),
-  createCoupangDynamicAdvertisement('1013426', '쿠팡 반려동물용품 베스트 상품', '1014090'),
-  createCoupangDynamicAdvertisement('1013427', '쿠팡 출산/유아동 베스트 상품', '1014091'),
-  createCoupangDynamicAdvertisement('1013428', '쿠팡 홈인테리어 베스트 상품', '1014092'),
-  createCoupangDynamicAdvertisement('1013429', '쿠팡 스포츠/레저 베스트 상품', '1014093'),
-  createCoupangDynamicAdvertisement('1013220', '쿠팡 가전디지털 베스트 상품', '1014094'),
+  createCoupangDynamicAdvertisement('1014243', '쿠팡 관심 기반 추천 상품', 680, 140),
+  createCoupangDynamicAdvertisement('1013229', '쿠팡 헬스/건강식품 베스트 상품', 300, 250),
+  createCoupangDynamicAdvertisement('1014085', '쿠팡 식품 베스트 상품', 680, 140),
+  createCoupangDynamicAdvertisement('1014244', '쿠팡 관심 기반 추천 상품', 300, 250),
+  createCoupangDynamicAdvertisement('1014089', '쿠팡 주방용품 베스트 상품', 680, 140),
+  createCoupangDynamicAdvertisement('1013219', '쿠팡 생활용품 베스트 상품', 300, 250),
+  createCoupangDynamicAdvertisement('1014087', '쿠팡 뷰티 베스트 상품', 680, 140),
+  createCoupangDynamicAdvertisement('1013428', '쿠팡 홈인테리어 베스트 상품', 300, 250),
+  createCoupangDynamicAdvertisement('1014091', '쿠팡 출산/유아동 베스트 상품', 680, 140),
+  createCoupangDynamicAdvertisement('1013426', '쿠팡 반려동물용품 베스트 상품', 300, 250),
 ] as const;
 
 const coupangSearchAdvertisements = [
-  createCoupangDynamicAdvertisement('1013216', '쿠팡 식품 베스트 상품', '1014085'),
-  createCoupangDynamicAdvertisement('1013228', '쿠팡 뷰티 베스트 상품', '1014087'),
+  createCoupangDynamicAdvertisement('1014212', '쿠팡 식품 베스트 상품', 680, 280),
+  createCoupangDynamicAdvertisement('1014213', '쿠팡 뷰티 베스트 상품', 680, 280),
 ] as const;
 
 const coupangSidebarAdvertisements = [
-  createCoupangDynamicAdvertisement('1013229', '쿠팡 헬스/건강식품 베스트 상품'),
+  createCoupangDynamicAdvertisement('1013229', '쿠팡 헬스/건강식품 베스트 상품', 300, 250),
 ] as const;
 
 export const ADVERTISEMENT_MEDIATION_CONFIG: AdvertisementMediationConfig = {

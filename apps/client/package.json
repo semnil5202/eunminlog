@@ -9,7 +9,7 @@
     "build": "astro build",
     "preview": "astro preview",
     "lint": "eslint .",
-    "test": "node --test src/features/post-detail/lib/article-ad-placement.test.mjs src/shared/lib/ad/coupang-variant.test.mjs"
+    "test": "node --test src/features/post-detail/lib/article-ad-placement.test.mjs"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.0",
