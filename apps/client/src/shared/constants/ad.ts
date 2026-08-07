@@ -148,7 +148,7 @@ const coupangArticleAdvertisements = [
   createCoupangDynamicAdvertisement('1014243', '쿠팡 관심 기반 추천 상품', 680, 140),
   createCoupangDynamicAdvertisement('1013229', '쿠팡 헬스/건강식품 베스트 상품', 300, 250),
   createCoupangDynamicAdvertisement('1014085', '쿠팡 식품 베스트 상품', 680, 140),
-  createCoupangDynamicAdvertisement('1014244', '쿠팡 관심 기반 추천 상품', 300, 250),
+  createCoupangDynamicAdvertisement('1013229', '쿠팡 헬스/건강식품 베스트 상품', 300, 250),
   createCoupangDynamicAdvertisement('1014089', '쿠팡 주방용품 베스트 상품', 680, 140),
   createCoupangDynamicAdvertisement('1013219', '쿠팡 생활용품 베스트 상품', 300, 250),
   createCoupangDynamicAdvertisement('1014087', '쿠팡 뷰티 베스트 상품', 680, 140),
@@ -163,7 +163,7 @@ const coupangSearchAdvertisements = [
 ] as const;
 
 const coupangSidebarAdvertisements = [
-  createCoupangDynamicAdvertisement('1013229', '쿠팡 헬스/건강식품 베스트 상품', 300, 250),
+  createCoupangDynamicAdvertisement('1014244', '쿠팡 관심 기반 추천 상품', 300, 250),
 ] as const;
 
 export const ADVERTISEMENT_MEDIATION_CONFIG: AdvertisementMediationConfig = {
