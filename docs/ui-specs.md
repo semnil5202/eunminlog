@@ -483,7 +483,7 @@ Admin에서 `data-type="image-carousel"`로 마크업된 연속 이미지를 Cli
 - 연속 H2처럼 직전 섹션이 비어 있으면 생략하고, 적격 후보를 문서 순서대로 최대 10개까지만 삽입
 - `article.1`부터 `article.10`까지 같은 In-article unit을 재사용하며, 쿠팡 fallback은 같은 순번의 위젯을 1:1로 사용한다.
 - 쿠팡 fallback 크기는 AdSense 설정과 독립적이다. AdSense는 Mobile·PC 모두 `fluid` In-article을 유지하고, 쿠팡은 두 화면 모두 홀수 순번 5개에 680×140·짝수 순번 5개에 300×250을 교차 배치한다.
-- 쿠팡 Article 1과 Sidebar는 고객 관심 기반 추천을 사용하고 Article 2~10은 카테고리 베스트를 사용해 위치별 성과를 비교한다.
+- 쿠팡 Article 1·4와 Sidebar는 각각 별도 고객 관심 기반 추천 위젯을 사용하고 나머지는 카테고리 베스트를 사용해 위치별 성과를 비교한다.
 - 삽입 로직: `features/post-detail/lib/ads.ts` -- `insertInArticleAds()`
 
 ---
