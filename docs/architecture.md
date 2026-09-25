@@ -192,6 +192,7 @@ src/
 │   │   ├── containers/TiptapEditorContainer.tsx
 │   │   ├── hooks/useTiptapEditor.ts
 │   │   ├── hooks/useMediaIntake.ts            # 파일별 업로드 세션·캐러셀 생성/추가
+│   │   ├── hooks/useImageTransfer.ts          # 본문 파일 paste/drop·드롭 위치·내부 드래그 구분
 │   │   ├── configs/                           # Tiptap 확장 설정
 │   │   ├── lib/carousel-node-view.ts          # 캐러셀별 스크롤·리사이즈·명시적 조작
 │   │   ├── lib/media-insertion.ts             # 비동기 삽입 대상 추적·일괄 삽입

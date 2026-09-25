@@ -1,8 +1,9 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import type { Editor } from '@tiptap/core';
 import { closeHistory } from '@tiptap/pm/history';
+import { toast } from 'sonner';
 
 import {
   uploadImageFile,
@@ -26,23 +27,70 @@ type IntakeSession = {
   items: MediaIntakeItem[];
   busy: boolean;
   error?: string;
+  toastId?: string | number;
 };
 
 /** 본문 이미지 입력과 캐러셀 생성·추가의 업로드 세션을 관리한다. */
 export function useMediaIntake(editor: Editor | null) {
+  const notificationId = useId();
   const active = useRef<IntakeSession | null>(null);
   const [session, setSession] = useState<IntakeSession | null>(null);
 
   const refresh = (current: IntakeSession) => {
-    if (active.current === current) setSession({ ...current, items: [...current.items] });
+    if (active.current !== current) return;
+    setSession({ ...current, items: [...current.items] });
+    const options = { id: notificationId, duration: Infinity, dismissible: false };
+    const cancel = (event: { preventDefault: () => void }) => {
+      event.preventDefault();
+      if (active.current === current) close();
+    };
+    if (current.busy && current.mode === 'images') {
+      current.toastId = toast.loading('이미지 업로드 중...', {
+        ...options,
+        description: undefined,
+        cancel: undefined,
+        action: { label: '업로드 취소', onClick: cancel },
+      });
+    } else if (current.error || current.items.some((item) => item.error)) {
+      toast.error('이미지 업로드에 실패했습니다.', {
+        ...options,
+        duration: 6000,
+        dismissible: true,
+        description:
+          current.error ??
+          current.items
+            .filter((item) => item.error)
+            .map((item) => `${item.file.name}: ${item.error}`)
+            .join(' · '),
+        action: undefined,
+        cancel: undefined,
+      });
+      current.toastId = undefined;
+      dispose();
+      setSession(null);
+    }
   };
   const dispose = useCallback(() => {
     const current = active.current;
     active.current = null;
+    if (current?.toastId !== undefined) toast.dismiss(current.toastId);
     current?.target.dispose();
     current?.items.forEach((item) => URL.revokeObjectURL(item.preview));
+    if (current) current.items = [];
   }, []);
   const close = () => {
+    const current = active.current;
+    if (current?.toastId !== undefined) {
+      toast.message('이미지 작업을 종료했습니다.', {
+        id: current.toastId,
+        duration: 2000,
+        dismissible: true,
+        description: undefined,
+        action: undefined,
+        cancel: undefined,
+      });
+      current.toastId = undefined;
+    }
     dispose();
     setSession(null);
   };
@@ -116,11 +164,16 @@ export function useMediaIntake(editor: Editor | null) {
         item.error = undefined;
         refresh(current);
         try {
-          item.result = await uploadImageFile(item.file);
+          const result = await uploadImageFile(item.file);
+          if (active.current !== current) return;
+          item.result = result;
           item.status = 'success';
         } catch (error) {
+          if (active.current !== current) return;
           item.status = 'error';
           item.error = error instanceof Error ? error.message : '이미지 업로드에 실패했습니다.';
+          current.busy = false;
+          pending.length = 0;
         }
         refresh(current);
       }
@@ -158,12 +211,29 @@ export function useMediaIntake(editor: Editor | null) {
         applied = insertMedia(editor, pos, results, current.mode);
       }
       if (!applied) throw new Error('이미지를 삽입하지 못했습니다. 위치를 다시 선택해주세요.');
+      current.toastId = undefined;
       close();
+      if (current.mode === 'images')
+        toast.success('이미지 업로드 완료', {
+          id: notificationId,
+          duration: 4000,
+          dismissible: true,
+          description: undefined,
+          action: undefined,
+          cancel: undefined,
+        });
       editor.commands.focus();
     } catch (error) {
       current.error = error instanceof Error ? error.message : '이미지를 삽입하지 못했습니다.';
       refresh(current);
     }
   };
-  return { session, open, close, addFiles, remove, submit };
+  const uploadFiles = (files: File[], pos?: number) => {
+    if (active.current || !editor || editor.isDestroyed || !files.length) return false;
+    open('images', pos);
+    addFiles(files);
+    void submit();
+    return true;
+  };
+  return { session, open, close, addFiles, remove, submit, uploadFiles };
 }

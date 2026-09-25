@@ -65,7 +65,7 @@ describe('변환 전 원본 검증', () => {
     expect(validateImageFile(file)).toBeNull();
     expect(validateImageFile(new File(['heic'], 'photo.HEIC'))).toBeNull();
   });
-  it('빈 파일, 비이미지, 20MB 초과 파일을 거절한다', () => {
+  it('빈 파일, 비이미지, 50MB 초과 파일을 거절한다', () => {
     expect(validateImageFile(new File([], 'empty.png', { type: 'image/png' }))).toContain(
       '빈 파일',
     );
@@ -73,7 +73,7 @@ describe('변환 전 원본 검증', () => {
       validateImageFile(new File(['pdf'], 'photo.pdf', { type: 'application/pdf' })),
     ).toContain('지원하지 않는');
     const large = new File(['image'], 'large.png', { type: 'image/png' });
-    Object.defineProperty(large, 'size', { value: 20 * 1024 * 1024 + 1 });
-    expect(validateImageFile(large)).toContain('20MB');
+    Object.defineProperty(large, 'size', { value: 50 * 1024 * 1024 + 1 });
+    expect(validateImageFile(large)).toContain('50MB');
   });
 });

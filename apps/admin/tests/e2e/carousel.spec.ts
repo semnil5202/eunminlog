@@ -113,27 +113,26 @@ test('명시적으로 생성하고 1장을 추가한 다음 단일 Undo로 추�
   expect(errors).toEqual([]);
 });
 
-test('부분 실패는 본문을 변경하지 않고 성공 파일 재업로드 없이 선택 순서를 보존한다', async ({
-  page,
-}) => {
-  await openCarousel(page, ['slow.png', 'fail.png']);
+test('생성 실패는 세션을 해제하고 새 캐러셀에 늦은 응답을 섞지 않는다', async ({ page }) => {
+  await openCarousel(page, ['very-slow.png', 'fail.png', 'queued.png']);
   await page.getByRole('button', { name: '생성', exact: true }).click();
-  await expect(page.getByRole('button', { name: '실패한 파일 재시도' })).toBeVisible();
+  await expect(page.getByText('이미지 업로드에 실패했습니다.', { exact: true })).toBeVisible();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
   await expect(page.locator('.image-carousel-container')).toHaveCount(0);
-  await page.getByRole('button', { name: '실패한 파일 재시도' }).click();
+  await createCarousel(page);
+  await page.waitForTimeout(2100);
   await expect(page.locator('.image-carousel-slide')).toHaveCount(2);
   const calls = await page.evaluate(
     () => (window as unknown as { uploadCalls: string[] }).uploadCalls,
   );
-  expect(calls.filter((name) => name === 'slow.png')).toHaveLength(1);
-  expect(calls.filter((name) => name === 'fail.png')).toHaveLength(2);
+  expect(calls).toEqual(['very-slow.png', 'fail.png', 'one.png', 'two.png']);
   const sources = await page
     .locator('.image-carousel-slide img')
     .evaluateAll((images) =>
       images.map((image) => decodeURIComponent((image as HTMLImageElement).src)),
     );
-  expect(sources[0]).toContain('slow.png');
-  expect(sources[1]).toContain('fail.png');
+  expect(sources[0]).toContain('one.png');
+  expect(sources[1]).toContain('two.png');
 });
 
 test('업로드 중 취소 후 늦은 응답은 본문에 삽입되지 않는다', async ({ page }) => {
@@ -194,20 +193,67 @@ test('키보드로 캐러셀 버튼을 실행하고 HTML 모드에서는 업로�
   await expect(page.getByRole('button', { name: '이미지 추가', exact: true })).toBeDisabled();
 });
 
-test('실패 파일을 제거하면 성공 결과를 재사용하고 중복 생성 요청을 막는다', async ({ page }) => {
-  await openCarousel(page, ['slow-one.png', 'two.png', 'fail.png']);
-  const submit = page.getByRole('button', { name: '생성', exact: true });
+test('추가 실패는 기존 캐러셀을 보존하고 바로 새 파일을 추가할 수 있다', async ({ page }) => {
+  await createCarousel(page);
+  const before = await page.getByTestId('saved-html').textContent();
+  const add = page
+    .locator('.image-carousel-container')
+    .getByRole('button', { name: '이미지 추가', exact: true });
+  await add.click();
+  await page
+    .getByLabel('이미지 파일 선택')
+    .setInputFiles(files('very-slow.png', 'fail.png', 'queued.png'));
+  const submit = page.getByRole('button', { name: '추가', exact: true });
   await submit.evaluate((element: HTMLButtonElement) => {
     element.click();
     element.click();
   });
-  await expect(page.getByRole('button', { name: '실패한 파일 재시도' })).toBeVisible();
-  await page.getByRole('button', { name: 'fail.png 제거' }).click();
-  await page.getByRole('button', { name: '생성', exact: true }).click();
-  await expect(page.locator('.image-carousel-slide')).toHaveCount(2);
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  expect(await page.getByTestId('saved-html').textContent()).toBe(before);
+  await add.click();
+  await page.getByLabel('이미지 파일 선택').setInputFiles(files('replacement.png'));
+  await page.getByRole('button', { name: '추가', exact: true }).click();
+  await expect(page.locator('.image-carousel-slide')).toHaveCount(3);
+  await page.waitForTimeout(2100);
+  await expect(page.locator('.image-carousel-slide')).toHaveCount(3);
   expect(
     await page.evaluate(() => (window as unknown as { uploadCalls: string[] }).uploadCalls),
-  ).toEqual(['slow-one.png', 'two.png', 'fail.png']);
+  ).toEqual(['one.png', 'two.png', 'very-slow.png', 'fail.png', 'replacement.png']);
+});
+
+test('캐러셀 생성과 추가는 장당 50MB를 허용하고 초과 시 세션을 해제한다', async ({ page }) => {
+  const selectSized = async (sizes: number[]) => {
+    await page.getByLabel('이미지 파일 선택').evaluate((element: HTMLInputElement, sizes) => {
+      const data = new DataTransfer();
+      sizes.forEach((size, index) => {
+        data.items.add(
+          new File([new Uint8Array(size)], `sized-${index}.png`, { type: 'image/png' }),
+        );
+      });
+      element.files = data.files;
+      element.dispatchEvent(new Event('change', { bubbles: true }));
+    }, sizes);
+  };
+  const limit = 50 * 1024 * 1024;
+  await page.getByRole('button', { name: '캐러셀 만들기', exact: true }).click();
+  await selectSized([limit + 1]);
+  await expect(page.getByText(/파일 크기가 50MB를 초과합니다/)).toBeVisible();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await page.getByRole('button', { name: '캐러셀 만들기', exact: true }).click();
+  await selectSized([limit, 1]);
+  await page.getByRole('button', { name: '생성', exact: true }).click();
+  await expect(page.locator('.image-carousel-slide')).toHaveCount(2);
+  const add = page
+    .locator('.image-carousel-container')
+    .getByRole('button', { name: '이미지 추가', exact: true });
+  await add.click();
+  await selectSized([limit + 1]);
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(page.locator('.image-carousel-slide')).toHaveCount(2);
+  await add.click();
+  await selectSized([limit]);
+  await page.getByRole('button', { name: '추가', exact: true }).click();
+  await expect(page.locator('.image-carousel-slide')).toHaveCount(3);
 });
 
 test('저장된 캐러셀 HTML은 실제 Client 스크립트로 표시되고 라이트박스로 확대된다', async ({
@@ -347,15 +393,16 @@ test('캐러셀 편집 범위와 공통 파란 점선 UI는 저장 HTML에 포�
   expect(frameBounds.height).toBeCloseTo(imageBounds.height, 1);
 });
 
-test('일반 이미지는 확인 없이 업로드하고 실패 재시도와 취소를 인라인으로 제공한다', async ({
-  page,
-}) => {
+test('일반 이미지 실패는 알림 후 즉시 해제되어 다른 파일을 업로드할 수 있다', async ({ page }) => {
   const chooser = page.waitForEvent('filechooser');
   await page.getByRole('button', { name: '이미지 추가', exact: true }).click();
   await (await chooser).setFiles(files('fail.png'));
-  await expect(page.getByRole('button', { name: '다시 시도', exact: true })).toBeVisible();
+  await expect(page.getByText('이미지 업로드에 실패했습니다.', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: '다시 시도', exact: true })).toHaveCount(0);
   await expect(page.getByRole('dialog')).toHaveCount(0);
-  await page.getByRole('button', { name: '다시 시도', exact: true }).click();
+  const replacement = page.waitForEvent('filechooser');
+  await page.getByRole('button', { name: '이미지 추가', exact: true }).click();
+  await (await replacement).setFiles(files('replacement.png'));
   await expect(page.locator('.tiptap img:not(.ProseMirror-separator)')).toHaveCount(1);
   const before = await page.getByTestId('saved-html').textContent();
   const nextChooser = page.waitForEvent('filechooser');

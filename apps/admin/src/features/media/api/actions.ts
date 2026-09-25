@@ -26,7 +26,7 @@ export async function getPresignedUrl(
   }
 
   if (fileSize > MAX_FILE_SIZE) {
-    throw new Error('파일 크기가 20MB를 초과합니다.');
+    throw new Error('파일 크기가 50MB를 초과합니다.');
   }
 
   const uploadContentType = contentType || 'image/webp';

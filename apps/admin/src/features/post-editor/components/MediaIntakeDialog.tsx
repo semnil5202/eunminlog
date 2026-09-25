@@ -41,7 +41,6 @@ export function MediaIntakeDialog({
   const inputRef = useRef<HTMLInputElement>(null);
   const hintId = useId();
   const minimum = mode === 'carousel' ? 2 : 1;
-  const hasFailures = items.some((item) => item.status === 'error');
   const selectionHint =
     items.length < minimum
       ? items.length === 0
@@ -149,18 +148,15 @@ export function MediaIntakeDialog({
               </li>
             ))}
           </ol>
-          <p className="mt-4 text-xs text-muted-foreground">파일당 최대 20MB</p>
+          <p className="mt-4 text-xs text-muted-foreground">
+            파일당 최대 50MB · 여러 파일 합산 제한 없음
+          </p>
           <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
             GIF는 정지 이미지로 변환됩니다. HEIC는 미리보기가 표시되지 않을 수 있습니다.
           </p>
           {error && (
             <p role="alert" className="mt-3 text-sm text-destructive">
               {error}
-            </p>
-          )}
-          {hasFailures && !busy && (
-            <p role="alert" className="mt-3 text-sm">
-              실패한 파일을 제거하거나 다시 시도해주세요. 완료된 파일은 다시 업로드하지 않습니다.
             </p>
           )}
         </div>
@@ -174,13 +170,7 @@ export function MediaIntakeDialog({
             disabled={busy || items.length < minimum || !!error}
             className="min-h-11 min-w-24"
           >
-            {busy
-              ? '업로드 중…'
-              : hasFailures
-                ? '실패한 파일 재시도'
-                : mode === 'carousel'
-                  ? '생성'
-                  : '추가'}
+            {busy ? '업로드 중…' : mode === 'carousel' ? '생성' : '추가'}
           </Button>
         </DialogFooter>
       </DialogContent>
