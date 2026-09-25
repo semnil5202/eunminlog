@@ -3,6 +3,8 @@ node_modules
 
 # testing
 coverage
+apps/admin/test-results/
+apps/admin/playwright-report/
 
 # next.js
 .next/

@@ -182,14 +182,19 @@ src/
 │   │   ├── api.ts                             # 임시저장 API 클라이언트
 │   │   └── types.ts
 │   ├── media/                                 # 이미지 업로드
-│   │   ├── api/actions.ts                     # Supabase Storage 업로드 Server Action
+│   │   ├── api/actions.ts                     # S3 presigned URL 생성 Server Action
 │   │   ├── constants/media.ts                 # 이미지 사이즈/포맷 상수
+│   │   ├── lib/upload-image.ts                # 원본·688px·선택적 OG 이미지 S3 업로드
+│   │   ├── lib/validate-image.ts              # 입력 이미지 형식·크기 검사
 │   │   └── hooks/useImageUpload.ts            # 업로드 훅
 │   ├── post-editor/                           # Tiptap 에디터
 │   │   ├── components/                        # 에디터 UI (Toolbar, TiptapEditor 등)
 │   │   ├── containers/TiptapEditorContainer.tsx
 │   │   ├── hooks/useTiptapEditor.ts
+│   │   ├── hooks/useMediaIntake.ts            # 파일별 업로드 세션·캐러셀 생성/추가
 │   │   ├── configs/                           # Tiptap 확장 설정
+│   │   ├── lib/carousel-node-view.ts          # 캐러셀별 스크롤·리사이즈·명시적 조작
+│   │   ├── lib/media-insertion.ts             # 비동기 삽입 대상 추적·일괄 삽입
 │   │   ├── api/                               # 포스트 저장/수정 Server Actions
 │   │   ├── lib/image.ts                       # 이미지 처리 유틸
 │   │   ├── constants/category.ts

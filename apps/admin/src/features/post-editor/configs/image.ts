@@ -43,6 +43,7 @@ export const CustomResizableImage = Image.extend({
       const { style } = node.attrs;
 
       const $container = document.createElement('div');
+      $container.className = 'image-node-view';
       const $img = document.createElement('img');
 
       Object.entries(node.attrs).forEach(([key, value]) => {
@@ -60,25 +61,20 @@ export const CustomResizableImage = Image.extend({
       if (!editable) return { dom: $container };
 
       const dotPositions = [
-        { top: '-6px', left: '-6px', cursor: 'nw-resize' },
-        { top: '-6px', right: '-6px', cursor: 'ne-resize' },
-        { bottom: '-6px', left: '-6px', cursor: 'sw-resize' },
-        { bottom: '-6px', right: '-6px', cursor: 'se-resize' },
+        { top: '-14px', left: '-14px', cursor: 'nw-resize' },
+        { top: '-14px', right: '-14px', cursor: 'ne-resize' },
+        { bottom: '-14px', left: '-14px', cursor: 'sw-resize' },
+        { bottom: '-14px', right: '-14px', cursor: 'se-resize' },
       ];
 
       const dots: HTMLElement[] = [];
 
       dotPositions.forEach((pos) => {
         const dot = document.createElement('div');
+        dot.className = 'image-resize-handle';
         dot.setAttribute(
           'style',
           [
-            'position: absolute',
-            'width: 14px',
-            'height: 14px',
-            'background: #4a90d9',
-            'border: 2px solid white',
-            'border-radius: 50%',
             'display: none',
             `cursor: ${pos.cursor}`,
             pos.top !== undefined ? `top: ${pos.top}` : '',
@@ -97,8 +93,7 @@ export const CustomResizableImage = Image.extend({
 
       const showHandles = () => {
         isSelected = true;
-        $container.style.border = '2px dashed #4a90d9';
-        $container.style.boxSizing = 'border-box';
+        $container.classList.add('image-resize-frame');
         dots.forEach((dot) => {
           dot.style.display = 'block';
         });
@@ -106,7 +101,7 @@ export const CustomResizableImage = Image.extend({
 
       const hideHandles = () => {
         isSelected = false;
-        $container.style.border = 'none';
+        $container.classList.remove('image-resize-frame');
         dots.forEach((dot) => {
           dot.style.display = 'none';
         });

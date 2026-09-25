@@ -4,6 +4,7 @@ import type { Editor } from '@tiptap/react';
 import { cn } from '@/lib/utils';
 
 import { CodeIcon } from './icons';
+import { CreateCarousel } from './toolbars/CreateCarousel';
 import {
   FontStyles,
   History,
@@ -20,9 +21,23 @@ type ToolbarProps = {
   editor: Editor;
   isHtmlMode: boolean;
   onToggleHtmlMode: () => void;
+  mediaBusy: boolean;
+  onImagesBegin: () => void;
+  onImageFiles: (files: File[]) => void;
+  onImagesCancel: () => void;
+  onCreateCarousel: () => void;
 };
 
-export function Toolbar({ editor, isHtmlMode, onToggleHtmlMode }: ToolbarProps) {
+export function Toolbar({
+  editor,
+  isHtmlMode,
+  onToggleHtmlMode,
+  mediaBusy,
+  onImagesBegin,
+  onImageFiles,
+  onImagesCancel,
+  onCreateCarousel,
+}: ToolbarProps) {
   const [, setTick] = useState(0);
 
   useEffect(() => {
@@ -50,7 +65,13 @@ export function Toolbar({ editor, isHtmlMode, onToggleHtmlMode }: ToolbarProps) 
         <VerticalDivider />
         <TextAlign editor={editor} />
         <VerticalDivider />
-        <UploadImage editor={editor} />
+        <UploadImage
+          disabled={isHtmlMode || mediaBusy}
+          onBegin={onImagesBegin}
+          onFiles={onImageFiles}
+          onCancel={onImagesCancel}
+        />
+        <CreateCarousel disabled={isHtmlMode || mediaBusy} onClick={onCreateCarousel} />
         <VerticalDivider />
         <TableToolbar editor={editor} />
       </div>
@@ -61,6 +82,8 @@ export function Toolbar({ editor, isHtmlMode, onToggleHtmlMode }: ToolbarProps) 
         <VerticalDivider />
         <button
           type="button"
+          aria-label="HTML 소스 모드"
+          disabled={mediaBusy}
           tabIndex={-1}
           onClick={onToggleHtmlMode}
           className={cn(

@@ -312,16 +312,12 @@ const gaPageParams = {
 
       if (imgs.length <= 1) return;
 
-      let current = 0;
       const slides = Array.from(viewport.querySelectorAll<HTMLElement>('.carousel-slide'));
-
-      const scrollTo = (index: number) => {
-        const slide = slides[index];
-        if (slide) {
-          viewport.scrollTo({ left: slide.offsetLeft, behavior: 'smooth' });
-          current = index;
-        }
-      };
+      const maxScroll = () => Math.max(0, viewport.scrollWidth - viewport.clientWidth);
+      const slideOffset = (index: number) => Math.min(
+        maxScroll(),
+        Math.max(0, (slides[index]?.offsetLeft ?? 0) - (slides[0]?.offsetLeft ?? 0)),
+      );
 
       const i18nEl = document.getElementById('carousel-i18n');
       const i18n = i18nEl ? JSON.parse(i18nEl.textContent || '{}') : {};
@@ -329,33 +325,36 @@ const gaPageParams = {
       const createArrow = (direction: 'prev' | 'next') => {
         const label = direction === 'prev' ? (i18n.prev || 'Previous') : (i18n.next || 'Next');
         const btn = document.createElement('button');
+        btn.type = 'button';
         btn.className = `carousel-arrow carousel-arrow--${direction}`;
         btn.setAttribute('aria-label', label);
         btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${direction === 'prev' ? 'M15 18l-6-6 6-6' : 'M9 18l6-6-6-6'}"/></svg>`;
         btn.addEventListener('click', () => {
-          const target = direction === 'prev'
-            ? Math.max(0, current - 1)
-            : Math.min(imgs.length - 1, current + 1);
-          scrollTo(target);
+          let target = 0;
+          if (direction === 'prev') {
+            slides.forEach((_, index) => {
+              if (slideOffset(index) < viewport.scrollLeft - 1) target = index;
+            });
+          } else {
+            const following = slides.findIndex((_, index) => slideOffset(index) > viewport.scrollLeft + 1);
+            target = following < 0 ? slides.length - 1 : following;
+          }
+          viewport.scrollTo({ left: slideOffset(target), behavior: 'smooth' });
         });
         return btn;
       };
 
-      container.appendChild(createArrow('prev'));
-      container.appendChild(createArrow('next'));
-
-      viewport.addEventListener('scrollend', () => {
-        let closestIdx = 0;
-        let closestDist = Infinity;
-        slides.forEach((s, idx) => {
-          const dist = Math.abs(s.offsetLeft - viewport.scrollLeft);
-          if (dist < closestDist) {
-            closestDist = dist;
-            closestIdx = idx;
-          }
-        });
-        current = closestIdx;
-      });
+      const previous = createArrow('prev');
+      const next = createArrow('next');
+      container.appendChild(previous);
+      container.appendChild(next);
+      const syncArrows = () => {
+        previous.disabled = viewport.scrollLeft <= 1;
+        next.disabled = viewport.scrollLeft >= maxScroll() - 1;
+      };
+      viewport.addEventListener('scroll', syncArrows, { passive: true });
+      window.addEventListener('resize', syncArrows);
+      syncArrows();
     });
   </script>
 </Layout>

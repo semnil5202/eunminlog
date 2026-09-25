@@ -132,7 +132,7 @@ RootLayout (app/layout.tsx)
 | ----------------- | -------------------------------------- | --------------------------------- | ------------------------------------------------------------------------------------ |
 | `metrics`         | 핵심 지표 (조회수/추천수/댓글수)       | `/`                               | Mock 구현 완료                                                                       |
 | `auth`            | 로그인/로그아웃, 세션 관리             | TBD (로그인 페이지)               | 미구현                                                                               |
-| `post-editor`     | Tiptap 에디터, 포스트 생성/편집 폼     | `/posts/new`, `/posts/[id]/edit`  | 에디터 + 폼 형식 + 메타 폼 + 썸네일 + 번역 연동 구현 완료 (저장/S3 업로드 미구현)    |
+| `post-editor`     | Tiptap 에디터, 포스트 생성/편집 폼     | `/posts/new`, `/posts/[id]/edit`  | 에디터 + 폼 형식 + 메타 폼 + 썸네일 + 번역 연동 + S3 이미지 업로드 구현 완료    |
 | `post-management` | 포스트 목록, 삭제, 추천 게시글 관리    | `/posts`                          | 목록/삭제/추천 수정 모드 구현 완료                                                   |
 | `media`           | 이미지 업로드, Pre-signed URL          | 에디터 내 사용                    | 구현 완료 (S3 presigned URL + WebP 변환 + 워터마크 + 688px 리사이징 + CDN URL)       |
 | `translation`     | GPT-5 Mini 다국어 번역 (API 연동 완료) | 에디터 내 사용                    | 구현 완료 (고유명사 추출 + 번역 + 미리보기 + 실패 fallback + 재시도). DB 저장 미연동 |
@@ -271,7 +271,7 @@ features/auth/
 | PE-1  | Tiptap 리치 텍스트 에디터 (Heading, Bold, Italic, List, Link, Image, Blockquote)               | P0       | 구현 완료            |
 | PE-2  | 폼 형식 선택 (visit / product-review)                                                          | P0       | 구현 완료            |
 | PE-3  | 포스트 메타데이터 폼 (title, category, sub_category, thumbnail, description)                   | P0       | 구현 완료            |
-| PE-4  | 이미지 삽입 (미디어 업로드 연동)                                                               | P0       | 초안 완료 (blob URL) |
+| PE-4  | 이미지 삽입 (미디어 업로드 연동)                                                               | P0       | 구현 완료 (S3/CDN) |
 | PE-5  | 이미지 삭제 및 순서 변경 (드래그 앤 드롭)                                                      | P1       | 미구현               |
 | PE-6  | 포스트 저장 (Supabase `posts` 테이블 upsert)                                                   | P0       | 미구현               |
 | PE-7  | 포스트 편집 (기존 데이터 로드 → 폼/에디터 반영 → 수정). 상세: Section 4-2-A 참조               | P0       | 미구현               |
@@ -401,15 +401,17 @@ travel (여행)    → domestic (국내), overseas (해외), accommodation (숙�
 | TiptapLink  | Link (모달 입력)                                 | 좌측 |
 | TextAlign   | AlignLeft, AlignCenter, AlignRight, AlignJustify | 좌측 |
 | List        | BulletList, OrderedList                          | 좌측 |
-| UploadImage | Image (파일 선택 → blob URL 삽입, 임시)          | 좌측 |
+| UploadImage | Image (S3 업로드 후 독립 이미지 삽입)            | 좌측 |
+| CreateCarousel | 캐러셀 만들기 (2장 이상 명시적으로 묶기)      | 좌측 |
 | History     | Undo, Redo                                       | 우측 |
 
 그룹 사이에 `VerticalDivider` 구분선 삽입.
 
-**이미지 삽입 기능** (초안 구현 완료):
+**이미지 삽입 기능**:
 
-- **삽입 방식**: UploadImage 툴바 버튼 클릭 → 숨겨진 `<input type="file">` 트리거 → 파일 선택 → WebP 변환 → S3 presigned URL 업로드 → CDN URL로 `editor.chain().focus().setImage({ src, width, height })` 삽입 (리사이즈 이미지의 실제 치수 전달)
-- **허용 포맷**: jpeg, png, jpg, gif, webp
+- **삽입 방식**: 파일 선택 → WebP 변환 → S3 presigned URL 업로드 → CDN URL과 실제 치수로 이미지 삽입. 일반 이미지 여러 장은 각각 독립된 이미지로 삽입하며, 인접 이미지나 선택한 캐러셀에 자동 병합하지 않는다.
+- **일반 이미지 확인 단계**: 일반 이미지 버튼은 파일 선택 즉시 업로드하며 미리보기·확인 모달을 띄우지 않는다. 진행 상태·취소·실패 안내·재시도는 편집기 위 인라인 영역에 표시한다. 실패 시 본문에는 삽입하지 않고 같은 세션의 성공 결과를 재사용한다. 파일 검증 오류는 닫은 뒤 파일을 다시 선택한다. 캐러셀 생성·추가는 기존 미리보기 모달을 유지한다.
+- **허용 포맷**: jpeg, png, jpg, gif, webp, heic, heif. GIF는 정지 이미지로 변환하며, HEIC/HEIF는 브라우저에서 로컬 미리보기가 표시되지 않을 수 있다.
 - **리사이즈**: 이미지 클릭 시 4코너에 파란색 리사이즈 핸들 표시. 핸들 드래그로 에디터 `.ProseMirror` 너비 대비 % 단위 리사이즈 (최소 50px, 최대 에디터 너비). 선택 시 파선 테두리(`1px dashed #4a90d9`) 표시.
 - **HTML 출력**: `<img style="width: X%; height: auto;" src="..." width="W" height="H" />` (X는 에디터 너비 대비 퍼센트, 기본값 100%). HTML `width`/`height` 속성에 리사이즈(688px) 이미지의 실제 치수를 기록하여 CLS 방지. `style`에 `height: auto`가 없으면 자동 추가 (세로 이미지 비율 보존)
 - **현재 제한**: 드래그앤드롭/붙여넣기 이미지 처리 미구현.
@@ -532,19 +534,39 @@ react-hook-form + Zod 기반 폼 검증. "작성 완료" / "번역본 생성하�
 
 ---
 
-#### 미디어 갤러리 -- 연속 이미지 처리 (B 방식)
+#### 명시적 캐러셀 생성·추가
 
-- Tiptap 에디터에서는 이미지를 개별 노드로 삽입/삭제/순서 변경만 관리.
-- Client(Astro) 렌더링 시 HTML 내 연속 `<img>` 태그를 감지하여 CSS snap 갤러리(`scroll-snap-type: x mandatory`)로 자동 변환.
-- Admin 에디터에서는 별도의 갤러리 UI를 구현하지 않는다. 이미지를 순서대로 삽입하면 Client에서 갤러리로 표시됨.
+복수 파일 선택·인접 이미지 업로드에 의한 자동 생성/병합 정책을 명시적 생성으로 변경한다.
+
+- **새 생성**: 툴바 `캐러셀 만들기` → 파일 선택 → 미리보기·제거 → `생성`. 2장 이상 필요하며, 파일 목록 순서를 유지한다. 순서 변경 UI는 제공하지 않는다.
+- **툴바 아이콘**: 사진과 하단 좌우 화살표를 결합해 넘겨보기를 표현한다. 캐러셀·표 아이콘은 18px 크기, 24×24 viewBox, strokeWidth 1.75의 선 기반 SVG로 맞춘다. 별도 텍스트는 표시하지 않으며 툴팁·접근 가능한 이름은 `캐러셀 만들기`를 유지한다.
+- **편집 범위 표시**: 관리자 편집 상태에서만 캐러셀 전체를 테두리로 묶고 상단에 `캐러셀 · N장`과 `이미지 추가`를 배치한다. 각 슬라이드 하단에는 `N번 이미지`와 크기 조절·삭제를 묶는다. 단일 이미지와 캐러셀은 공통 `image-resize-frame`/`image-resize-handle` 스타일(파란색 `#4a90d9` 2px 점선·14px 원형 핸들)을 사용한다. 선택 표시에는 outline을 사용하여 레이아웃 너비를 바꾸지 않는다. 편집용 헤더·번호·선택 클래스는 저장 HTML과 공개 뷰어에 포함하지 않는다.
+- **선택선 여백**: 점선을 이미지 바깥 6px에 표시하고 핸들 중심을 점선 모서리에 맞춘다. 편집용 캐러셀 뷰포트는 16px 안쪽 여백·32px 슬라이드 간격으로 선택선 잘림과 인접 이미지 겹침을 방지한다. 리사이즈 백분율 계산은 뷰포트 패딩을 제외한 콘텐츠 너비를 기준으로 한다.
+- **단일 이미지 여백**: Admin NodeView의 내부 이미지 margin은 0, 바깥 컨테이너의 상하 margin은 12px로 분리한다. 사진과 선택선 사이 상하 간격이 좌우보다 커지지 않도록 하며 공개 이미지 CSS는 유지한다.
+- **파일 선택 UI**: 빈 상태는 이미지 아이콘을 포함한 큰 클릭형 `이미지 선택` 영역을 표시한다. 선택 후에는 장수·번호·썸네일·파일명·상태·제거 목록과 `이미지 더 선택` 버튼을 제공한다. 최소 장수에 미달하면 필요한 추가 장수를 안내한다. 버튼은 키보드로 실행 가능하며 주요 조작 영역은 44px 이상이다. 모달은 최대 `90dvh`, 목록 영역만 스크롤하고 하단 취소·실행 버튼은 고정한다. 드래그앤드롭은 지원하지 않으며 이를 암시하는 문구·점선 영역을 사용하지 않는다.
+- **선택 UI 참고**: [Carbon File uploader](https://carbondesignsystem.com/components/file-uploader/usage/), [GOV.UK File upload](https://design-system.service.gov.uk/components/file-upload/)의 명확한 선택 버튼·안내·파일별 상태 패턴을 적용한다. 기존 업로드·재시도·취소 정책은 유지한다.
+- **기존 캐러셀 추가**: 해당 캐러셀의 `이미지 추가` 버튼에서 1장 이상 선택하여 끝에 일괄 추가한다. 기존 슬라이드 너비·크롭·치수를 유지한다.
+- **삭제**: 1장만 남아도 캐러셀을 유지하고, 마지막 이미지 삭제 시 블록을 삭제한다. 개별 이미지의 `크기 조절` 버튼으로 편집에 진입하며 기존 더블클릭·롱프레스도 지원한다.
+- **파일별 상태**: 대기/업로드 중/완료/실패를 표시하고 최대 2개 파일을 병렬 처리한다. 일부 실패 시 본문을 변경하지 않으며, 실패 파일을 제거하거나 재시도한 뒤 남은 파일이 모두 완료되어야 삽입한다. 같은 세션의 완료 파일은 재업로드하지 않는다.
+- **삽입 안정성**: 업로드 세션에서 transaction mapping으로 삽입 위치 또는 추가 대상 캐러셀을 추적한다. 대상 삭제·본문 전체 교체·에디터 종료 시 임의 위치에 삽입하지 않는다. 이미지 묶음 삽입/추가는 한 번의 Undo로 되돌린다.
+- **취소**: 미리보기 URL과 위치 추적을 해제하고 늦게 완료된 업로드 결과를 본문에 적용하지 않는다. 이미 S3에 전송된 객체의 자동 삭제·회수는 제공하지 않는다.
+- **저장 계약 (P0)**: `<div data-type="image-carousel" style="...">`의 직계 `<img>`에 `src`, `data-width`, `data-height`, 실제 `width`/`height`를 저장한다. 기존 게시글 HTML을 그대로 읽으며 DB 마이그레이션은 없다.
+- **구현 경계**: `configs/image-carousel.ts`는 스키마·명령·HTML, `lib/carousel-node-view.ts`는 캐러셀별 스크롤·편집 UI와 이벤트 정리, `hooks/useMediaIntake.ts`는 업로드 세션, `lib/media-insertion.ts`는 위치 추적·삽입을 담당한다.
 
 #### 캐러셀 이미지 크롭 (image-carousel.ts)
 
 - **크롭 비율 저장 방식**: 캐러셀 이미지 리사이즈(크롭) 시 높이를 고정 `px` 값 대신 `ratio:X.XXXX` 형식의 aspect-ratio 비율로 저장한다.
   - 예: `height: "ratio:0.7500"` → `aspect-ratio: 0.7500; object-fit: cover; height: auto;`로 렌더링
   - 고정 px로 저장하면 모바일 너비 변화 시 비율이 깨지는 문제를 방지
-- **HTML 출력**: `<img style="width: X%; aspect-ratio: R; object-fit: cover; height: auto;" ...>`
+- **HTML 출력**: `<img data-width="X%" data-height="ratio:R" width="W" height="H" src="...">`. Admin NodeView와 Client 렌더러가 표시 너비 및 `aspect-ratio`로 변환한다.
 - **기존 포맷 하위 호환**: `height: auto` (비크롭)와 `height: Npx` (기존 고정 px) 모두 정상 처리
+
+#### 캐러셀 회귀 테스트
+
+- `pnpm --filter @eunminlog/admin test`: Vitest로 저장 HTML 왕복·명령·삽입 위치 추적·Undo/Redo·NodeView 상태와 정리를 검증한다.
+- `pnpm --filter @eunminlog/admin test:e2e`: Playwright의 Desktop Chrome/Pixel 7 설정에서 생성·추가·삭제·부분 실패 및 화면 조작을 검증한다. 최초 실행에는 Playwright Chromium 설치가 필요하다.
+- 파일 선택 UI 회귀: 키보드로 파일 선택창 열기, 0/1/2장 조건 안내, 추가 선택·전체 제거 후 빈 상태 복귀, 20장 목록의 하단 버튼 유지·모바일 너비를 검증한다. 업로드는 테스트 대역을 사용하며 실제 S3에 전송하지 않는다.
+- E2E는 실제 에디터 컴포넌트와 업로드 mock을 사용하는 Vite harness (`tests/harness`)에서 실행한다. 운영 인증·실제 S3 전송·Client 전체 페이지 검증을 대체하지 않는다.
 
 #### Server Action vs CSR 구분
 
@@ -583,7 +605,8 @@ features/post-editor/
 │       ├── TiptapLink.tsx           # Link 모달 (Portal 기반)
 │       ├── List.tsx                 # BulletList, OrderedList 토글
 │       ├── TextAlign.tsx            # ✅ 텍스트 정렬 (Left, Center, Right, Justify)
-│       ├── UploadImage.tsx          # ✅ 파일 선택 → blob URL 삽입 (S3 업로드 미연동)
+│       ├── UploadImage.tsx          # ✅ S3 업로드 → 독립 이미지 삽입
+│       ├── CreateCarousel.tsx       # ✅ 명시적 캐러셀 생성
 │       ├── History.tsx              # Undo, Redo
 │       ├── VerticalDivider.tsx      # 그룹 간 구분선
 │       ├── types.ts                 # 공유 toolbar prop 타입
@@ -720,7 +743,7 @@ features/post-management/
     ├─ 4. 원본 S3 PUT ────────────────────────────────────────>│  {uuid}.webp
     │                              │                           │
     │  5. 리사이즈 변형 생성       │                           │
-    │     (maxWidth: 688px, 품질 0.75) │                       │
+    │     (maxWidth: 688px, 본문 품질 0.85) │                  │
     │                              │                           │
     │<── 6. 변형용 Pre-signed URL ─┤                           │
     │                              │                           │
@@ -736,7 +759,7 @@ features/post-management/
 
 | 변형         | 최대 가로 | 용도            | 파일명 패턴       |
 | ------------ | --------- | --------------- | ----------------- |
-| **original** | 제한 없음 | 라이트박스 확대 | `{uuid}.webp`     |
+| **original** | 2048px    | 라이트박스 확대 | `{uuid}.webp`     |
 | **\_688**    | 688px     | 본문/카드 표시  | `{uuid}_688.webp` |
 
 #### 파일 유효성 규칙
@@ -1660,9 +1683,9 @@ src/features/
 | ----- | ------------------- | --------------------------------------------------------------------------------------------------------------- | -------- | ---------------------------------------------------------------- |
 | 1     | shared + infra      | Supabase 클라이언트, 타입 정의, HTTPS 로컬 dev 서버, 사이드바, 핵심 지표 페이지 (mock), SearchFilter            | P0       | **완료**                                                         |
 | 2     | auth                | 로그인/로그아웃, 인증 가드                                                                                      | P0       | 미착수                                                           |
-| 3     | post-editor         | Tiptap 에디터, 폼 형식, 메타 폼, 썸네일, 카테고리, 체험방문 필드, 3줄 요약, 포스트 저장(생성)                   | P0       | **에디터 + 폼 형식 + 메타 폼 구현 완료** (저장/S3 업로드 미구현) |
+| 3     | post-editor         | Tiptap 에디터, 폼 형식, 메타 폼, 썸네일, 카테고리, 체험방문 필드, 3줄 요약, 포스트 저장(생성)                   | P0       | **에디터 + 폼 형식 + 메타 폼 + S3 이미지 업로드 구현 완료** |
 | 3-1   | translation         | 고유명사 추출, GPT-5 Mini 번역 실행 (병렬), 미리보기 Sheet, 실패 fallback, locale 재시도                        | P0       | **구현 완료** (DB 저장 미연동)                                   |
-| 4     | media               | Pre-signed URL, S3 업로드, 에디터 이미지 삽입                                                                   | P0       | 미착수                                                           |
+| 4     | media               | Pre-signed URL, S3 업로드, 에디터 이미지 삽입                                                                   | P0       | 구현 완료                                                        |
 | 5     | post-management     | 게시글 목록, 삭제                                                                                               | P0       | **목록 구현 완료** (삭제 미구현)                                 |
 | 5-1   | shared (리팩토링)   | SearchFilter 컴파운드 컴포넌트 리팩토링 + Pagination 공유 컴포넌트 구현                                         | P0       | 미착수                                                           |
 | 5-2   | category-management | 카테고리 관리 페이지 (`/categories`) — 검색 + 그룹 테이블 + DB 연동 + 대분류 다국어 표시 + 소분류 다국어 정합성 | P1       | **구현 완료**                                                    |
