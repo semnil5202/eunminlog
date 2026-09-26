@@ -1,6 +1,6 @@
 import type { Editor } from '@tiptap/core';
 import type { Node as ProseMirrorNode } from '@tiptap/pm/model';
-import { NodeSelection, TextSelection, type Transaction } from '@tiptap/pm/state';
+import { NodeSelection, type Transaction } from '@tiptap/pm/state';
 import { closeHistory } from '@tiptap/pm/history';
 
 type UploadedImage = { url: string; width: number; height: number };
@@ -92,13 +92,11 @@ export function insertMedia(
           ),
         );
   const tr = closeHistory(editor.state.tr);
-  const $pos = tr.doc.resolve(pos);
-  tr.setSelection(TextSelection.near($pos));
   // Replace fitting splits textblocks and lifts to a valid block boundary without deleting text.
   tr.insert(pos, nodes);
   if (!tr.docChanged) return false;
   tr.setMeta('mediaCommit', true);
-  editor.view.dispatch(tr.scrollIntoView());
+  editor.view.dispatch(tr);
   editor.view.dispatch(closeHistory(editor.state.tr));
   return true;
 }

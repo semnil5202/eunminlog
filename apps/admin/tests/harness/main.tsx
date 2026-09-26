@@ -10,6 +10,7 @@ function App() {
     <main style={{ maxWidth: 760, margin: '24px auto', padding: 16 }}>
       <h1>캐러셀 테스트 편집기</h1>
       <TiptapEditorContainer content={content} onChange={setContent} />
+      <input aria-label="다른 입력란" />
       <output data-testid="saved-html" style={{ display: 'none' }}>
         {content}
       </output>

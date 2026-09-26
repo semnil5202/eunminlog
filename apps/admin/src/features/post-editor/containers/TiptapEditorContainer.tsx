@@ -143,6 +143,9 @@ export function TiptapEditorContainer({
           onFiles={intake.addFiles}
           onRemove={intake.remove}
           onSubmit={() => void intake.submit()}
+          onReturnFocus={() => {
+            if (!editor.isDestroyed) editor.view.focus();
+          }}
         />
       )}
       {children}

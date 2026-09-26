@@ -111,6 +111,31 @@ test('드롭 안내와 놓은 위치를 사용하고 업로드 도중 텍스트 
   const html = (await page.getByTestId('saved-html').textContent())!;
   expect(html.indexOf('<img')).toBeLessThan(html.indexOf('마지막 문단'));
   expect(html).toContain('마지막 문단 수정');
+  await page.keyboard.type(' 계속');
+  await expect(page.locator('.tiptap p').last()).toContainText('마지막 문단 수정 계속');
+});
+
+test('업로드 완료는 다른 입력란의 포커스를 빼앗지 않는다', async ({ page }) => {
+  await transfer(page, 'paste', [{ name: 'very-slow-focus.png' }]);
+  const input = page.getByRole('textbox', { name: '다른 입력란', exact: true });
+  await input.fill('입력중');
+  await expect(images(page)).toHaveCount(1);
+  await expect(input).toBeFocused();
+  await page.keyboard.type(' 계속');
+  await expect(input).toHaveValue('입력중 계속');
+});
+
+test('툴바 업로드 후 다른 작업을 하지 않으면 본문에서 바로 이어 쓸 수 있다', async ({ page }) => {
+  await page.locator('.tiptap').press('ControlOrMeta+End');
+  const chooser = page.waitForEvent('filechooser');
+  await page.getByRole('button', { name: '이미지 추가', exact: true }).click();
+  await (
+    await chooser
+  ).setFiles({ name: 'slow-toolbar.png', mimeType: 'image/png', buffer: Buffer.from('image') });
+  await expect(images(page)).toHaveCount(1);
+  await expect(page.locator('.tiptap')).toBeFocused();
+  await page.keyboard.type('이어서');
+  await expect(page.locator('.tiptap')).toContainText('이어서');
 });
 
 test('일반 업로드 실패는 세션을 비우고 이전 늦은 응답이 새 업로드에 섞이지 않는다', async ({

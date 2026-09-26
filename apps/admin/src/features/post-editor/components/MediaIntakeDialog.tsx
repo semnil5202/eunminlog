@@ -23,6 +23,7 @@ type Props = {
   onFiles: (files: File[]) => void;
   onRemove: (id: string) => void;
   onSubmit: () => void;
+  onReturnFocus: () => void;
 };
 const labels = { images: '이미지 추가', carousel: '캐러셀 만들기', append: '캐러셀에 이미지 추가' };
 const statuses = { waiting: '대기', uploading: '업로드 중', success: '완료', error: '실패' };
@@ -37,6 +38,7 @@ export function MediaIntakeDialog({
   onFiles,
   onRemove,
   onSubmit,
+  onReturnFocus,
 }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const hintId = useId();
@@ -54,7 +56,13 @@ export function MediaIntakeDialog({
         if (!open) onClose();
       }}
     >
-      <DialogContent className="flex max-h-[90dvh] flex-col gap-0 overflow-hidden p-0 sm:max-w-xl">
+      <DialogContent
+        className="flex max-h-[90dvh] flex-col gap-0 overflow-hidden p-0 sm:max-w-xl"
+        onCloseAutoFocus={(event) => {
+          event.preventDefault();
+          if (document.activeElement === document.body) onReturnFocus();
+        }}
+      >
         <DialogHeader className="shrink-0 px-6 pt-6 pb-4 text-left">
           <DialogTitle>{labels[mode]}</DialogTitle>
           <DialogDescription>
