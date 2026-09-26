@@ -107,6 +107,43 @@ afterEach(() => {
 });
 
 describe('캐러셀 NodeView 수명과 편집', () => {
+  it('이미지 선택 시에만 해당 모자이크·삭제를 표시하고 번호는 유지한다', () => {
+    const editor = makeEditor();
+    flushFrames();
+    const [container] = containers(editor);
+    const pictures = container.querySelectorAll('img');
+    pictures[0].click();
+    expect(container.querySelectorAll('.image-resize-frame')).toHaveLength(1);
+    expect(container.querySelector('.image-carousel-actions')!.textContent).toBe('1번 이미지');
+    expect(container.querySelectorAll('.image-carousel-actions button')).toHaveLength(0);
+    pictures[1].click();
+    expect(container.querySelectorAll('.image-resize-frame')).toHaveLength(1);
+    expect(pictures[1].parentElement!.classList.contains('image-resize-frame')).toBe(true);
+    expect(editor.getHTML()).not.toMatch(/image-resize-frame|번 이미지|모자이크/);
+  });
+
+  it('인접 너비와 높이에 독립적으로 붙고 이탈하며 인접 이미지 데이터는 보존한다', () => {
+    const editor = makeEditor(['70%', '90%', '50%']);
+    flushFrames();
+    const [container] = containers(editor);
+    const neighbors = structuredClone(editor.state.doc.firstChild!.attrs.images.slice(1));
+    container.querySelector('img')!.click();
+    pointer(control(container, '1번 이미지 se 크기 조절'), 'pointerdown');
+    pointer(document, 'pointermove', { clientX: 75, clientY: 5 });
+    const slide = container.querySelector<HTMLElement>('.image-carousel-slide')!;
+    expect(parseFloat(slide.style.flexBasis)).toBe(90);
+    expect(container.querySelector('img')!.style.height).toBe('200px');
+    pointer(document, 'pointermove', { clientX: 90, clientY: 20 });
+    expect(parseFloat(slide.style.flexBasis)).toBe(90);
+    expect(container.querySelector('img')!.style.height).toBe('220px');
+    pointer(document, 'pointermove', { clientX: 100, clientY: 20 });
+    expect(parseFloat(slide.style.flexBasis)).toBe(95);
+    pointer(document, 'pointerup', { clientX: 100, clientY: 20 });
+    flushFrames();
+    expect(editor.state.doc.firstChild!.attrs.images.slice(1)).toEqual(neighbors);
+    expect(editor.state.doc.firstChild!.attrs.images[0].width).toBe('95.0%');
+  });
+
   it('서로 다른 캐러셀의 스크롤을 추가 및 삭제 후에도 독립적으로 유지한다', () => {
     const editor = makeEditor(undefined, 2);
     flushFrames();
@@ -143,7 +180,7 @@ describe('캐러셀 NodeView 수명과 편집', () => {
     flushFrames();
     const [container] = containers(editor);
     control(container, '다음 이미지').click();
-    control(container, '2번 이미지 크기 조절').click();
+    container.querySelectorAll('img')[1].click();
     const handle = control(container, '2번 이미지 se 크기 조절');
     handle.focus();
     handle.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
@@ -157,7 +194,7 @@ describe('캐러셀 NodeView 수명과 편집', () => {
     const editor = makeEditor();
     flushFrames();
     const [container] = containers(editor);
-    control(container, '1번 이미지 크기 조절').click();
+    container.querySelector('img')!.click();
     pointer(control(container, '1번 이미지 se 크기 조절'), 'pointerdown');
     const image = container.querySelector('img')!;
     const originalStyle = image.style.cssText;
@@ -173,7 +210,7 @@ describe('캐러셀 NodeView 수명과 편집', () => {
     const editor = makeEditor();
     flushFrames();
     const [container] = containers(editor);
-    control(container, '1번 이미지 크기 조절').click();
+    container.querySelector('img')!.click();
     pointer(control(container, '1번 이미지 se 크기 조절'), 'pointerdown');
     pointer(document, 'pointermove', { clientX: 500, clientY: 100 });
     expect(container.querySelector<HTMLElement>('.image-carousel-slide')!.style.flexBasis).toBe(
@@ -194,7 +231,40 @@ describe('캐러셀 NodeView 수명과 편집', () => {
     });
   });
 
-  it('롱프레스 대기 중 종료하면 타이머와 예약된 화면 갱신을 해제한다', () => {
+  it('스와이프 후 클릭은 선택하지 않고 다음 탭과 키보드로 선택할 수 있다', () => {
+    const editor = makeEditor();
+    const [container] = containers(editor);
+    const image = container.querySelector('img')!;
+    pointer(image, 'pointerdown', { pointerType: 'touch' });
+    pointer(image, 'pointermove', { pointerType: 'touch', clientX: 30 });
+    image.click();
+    expect(image.parentElement!.classList.contains('image-resize-frame')).toBe(false);
+    pointer(image, 'pointerdown', { pointerType: 'touch' });
+    image.click();
+    expect(image.parentElement!.classList.contains('image-resize-frame')).toBe(true);
+    const next = container.querySelectorAll('img')[1];
+    next.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    expect(next.parentElement!.classList.contains('image-resize-frame')).toBe(true);
+  });
+
+  it('Escape는 미저장 크기와 스냅 안내를 복원하고 늦은 pointerup을 무시한다', () => {
+    const editor = makeEditor();
+    flushFrames();
+    const [container] = containers(editor);
+    const image = container.querySelector('img')!;
+    const original = image.style.cssText;
+    image.click();
+    pointer(control(container, '1번 이미지 se 크기 조절'), 'pointerdown');
+    pointer(document, 'pointermove', { clientX: 5, clientY: 5 });
+    expect(container.querySelector('.image-carousel-snap-guide')).not.toBeNull();
+    container.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    pointer(document, 'pointerup', { clientX: 100, clientY: 100 });
+    expect(container.querySelector('.image-carousel-snap-guide')).toBeNull();
+    expect(image.style.cssText).toBe(original);
+    expect(editor.state.doc.firstChild!.attrs.images[0].width).toBe('90%');
+  });
+
+  it('종료하면 예약된 화면 갱신을 해제한다', () => {
     const editor = makeEditor();
     const [container] = containers(editor);
     const slide = container.querySelector<HTMLElement>('.image-carousel-slide')!;

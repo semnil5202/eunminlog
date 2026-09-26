@@ -131,6 +131,9 @@ test('저장 실패는 원본과 초안을 보존하고 재시도할 수 있다'
   await expect(page.getByText('테스트 모자이크 업로드 실패', { exact: true })).toBeVisible();
   await expect(tools(page).getByRole('button', { name: '적용', exact: true })).toBeEnabled();
   expect(await page.getByTestId('saved-html').textContent()).toBe(before);
+  await tools(page)
+    .getByRole('button', { name: '적용', exact: true })
+    .evaluate((button) => button.scrollIntoView({ block: 'center' }));
   await tools(page).getByRole('button', { name: '적용', exact: true }).click();
   await expect(tools(page)).toHaveCount(0);
   expect(await calls(page)).toEqual(['portrait.png', 'mosaic.png', 'mosaic.png']);
@@ -173,6 +176,7 @@ test('캐러셀 모자이크는 대상만 교체하고 순서·치수와 스와�
       style: node.getAttribute('style'),
     })),
   );
+  await page.locator('.image-carousel-slide img').first().click();
   await page.getByRole('button', { name: '1번 이미지 모자이크', exact: true }).click();
   await expect(tools(page).getByRole('button', { name: '영역 추가' })).toBeEnabled();
   await tools(page).getByRole('button', { name: '영역 추가' }).click();

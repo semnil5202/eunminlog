@@ -1,6 +1,7 @@
 import type { NodeViewRenderer } from '@tiptap/core';
 import { closeHistory } from '@tiptap/pm/history';
 import type { CarouselImage } from '../types/carousel';
+import { snapCarouselDimension } from './carousel-resize-snap';
 
 /** 캐러셀 드래그 크기를 실제 표시 너비와 크롭 비율로 변환한다. */
 export function getCarouselResize(width: number, height: number, viewportWidth: number) {
@@ -48,11 +49,9 @@ export const createCarouselNodeView: NodeViewRenderer = ({ node: initialNode, ed
     cancelAnimationFrame(frame);
     const events = new AbortController();
     const { signal } = events;
-    const timers = new Set<ReturnType<typeof setTimeout>>();
     let cancelDrag = () => {};
     cleanRender = () => {
       events.abort();
-      timers.forEach(clearTimeout);
       cancelDrag();
     };
     container.style.cssText = `${node.attrs.style ?? 'width: 100%;'}; position: relative;`;
@@ -60,7 +59,7 @@ export const createCarouselNodeView: NodeViewRenderer = ({ node: initialNode, ed
     container.replaceChildren(viewport);
     viewport.replaceChildren();
     const slides: HTMLElement[] = [];
-    const resizeButtons: HTMLButtonElement[] = [];
+    const imageControls: HTMLImageElement[] = [];
     let syncNavigation = () => {};
     const maxScroll = () => Math.max(0, viewport.scrollWidth - viewport.clientWidth);
     const contentWidth = () => {
@@ -85,12 +84,15 @@ export const createCarouselNodeView: NodeViewRenderer = ({ node: initialNode, ed
         slide.querySelectorAll<HTMLButtonElement>('.image-carousel-handle').forEach((handle) => {
           handle.hidden = index !== activeIndex;
         });
-        resizeButtons[index]?.setAttribute('aria-pressed', String(index === activeIndex));
+        const actions = slide.querySelector<HTMLElement>('.image-carousel-selected-actions');
+        if (actions) actions.hidden = index !== activeIndex;
+        imageControls[index]?.setAttribute('aria-pressed', String(index === activeIndex));
       });
     container.addEventListener(
       'keydown',
       (event) => {
         if (event.key === 'Escape') {
+          cancelDrag();
           activeIndex = -1;
           syncActive();
         }
@@ -101,6 +103,7 @@ export const createCarouselNodeView: NodeViewRenderer = ({ node: initialNode, ed
       'pointerdown',
       (event) => {
         if (!container.contains(event.target as globalThis.Node)) {
+          cancelDrag();
           activeIndex = -1;
           syncActive();
         }
@@ -158,14 +161,60 @@ export const createCarouselNodeView: NodeViewRenderer = ({ node: initialNode, ed
       const label = document.createElement('span');
       label.className = 'image-carousel-item-label';
       label.textContent = `${index + 1}번 이미지`;
-      const resize = button('크기 조절', 'image-carousel-action');
-      resize.setAttribute('aria-label', `${index + 1}번 이미지 크기 조절`);
-      resizeButtons.push(resize);
-      resize.addEventListener(
+      img.tabIndex = 0;
+      img.setAttribute('role', 'button');
+      img.setAttribute('aria-label', `${index + 1}번 이미지 편집`);
+      imageControls.push(img);
+      const selectImage = () => {
+        if (container.querySelector('[data-mosaic-editing]')) return;
+        cancelDrag();
+        activeIndex = index;
+        syncActive();
+      };
+      img.addEventListener(
+        'keydown',
+        (event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            selectImage();
+          }
+        },
+        { signal },
+      );
+      let origin: { x: number; y: number; scroll: number } | null = null;
+      let moved = false;
+      img.addEventListener(
+        'pointerdown',
+        (event) => {
+          origin = { x: event.clientX, y: event.clientY, scroll: viewport.scrollLeft };
+          moved = false;
+        },
+        { signal },
+      );
+      img.addEventListener(
+        'pointermove',
+        (event) => {
+          if (
+            origin &&
+            (Math.abs(origin.x - event.clientX) > 10 || Math.abs(origin.y - event.clientY) > 10)
+          )
+            moved = true;
+        },
+        { signal },
+      );
+      img.addEventListener(
+        'pointercancel',
+        () => {
+          moved = true;
+        },
+        { signal },
+      );
+      img.addEventListener(
         'click',
         () => {
-          activeIndex = activeIndex === index ? -1 : index;
-          syncActive();
+          if (!moved && (!origin || Math.abs(origin.scroll - viewport.scrollLeft) <= 10))
+            selectImage();
+          origin = null;
         },
         { signal },
       );
@@ -180,7 +229,12 @@ export const createCarouselNodeView: NodeViewRenderer = ({ node: initialNode, ed
           activeIndex = currentIndex;
           editor.commands.removeImageFromCarousel(pos, index);
           editor.view.dispatch(closeHistory(editor.state.tr));
-          if (!destroyed) resizeButtons[currentIndex]?.focus({ preventScroll: true });
+          if (!destroyed)
+            container
+              .querySelector<HTMLImageElement>(
+                `img[aria-label="${currentIndex + 1}번 이미지 편집"]`,
+              )
+              ?.focus({ preventScroll: true });
           else editor.view.focus();
         },
         { signal },
@@ -192,6 +246,7 @@ export const createCarouselNodeView: NodeViewRenderer = ({ node: initialNode, ed
         () => {
           const pos = getPos();
           if (pos === undefined) return;
+          cancelDrag();
           activeIndex = index;
           syncActive();
           editor.view.dom.dispatchEvent(
@@ -200,7 +255,12 @@ export const createCarouselNodeView: NodeViewRenderer = ({ node: initialNode, ed
         },
         { signal },
       );
-      actions.append(label, resize, mosaic, remove);
+      const selectedActions = document.createElement('div');
+      selectedActions.className = 'image-carousel-selected-actions';
+      selectedActions.hidden = true;
+      selectedActions.append(mosaic, remove);
+      wrapper.append(selectedActions);
+      actions.append(label);
       slide.append(actions);
       for (const corner of ['nw', 'ne', 'sw', 'se']) {
         const handle = button(
@@ -233,15 +293,61 @@ export const createCarouselNodeView: NodeViewRenderer = ({ node: initialNode, ed
             event.stopPropagation();
             cancelDrag();
             const drag = new AbortController();
-            cancelDrag = () => drag.abort();
+            const guide = document.createElement('span');
+            guide.className = 'image-carousel-snap-guide';
+            guide.setAttribute('aria-hidden', 'true');
+            guide.hidden = true;
+            container.append(guide);
+            const originalFlex = slide.style.flex;
+            const originalImageStyle = img.style.cssText;
+            cancelDrag = () => {
+              drag.abort();
+              guide.remove();
+              delete wrapper.dataset.snapWidth;
+              delete wrapper.dataset.snapHeight;
+              slide.style.flex = originalFlex;
+              img.style.cssText = originalImageStyle;
+              cancelDrag = () => {};
+            };
             const startWidth = img.clientWidth;
             const startHeight = img.clientHeight;
-            const measure = (next: PointerEvent) =>
-              getCarouselResize(
+            const neighbors = [slides[index - 1], slides[index + 1]]
+              .map((neighbor) => neighbor?.querySelector('img'))
+              .filter((neighbor): neighbor is HTMLImageElement => Boolean(neighbor))
+              .map((neighbor) => ({ width: neighbor.clientWidth, height: neighbor.clientHeight }));
+            let snappedWidth: number | null = null;
+            let snappedHeight: number | null = null;
+            const positionGuide = () => {
+              guide.hidden = snappedHeight === null;
+              if (guide.hidden) return;
+              guide.style.top = `${img.getBoundingClientRect().bottom - container.getBoundingClientRect().top - container.clientTop + container.scrollTop}px`;
+            };
+            document.addEventListener('scroll', positionGuide, {
+              signal: drag.signal,
+              capture: true,
+            });
+            window.addEventListener('resize', positionGuide, { signal: drag.signal });
+            const measure = (next: PointerEvent) => {
+              const availableWidth = Math.max(1, contentWidth());
+              const width = snapCarouselDimension(
                 startWidth + (next.clientX - event.clientX) * (corner.endsWith('w') ? -1 : 1),
-                startHeight + (next.clientY - event.clientY) * (corner.startsWith('n') ? -1 : 1),
-                contentWidth(),
+                neighbors.map((neighbor) => neighbor.width),
+                snappedWidth,
+                Math.min(80, availableWidth),
+                availableWidth,
               );
+              const height = snapCarouselDimension(
+                startHeight + (next.clientY - event.clientY) * (corner.startsWith('n') ? -1 : 1),
+                neighbors.map((neighbor) => neighbor.height),
+                snappedHeight,
+                60,
+              );
+              snappedWidth = width.target;
+              snappedHeight = height.target;
+              wrapper.dataset.snapWidth = String(snappedWidth !== null);
+              wrapper.dataset.snapHeight = String(snappedHeight !== null);
+              return getCarouselResize(width.value, height.value, availableWidth);
+            };
             document.addEventListener(
               'pointermove',
               (next) => {
@@ -252,6 +358,7 @@ export const createCarouselNodeView: NodeViewRenderer = ({ node: initialNode, ed
                 img.style.height = `${size.pixels}px`;
                 img.style.aspectRatio = 'auto';
                 img.style.objectFit = 'cover';
+                positionGuide();
               },
               { signal: drag.signal, passive: false },
             );
@@ -259,16 +366,17 @@ export const createCarouselNodeView: NodeViewRenderer = ({ node: initialNode, ed
               'pointerup',
               (next) => {
                 if (next.pointerId !== event.pointerId) return;
-                drag.abort();
                 const size = measure(next);
+                cancelDrag();
                 saveSize(index, size.width, size.height);
               },
               { signal: drag.signal },
             );
             document.addEventListener(
               'pointercancel',
-              () => {
-                drag.abort();
+              (next) => {
+                if (next.pointerId !== event.pointerId) return;
+                cancelDrag();
                 render(true);
               },
               { signal: drag.signal },
@@ -278,50 +386,6 @@ export const createCarouselNodeView: NodeViewRenderer = ({ node: initialNode, ed
         );
         wrapper.append(handle);
       }
-      slide.addEventListener(
-        'dblclick',
-        () => {
-          activeIndex = index;
-          syncActive();
-        },
-        { signal },
-      );
-      let timer: ReturnType<typeof setTimeout> | undefined;
-      let origin = { x: 0, y: 0 };
-      const cancelPress = () => {
-        if (timer) {
-          clearTimeout(timer);
-          timers.delete(timer);
-          timer = undefined;
-        }
-      };
-      slide.addEventListener(
-        'pointerdown',
-        (event) => {
-          if (event.pointerType !== 'touch' || (event.target as HTMLElement).closest('button'))
-            return;
-          cancelPress();
-          origin = { x: event.clientX, y: event.clientY };
-          timer = setTimeout(() => {
-            activeIndex = index;
-            syncActive();
-            cancelPress();
-          }, 500);
-          timers.add(timer);
-        },
-        { signal },
-      );
-      slide.addEventListener(
-        'pointermove',
-        (event) => {
-          if (Math.abs(origin.x - event.clientX) > 10 || Math.abs(origin.y - event.clientY) > 10)
-            cancelPress();
-        },
-        { signal },
-      );
-      slide.addEventListener('pointerup', cancelPress, { signal });
-      slide.addEventListener('pointercancel', cancelPress, { signal });
-      slide.addEventListener('pointerleave', cancelPress, { signal });
     });
     if (images.length > 1) {
       const previous = button('이전 이미지', 'image-carousel-arrow image-carousel-arrow-prev');
@@ -402,9 +466,9 @@ export const createCarouselNodeView: NodeViewRenderer = ({ node: initialNode, ed
       scrollTo(currentIndex, 'instant');
       if (restoreFocus) {
         const previousControl = Array.from(
-          container.querySelectorAll<HTMLButtonElement>('button'),
+          container.querySelectorAll<HTMLElement>('button, img[role="button"]'),
         ).find((control) => control.getAttribute('aria-label') === focusedLabel && !control.hidden);
-        (previousControl ?? resizeButtons[Math.max(0, activeIndex)])?.focus({
+        (previousControl ?? imageControls[Math.max(0, activeIndex)])?.focus({
           preventScroll: true,
         });
       }
@@ -415,7 +479,7 @@ export const createCarouselNodeView: NodeViewRenderer = ({ node: initialNode, ed
     dom: container,
     stopEvent: (event) =>
       event.target instanceof HTMLElement &&
-      Boolean(event.target.closest('button, [data-mosaic-editor]')),
+      Boolean(event.target.closest('button, img[role="button"], [data-mosaic-editor]')),
     ignoreMutation: () => true,
     update(nextNode) {
       if (nextNode.type !== node.type) return false;

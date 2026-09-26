@@ -325,11 +325,13 @@
 }
 
 [data-mosaic-editing] > .image-resize-handle,
-[data-mosaic-editing] > .image-mosaic-button {
+[data-mosaic-editing] > .image-mosaic-button,
+[data-mosaic-editing] > .image-carousel-selected-actions {
   display: none !important;
 }
 
 .image-carousel-container:has([data-mosaic-editing]) .image-carousel-actions,
+.image-carousel-container:has([data-mosaic-editing]) .image-carousel-selected-actions,
 .image-carousel-container:has([data-mosaic-editing]) .image-carousel-arrow {
   pointer-events: none;
 }
@@ -341,6 +343,42 @@
   gap: 8px;
   padding-block: 8px;
   margin-top: 16px;
+}
+
+.image-carousel-selected-actions {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 5;
+}
+
+.image-carousel-selected-actions:not([hidden]) {
+  display: flex;
+  gap: 8px;
+}
+
+.image-carousel-image[data-snap-width='true']::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+  z-index: 4;
+}
+
+.image-carousel-image[data-snap-width='true']::after {
+  top: 0;
+  bottom: 0;
+  right: 0;
+  border-right: 2px solid #4a90d9;
+}
+
+.image-carousel-snap-guide {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 2px solid #4a90d9;
+  transform: translateY(-1px);
+  pointer-events: none;
+  z-index: 5;
 }
 
 .image-carousel-action {

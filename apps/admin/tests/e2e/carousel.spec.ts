@@ -148,7 +148,7 @@ test('명시적인 크기 조절 및 삭제는 한 장 캐러셀 유지 후 마�
 }) => {
   await createCarousel(page);
   await page.locator('.image-carousel-container').click();
-  await page.getByRole('button', { name: '1번 이미지 크기 조절', exact: true }).click();
+  await page.locator('.image-carousel-slide img').first().click();
   await page.getByRole('button', { name: '1번 이미지 삭제', exact: true }).click();
   await expect(page.locator('.image-carousel-container')).toHaveCount(1);
   await expect(page.locator('.image-carousel-slide')).toHaveCount(1);
@@ -329,7 +329,7 @@ test('일반 이미지 여러 장은 기존 캐러셀과 자동 병합하지 않
 
 test('드래그 미리보기의 실제 너비·높이와 저장한 크롭 비율이 일치한다', async ({ page }) => {
   await createCarousel(page);
-  await page.getByRole('button', { name: '1번 이미지 크기 조절', exact: true }).click();
+  await page.locator('.image-carousel-slide img').first().click();
   const handle = page.getByRole('button', { name: '1번 이미지 se 크기 조절', exact: true });
   await handle.scrollIntoViewIfNeeded();
   const box = (await handle.boundingBox())!;
@@ -344,6 +344,41 @@ test('드래그 미리보기의 실제 너비·높이와 저장한 크롭 비율
   expect(html).toContain('data-width="100.0%"');
 });
 
+test('인접 사진 높이에 붙었다가 더 끌면 풀리고 안내는 종료 시 사라진다', async ({ page }) => {
+  await createCarousel(page);
+  const pictures = page.locator('.image-carousel-slide img');
+  await pictures.first().click();
+  const original = (await pictures.nth(1).boundingBox())!;
+  const neighborStyle = await pictures.nth(1).getAttribute('style');
+  const handle = page.getByRole('button', { name: '1번 이미지 se 크기 조절', exact: true });
+  await handle.scrollIntoViewIfNeeded();
+  const bounds = (await handle.boundingBox())!;
+  const x = bounds.x + bounds.width / 2;
+  const y = bounds.y + bounds.height / 2;
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x, y + 5);
+  expect((await pictures.first().boundingBox())!.height).toBeCloseTo(original.height, 0);
+  const guide = page.locator('.image-carousel-snap-guide');
+  await expect(guide).toBeVisible();
+  await expect(page.getByText(/높이 일치|너비 일치/)).toHaveCount(0);
+  const line = (await guide.boundingBox())!;
+  const carousel = (await page.locator('.image-carousel-container').boundingBox())!;
+  const picture = (await pictures.first().boundingBox())!;
+  expect(Math.abs(line.y + line.height / 2 - (picture.y + picture.height))).toBeLessThan(1);
+  expect(Math.abs(line.width - carousel.width)).toBeLessThanOrEqual(2);
+  expect(Math.abs(line.x - carousel.x)).toBeLessThanOrEqual(1);
+  await page.mouse.move(x, y + 12);
+  expect((await pictures.first().boundingBox())!.height).toBeCloseTo(original.height, 0);
+  await page.mouse.move(x, y + 25);
+  await expect(guide).toBeHidden();
+  expect((await pictures.first().boundingBox())!.height).toBeGreaterThan(original.height + 20);
+  await page.mouse.up();
+  await expect(guide).toHaveCount(0);
+  expect(await pictures.nth(1).getAttribute('style')).toBe(neighborStyle);
+  expect(await page.getByTestId('saved-html').textContent()).not.toMatch(/일치|snap-guide/);
+});
+
 test('캐러셀 편집 범위와 공통 파란 점선 UI는 저장 HTML에 포함되지 않는다', async ({
   page,
 }, testInfo) => {
@@ -352,7 +387,12 @@ test('캐러셀 편집 범위와 공통 파란 점선 UI는 저장 HTML에 포�
   await expect(header.getByText('캐러셀 · 2장')).toBeVisible();
   await expect(header.getByRole('button', { name: '이미지 추가', exact: true })).toBeVisible();
   await expect(page.locator('.image-carousel-actions').first()).toContainText('1번 이미지');
-  await page.getByRole('button', { name: '1번 이미지 크기 조절', exact: true }).click();
+  await expect(page.getByRole('button', { name: '1번 이미지 모자이크', exact: true })).toBeHidden();
+  await page.locator('.image-carousel-slide img').first().click();
+  await expect(
+    page.getByRole('button', { name: '1번 이미지 모자이크', exact: true }),
+  ).toBeVisible();
+  await expect(page.locator('.image-carousel-actions button')).toHaveCount(0);
   const frame = page.locator('.image-carousel-image').first();
   await expect(frame).toHaveCSS('outline-style', 'dashed');
   await expect(frame).toHaveCSS('outline-color', 'rgb(74, 144, 217)');
@@ -366,6 +406,9 @@ test('캐러셀 편집 범위와 공통 파란 점선 UI는 저장 HTML에 포�
     'rgb(74, 144, 217)',
   );
   await page.screenshot({ path: testInfo.outputPath('carousel-editor-frame.png'), fullPage: true });
+  await page.getByRole('button', { name: '다음 이미지', exact: true }).click();
+  await page.locator('.image-carousel-slide img').nth(1).click();
+  await expect(page.getByRole('button', { name: '1번 이미지 모자이크', exact: true })).toBeHidden();
   await page.getByRole('button', { name: '2번 이미지 삭제', exact: true }).click();
   await expect(header.getByText('캐러셀 · 1장')).toBeVisible();
   const html = await page.getByTestId('saved-html').textContent();
