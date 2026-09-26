@@ -25,8 +25,12 @@ beforeEach(() => {
 describe('기존 미디어 파이프라인 보존', () => {
   it('본문 이미지의 원본·688 변형과 실제 치수를 유지한다', async () => {
     const result = await uploadImageFile(file);
-    expect(toWebP).toHaveBeenNthCalledWith(1, file, { maxWidth: 2048 });
-    expect(toWebP).toHaveBeenNthCalledWith(2, file, { maxWidth: 688, quality: 0.85 });
+    expect(toWebP).toHaveBeenNthCalledWith(1, file, { maxWidth: 2048, watermark: true });
+    expect(toWebP).toHaveBeenNthCalledWith(2, file, {
+      maxWidth: 688,
+      quality: 0.85,
+      watermark: true,
+    });
     expect(getPresignedUrl).toHaveBeenNthCalledWith(
       2,
       'image/webp',
@@ -43,8 +47,16 @@ describe('기존 미디어 파이프라인 보존', () => {
   });
   it('썸네일의 별도 품질과 OG 변형을 유지한다', async () => {
     await uploadImageFile(file, { og: true });
-    expect(toWebP).toHaveBeenNthCalledWith(2, file, { maxWidth: 688, quality: 0.75 });
-    expect(toWebP).toHaveBeenNthCalledWith(3, file, { maxWidth: 1200, maxHeight: 630 });
+    expect(toWebP).toHaveBeenNthCalledWith(2, file, {
+      maxWidth: 688,
+      quality: 0.75,
+      watermark: true,
+    });
+    expect(toWebP).toHaveBeenNthCalledWith(3, file, {
+      maxWidth: 1200,
+      maxHeight: 630,
+      watermark: true,
+    });
     expect(getPresignedUrl).toHaveBeenNthCalledWith(
       3,
       'image/webp',
@@ -52,6 +64,21 @@ describe('기존 미디어 파이프라인 보존', () => {
       'posts/2026/09/test_og.webp',
       'image/webp',
     );
+    expect(fetch).toHaveBeenCalledTimes(3);
+  });
+  it('재편집 이미지의 원본·688·OG 모두 추가 워터마크를 생략한다', async () => {
+    await uploadImageFile(file, { og: true, watermark: false });
+    expect(toWebP).toHaveBeenNthCalledWith(1, file, { maxWidth: 2048, watermark: false });
+    expect(toWebP).toHaveBeenNthCalledWith(2, file, {
+      maxWidth: 688,
+      quality: 0.75,
+      watermark: false,
+    });
+    expect(toWebP).toHaveBeenNthCalledWith(3, file, {
+      maxWidth: 1200,
+      maxHeight: 630,
+      watermark: false,
+    });
     expect(fetch).toHaveBeenCalledTimes(3);
   });
   it('S3 PUT 실패를 파일별 재시도 계층으로 전달한다', async () => {

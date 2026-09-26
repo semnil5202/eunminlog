@@ -192,6 +192,9 @@ src/
 │   │   ├── containers/TiptapEditorContainer.tsx
 │   │   ├── hooks/useTiptapEditor.ts
 │   │   ├── hooks/useMediaIntake.ts            # 파일별 업로드 세션·캐러셀 생성/추가
+│   │   ├── containers/MosaicEditorContainer.tsx # 단일·캐러셀 공통 인라인 모자이크 편집/저장
+│   │   ├── lib/mosaic.ts                     # 영역 좌표·고정 강도 Canvas 픽셀 처리
+│   │   ├── lib/mosaic-target.ts              # 비동기 편집 대상 추적·Undo 단위 URL 교체
 │   │   ├── hooks/useImageTransfer.ts          # 본문 파일 paste/drop·드롭 위치·내부 드래그 구분
 │   │   ├── configs/                           # Tiptap 확장 설정
 │   │   ├── lib/carousel-node-view.ts          # 캐러셀별 스크롤·리사이즈·명시적 조작

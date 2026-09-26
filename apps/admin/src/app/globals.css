@@ -317,6 +317,23 @@
   position: relative;
 }
 
+.image-mosaic-button {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 5;
+}
+
+[data-mosaic-editing] > .image-resize-handle,
+[data-mosaic-editing] > .image-mosaic-button {
+  display: none !important;
+}
+
+.image-carousel-container:has([data-mosaic-editing]) .image-carousel-actions,
+.image-carousel-container:has([data-mosaic-editing]) .image-carousel-arrow {
+  pointer-events: none;
+}
+
 .image-carousel-actions {
   display: flex;
   align-items: center;

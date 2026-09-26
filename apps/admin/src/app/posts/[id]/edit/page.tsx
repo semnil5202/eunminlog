@@ -48,6 +48,10 @@ import { ThumbnailUpload } from '@/features/post-editor/components/ThumbnailUplo
 import { ProductReviewFields } from '@/features/post-editor/components/ProductReviewFields';
 import { VisitFields } from '@/features/post-editor/components/VisitFields';
 import { TiptapEditorContainer } from '@/features/post-editor/containers/TiptapEditorContainer';
+import {
+  copyReplacementImageAlt,
+  mergeImageAltEdits,
+} from '@/features/post-editor/lib/image-alt-replacement';
 import { FORM_TYPE_OPTIONS } from '@/features/post-editor/constants/category';
 import { SUMMARY_SYSTEM_PROMPT } from '@/shared/constants/prompts';
 import {
@@ -235,6 +239,12 @@ function EditPostForm({
   const [showSubmitDialog, setShowSubmitDialog] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imageAlts, setImageAlts] = useState<ImageAlt[]>(postData.imageAlts ?? []);
+  const handleImageReplace = useCallback((previous: string, next: string) => {
+    setImageAlts((entries) => copyReplacementImageAlt(entries, previous, next));
+  }, []);
+  const handleImageAltComplete = useCallback((updates: ImageAlt[]) => {
+    setImageAlts((entries) => mergeImageAltEdits(entries, updates));
+  }, []);
   const [isAltSheetOpen, setIsAltSheetOpen] = useState(false);
   const [isManualTranslationOpen, setIsManualTranslationOpen] = useState(false);
   const [manualTranslationRaw, setManualTranslationRaw] = useState('');
@@ -521,7 +531,11 @@ function EditPostForm({
             name="content"
             control={control}
             render={({ field }) => (
-              <TiptapEditorContainer content={field.value} onChange={field.onChange}>
+              <TiptapEditorContainer
+                content={field.value}
+                onChange={field.onChange}
+                onImageReplace={handleImageReplace}
+              >
                 <div className="p-4">
                   <div className="flex items-center justify-between">
                     <input
@@ -699,7 +713,7 @@ function EditPostForm({
         onOpenChange={setIsAltSheetOpen}
         content={watchedContent}
         imageAlts={imageAlts}
-        onComplete={setImageAlts}
+        onComplete={handleImageAltComplete}
         thumbnail={watch('thumbnail') || null}
         thumbnailAlt={watch('thumbnailAlt')}
         onThumbnailAltChange={(alt) =>

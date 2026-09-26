@@ -18,6 +18,10 @@ import { ThumbnailUpload } from '@/features/post-editor/components/ThumbnailUplo
 import { ProductReviewFields } from '@/features/post-editor/components/ProductReviewFields';
 import { VisitFields } from '@/features/post-editor/components/VisitFields';
 import { TiptapEditorContainer } from '@/features/post-editor/containers/TiptapEditorContainer';
+import {
+  copyReplacementImageAlt,
+  mergeImageAltEdits,
+} from '@/features/post-editor/lib/image-alt-replacement';
 import { FORM_TYPE_OPTIONS } from '@/features/post-editor/constants/category';
 import { SUMMARY_SYSTEM_PROMPT } from '@/shared/constants/prompts';
 import {
@@ -94,6 +98,12 @@ function NewPostContent() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imageAlts, setImageAlts] = useState<ImageAlt[]>([]);
+  const handleImageReplace = useCallback((previous: string, next: string) => {
+    setImageAlts((entries) => copyReplacementImageAlt(entries, previous, next));
+  }, []);
+  const handleImageAltComplete = useCallback((updates: ImageAlt[]) => {
+    setImageAlts((entries) => mergeImageAltEdits(entries, updates));
+  }, []);
   const [isAltSheetOpen, setIsAltSheetOpen] = useState(false);
   const [imageAltError, setImageAltError] = useState(false);
   const [isManualTranslationOpen, setIsManualTranslationOpen] = useState(false);
@@ -381,7 +391,11 @@ function NewPostContent() {
             name="content"
             control={control}
             render={({ field }) => (
-              <TiptapEditorContainer content={field.value} onChange={field.onChange}>
+              <TiptapEditorContainer
+                content={field.value}
+                onChange={field.onChange}
+                onImageReplace={handleImageReplace}
+              >
                 <div className="p-4">
                   <div className="flex items-center justify-between">
                     <input
@@ -566,7 +580,7 @@ function NewPostContent() {
         onOpenChange={setIsAltSheetOpen}
         content={watch('content')}
         imageAlts={imageAlts}
-        onComplete={setImageAlts}
+        onComplete={handleImageAltComplete}
         thumbnail={watch('thumbnail') || null}
         thumbnailAlt={watch('thumbnailAlt')}
         onThumbnailAltChange={(alt) =>

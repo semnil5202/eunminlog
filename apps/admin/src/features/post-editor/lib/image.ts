@@ -30,12 +30,13 @@ type ToWebPOptions = {
   maxWidth?: number;
   maxHeight?: number;
   quality?: number;
+  watermark?: boolean;
 };
 
 export type WebPResult = { blob: Blob; width: number; height: number };
 
 export async function toWebP(file: File, options: ToWebPOptions = {}): Promise<WebPResult> {
-  const { maxWidth, maxHeight, quality = 1 } = options;
+  const { maxWidth, maxHeight, quality = 1, watermark = true } = options;
   const source = await convertHeicToJpeg(file);
 
   return new Promise((resolve, reject) => {
@@ -71,7 +72,7 @@ export async function toWebP(file: File, options: ToWebPOptions = {}): Promise<W
         return;
       }
       ctx.drawImage(resized, 0, cropY, w, canvasH, 0, 0, w, canvasH);
-      drawWatermark(ctx, w, canvasH);
+      if (watermark) drawWatermark(ctx, w, canvasH);
 
       canvas.toBlob(
         (blob) => {

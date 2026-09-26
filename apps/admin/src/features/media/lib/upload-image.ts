@@ -14,12 +14,13 @@ async function uploadBlob(presignedUrl: string, blob: Blob) {
   if (!response.ok) throw new Error('S3 업로드에 실패했습니다.');
 }
 
-/** 이미지와 파생 이미지를 업로드한다. @param file 원본 파일 @param options OG 생성 옵션 */
+/** 이미지와 파생 이미지를 업로드한다. @param file 원본 파일 @param options OG 생성 및 워터마크 옵션 */
 export async function uploadImageFile(
   file: File,
-  options?: { og?: boolean },
+  options?: { og?: boolean; watermark?: boolean },
 ): Promise<UploadImageResult> {
-  const original = await toWebP(file, { maxWidth: 2048 });
+  const watermark = options?.watermark ?? true;
+  const original = await toWebP(file, { maxWidth: 2048, watermark });
   const blobType = original.blob.type || 'image/webp';
   const { presignedUrl, cdnUrl, key } = await getPresignedUrl(
     blobType,
@@ -29,7 +30,11 @@ export async function uploadImageFile(
   );
   await uploadBlob(presignedUrl, original.blob);
 
-  const resized = await toWebP(file, { maxWidth: 688, quality: options?.og ? 0.75 : 0.85 });
+  const resized = await toWebP(file, {
+    maxWidth: 688,
+    quality: options?.og ? 0.75 : 0.85,
+    watermark,
+  });
   const ext = blobType === 'image/jpeg' ? 'jpg' : 'webp';
   const resizedKey = key.replace(/\.(webp|jpg)$/, `_688.${ext}`);
   const { presignedUrl: resizedUrl } = await getPresignedUrl(
@@ -41,7 +46,7 @@ export async function uploadImageFile(
   await uploadBlob(resizedUrl, resized.blob);
 
   if (options?.og) {
-    const og = await toWebP(file, { maxWidth: 1200, maxHeight: 630 });
+    const og = await toWebP(file, { maxWidth: 1200, maxHeight: 630, watermark });
     const ogKey = key.replace(/\.(webp|jpg)$/, `_og.${ext}`);
     const { presignedUrl: ogUrl } = await getPresignedUrl(blobType, og.blob.size, ogKey, blobType);
     await uploadBlob(ogUrl, og.blob);

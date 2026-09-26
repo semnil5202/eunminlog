@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useLayoutEffect } from 'react';
 
 import { cn } from '@/lib/utils';
 import { TableIcon } from '../icons';
@@ -37,16 +37,24 @@ export function TableToolbar({ editor }: EditorProps) {
     };
   }, [editor]);
 
-  useEffect(() => {
-    if (isInTable && buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect();
-      const parent = buttonRef.current.closest('[class*="border-b"]');
-      const parentRect = parent?.getBoundingClientRect();
-      const right = parentRect
-        ? window.innerWidth - parentRect.right + parentRect.width * 0.15
-        : window.innerWidth - rect.right;
-      setDropdownPos({ top: rect.bottom + 4, right: Math.max(8, right) });
-    }
+  useLayoutEffect(() => {
+    const toolbar = buttonRef.current?.closest('[data-editor-toolbar]');
+    if (!isInTable || !toolbar) return;
+    const updatePosition = () => {
+      const rect = toolbar.getBoundingClientRect();
+      const right = Math.max(8, window.innerWidth - rect.right + rect.width * 0.15);
+      setDropdownPos({ top: rect.bottom, right });
+    };
+    updatePosition();
+    window.addEventListener('scroll', updatePosition, true);
+    window.addEventListener('resize', updatePosition);
+    const observer = new ResizeObserver(updatePosition);
+    observer.observe(toolbar);
+    return () => {
+      window.removeEventListener('scroll', updatePosition, true);
+      window.removeEventListener('resize', updatePosition);
+      observer.disconnect();
+    };
   }, [isInTable]);
 
   return (
@@ -54,6 +62,7 @@ export function TableToolbar({ editor }: EditorProps) {
       <button
         ref={buttonRef}
         type="button"
+        aria-label="표 삽입"
         tabIndex={-1}
         onClick={() =>
           editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
@@ -67,8 +76,14 @@ export function TableToolbar({ editor }: EditorProps) {
       </button>
       {isInTable && (
         <div
-          className="fixed z-50 flex max-w-[calc(100vw-16px)] items-center gap-0.5 overflow-x-auto border bg-background px-1 py-0.5 shadow-md"
-          style={{ top: dropdownPos.top, right: dropdownPos.right }}
+          role="toolbar"
+          aria-label="표 설정"
+          className="fixed z-50 flex items-center gap-0.5 overflow-x-auto border bg-background px-1 py-0.5 shadow-md"
+          style={{
+            top: dropdownPos.top,
+            right: dropdownPos.right,
+            maxWidth: `calc(100vw - ${dropdownPos.right + 8}px)`,
+          }}
         >
           <button
             type="button"

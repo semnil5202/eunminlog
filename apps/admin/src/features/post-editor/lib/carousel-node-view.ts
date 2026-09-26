@@ -185,7 +185,22 @@ export const createCarouselNodeView: NodeViewRenderer = ({ node: initialNode, ed
         },
         { signal },
       );
-      actions.append(label, resize, remove);
+      const mosaic = button('모자이크', 'image-carousel-action');
+      mosaic.setAttribute('aria-label', `${index + 1}번 이미지 모자이크`);
+      mosaic.addEventListener(
+        'click',
+        () => {
+          const pos = getPos();
+          if (pos === undefined) return;
+          activeIndex = index;
+          syncActive();
+          editor.view.dom.dispatchEvent(
+            new CustomEvent('image:mosaic', { detail: { pos, index, image: img } }),
+          );
+        },
+        { signal },
+      );
+      actions.append(label, resize, mosaic, remove);
       slide.append(actions);
       for (const corner of ['nw', 'ne', 'sw', 'se']) {
         const handle = button(
@@ -399,7 +414,8 @@ export const createCarouselNodeView: NodeViewRenderer = ({ node: initialNode, ed
   return {
     dom: container,
     stopEvent: (event) =>
-      event.target instanceof HTMLElement && Boolean(event.target.closest('button')),
+      event.target instanceof HTMLElement &&
+      Boolean(event.target.closest('button, [data-mosaic-editor]')),
     ignoreMutation: () => true,
     update(nextNode) {
       if (nextNode.type !== node.type) return false;

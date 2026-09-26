@@ -90,9 +90,25 @@ export const CustomResizableImage = Image.extend({
       });
 
       let isSelected = false;
+      const mosaic = document.createElement('button');
+      mosaic.type = 'button';
+      mosaic.textContent = '모자이크';
+      mosaic.className = 'image-mosaic-button image-carousel-action';
+      mosaic.contentEditable = 'false';
+      mosaic.hidden = true;
+      mosaic.addEventListener('click', (event) => {
+        event.stopPropagation();
+        const pos = getPos();
+        if (pos !== undefined)
+          editor.view.dom.dispatchEvent(
+            new CustomEvent('image:mosaic', { detail: { pos, image: $img } }),
+          );
+      });
+      $container.append(mosaic);
 
       const showHandles = () => {
         isSelected = true;
+        mosaic.hidden = false;
         $container.classList.add('image-resize-frame');
         dots.forEach((dot) => {
           dot.style.display = 'block';
@@ -101,6 +117,7 @@ export const CustomResizableImage = Image.extend({
 
       const hideHandles = () => {
         isSelected = false;
+        mosaic.hidden = true;
         $container.classList.remove('image-resize-frame');
         dots.forEach((dot) => {
           dot.style.display = 'none';
@@ -169,6 +186,10 @@ export const CustomResizableImage = Image.extend({
 
       return {
         dom: $container,
+        ignoreMutation: () => true,
+        stopEvent: (event) =>
+          event.target instanceof HTMLElement &&
+          !!event.target.closest('[data-mosaic-editor], .image-mosaic-button'),
         destroy() {
           document.removeEventListener('click', handleOutsideClick);
         },

@@ -51,7 +51,10 @@ export function Toolbar({
   }, [editor]);
 
   return (
-    <div className="sticky top-0 z-10 flex h-11 items-center justify-between overflow-x-auto border-b bg-muted px-2">
+    <div
+      data-editor-toolbar
+      className="sticky top-0 z-10 flex h-11 items-center justify-between overflow-x-auto border-b bg-muted px-2"
+    >
       <div
         className={cn('flex items-center gap-1', isHtmlMode && 'opacity-40 pointer-events-none')}
       >
