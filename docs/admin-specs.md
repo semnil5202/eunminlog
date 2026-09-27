@@ -881,6 +881,8 @@ features/media/
 
 #### 번역 API 호출 전략
 
+현재 본문 번역은 자동 API가 아닌 수동 번역 Sheet를 사용한다. 프롬프트를 외부 AI에 전달해 UTF-8 `translations.txt` 전문을 생성하고 파일 내용 전체를 붙여넣는다. 7개 언어·필수/조건부 필드·목록·HTML 구조 검증 실패 시 기존 결과를 교체하지 않는다. BOM·Windows 줄바꿈을 지원하고 입력을 유지하여 수정할 수 있다. 직접 파일 업로드는 제공하지 않으며 의미적 번역 누락·정확성은 사용자가 확인한다. 아래 자동 API 설명은 비활성 경로의 구현 참고이며, 수동 출력 정본은 [수동 번역 프롬프트](gpt-prompts.md#4-수동-번역-buildtranslationprompt)를 따른다.
+
 - **호출 위치**: 브라우저에서 OpenAI SDK (`openai` npm 패키지, `dangerouslyAllowBrowser: true`) 직접 호출. 공유 클라이언트: `shared/lib/openai.ts`. Vercel Function 타임아웃 제약 회피를 위해 API Route를 사용하지 않는다.
 - **모델**: GPT-5 Mini (`gpt-5-mini`). 번역+요약+용어 추출+슬러그+카테고리 번역 모두 사용.
 - **프롬프트 관리**: 모든 GPT 프롬프트를 `shared/constants/prompts.ts`에 중앙 집중 관리. 상세: [`docs/gpt-prompts.md`](gpt-prompts.md).

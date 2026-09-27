@@ -2,7 +2,7 @@
 
 type ImageAlt = { src: string; alt: string };
 
-type PromptBuildParams = {
+export type PromptBuildParams = {
   formType: 'visit' | 'product-review';
   title: string;
   content: string;
@@ -17,6 +17,29 @@ type PromptBuildParams = {
   thumbnailAlt?: string;
 };
 
+export function getTranslationFields(params: PromptBuildParams): Record<string, number> {
+  const fields: Record<string, number> = { TITLE: 0, DESCRIPTION: 0 };
+  if (params.formType === 'visit') {
+    if (params.placeName) fields.PLACE_NAME = 0;
+    if (params.address) fields.ADDRESS = 0;
+    if (params.pricePrefix) fields.PRICE_PREFIX = 0;
+  } else {
+    for (const [field, values] of [
+      ['PRODUCT_NAMES', params.productNames],
+      ['PURCHASE_SOURCES', params.purchaseSources],
+      ['PRICE_PREFIXES', params.pricePrefixes],
+    ] as const) {
+      const count = values?.filter(Boolean).length ?? 0;
+      if (count) fields[field] = count;
+    }
+  }
+  if (params.thumbnailAlt) fields.THUMBNAIL_ALT = 0;
+  const imageCount = params.imageAlts?.filter((image) => image.alt).length ?? 0;
+  if (imageCount) fields.IMAGE_ALTS = imageCount;
+  fields.CONTENT = 0;
+  return fields;
+}
+
 function buildResponseFormat(params: PromptBuildParams): string {
   const fields: string[] = [
     '---TITLE---\n(번역된 제목)',
@@ -30,16 +53,16 @@ function buildResponseFormat(params: PromptBuildParams): string {
   }
 
   if (params.formType === 'product-review') {
-    if (params.productNames && params.productNames.length > 0)
+    if (params.productNames?.some(Boolean))
       fields.push('---PRODUCT_NAMES---\n(번역된 제품명, 번호순)');
-    if (params.purchaseSources && params.purchaseSources.length > 0)
+    if (params.purchaseSources?.some(Boolean))
       fields.push('---PURCHASE_SOURCES---\n(번역된 구매처, 번호순)');
-    if (params.pricePrefixes && params.pricePrefixes.length > 0)
+    if (params.pricePrefixes?.some(Boolean))
       fields.push('---PRICE_PREFIXES---\n(번역된 가격설명들, 번호순)');
   }
 
   if (params.thumbnailAlt) fields.push('---THUMBNAIL_ALT---\n(번역된 썸네일 alt)');
-  if (params.imageAlts && params.imageAlts.length > 0)
+  if (params.imageAlts?.some((image) => image.alt))
     fields.push('---IMAGE_ALTS---\n(번역된 이미지 alt, 번호순)');
 
   fields.push('---CONTENT---\n(번역된 HTML 본문)');
@@ -112,9 +135,12 @@ export function buildTranslationPrompt(params: PromptBuildParams): string {
 
 === 출력 규칙 ===
 
-- 응답을 코드블록(\`\`\`)이나 마크다운 포맷으로 감싸지 마세요. plain text로 즉시 반환하세요
-- 설명, 인사, 이모지, 요약, 마무리 멘트 등 번역 결과 외의 텍스트를 절대 출력하지 마세요
-- ---LOCALE:en---부터 바로 시작하고, 마지막 locale의 CONTENT가 끝나면 즉시 종료하세요
+- 번역 전문을 UTF-8 인코딩의 다운로드 가능한 translations.txt 파일 하나로 생성하세요. 대화 본문에 번역 전문을 인라인으로 반환하지 마세요
+- 파일 안에는 아래 구분자 형식의 plain text만 넣으세요. 코드블록(\`\`\`), 설명, 인사, 이모지, 요약, 마무리 멘트를 넣지 마세요
+- 파일은 ---LOCALE:en---부터 시작하고 마지막 th의 CONTENT 전문이 끝나면 종료하세요. 대화에는 완성된 파일 다운로드 링크만 반환하세요
+- 요약, 생략, '이하 동일', 일부 언어만 출력하는 것은 금지합니다. 7개 언어 각각 원문 처음부터 끝까지 번역하세요
+- 파일을 제공하기 전에 7개 locale이 각각 한 번씩 있는지, 필수 필드와 번호 목록의 항목 수가 원문과 같은지, HTML 태그/속성/순서가 모두 보존되었는지 확인하세요
+- 파일 생성이나 첨부를 지원하지 않거나 출력 한도로 전문을 완성할 수 없다면 그 사실을 알리세요. 일부 결과를 완성본 파일인 것처럼 제공하지 마세요
 - 원문에 없는 필드를 추가하지 마세요. 아래 응답 형식에 명시된 필드만 반환하세요
 
 === 응답 형식 ===
