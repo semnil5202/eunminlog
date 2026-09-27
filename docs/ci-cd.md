@@ -5,6 +5,8 @@
 
 ## 1. Overview
 
+미디어 고아 파일 정리는 배포 워크플로우와 분리된 [수동 스크립트](media-cleanup.md)를 사용한다. dev/prod를 명시하고 양쪽 참조를 대조하며, 기본은 삭제 없는 보고서 생성이다. 정리용 GitHub Actions나 예약 작업은 등록하지 않는다.
+
 Astro SSG 클라이언트 앱(`apps/client`)을 GitHub Actions로 자동 빌드하여 AWS S3에 배포하고, CloudFront 캐시를 무효화하는 파이프라인. CloudFront Function(Viewer Request)이 하위 경로를 `index.html`로 매핑하여 S3 REST API의 경로 해석 제약을 보완한다.
 
 ```
