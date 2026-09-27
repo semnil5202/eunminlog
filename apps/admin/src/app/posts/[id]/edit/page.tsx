@@ -43,6 +43,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import { Input } from '@/components/ui/input';
 import { CategorySelector } from '@/features/post-editor/components/CategorySelector';
 import { ThumbnailUpload } from '@/features/post-editor/components/ThumbnailUpload';
 import { ProductReviewFields } from '@/features/post-editor/components/ProductReviewFields';
@@ -219,13 +220,6 @@ function EditPostForm({
 
   const { errors, isDirty: isFormDirty } = formState;
 
-  useEffect(() => {
-    if (!isFormDirty) return;
-    const handler = (e: BeforeUnloadEvent) => e.preventDefault();
-    window.addEventListener('beforeunload', handler);
-    return () => window.removeEventListener('beforeunload', handler);
-  }, [isFormDirty]);
-
   const [categoryOptions, setCategoryOptions] = useState<CategoryOption[]>([]);
   const [subCategoryMap, setSubCategoryMap] = useState<Record<string, CategoryOption[]>>({});
 
@@ -239,11 +233,28 @@ function EditPostForm({
   const [showSubmitDialog, setShowSubmitDialog] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imageAlts, setImageAlts] = useState<ImageAlt[]>(postData.imageAlts ?? []);
+  const [savedImageAlts, setSavedImageAlts] = useState<ImageAlt[]>(postData.imageAlts ?? []);
+  const savedAltMap = new Map(savedImageAlts.map(({ src, alt }) => [src, alt]));
+  const currentAltMap = new Map(imageAlts.map(({ src, alt }) => [src, alt]));
+  const isImageAltDirty =
+    imageAlts.some(({ src, alt }) => alt !== (savedAltMap.get(src) ?? '')) ||
+    savedImageAlts.some(({ src, alt }) => alt !== (currentAltMap.get(src) ?? ''));
+
+  useEffect(() => {
+    if (!isFormDirty && !isImageAltDirty) return;
+    const handler = (e: BeforeUnloadEvent) => e.preventDefault();
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [isFormDirty, isImageAltDirty]);
+
   const handleImageReplace = useCallback((previous: string, next: string) => {
     setImageAlts((entries) => copyReplacementImageAlt(entries, previous, next));
   }, []);
   const handleImageAltComplete = useCallback((updates: ImageAlt[]) => {
     setImageAlts((entries) => mergeImageAltEdits(entries, updates));
+  }, []);
+  const handleImageAltChange = useCallback((src: string, alt: string) => {
+    setImageAlts((entries) => mergeImageAltEdits(entries, [{ src, alt }]));
   }, []);
   const [isAltSheetOpen, setIsAltSheetOpen] = useState(false);
   const [isManualTranslationOpen, setIsManualTranslationOpen] = useState(false);
@@ -303,9 +314,8 @@ function EditPostForm({
       }
       reset(formData);
       loadDraftId(draft.id);
-      if (draft.image_alts.length > 0) {
-        setImageAlts(draft.image_alts);
-      }
+      setImageAlts(draft.image_alts);
+      setSavedImageAlts(draft.image_alts);
       if (draft.translation_data?.results && draft.translation_data.results.length > 0) {
         setManualTranslationResults(fromTranslationResults(draft.translation_data.results));
       }
@@ -520,6 +530,23 @@ function EditPostForm({
             {errors.thumbnail && (
               <p className="mt-1 text-[14px] text-red-500">{errors.thumbnail.message}</p>
             )}
+            <div id="field-thumbnailAlt" className="image-alt-field">
+              <label htmlFor="thumbnail-alt" className="block text-sm font-semibold">
+                썸네일 이미지 설명 (alt)
+              </label>
+              <Input
+                id="thumbnail-alt"
+                {...register('thumbnailAlt')}
+                placeholder="예: 강남 파스타 맛집 외관"
+                aria-invalid={!!errors.thumbnailAlt}
+                aria-describedby={errors.thumbnailAlt ? 'thumbnail-alt-error' : undefined}
+              />
+              {errors.thumbnailAlt && (
+                <p id="thumbnail-alt-error" className="text-[14px] text-red-500">
+                  {errors.thumbnailAlt.message}
+                </p>
+              )}
+            </div>
           </div>
         </div>
 
@@ -535,6 +562,8 @@ function EditPostForm({
                 content={field.value}
                 onChange={field.onChange}
                 onImageReplace={handleImageReplace}
+                imageAlts={imageAlts}
+                onImageAltChange={handleImageAltChange}
               >
                 <div className="p-4">
                   <div className="flex items-center justify-between">
@@ -717,7 +746,10 @@ function EditPostForm({
         thumbnail={watch('thumbnail') || null}
         thumbnailAlt={watch('thumbnailAlt')}
         onThumbnailAltChange={(alt) =>
-          setValue('thumbnailAlt', alt, { shouldValidate: !!errors.thumbnailAlt })
+          setValue('thumbnailAlt', alt, {
+            shouldValidate: !!errors.thumbnailAlt,
+            shouldDirty: true,
+          })
         }
       />
 

@@ -42,6 +42,9 @@ export async function uploadImageFile(
     return { url, width: 688, height: 400 };
   }
   if (file.name.includes('fail') && count === 1) throw new Error('테스트 업로드 실패');
+  if (new URLSearchParams(location.search).has('alt')) {
+    return { url: `/alt-fixture/${encodeURIComponent(file.name)}`, width: 688, height: 400 };
+  }
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="688" height="400"><rect width="688" height="400" fill="#749b81"/><text x="30" y="80" font-size="36">${file.name}</text></svg>`;
   return { url: `data:image/svg+xml,${encodeURIComponent(svg)}`, width: 688, height: 400 };
 }

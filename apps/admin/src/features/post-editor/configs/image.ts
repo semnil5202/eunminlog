@@ -1,4 +1,5 @@
 import Image from '@tiptap/extension-image';
+import { createImageAltInput } from '../lib/image-alt-input';
 
 export const CustomResizableImage = Image.extend({
   addAttributes() {
@@ -43,7 +44,9 @@ export const CustomResizableImage = Image.extend({
       const { style } = node.attrs;
 
       const $container = document.createElement('div');
-      $container.className = 'image-node-view';
+      const $root = document.createElement('div');
+      $root.className = 'image-node-view';
+      $container.className = 'image-node-view-frame';
       const $img = document.createElement('img');
 
       Object.entries(node.attrs).forEach(([key, value]) => {
@@ -52,13 +55,17 @@ export const CustomResizableImage = Image.extend({
       });
 
       $img.setAttribute('style', 'width: 100%; height: auto; display: block;');
-      $container.setAttribute(
+      $root.setAttribute(
         'style',
         `${style}; display: inline-block; position: relative; cursor: pointer;`,
       );
+      $container.style.cssText = 'width: 100%; position: relative;';
       $container.appendChild($img);
+      $root.append($container);
 
-      if (!editable) return { dom: $container };
+      if (!editable) return { dom: $root };
+      const altField = createImageAltInput(editor, node.attrs.src);
+      $root.append(altField);
 
       const dotPositions = [
         { top: '-14px', left: '-14px', cursor: 'nw-resize' },
@@ -109,6 +116,7 @@ export const CustomResizableImage = Image.extend({
       const showHandles = () => {
         isSelected = true;
         mosaic.hidden = false;
+        altField.hidden = false;
         $container.classList.add('image-resize-frame');
         dots.forEach((dot) => {
           dot.style.display = 'block';
@@ -118,6 +126,7 @@ export const CustomResizableImage = Image.extend({
       const hideHandles = () => {
         isSelected = false;
         mosaic.hidden = true;
+        altField.hidden = true;
         $container.classList.remove('image-resize-frame');
         dots.forEach((dot) => {
           dot.style.display = 'none';
@@ -130,7 +139,7 @@ export const CustomResizableImage = Image.extend({
       });
 
       const handleOutsideClick = (e: MouseEvent) => {
-        if (!$container.contains(e.target as Node)) {
+        if (!$root.contains(e.target as Node)) {
           hideHandles();
         }
       };
@@ -141,7 +150,7 @@ export const CustomResizableImage = Image.extend({
         if (typeof getPos === 'function') {
           const pos = getPos();
           if (pos === undefined) return;
-          let cleanStyle = $container.style.cssText
+          let cleanStyle = $root.style.cssText
             .replace(/\b(border|cursor|display|position|box-sizing)\s*:[^;]+;/g, '')
             .trim();
           if (!/height\s*:/i.test(cleanStyle)) {
@@ -162,7 +171,7 @@ export const CustomResizableImage = Image.extend({
           const deltaX = isLeft ? startX - e.clientX : e.clientX - startX;
           const newWidth = Math.min(Math.max(startWidth + deltaX, 50), editorWidth);
           const percent = ((newWidth / editorWidth) * 100).toFixed(1);
-          $container.style.width = `${percent}%`;
+          $root.style.width = `${percent}%`;
           $img.style.width = '100%';
         };
 
@@ -176,7 +185,7 @@ export const CustomResizableImage = Image.extend({
           e.preventDefault();
           e.stopPropagation();
           startX = e.clientX;
-          startWidth = $container.offsetWidth;
+          startWidth = $root.offsetWidth;
           document.addEventListener('pointermove', onPointerMove);
           document.addEventListener('pointerup', onPointerUp);
         });
@@ -185,11 +194,11 @@ export const CustomResizableImage = Image.extend({
       });
 
       return {
-        dom: $container,
+        dom: $root,
         ignoreMutation: () => true,
         stopEvent: (event) =>
           event.target instanceof HTMLElement &&
-          !!event.target.closest('[data-mosaic-editor], .image-mosaic-button'),
+          !!event.target.closest('[data-mosaic-editor], .image-mosaic-button, .image-alt-field'),
         destroy() {
           document.removeEventListener('click', handleOutsideClick);
         },

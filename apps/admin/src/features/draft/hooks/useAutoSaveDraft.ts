@@ -25,74 +25,74 @@ export function useAutoSaveDraft({
   const [draftId, setDraftId] = useState<string | null>(null);
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const paramsRef = useRef({ getValues, getTranslationData, getImageAlts, postId });
+  const draftIdRef = useRef<string | null>(null);
+  const pendingSaveRef = useRef<ReturnType<typeof saveDraft> | null>(null);
   const lastSnapshotRef = useRef<string>('');
 
-  const buildSnapshot = useCallback(() => {
-    const values = getValues();
-    const translationData = getTranslationData?.() ?? null;
-    const imageAlts = getImageAlts?.() ?? [];
-    return JSON.stringify({ values, translationData, imageAlts });
-  }, [getValues, getTranslationData, getImageAlts]);
+  useEffect(() => {
+    paramsRef.current = { getValues, getTranslationData, getImageAlts, postId };
+  }, [getValues, getTranslationData, getImageAlts, postId]);
 
-  const save = useCallback(async () => {
+  const persist = useCallback((manual: boolean) => {
+    const { getValues, getTranslationData, getImageAlts, postId } = paramsRef.current;
     const values = getValues();
-    if (!values.title.trim() && !values.content.trim()) return;
+    if (!manual && !values.title.trim() && !values.content.trim()) return;
 
-    const snapshot = buildSnapshot();
-    if (snapshot === lastSnapshotRef.current) return;
+    const snapshot = JSON.stringify({
+      values,
+      translationData: getTranslationData?.() ?? null,
+      imageAlts: getImageAlts?.() ?? [],
+    });
+    if (!manual && snapshot === lastSnapshotRef.current) return;
+    const captured = JSON.parse(snapshot) as {
+      values: PostFormValues;
+      translationData: TranslationData | null;
+      imageAlts: ImageAlt[];
+    };
 
     setIsSaving(true);
-    try {
-      const draft = await saveDraft({
-        id: draftId ?? undefined,
-        postId: postId ?? null,
-        title: values.title || '제목 없음',
-        formData: values,
-        translationData: getTranslationData?.() ?? null,
-        imageAlts: getImageAlts?.() ?? [],
+    const request = saveDraft({
+      id: draftIdRef.current ?? undefined,
+      postId: postId ?? null,
+      title: captured.values.title || '제목 없음',
+      formData: captured.values,
+      translationData: captured.translationData,
+      imageAlts: captured.imageAlts,
+    })
+      .then((draft) => {
+        draftIdRef.current = draft.id;
+        setDraftId(draft.id);
+        setLastSavedAt(new Date());
+        lastSnapshotRef.current = snapshot;
+        return draft;
+      })
+      .finally(() => {
+        pendingSaveRef.current = null;
+        setIsSaving(false);
       });
-      setDraftId(draft.id);
-      setLastSavedAt(new Date());
-      lastSnapshotRef.current = snapshot;
-    } catch {
-      // 자동 저장 실패는 조용히 무시
-    } finally {
-      setIsSaving(false);
-    }
-  }, [getValues, getTranslationData, getImageAlts, buildSnapshot, draftId, postId]);
+    pendingSaveRef.current = request;
+    return request;
+  }, []);
 
   const saveManual = useCallback(async () => {
-    setIsSaving(true);
-    try {
-      const values = getValues();
-      const draft = await saveDraft({
-        id: draftId ?? undefined,
-        postId: postId ?? null,
-        title: values.title || '제목 없음',
-        formData: values,
-        translationData: getTranslationData?.() ?? null,
-        imageAlts: getImageAlts?.() ?? [],
-      });
-      setDraftId(draft.id);
-      setLastSavedAt(new Date());
-      lastSnapshotRef.current = buildSnapshot();
-      return draft;
-    } finally {
-      setIsSaving(false);
+    while (pendingSaveRef.current) {
+      await pendingSaveRef.current.catch(() => undefined);
     }
-  }, [getValues, getTranslationData, getImageAlts, buildSnapshot, draftId, postId]);
+    return persist(true)!;
+  }, [persist]);
 
   useEffect(() => {
     if (!enabled) return;
 
-    timerRef.current = setInterval(save, AUTO_SAVE_INTERVAL);
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [save, enabled]);
+    const timer = setInterval(() => {
+      if (!pendingSaveRef.current) void persist(false)?.catch(() => undefined);
+    }, AUTO_SAVE_INTERVAL);
+    return () => clearInterval(timer);
+  }, [persist, enabled]);
 
   const loadDraftId = useCallback((id: string) => {
+    draftIdRef.current = id;
     setDraftId(id);
   }, []);
 

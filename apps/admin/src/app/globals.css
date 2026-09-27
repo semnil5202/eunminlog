@@ -168,7 +168,7 @@
   margin-block: 12px;
 }
 
-.ProseMirror .image-node-view > img {
+.ProseMirror .image-node-view-frame > img {
   margin: 0;
 }
 
@@ -244,12 +244,6 @@
 .image-carousel-title {
   font-size: 13px;
   font-weight: 600;
-}
-
-.image-carousel-item-label {
-  margin-right: auto;
-  font-size: 12px;
-  color: var(--muted-foreground);
 }
 
 .image-carousel-viewport {
@@ -330,19 +324,9 @@
   display: none !important;
 }
 
-.image-carousel-container:has([data-mosaic-editing]) .image-carousel-actions,
 .image-carousel-container:has([data-mosaic-editing]) .image-carousel-selected-actions,
 .image-carousel-container:has([data-mosaic-editing]) .image-carousel-arrow {
   pointer-events: none;
-}
-
-.image-carousel-actions {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-  padding-block: 8px;
-  margin-top: 16px;
 }
 
 .image-carousel-selected-actions {
@@ -388,6 +372,43 @@
   color: var(--foreground);
   font-size: 12px;
   cursor: pointer;
+}
+
+.image-alt-field:not([hidden]) {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  background: var(--muted);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.08);
+  font-size: 14px;
+  cursor: text;
+}
+
+.image-alt-field:focus-within {
+  border-color: #4a90d9;
+}
+
+.image-alt-field > span {
+  font-weight: 600;
+}
+
+.image-alt-field input {
+  width: 100%;
+  min-width: 0;
+  height: 40px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  background: var(--background);
+  color: var(--foreground);
+  font-size: 14px;
+}
+
+.image-node-view:has([data-mosaic-editing]) > .image-alt-field,
+.image-carousel-slide:has([data-mosaic-editing]) > .image-alt-field {
+  display: none;
 }
 
 .image-resize-frame {

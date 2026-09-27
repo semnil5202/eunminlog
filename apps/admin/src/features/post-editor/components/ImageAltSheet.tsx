@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo } from 'react';
 
 import {
   Sheet,
@@ -45,65 +45,28 @@ export function ImageAltSheet({
   thumbnailAlt = '',
   onThumbnailAltChange,
 }: ImageAltSheetProps) {
-  const [snapshotSrcs, setSnapshotSrcs] = useState<string[]>([]);
-  const [alts, setAlts] = useState<Map<string, string>>(new Map());
-  const [localThumbnailAlt, setLocalThumbnailAlt] = useState(thumbnailAlt);
-  const [prevOpen, setPrevOpen] = useState(false);
-
-  if (open && !prevOpen) {
-    setSnapshotSrcs(extractImageSrcs(content));
-    const map = new Map<string, string>();
-    for (const item of imageAlts) {
-      map.set(item.src, item.alt);
-    }
-    setAlts(map);
-    setLocalThumbnailAlt(thumbnailAlt);
-  }
-  if (open !== prevOpen) {
-    setPrevOpen(open);
-  }
-
-  const imageSrcs = snapshotSrcs;
+  const imageSrcs = useMemo(
+    () => (open ? [...new Set(extractImageSrcs(content))] : []),
+    [content, open],
+  );
+  const alts = useMemo(() => new Map(imageAlts.map(({ src, alt }) => [src, alt])), [imageAlts]);
 
   const handleAltChange = (src: string, alt: string) => {
-    setAlts((prev) => {
-      const next = new Map(prev);
-      next.set(src, alt);
-      return next;
-    });
+    onComplete([{ src, alt }]);
   };
 
   const hasThumbnail = !!thumbnail;
-  const thumbnailAltFilled = !hasThumbnail || localThumbnailAlt.trim().length > 0;
+  const thumbnailAltFilled = !hasThumbnail || thumbnailAlt.trim().length > 0;
   const contentAltsFilled = imageSrcs.every((src) => (alts.get(src) ?? '').trim());
   const hasAnyItem = hasThumbnail || imageSrcs.length > 0;
   const allFilled = hasAnyItem && thumbnailAltFilled && contentAltsFilled;
 
-  const syncToParent = () => {
-    if (onThumbnailAltChange) {
-      onThumbnailAltChange(localThumbnailAlt.trim());
-    }
-    const result: ImageAlt[] = imageSrcs.map((src) => ({
-      src,
-      alt: (alts.get(src) ?? '').trim(),
-    }));
-    onComplete(result);
-  };
-
   const handleComplete = () => {
-    syncToParent();
     onOpenChange(false);
   };
 
-  const handleOpenChange = (next: boolean) => {
-    if (!next) {
-      syncToParent();
-    }
-    onOpenChange(next);
-  };
-
   return (
-    <Sheet open={open} onOpenChange={handleOpenChange}>
+    <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="flex w-full flex-col sm:max-w-[688px]">
         <SheetHeader>
           <SheetTitle className="text-lg">이미지 alt 입력</SheetTitle>
@@ -130,8 +93,9 @@ export function ImageAltSheet({
                     />
                   </div>
                   <Input
-                    value={localThumbnailAlt}
-                    onChange={(e) => setLocalThumbnailAlt(e.target.value)}
+                    aria-label="썸네일 이미지 설명 (alt)"
+                    value={thumbnailAlt}
+                    onChange={(e) => onThumbnailAltChange?.(e.target.value)}
                     placeholder="예: 강남 파스타 맛집 외관"
                   />
                 </div>
@@ -150,6 +114,7 @@ export function ImageAltSheet({
                     />
                   </div>
                   <Input
+                    aria-label={`이미지 ${i + 1} 설명 (alt)`}
                     value={alts.get(src) ?? ''}
                     onChange={(e) => handleAltChange(src, e.target.value)}
                     placeholder="예: 강남 파스타 맛집 내부 전경"

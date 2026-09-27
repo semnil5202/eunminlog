@@ -2,6 +2,7 @@ import type { NodeViewRenderer } from '@tiptap/core';
 import { closeHistory } from '@tiptap/pm/history';
 import type { CarouselImage } from '../types/carousel';
 import { snapCarouselDimension } from './carousel-resize-snap';
+import { createImageAltInput } from './image-alt-input';
 
 /** 캐러셀 드래그 크기를 실제 표시 너비와 크롭 비율로 변환한다. */
 export function getCarouselResize(width: number, height: number, viewportWidth: number) {
@@ -86,6 +87,8 @@ export const createCarouselNodeView: NodeViewRenderer = ({ node: initialNode, ed
         });
         const actions = slide.querySelector<HTMLElement>('.image-carousel-selected-actions');
         if (actions) actions.hidden = index !== activeIndex;
+        const altField = slide.querySelector<HTMLElement>('.image-alt-field');
+        if (altField) altField.hidden = index !== activeIndex;
         imageControls[index]?.setAttribute('aria-pressed', String(index === activeIndex));
       });
     container.addEventListener(
@@ -100,9 +103,9 @@ export const createCarouselNodeView: NodeViewRenderer = ({ node: initialNode, ed
       { signal },
     );
     document.addEventListener(
-      'pointerdown',
+      'click',
       (event) => {
-        if (!container.contains(event.target as globalThis.Node)) {
+        if (!event.composedPath().includes(container)) {
           cancelDrag();
           activeIndex = -1;
           syncActive();
@@ -156,11 +159,6 @@ export const createCarouselNodeView: NodeViewRenderer = ({ node: initialNode, ed
       viewport.append(slide);
       slides.push(slide);
       if (!editor.isEditable) return;
-      const actions = document.createElement('div');
-      actions.className = 'image-carousel-actions';
-      const label = document.createElement('span');
-      label.className = 'image-carousel-item-label';
-      label.textContent = `${index + 1}번 이미지`;
       img.tabIndex = 0;
       img.setAttribute('role', 'button');
       img.setAttribute('aria-label', `${index + 1}번 이미지 편집`);
@@ -260,8 +258,7 @@ export const createCarouselNodeView: NodeViewRenderer = ({ node: initialNode, ed
       selectedActions.hidden = true;
       selectedActions.append(mosaic, remove);
       wrapper.append(selectedActions);
-      actions.append(label);
-      slide.append(actions);
+      slide.append(createImageAltInput(editor, image.src, `${index + 1}번 이미지 설명 (alt)`));
       for (const corner of ['nw', 'ne', 'sw', 'se']) {
         const handle = button(
           `${index + 1}번 이미지 ${corner} 크기 조절`,
@@ -479,7 +476,9 @@ export const createCarouselNodeView: NodeViewRenderer = ({ node: initialNode, ed
     dom: container,
     stopEvent: (event) =>
       event.target instanceof HTMLElement &&
-      Boolean(event.target.closest('button, img[role="button"], [data-mosaic-editor]')),
+      Boolean(
+        event.target.closest('button, img[role="button"], [data-mosaic-editor], .image-alt-field'),
+      ),
     ignoreMutation: () => true,
     update(nextNode) {
       if (nextNode.type !== node.type) return false;

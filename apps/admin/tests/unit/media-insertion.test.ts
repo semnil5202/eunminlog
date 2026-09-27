@@ -21,6 +21,17 @@ afterEach(() => {
 });
 
 describe('미디어 삽입 정책', () => {
+  it('업로드 중 이동한 선택 영역을 매핑하고 강제 스크롤하지 않는다', () => {
+    const editor = make('<p>first</p><p>second</p>');
+    editor.commands.setTextSelection({ from: 9, to: 12 });
+    const selected = editor.state.doc.textBetween(9, 12);
+    const scrolls: boolean[] = [];
+    editor.on('transaction', ({ transaction }) => scrolls.push(transaction.scrolledIntoView));
+    insertMedia(editor, 2, uploads, 'images');
+    const { from, to } = editor.state.selection;
+    expect(editor.state.doc.textBetween(from, to)).toBe(selected);
+    expect(scrolls.some(Boolean)).toBe(false);
+  });
   it('복수 일반 이미지는 인접 이미지와 병합하지 않고 각각 삽입한다', () => {
     const editor = make('<p><img src="/existing.webp"></p>');
     expect(insertMedia(editor, 2, uploads, 'images')).toBe(true);

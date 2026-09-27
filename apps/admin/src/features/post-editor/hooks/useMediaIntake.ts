@@ -140,6 +140,13 @@ export function useMediaIntake(editor: Editor | null) {
     if (!current || current.busy || !editor || editor.isDestroyed) return;
     const minimum = current.mode === 'carousel' ? 2 : 1;
     if (current.items.length < minimum) return;
+    if (
+      current.mode === 'images' &&
+      (document.activeElement === document.body ||
+        document.activeElement?.closest('[data-editor-toolbar]'))
+    ) {
+      editor.view.focus();
+    }
     if (current.target.resolve() === null) {
       current.error = '삽입 위치 또는 캐러셀이 변경되었습니다. 닫은 뒤 다시 시도해주세요.';
       refresh(current);
@@ -222,7 +229,6 @@ export function useMediaIntake(editor: Editor | null) {
           action: undefined,
           cancel: undefined,
         });
-      editor.commands.focus();
     } catch (error) {
       current.error = error instanceof Error ? error.message : '이미지를 삽입하지 못했습니다.';
       refresh(current);

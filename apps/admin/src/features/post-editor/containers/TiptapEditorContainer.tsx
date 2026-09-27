@@ -1,6 +1,6 @@
 'use client';
 
-import { type ReactNode, useCallback, useEffect, useState } from 'react';
+import { type ReactNode, useCallback, useEffect, useLayoutEffect, useState } from 'react';
 
 import { cn } from '@/lib/utils';
 import { useTiptapEditor } from '../hooks/useTiptapEditor';
@@ -14,6 +14,7 @@ import { useMediaIntake } from '../hooks/useMediaIntake';
 import { useImageTransfer } from '../hooks/useImageTransfer';
 import { MosaicEditorContainer, type MosaicSession } from './MosaicEditorContainer';
 import { captureMosaicTarget } from '../lib/mosaic-target';
+import { syncImageAltInputs } from '../lib/image-alt-input';
 
 type TiptapEditorContainerProps = {
   content: string;
@@ -22,6 +23,8 @@ type TiptapEditorContainerProps = {
   className?: string;
   children?: ReactNode;
   onImageReplace?: (previous: string, next: string) => void;
+  imageAlts?: { src: string; alt: string }[];
+  onImageAltChange?: (src: string, alt: string) => void;
 };
 
 export function TiptapEditorContainer({
@@ -31,6 +34,8 @@ export function TiptapEditorContainer({
   className,
   children,
   onImageReplace,
+  imageAlts,
+  onImageAltChange,
 }: TiptapEditorContainerProps) {
   const [isMounted, setIsMounted] = useState(false);
   const [isHtmlMode, setIsHtmlMode] = useState(false);
@@ -44,6 +49,14 @@ export function TiptapEditorContainer({
     uploadFiles: intake.uploadFiles,
   });
   const openMedia = intake.open;
+
+  useLayoutEffect(() => {
+    if (!editor || editor.isDestroyed) return;
+    syncImageAltInputs(editor, {
+      getAlt: (src) => imageAlts?.find((entry) => entry.src === src)?.alt ?? '',
+      onChange: (src, alt) => onImageAltChange?.(src, alt),
+    });
+  }, [editor, imageAlts, onImageAltChange]);
 
   useEffect(() => {
     if (!editor || !mosaic) return;
@@ -143,6 +156,9 @@ export function TiptapEditorContainer({
           onFiles={intake.addFiles}
           onRemove={intake.remove}
           onSubmit={() => void intake.submit()}
+          onReturnFocus={() => {
+            if (!editor.isDestroyed) editor.view.focus();
+          }}
         />
       )}
       {children}
