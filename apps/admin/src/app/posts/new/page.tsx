@@ -390,8 +390,8 @@ function NewPostContent() {
             {errors.thumbnail && (
               <p className="mt-1 text-[14px] text-red-500">{errors.thumbnail.message}</p>
             )}
-            <div id="field-thumbnailAlt" className="mt-3 space-y-1">
-              <label htmlFor="thumbnail-alt" className="block text-sm font-medium">
+            <div id="field-thumbnailAlt" className="image-alt-field">
+              <label htmlFor="thumbnail-alt" className="block text-sm font-semibold">
                 썸네일 이미지 설명 (alt)
               </label>
               <Input

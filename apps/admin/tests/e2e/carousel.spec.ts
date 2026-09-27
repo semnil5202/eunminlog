@@ -386,7 +386,8 @@ test('캐러셀 편집 범위와 공통 파란 점선 UI는 저장 HTML에 포�
   const header = page.locator('.image-carousel-header');
   await expect(header.getByText('캐러셀 · 2장')).toBeVisible();
   await expect(header.getByRole('button', { name: '이미지 추가', exact: true })).toBeVisible();
-  await expect(page.locator('.image-carousel-actions').first()).toContainText('1번 이미지');
+  await expect(page.locator('.image-carousel-actions')).toHaveCount(0);
+  await expect(page.locator('.image-carousel-item-label')).toHaveCount(0);
   await expect(page.getByRole('button', { name: '1번 이미지 모자이크', exact: true })).toBeHidden();
   await page.locator('.image-carousel-slide img').first().click();
   await expect(

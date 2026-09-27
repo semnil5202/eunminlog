@@ -103,9 +103,9 @@ export const createCarouselNodeView: NodeViewRenderer = ({ node: initialNode, ed
       { signal },
     );
     document.addEventListener(
-      'pointerdown',
+      'click',
       (event) => {
-        if (!container.contains(event.target as globalThis.Node)) {
+        if (!event.composedPath().includes(container)) {
           cancelDrag();
           activeIndex = -1;
           syncActive();
@@ -159,11 +159,6 @@ export const createCarouselNodeView: NodeViewRenderer = ({ node: initialNode, ed
       viewport.append(slide);
       slides.push(slide);
       if (!editor.isEditable) return;
-      const actions = document.createElement('div');
-      actions.className = 'image-carousel-actions';
-      const label = document.createElement('span');
-      label.className = 'image-carousel-item-label';
-      label.textContent = `${index + 1}번 이미지`;
       img.tabIndex = 0;
       img.setAttribute('role', 'button');
       img.setAttribute('aria-label', `${index + 1}번 이미지 편집`);
@@ -263,8 +258,6 @@ export const createCarouselNodeView: NodeViewRenderer = ({ node: initialNode, ed
       selectedActions.hidden = true;
       selectedActions.append(mosaic, remove);
       wrapper.append(selectedActions);
-      actions.append(label);
-      slide.append(actions);
       slide.append(createImageAltInput(editor, image.src, `${index + 1}번 이미지 설명 (alt)`));
       for (const corner of ['nw', 'ne', 'sw', 'se']) {
         const handle = button(
