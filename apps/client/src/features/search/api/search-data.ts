@@ -4,6 +4,7 @@ import type { LocalizedPost } from '@/shared/types/post';
 import type { Locale } from '@/shared/types/common';
 import { getCategoryLabel } from '@/shared/lib/i18n/categories';
 import { getLocalePath } from '@/shared/lib/i18n/locales';
+import { formatDate } from '@/shared/lib/date';
 
 export type SearchItem = {
   slug: string;
@@ -51,11 +52,7 @@ export const buildSearchData = async (
       createdAt: p.created_at,
       href: getLocalePath(`/${p.category}/${p.sub_category}/${p.slug}/`, locale),
       categoryLabel: await getCategoryLabel(p.category, locale),
-      dateStr: new Date(p.created_at).toLocaleDateString(locale, {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-      }),
+      dateStr: formatDate(p.created_at, locale),
     })),
   );
 
