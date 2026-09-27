@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useEditor } from '@tiptap/react';
 
 import { tiptapExtensions } from '../configs/tiptap-extensions';
+import { redirectSelectedImageText } from '../lib/image-alt-input';
 
 const URL_REGEX = /^https?:\/\/\S+$/;
 
@@ -36,6 +37,8 @@ export function useTiptapEditor({ content, onChange }: UseTiptapEditorProps) {
         style: 'line-height: 1.6;',
       },
       handlePaste: (_view, event) => {
+        if (redirectSelectedImageText(_view, event.clipboardData?.getData('text/plain') ?? ''))
+          return true;
         const text = event.clipboardData?.getData('text/plain')?.trim();
         if (text && URL_REGEX.test(text)) {
           requestAnimationFrame(() => {
@@ -44,6 +47,7 @@ export function useTiptapEditor({ content, onChange }: UseTiptapEditorProps) {
         }
         return false;
       },
+      handleTextInput: (view, _from, _to, text) => redirectSelectedImageText(view, text),
     },
   });
 

@@ -1,4 +1,6 @@
 import type { Editor } from '@tiptap/core';
+import { NodeSelection } from '@tiptap/pm/state';
+import type { EditorView } from '@tiptap/pm/view';
 
 type AltBinding = {
   getAlt: (src: string) => string;
@@ -6,6 +8,43 @@ type AltBinding = {
 };
 
 const bindings = new WeakMap<Editor, AltBinding>();
+
+/** 이미지 선택 후 레이아웃 스크롤 없이 설명 입력으로 이동한다. */
+export function focusImageAltInput(root: HTMLElement) {
+  queueMicrotask(() => {
+    if (!root.isConnected) return;
+    root
+      .querySelector<HTMLInputElement>('.image-alt-field:not([hidden]) input')
+      ?.focus({ preventScroll: true });
+  });
+}
+
+/** 선택된 이미지 노드를 텍스트로 교체하지 않고 설명 입력으로 전달한다. */
+export function redirectSelectedImageText(view: EditorView, text: string): boolean {
+  const selection = view.state.selection;
+  if (
+    !(selection instanceof NodeSelection) ||
+    !['image', 'imageCarousel'].includes(selection.node.type.name)
+  )
+    return false;
+  const root = view.nodeDOM(selection.from);
+  if (!(root instanceof HTMLElement)) return true;
+  const field =
+    root.querySelector<HTMLElement>('.image-alt-field:not([hidden])') ??
+    root.querySelector<HTMLElement>('.image-alt-field');
+  const input = field?.querySelector('input');
+  if (!field || !input) return true;
+  field.hidden = false;
+  input.focus({ preventScroll: true });
+  input.setRangeText(
+    text,
+    input.selectionStart ?? input.value.length,
+    input.selectionEnd ?? input.value.length,
+    'end',
+  );
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  return true;
+}
 
 /** NodeView 입력을 폼의 기존 alt 상태와 연결한다. */
 export function syncImageAltInputs(editor: Editor, binding: AltBinding) {
