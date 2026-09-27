@@ -107,15 +107,17 @@ afterEach(() => {
 });
 
 describe('캐러셀 NodeView 수명과 편집', () => {
-  it('이미지 선택 시에만 해당 모자이크·삭제를 표시하고 번호는 유지한다', () => {
+  it('이미지 선택 시에만 해당 모자이크·삭제를 표시하고 번호 영역은 표시하지 않는다', () => {
     const editor = makeEditor();
     flushFrames();
     const [container] = containers(editor);
     const pictures = container.querySelectorAll('img');
     pictures[0].click();
     expect(container.querySelectorAll('.image-resize-frame')).toHaveLength(1);
-    expect(container.querySelector('.image-carousel-actions')!.textContent).toBe('1번 이미지');
-    expect(container.querySelectorAll('.image-carousel-actions button')).toHaveLength(0);
+    expect(container.querySelector('.image-carousel-actions')).toBeNull();
+    expect(
+      container.querySelectorAll('.image-carousel-selected-actions:not([hidden]) button'),
+    ).toHaveLength(2);
     pictures[1].click();
     expect(container.querySelectorAll('.image-resize-frame')).toHaveLength(1);
     expect(pictures[1].parentElement!.classList.contains('image-resize-frame')).toBe(true);

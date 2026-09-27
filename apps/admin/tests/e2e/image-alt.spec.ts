@@ -33,6 +33,27 @@ test.beforeEach(async ({ page }) => {
   await expect(page.locator('.tiptap')).toBeVisible();
 });
 
+for (const carousel of [false, true]) {
+  test(`${carousel ? '캐러셀' : '단일'} 사진 클릭 직후 타이핑과 붙여넣기는 alt만 바꾼다`, async ({
+    page,
+    context,
+  }) => {
+    await upload(page, carousel);
+    const before = await page.getByTestId('saved-html').textContent();
+    await page.locator('.tiptap img').first().click();
+    const input = page.locator('.image-alt-field:not([hidden]) input');
+    await expect(input).toBeFocused();
+    await page.keyboard.type('Photo ');
+    await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+    await page.evaluate(() => navigator.clipboard.writeText('붙여넣은 설명'));
+    await page.keyboard.press('ControlOrMeta+v');
+    await expect(input).toHaveValue('Photo 붙여넣은 설명');
+    expect(await page.getByTestId('saved-html').textContent()).toBe(before);
+    await input.press('Backspace');
+    expect(await page.getByTestId('saved-html').textContent()).toBe(before);
+  });
+}
+
 test('사진 하단 alt와 드로어가 양방향 공유되고 사진 크기에는 영향이 없다', async ({ page }) => {
   await upload(page);
   const picture = page.locator('.tiptap img').first();

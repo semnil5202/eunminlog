@@ -2,6 +2,7 @@
 
 import type { TranslationLocale } from '@/shared/types/post';
 import type { TranslationResult } from '@/features/translation/types';
+import { getTranslationFields, type PromptBuildParams } from './prompt-builder';
 
 export type ParsedLocaleResult = {
   locale: TranslationLocale;
@@ -20,8 +21,86 @@ export type ParsedLocaleResult = {
 
 const LOCALES: TranslationLocale[] = ['en', 'ja', 'zh-CN', 'zh-TW', 'id', 'vi', 'th'];
 
+function normalizeResult(raw: string): string {
+  return raw
+    .replace(/^\uFEFF/, '')
+    .replace(/\r\n?/g, '\n')
+    .replaceAll('\\---', '---')
+    .replace(/^(---[^\n]+---)[ \t]+$/gm, '$1')
+    .trim();
+}
+
+/** 원문 기준으로 번역 파일의 구조와 필수 항목을 확인한다. */
+export function validateTranslationResult(
+  rawInput: string,
+  source: PromptBuildParams,
+): { results: ParsedLocaleResult[]; errors: string[] } {
+  const raw = normalizeResult(rawInput);
+  const errors: string[] = [];
+  const blocks = [...raw.matchAll(/^---LOCALE:([^\n]+)---[ \t]*$/gm)];
+  const expectedFields = getTranslationFields(source);
+  const sourceTags = source.content.match(/<!--[\s\S]*?-->|<[^>]+>/g) ?? [];
+
+  for (const locale of LOCALES) {
+    const count = blocks.filter((block) => block[1] === locale).length;
+    if (count !== 1)
+      errors.push(`${locale}: 언어 구간이 ${count === 0 ? '누락' : '중복'}되었습니다.`);
+  }
+  if (blocks[0]?.index !== 0) errors.push('파일은 LOCALE 구분자로 시작해야 합니다.');
+
+  for (const [index, match] of blocks.entries()) {
+    const locale = match[1];
+    if (!LOCALES.includes(locale as TranslationLocale)) {
+      errors.push(`지원하지 않는 언어 구간입니다: ${locale}`);
+      continue;
+    }
+    const block = raw.slice(match.index! + match[0].length, blocks[index + 1]?.index);
+    const markers = [...block.matchAll(/^---([A-Z_]+)---[ \t]*$/gm)];
+    for (const [field, count] of Object.entries(expectedFields)) {
+      const occurrences = markers.filter((marker) => marker[1] === field);
+      if (occurrences.length !== 1) {
+        errors.push(`${locale}: ${field} 필드가 누락되거나 중복되었습니다.`);
+        continue;
+      }
+      const marker = occurrences[0]!;
+      const markerIndex = markers.indexOf(marker);
+      const value = block
+        .slice(marker.index! + marker[0].length, markers[markerIndex + 1]?.index)
+        .trim();
+      if (!value) errors.push(`${locale}: ${field} 값이 비어 있습니다.`);
+      if (count > 0) {
+        const lines = value.split('\n').filter((line) => line.trim());
+        if (
+          lines.length !== count ||
+          lines.some((line, i) => !new RegExp(`^${i + 1}\\.\\s+\\S`).test(line.trim()))
+        ) {
+          errors.push(
+            `${locale}: ${field} 목록은 원문과 같은 ${count}개 항목을 1번부터 순서대로 포함해야 합니다.`,
+          );
+        }
+      }
+      if (field === 'CONTENT') {
+        const tags = value.match(/<!--[\s\S]*?-->|<[^>]+>/g) ?? [];
+        if (JSON.stringify(tags) !== JSON.stringify(sourceTags)) {
+          errors.push(
+            `${locale}: 본문 HTML 구조가 원문과 다릅니다. 잘림 또는 태그·속성 변경을 확인해주세요.`,
+          );
+        }
+      }
+    }
+    if (markers.some((marker) => !(marker[1]! in expectedFields))) {
+      errors.push(`${locale}: 원문에 없는 필드가 포함되어 있습니다.`);
+    }
+    if (markers.at(-1)?.[1] !== 'CONTENT')
+      errors.push(`${locale}: 마지막 필드는 CONTENT여야 합니다.`);
+  }
+  return { results: errors.length ? [] : parseTranslationResult(raw), errors };
+}
+
 function extractSection(block: string, marker: string): string {
-  const regex = new RegExp(`---${marker}---\\n([\\s\\S]*?)(?=\\n---[A-Z]|$)`);
+  const regex = new RegExp(
+    `(?:^|\\n)---${marker}---\\n([\\s\\S]*?)(?=\\n---[A-Z_]+---(?:\\n|$)|$)`,
+  );
   const match = block.match(regex);
   return match?.[1]?.trim() ?? '';
 }
@@ -35,7 +114,7 @@ function parseNumberedList(text: string): string[] {
 }
 
 export function parseTranslationResult(rawInput: string): ParsedLocaleResult[] {
-  const raw = rawInput.replaceAll('\\---', '---');
+  const raw = normalizeResult(rawInput);
   const results: ParsedLocaleResult[] = [];
 
   for (const locale of LOCALES) {

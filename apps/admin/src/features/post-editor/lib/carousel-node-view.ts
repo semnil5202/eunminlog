@@ -2,7 +2,7 @@ import type { NodeViewRenderer } from '@tiptap/core';
 import { closeHistory } from '@tiptap/pm/history';
 import type { CarouselImage } from '../types/carousel';
 import { snapCarouselDimension } from './carousel-resize-snap';
-import { createImageAltInput } from './image-alt-input';
+import { createImageAltInput, focusImageAltInput } from './image-alt-input';
 
 /** 캐러셀 드래그 크기를 실제 표시 너비와 크롭 비율로 변환한다. */
 export function getCarouselResize(width: number, height: number, viewportWidth: number) {
@@ -168,6 +168,7 @@ export const createCarouselNodeView: NodeViewRenderer = ({ node: initialNode, ed
         cancelDrag();
         activeIndex = index;
         syncActive();
+        focusImageAltInput(slide);
       };
       img.addEventListener(
         'keydown',

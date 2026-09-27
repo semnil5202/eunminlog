@@ -14,14 +14,12 @@ import {
 } from '@/components/ui/sheet';
 import { buildTranslationPrompt } from '@/features/translation/lib/prompt-builder';
 import {
-  parseTranslationResult,
+  validateTranslationResult,
   type ParsedLocaleResult,
 } from '@/features/translation/lib/prompt-parser';
 import { LOCALE_FILTER_LABELS } from '@/features/translation/constants/locale';
 import type { TranslationLocale } from '@/shared/types/post';
 import type { ImageAlt } from '@/features/translation/types';
-
-const LOCALES: TranslationLocale[] = ['en', 'ja', 'zh-CN', 'zh-TW', 'id', 'vi', 'th'];
 
 type ManualTranslationSheetProps = {
   open: boolean;
@@ -70,11 +68,13 @@ export function ManualTranslationSheet({
   const [results, setResults] = useState<ParsedLocaleResult[]>(savedResults);
   const [activeLocale, setActiveLocale] = useState<TranslationLocale>('en');
   const [copied, setCopied] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     setRawText(savedRawText);
     setResults(savedResults);
+    setValidationErrors([]);
   }, [savedRawText, savedResults]);
 
   const handleCopyPrompt = async () => {
@@ -105,16 +105,24 @@ export function ManualTranslationSheet({
       return;
     }
 
-    const parsed = parseTranslationResult(rawText);
-    if (parsed.length === 0) {
-      toast.error('번역 결과를 파싱할 수 없습니다. 형식을 확인해주세요.');
+    const { results: parsed, errors } = validateTranslationResult(rawText, {
+      formType,
+      title,
+      content,
+      description,
+      placeName,
+      address,
+      pricePrefix,
+      productNames,
+      purchaseSources,
+      pricePrefixes,
+      imageAlts,
+      thumbnailAlt,
+    });
+    setValidationErrors(errors);
+    if (errors.length) {
+      toast.error('번역 결과가 불완전하거나 형식이 다릅니다. 기존 번역은 유지됩니다.');
       return;
-    }
-
-    const missing = LOCALES.filter((l) => !parsed.find((r) => r.locale === l));
-    if (missing.length > 0) {
-      const labels = missing.map((l) => LOCALE_FILTER_LABELS[l]).join(', ');
-      toast.warning(`${labels} 번역이 누락되었습니다.`);
     }
 
     setResults(parsed);
@@ -131,7 +139,7 @@ export function ManualTranslationSheet({
         <SheetHeader>
           <SheetTitle className="text-lg">수동 번역</SheetTitle>
           <SheetDescription>
-            프롬프트를 복사하여 외부 AI에서 번역 결과를 받은 후 아래에 붙여넣으세요.
+            외부 AI에서 받은 .txt 파일을 열고 전체 내용을 아래에 붙여넣으세요.
           </SheetDescription>
         </SheetHeader>
 
@@ -149,11 +157,14 @@ export function ManualTranslationSheet({
               </button>
             </div>
             <ul className="mt-2 text-xs text-muted-foreground space-y-1">
-              <li>- 복사한 프롬프트를 외부 AI에 붙여넣고 번역 결과를 받으세요.</li>
-              <li>- 결과를 붙여넣은 후 영어부터 태국어까지 모든 언어가 보이는지 확인해주세요.</li>
+              <li>- 외부 AI에서 UTF-8 translations.txt 파일을 다운로드하세요.</li>
               <li>
-                - 일부 언어가 누락되었다면 AI의 복사 아이콘 대신 직접 드래그하여 복사/붙여넣기
-                해주세요.
+                - 파일을 열어 전체 선택·복사한 후 아래에 붙여넣으세요. 파일 업로드는 지원하지
+                않습니다.
+              </li>
+              <li>
+                - 7개 언어와 필수 항목·HTML 구조를 검사합니다. 번역 내용의 생략 여부와 정확성은 직접
+                확인해주세요.
               </li>
             </ul>
           </div>
@@ -163,10 +174,27 @@ export function ManualTranslationSheet({
             <textarea
               ref={textareaRef}
               value={rawText}
-              onChange={(e) => setRawText(e.target.value)}
-              placeholder="AI에서 받은 번역 결과를 여기에 붙여넣으세요..."
+              onChange={(e) => {
+                setRawText(e.target.value);
+                setValidationErrors([]);
+              }}
+              aria-label="번역 파일 전체 내용"
+              aria-invalid={validationErrors.length > 0}
+              aria-describedby={validationErrors.length ? 'translation-errors' : undefined}
+              placeholder="translations.txt 파일의 전체 내용을 여기에 붙여넣으세요..."
               className="w-full h-48 p-3 text-sm border border-input rounded-md resize-y focus:outline-none focus:ring-2 focus:ring-ring"
             />
+            {validationErrors.length > 0 && (
+              <ul
+                id="translation-errors"
+                role="alert"
+                className="mt-2 space-y-1 text-sm text-destructive"
+              >
+                {validationErrors.map((error, index) => (
+                  <li key={`${index}-${error}`}>{error}</li>
+                ))}
+              </ul>
+            )}
             <div className="mt-2 flex justify-end gap-2">
               {isTranslationDirty && onSkipDirtyCheck && (
                 <button

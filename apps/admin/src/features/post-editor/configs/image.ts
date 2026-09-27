@@ -1,5 +1,5 @@
 import Image from '@tiptap/extension-image';
-import { createImageAltInput } from '../lib/image-alt-input';
+import { createImageAltInput, focusImageAltInput } from '../lib/image-alt-input';
 
 export const CustomResizableImage = Image.extend({
   addAttributes() {
@@ -136,6 +136,7 @@ export const CustomResizableImage = Image.extend({
       $container.addEventListener('click', (e) => {
         e.stopPropagation();
         if (!isSelected) showHandles();
+        if (e.target === $img) focusImageAltInput($root);
       });
 
       const handleOutsideClick = (e: MouseEvent) => {

@@ -181,7 +181,7 @@ JSON 배열 파싱 -> `FlaggedTerm[]` 타입으로 변환.
 
 ## 4. 수동 번역 (`buildTranslationPrompt`)
 
-> 자동 번역 API(`fetchTranslatePost`)는 품질 이슈로 비활성화. 현재는 프롬프트 복사 → 외부 AI 결과 붙여넣기 방식으로 운영.
+> 자동 번역 API(`fetchTranslatePost`)는 품질 이슈로 비활성화. 현재는 프롬프트 복사 → 외부 AI의 UTF-8 `translations.txt` 다운로드 → 파일 내용 전체 붙여넣기 방식으로 운영. 파일 직접 업로드 UI는 제공하지 않는다.
 
 트리거: ManualTranslationSheet에서 "프롬프트 복사" 버튼 클릭
 소스: `features/translation/lib/prompt-builder.ts` → `buildTranslationPrompt()`
@@ -217,9 +217,9 @@ JSON 배열 파싱 -> `FlaggedTerm[]` 타입으로 변환.
 
 ### 출력 규칙
 
-- 코드블록(```)이나 마크다운 포맷으로 감싸지 않고 plain text로 즉시 반환
-- 번역 결과 외의 텍스트(설명, 인사, 이모지 등) 출력 금지
-- `---LOCALE:en---`부터 바로 시작, 마지막 CONTENT 종료 시 즉시 종료
+- UTF-8 `translations.txt` 파일 하나에 7개 언어 번역 전문을 담고 대화에는 다운로드 링크만 반환하도록 지시한다. 파일 생성이 불가능하면 불가능함을 알리며 인라인 부분 번역으로 대신하지 않는다.
+- 파일 내용은 코드블록·인사·설명 없이 기존 구분자 포맷을 사용한다. 요약·생략·"이하 동일"을 금지하고 언어·필수 필드·본문 누락을 자체 확인하도록 지시한다.
+- 파일은 `---LOCALE:en---`부터 시작하고 마지막 CONTENT 전문으로 끝난다. 파일 출력만으로 외부 모델의 길이 제한이나 의미적 누락을 보장할 수는 없으므로 사용자가 내용 정확성을 검토한다.
 - 원문에 없는 필드 추가 금지
 
 ### 응답 형식 (구분자 기반)
@@ -247,6 +247,8 @@ JSON 배열 파싱 -> `FlaggedTerm[]` 타입으로 변환.
 필드는 원문에 존재하는 것만 포함. `formType === 'product-review'`일 때는 PLACE_NAME/ADDRESS/PRICE_PREFIX 대신 PRODUCT_NAMES/PURCHASE_SOURCES/PRICE_PREFIXES가 포함된다.
 
 ### 파싱
+
+적용 전 검증은 UTF-8 BOM 및 CRLF/CR 줄바꿈을 정규화하고 7개 locale의 누락·중복, 원문에 따른 필수 필드, 번호 목록 개수·순서, HTML 태그·속성 보존을 확인한다. 오류가 있으면 부분 결과를 적용하지 않고 입력을 유지해 수정·재입력하도록 한다. 의미적 번역 완결성은 자동 검증 범위가 아니다.
 
 `parseTranslationResult(rawInput)`:
 

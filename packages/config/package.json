@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     "./theme.css": "./theme.css",
-    "./site": "./site.ts"
+    "./site": "./site.ts",
+    "./article-ads": "./article-ads.ts"
   }
 }
