@@ -432,7 +432,8 @@ Admin 본문 WYSIWYG는 클립보드 이미지 파일 붙여넣기와 외부 파
 
 - **위치**: `shared/lib/date.ts`
 - ISO 8601 날짜 문자열을 locale별 포맷(`year: numeric, month: long, day: numeric`)으로 변환
-- 5곳의 중복 날짜 포맷 로직을 단일 함수로 통합
+- 리스트·협찬 카드·무한스크롤 JSON·검색·상세 모두 공통 함수를 사용하고 시간대를 `Asia/Seoul`로 고정한다. 빌드 환경·방문자 시간대와 무관하게 같은 KST 날짜를 표시한다.
+- 언어에 따라 날짜 표기만 달라지며 달력은 locale 기본값을 유지한다. 태국어는 불기를 사용한다(서기 2026년 → 불기 2569년).
 
 #### `getActiveSegments(pathname, locale)`
 

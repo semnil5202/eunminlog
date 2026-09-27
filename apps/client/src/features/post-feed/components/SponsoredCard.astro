@@ -7,6 +7,7 @@ import { getLocalePath } from "@/shared/lib/i18n/locales";
 import { t } from "@/shared/lib/i18n/translations";
 import PostBadge from "@/shared/components/ui/PostBadge.astro";
 import { optimizedUrl } from "@/shared/lib/image";
+import { formatDate } from "@/shared/lib/date";
 
 interface Props {
   post: LocalizedPost;
@@ -24,11 +25,7 @@ const categoryLabel = await getCategoryLabel(post.category, locale);
 const sponsoredLabel = t("post.sponsoredBadge", locale);
 const popularLabel = t("post.popularBadge", locale);
 const badgeLabel = post.is_sponsored ? sponsoredLabel : post.is_recommended ? popularLabel : undefined;
-const dateStr = new Date(post.created_at).toLocaleDateString(locale, {
-  year: "numeric",
-  month: "long",
-  day: "numeric",
-});
+const dateStr = formatDate(post.created_at, locale);
 ---
 
 <article

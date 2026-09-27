@@ -6,6 +6,7 @@ import { getCategoryLabel } from "@/shared/lib/i18n/categories";
 import { getLocalePath } from "@/shared/lib/i18n/locales";
 import PostBadge from "@/shared/components/ui/PostBadge.astro";
 import { optimizedUrl } from "@/shared/lib/image";
+import { formatDate } from "@/shared/lib/date";
 
 interface Props {
   post: LocalizedPost;
@@ -24,11 +25,7 @@ const postPath = `/${post.category}/${post.sub_category}/${post.slug}/`;
 const localizedHref = getLocalePath(postPath, locale);
 
 const categoryLabel = await getCategoryLabel(post.category, locale);
-const dateStr = new Date(post.created_at).toLocaleDateString(locale, {
-  year: "numeric",
-  month: "long",
-  day: "numeric",
-});
+const dateStr = formatDate(post.created_at, locale);
 ---
 
 <article

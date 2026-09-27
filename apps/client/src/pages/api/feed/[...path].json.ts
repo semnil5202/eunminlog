@@ -17,6 +17,7 @@ import { getLocalePath } from '@/shared/lib/i18n/locales';
 import { getCategoryLabel } from '@/shared/lib/i18n/categories';
 import { t } from '@/shared/lib/i18n/translations';
 import type { Post } from '@/shared/types/post';
+import { formatDate } from '@/shared/lib/date';
 
 type FeedPostData = {
   title: string;
@@ -51,11 +52,7 @@ const buildFeedPostData = async (post: Post, locale: Locale): Promise<FeedPostDa
     thumbnailAlt: localized.thumbnail_alt ?? localized.title,
     href: getLocalePath(postPath, locale),
     categoryLabel: await getCategoryLabel(post.category, locale),
-    dateStr: new Date(post.created_at).toLocaleDateString(locale, {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    }),
+    dateStr: formatDate(post.created_at, locale),
     placeName: localized.translated_place_name ?? post.place_name ?? null,
     isSponsored: post.is_sponsored,
     isRecommended: post.is_recommended,
