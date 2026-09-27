@@ -56,6 +56,7 @@ export function useImageTransfer({
     dragging: !!enabled && dragging,
     handlers: {
       onPasteCapture(event: ClipboardEvent<HTMLDivElement>) {
+        if (event.target instanceof Element && event.target.closest('.image-alt-field')) return;
         if (!enabled || !(event.target instanceof Element) || !event.target.closest('.ProseMirror'))
           return;
         const files = getFiles(event.clipboardData);
@@ -72,6 +73,7 @@ export function useImageTransfer({
         setDragging(false);
       },
       onDragOverCapture(event: DragEvent<HTMLDivElement>) {
+        if (event.target instanceof Element && event.target.closest('.image-alt-field')) return;
         if (
           internalDrag.current ||
           (editor && !editor.isDestroyed && editor.view.dragging) ||
@@ -91,6 +93,10 @@ export function useImageTransfer({
       },
       onDropCapture(event: DragEvent<HTMLDivElement>) {
         setDragging(false);
+        if (event.target instanceof Element && event.target.closest('.image-alt-field')) {
+          if (hasFiles(event.dataTransfer)) event.preventDefault();
+          return;
+        }
         if (internalDrag.current || (editor && !editor.isDestroyed && editor.view.dragging)) {
           internalDrag.current = false;
           return;

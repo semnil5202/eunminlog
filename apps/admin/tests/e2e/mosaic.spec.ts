@@ -42,12 +42,48 @@ async function openSingle(page: Page) {
   await expect(tools(page).getByRole('button', { name: '영역 추가', exact: true })).toBeEnabled();
 }
 
+test('확대 모달은 도구와 포커스를 유지하고 Escape로 변경 없이 닫힌다', async ({ page }) => {
+  await openSingle(page);
+  const dialog = page.getByRole('dialog');
+  await expect(dialog).toBeVisible();
+  const before = await page.getByTestId('saved-html').textContent();
+  const viewport = page.viewportSize()!;
+  const dialogBox = (await dialog.boundingBox())!;
+  expect(dialogBox.width).toBeGreaterThan(viewport.width * 0.9);
+  const toolbarBox = (await tools(page).boundingBox())!;
+  expect(toolbarBox.y + toolbarBox.height).toBeLessThanOrEqual(viewport.height);
+  const stage = page.getByRole('group', { name: '모자이크 편집 영역' });
+  const stageBox = (await stage.boundingBox())!;
+  const photoBox = (await page.locator('[data-mosaic-editor] canvas').boundingBox())!;
+  if (photoBox.y - stageBox.y > 5) {
+    await stage.click({ position: { x: 2, y: 2 } });
+    await expect(page.getByRole('button', { name: '1번 모자이크 영역' })).toHaveCount(0);
+  }
+  if (dialogBox.x > 5) {
+    await page.mouse.click(2, 2);
+    await expect(dialog).toBeVisible();
+  }
+  await tools(page).getByRole('button', { name: '영역 추가' }).click();
+  for (let index = 0; index < 8; index++) {
+    await page.keyboard.press('Tab');
+    expect(await dialog.evaluate((node) => node.contains(document.activeElement))).toBe(true);
+  }
+  await page.keyboard.press('Escape');
+  await expect(dialog).toHaveCount(0);
+  expect(await page.getByTestId('saved-html').textContent()).toBe(before);
+  expect(await calls(page)).toEqual(['portrait.png']);
+});
+
 test('영역 추가·키보드 이동과 크기 조절·삭제 후 취소는 업로드하지 않는다', async ({ page }) => {
   await openSingle(page);
   const before = await page.getByTestId('saved-html').textContent();
   await tools(page).getByRole('button', { name: '영역 추가', exact: true }).click();
   const region = page.getByRole('button', { name: '1번 모자이크 영역' });
   const initial = await region.boundingBox();
+  const picture = (await page.locator('[data-mosaic-editor] canvas').boundingBox())!;
+  const expectedSide = Math.min(picture.width, picture.height) * 0.09;
+  expect(Math.abs(initial!.width - expectedSide)).toBeLessThan(1);
+  expect(Math.abs(initial!.height - expectedSide)).toBeLessThan(1);
   await region.focus();
   await region.press('ArrowRight');
   await expect.poll(async () => (await region.boundingBox())!.x).toBeGreaterThan(initial!.x);
@@ -105,8 +141,12 @@ test('사진 클릭 또는 탭으로 생성한 모자이크를 적용하고 본�
   const source = await images(page).getAttribute('src');
   const before = await page.getByTestId('saved-html').textContent();
   const area = page.getByRole('group', { name: '모자이크 편집 영역' });
-  const box = await area.boundingBox();
-  const position = { x: box!.width * 0.5, y: box!.height * 0.7 };
+  const box = (await area.boundingBox())!;
+  const photo = (await page.locator('[data-mosaic-editor] canvas').boundingBox())!;
+  const position = {
+    x: photo.x - box.x + photo.width * 0.5,
+    y: photo.y - box.y + photo.height * 0.7,
+  };
   if (testInfo.project.name === 'mobile') await area.tap({ position });
   else await area.click({ position });
   await expect(page.getByRole('button', { name: '1번 모자이크 영역' })).toBeVisible();
@@ -157,7 +197,10 @@ test('저장 중 취소 후 늦은 결과를 무시하고 다시 편집할 수 �
 
 test('Undo로 대상 이미지가 제거되면 편집 세션도 종료한다', async ({ page }) => {
   await openSingle(page);
-  await page.getByRole('button', { name: 'Undo', exact: true }).click();
+  await page
+    .locator('button')
+    .filter({ has: page.locator('svg title', { hasText: /^Undo$/ }) })
+    .evaluate((button: HTMLButtonElement) => button.click());
   await expect(images(page)).toHaveCount(0);
   await expect(tools(page)).toHaveCount(0);
   await expect(page.getByRole('button', { name: '이미지 추가', exact: true })).toBeEnabled();
@@ -180,7 +223,7 @@ test('캐러셀 모자이크는 대상만 교체하고 순서·치수와 스와�
   await page.getByRole('button', { name: '1번 이미지 모자이크', exact: true }).click();
   await expect(tools(page).getByRole('button', { name: '영역 추가' })).toBeEnabled();
   await tools(page).getByRole('button', { name: '영역 추가' }).click();
-  await expect(page.locator('.image-carousel-viewport')).toHaveCSS('overflow-x', 'hidden');
+  await expect(page.getByRole('dialog')).toHaveAttribute('aria-modal', 'true');
   await tools(page).getByRole('button', { name: '적용', exact: true }).click();
   await expect(tools(page)).toHaveCount(0);
   await expect(images(page).first()).not.toHaveAttribute('src', original[0].src!);

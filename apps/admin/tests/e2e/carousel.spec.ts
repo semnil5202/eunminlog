@@ -429,7 +429,7 @@ test('캐러셀 편집 범위와 공통 파란 점선 UI는 저장 HTML에 포�
   await expect(selected).toHaveCSS('outline-offset', '6px');
   await expect(standalone).toHaveCSS('margin-top', '0px');
   await expect(standalone).toHaveCSS('margin-bottom', '0px');
-  await expect(selected).toHaveCSS('margin-top', '12px');
+  await expect(page.locator('.image-node-view').last()).toHaveCSS('margin-top', '12px');
   const imageBounds = (await standalone.boundingBox())!;
   const frameBounds = (await selected.boundingBox())!;
   expect(frameBounds.y).toBeCloseTo(imageBounds.y, 1);
