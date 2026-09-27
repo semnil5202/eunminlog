@@ -1,4 +1,11 @@
-export type AdvertisementPlacement = 'feed' | 'search' | 'article' | 'postTop' | 'sidebar';
+export type AdvertisementPlacement =
+  | 'feed'
+  | 'search'
+  | 'article'
+  | 'postTop'
+  | 'sidebar'
+  | 'popularList'
+  | 'nearbyList';
 
 export const ADVERTISEMENT_SLOT_KEY = {
   feedFirst: 'feed.first',
@@ -17,6 +24,8 @@ export const ADVERTISEMENT_SLOT_KEY = {
   articleTenth: 'article.10',
   postTop: 'postTop',
   sidebar: 'sidebar',
+  popularList: 'popularList.inFeed',
+  nearbyList: 'nearbyList.inFeed',
 } as const;
 
 export const ADVERTISEMENT_ARTICLE_SLOT_KEYS = [
@@ -166,17 +175,25 @@ const coupangSidebarAdvertisements = [
   createCoupangDynamicAdvertisement('1014244', '쿠팡 관심 기반 추천 상품', 300, 250),
 ] as const;
 
+const coupangPopularListAdvertisements = [
+  createCoupangDynamicAdvertisement('1033444', '쿠팡 관심 기반 추천 상품', 300, 100),
+] as const;
+
+const coupangNearbyListAdvertisements = [
+  createCoupangDynamicAdvertisement('1033426', '쿠팡 관심 기반 추천 상품', 680, 140),
+] as const;
+
 export const ADVERTISEMENT_MEDIATION_CONFIG: AdvertisementMediationConfig = {
   enabled: isProductionBuild && import.meta.env.PUBLIC_AD_MEDIATION_ENABLED === 'true',
   previewProvider: isProductionBuild ? null : 'gpt-sample',
   slots: {
     [ADVERTISEMENT_SLOT_KEY.feedFirst]: {
-      enabled: false,
+      enabled: true,
       placement: 'feed',
       adsenseUnitKey: ADVERTISEMENT_UNIT_KEY.feed,
     },
     [ADVERTISEMENT_SLOT_KEY.feedSecond]: {
-      enabled: false,
+      enabled: true,
       placement: 'feed',
       adsenseUnitKey: ADVERTISEMENT_UNIT_KEY.feed,
     },
@@ -251,6 +268,16 @@ export const ADVERTISEMENT_MEDIATION_CONFIG: AdvertisementMediationConfig = {
       placement: 'sidebar',
       adsenseUnitKey: ADVERTISEMENT_UNIT_KEY.sidebar,
     },
+    [ADVERTISEMENT_SLOT_KEY.popularList]: {
+      enabled: true,
+      placement: 'popularList',
+      adsenseUnitKey: ADVERTISEMENT_UNIT_KEY.feed,
+    },
+    [ADVERTISEMENT_SLOT_KEY.nearbyList]: {
+      enabled: true,
+      placement: 'nearbyList',
+      adsenseUnitKey: ADVERTISEMENT_UNIT_KEY.feed,
+    },
   },
   adsense: {
     clientId: isProductionBuild ? normalizeAdSenseClientId(adSenseClientId) : null,
@@ -272,6 +299,8 @@ export const ADVERTISEMENT_MEDIATION_CONFIG: AdvertisementMediationConfig = {
     article: isProductionBuild ? coupangArticleAdvertisements : [],
     postTop: isProductionBuild ? [coupangPostTopAdvertisement] : [],
     sidebar: isProductionBuild ? coupangSidebarAdvertisements : [],
+    popularList: isProductionBuild ? coupangPopularListAdvertisements : [],
+    nearbyList: isProductionBuild ? coupangNearbyListAdvertisements : [],
   },
 };
 

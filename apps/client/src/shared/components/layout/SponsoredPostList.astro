@@ -4,6 +4,8 @@
 import { t } from "@/shared/lib/i18n/translations";
 import type { Locale } from "@/shared/types/common";
 import type { LocalizedPost } from "@/shared/types/post";
+import InFeedAdsense from "@/shared/components/ad/InFeedAdsense.astro";
+import { ADVERTISEMENT_SLOT_KEY } from "@/shared/constants/ad";
 import SponsoredPostItem from "./SponsoredPostItem.astro";
 
 interface Props {
@@ -11,11 +13,19 @@ interface Props {
   posts: LocalizedPost[];
   currentSlug?: string;
   title?: string;
+  showInFeedAdvertisement?: boolean;
 }
 
-const { locale, posts, currentSlug, title } = Astro.props;
+const {
+  locale,
+  posts,
+  currentSlug,
+  title,
+  showInFeedAdvertisement = false,
+} = Astro.props;
 const popularLabel = title ?? t("sidebar.popular", locale);
 const emptyLabel = t("sidebar.popularEmpty", locale);
+const shouldShowInFeedAdvertisement = showInFeedAdvertisement && posts.length >= 3;
 ---
 
 <section class="sponsored-post-list">
@@ -30,6 +40,16 @@ const emptyLabel = t("sidebar.popularEmpty", locale);
           <SponsoredPostItem post={post} currentSlug={currentSlug} locale={locale} />
         ))}
       </ul>
+
+      {shouldShowInFeedAdvertisement && (
+        <InFeedAdsense
+          class="h-[150px] min-h-[104px] max-h-[150px] w-full"
+          slotId="popular_list_in_feed"
+          position="popular_list_after_2"
+          slotKey={ADVERTISEMENT_SLOT_KEY.popularList}
+          locale={locale}
+        />
+      )}
 
       {posts.length > 2 && (
         <ul role="list" class="border-t border-gray-100">

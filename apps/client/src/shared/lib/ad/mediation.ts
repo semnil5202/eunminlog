@@ -195,6 +195,9 @@ const createAdSenseElement = (
     applyFixedAdSenseSize(container, adsenseElement);
   } else {
     adsenseElement.dataset.adFormat = unit.format;
+    if (container.dataset.adPlacement === 'popularList') {
+      adsenseElement.style.height = '150px';
+    }
   }
   if (unit.layoutKey) adsenseElement.dataset.adLayoutKey = unit.layoutKey;
   if (unit.layout) {

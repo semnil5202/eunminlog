@@ -222,7 +222,11 @@ export const createGooglePublisherTagSampleElement = (
   const element = document.createElement('div');
   element.id = `gpt-sample-slot-${sampleElementSequence}`;
   element.className =
-    placement === 'postTop' || placement === 'sidebar' ? 'h-full w-full' : 'min-h-[250px] w-full';
+    placement === 'postTop' || placement === 'sidebar'
+      ? 'h-full w-full'
+      : placement === 'popularList'
+        ? 'min-h-[104px] w-full'
+        : 'min-h-[250px] w-full';
   element.dataset.googlePublisherTagSample = 'true';
   return element;
 };
