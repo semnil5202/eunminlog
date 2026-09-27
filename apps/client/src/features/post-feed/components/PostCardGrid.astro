@@ -1,5 +1,6 @@
 ---
-/** 포스트 피드를 단일 컬럼 리스트로 렌더링한다. 2번째, 5번째 슬롯에 인피드 광고 삽입. */
+/** 포스트 피드를 렌더링하고 게시글 5개 간격으로 인피드 광고를 삽입한다. */
+import { getFeedAdvertisementIndex } from "@/shared/lib/ad/feed-placement";
 import type { LocalizedPost } from "@/shared/types/post";
 import type { Locale } from "@/shared/types/common";
 import { t } from "@/shared/lib/i18n/translations";
@@ -36,10 +37,11 @@ const feedItems: FeedItem[] = [];
 let cardIndex = 0;
 
 for (let index = 0; index < posts.length; index++) {
+  const advertisementIndex = getFeedAdvertisementIndex(cardIndex);
   const slotKey =
-    cardIndex === 1
+    advertisementIndex === 0
       ? ADVERTISEMENT_SLOT_KEY.feedFirst
-      : cardIndex === 4
+      : advertisementIndex === 1
         ? ADVERTISEMENT_SLOT_KEY.feedSecond
         : null;
   if (slotKey && isAdvertisementSlotEnabled(slotKey)) {
@@ -112,6 +114,7 @@ for (let index = 0; index < posts.length; index++) {
 {feedEndpoint && (
   <script>
     import { createAdvertisementSlotElement } from "@/shared/lib/ad/mediation";
+    import { getFeedAdvertisementIndex } from "@/shared/lib/ad/feed-placement";
 
     const feed = document.getElementById("post-feed");
     const sentinel = document.getElementById("feed-sentinel");
@@ -201,7 +204,7 @@ for (let index = 0; index < posts.length; index++) {
         loading = true;
 
         try {
-          const response = await fetch(`${endpoint}${nextPage}.json`);
+          const response = await fetch(`${endpoint}${nextPage}.json`, { cache: "no-cache" });
           if (!response.ok) {
             hasNext = false;
             sentinel.remove();
@@ -214,10 +217,11 @@ for (let index = 0; index < posts.length; index++) {
 
           let localIndex = 0;
           for (const post of posts) {
+            const advertisementIndex = getFeedAdvertisementIndex(loadedCardCount + localIndex);
             const slotKey =
-              localIndex === 1
+              advertisementIndex === 0
                 ? "feed.first"
-                : localIndex === 4
+                : advertisementIndex === 1
                   ? "feed.second"
                   : null;
             const slotEnabled =

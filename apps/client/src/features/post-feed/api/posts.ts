@@ -108,7 +108,7 @@ export const getMultilingualPosts = async (): Promise<Post[]> => {
 
 export const getPaginatedMultilingualPosts = async (
   page: number,
-  perPage = 9,
+  perPage = 10,
 ): Promise<{ posts: Post[]; totalPages: number }> => {
   const from = (page - 1) * perPage;
 
@@ -138,7 +138,7 @@ export const getPaginatedMultilingualPosts = async (
 export const getPaginatedMultilingualPostsByCategory = async (
   category: CategorySlug,
   page: number,
-  perPage = 9,
+  perPage = 10,
 ): Promise<{ posts: Post[]; totalPages: number }> => {
   const from = (page - 1) * perPage;
 
@@ -171,7 +171,7 @@ export const getPaginatedMultilingualPostsBySubCategory = async (
   category: CategorySlug,
   subCategory: string,
   page: number,
-  perPage = 9,
+  perPage = 10,
 ): Promise<{ posts: Post[]; totalPages: number }> => {
   const from = (page - 1) * perPage;
 
@@ -206,7 +206,7 @@ export const getPaginatedMultilingualPostsBySubCategory = async (
 
 export const getPaginatedPosts = async (
   page: number,
-  perPage = 9,
+  perPage = 10,
 ): Promise<{ posts: Post[]; totalPages: number }> => {
   const from = (page - 1) * perPage;
 
@@ -233,7 +233,7 @@ export const getPaginatedPosts = async (
 export const getPaginatedPostsByCategory = async (
   category: CategorySlug,
   page: number,
-  perPage = 9,
+  perPage = 10,
 ): Promise<{ posts: Post[]; totalPages: number }> => {
   const from = (page - 1) * perPage;
 
@@ -264,7 +264,7 @@ export const getPaginatedPostsBySubCategory = async (
   category: CategorySlug,
   subCategory: string,
   page: number,
-  perPage = 9,
+  perPage = 10,
 ): Promise<{ posts: Post[]; totalPages: number }> => {
   const from = (page - 1) * perPage;
 

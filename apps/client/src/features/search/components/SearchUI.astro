@@ -140,6 +140,7 @@ const advertisementLabel = t("a11y.advertisement", locale);
 
 <script>
   import { createAdvertisementSlotElement } from "@/shared/lib/ad/mediation";
+  import { getFeedAdvertisementIndex } from "@/shared/lib/ad/feed-placement";
   import { unobserveAdSlotsWithin } from "@/shared/lib/analytics/ad-tracker";
 
   const searchUi = document.getElementById('search-ui');
@@ -279,10 +280,11 @@ const advertisementLabel = t("a11y.advertisement", locale);
 
     let cardIndex = 0;
     for (const post of filtered) {
+      const advertisementIndex = getFeedAdvertisementIndex(cardIndex);
       const slotKey =
-        cardIndex === 1
+        advertisementIndex === 0
           ? 'search.first'
-          : cardIndex === 4
+          : advertisementIndex === 1
             ? 'search.second'
             : null;
       const slotEnabled =

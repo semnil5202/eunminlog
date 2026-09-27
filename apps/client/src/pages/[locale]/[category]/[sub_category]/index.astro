@@ -101,7 +101,7 @@ const popularTitle = t("sidebar.scopedPopular", locale).replaceAll("{0}", subCat
     <PostCardGrid
       posts={localizedPosts}
       locale={locale}
-      feedEndpoint={`/api/feed/${locale}/${category}/${sub_category}/`}
+      feedEndpoint={`/api/feed/v2/${locale}/${category}/${sub_category}/`}
       hasNextPage={totalPages > 1}
       sponsoredLabel={t("post.sponsoredBadge", locale)}
       popularLabel={t("post.popularBadge", locale)}

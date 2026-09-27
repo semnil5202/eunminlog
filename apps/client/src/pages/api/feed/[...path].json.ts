@@ -92,7 +92,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
       : await getPaginatedMultilingualPosts(1);
     for (let page = 2; page <= allTotal; page++) {
       paths.push({
-        params: { path: `${locale}/all/${page}` },
+        params: { path: `v2/${locale}/all/${page}` },
         props: { locale, category: null, subCategory: null, page },
       });
     }
@@ -103,7 +103,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
         : await getPaginatedMultilingualPostsByCategory(category as CategorySlug, 1);
       for (let page = 2; page <= catTotal; page++) {
         paths.push({
-          params: { path: `${locale}/${category}/${page}` },
+          params: { path: `v2/${locale}/${category}/${page}` },
           props: { locale, category: category as CategorySlug, subCategory: null, page },
         });
       }
@@ -114,7 +114,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
           : await getPaginatedMultilingualPostsBySubCategory(category as CategorySlug, sub, 1);
         for (let page = 2; page <= subTotal; page++) {
           paths.push({
-            params: { path: `${locale}/${category}/${sub}/${page}` },
+            params: { path: `v2/${locale}/${category}/${sub}/${page}` },
             props: { locale, category: category as CategorySlug, subCategory: sub, page },
           });
         }

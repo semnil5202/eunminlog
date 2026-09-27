@@ -46,7 +46,7 @@ const popularTitle = t("sidebar.allPopular", locale);
   <PostCardGrid
     posts={posts}
     locale={locale}
-    feedEndpoint={`/api/feed/${locale}/all/`}
+    feedEndpoint={`/api/feed/v2/${locale}/all/`}
     hasNextPage={totalPages > 1}
     sponsoredLabel={t("post.sponsoredBadge", locale)}
     popularLabel={t("post.popularBadge", locale)}
