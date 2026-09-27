@@ -48,7 +48,7 @@
 
 Feed 설정은 보존하지만 현재 비활성이다. Search는 같은 Native In-feed unit을 index 1, 4에서 사용하고 Article은 같은 Native In-article unit을 적격 H2 앞 최대 10곳에서 반복 사용한다. 활성 지면의 각 DOM 노출은 고유한 logical slot/position을 사용하며 인기글 104px 광고 지면은 사용하지 않는다.
 
-PostTop은 AdSense 콘솔에서 생성한 Mobile 300×50과 PC 468×60 고정형 unit을 `lg` breakpoint로 선택해 한 DOM 슬롯에서 하나만 요청한다. Sidebar도 별도 300×250 고정형 unit을 사용한다. 세 지면 모두 `data-ad-format="auto"`를 사용하지 않고 광고 요청 직전에 현재 예약 컨테이너의 픽셀 크기를 `<ins>` 인라인 스타일로 고정한다. 최소 높이도 동일하게 예약해 `unfilled` 전환 후 쿠팡 fallback에서 컨테이너가 접히지 않게 한다.
+PostTop은 게시글 대표 이미지와 협찬·쿠팡 공시문 아래, 장소·제품 정보 카드 위에 배치한다. AdSense 콘솔에서 생성한 Mobile 300×50과 PC 468×60 고정형 unit을 `lg` breakpoint로 선택해 한 DOM 슬롯에서 하나만 요청한다. Sidebar도 별도 300×250 고정형 unit을 사용한다. 세 지면 모두 `data-ad-format="auto"`를 사용하지 않고 광고 요청 직전에 현재 예약 컨테이너의 픽셀 크기를 `<ins>` 인라인 스타일로 고정한다. 최소 높이도 동일하게 예약해 `unfilled` 전환 후 쿠팡 fallback에서 컨테이너가 접히지 않게 한다.
 
 AdSense `<ins>`는 슬롯 등록 시 미리 생성하지 않는다. 즉시 또는 lazy 진입한 슬롯을 공통 요청 큐에서 하나씩 처리하고, 대상 컨테이너에 `<ins>`를 추가한 직후 `push({})`를 호출한다. Google이 `data-adsbygoogle-status`로 요청 접수를 표시한 뒤 다음 슬롯을 처리해, 상세 페이지의 Article·Sidebar처럼 DOM 순서가 다른 여러 지면에서도 요청 대상이 어긋나지 않게 한다.
 

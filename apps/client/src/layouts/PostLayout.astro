@@ -114,9 +114,6 @@ const gaPageParams = {
       <LeftSidebar locale={locale} />
 
       <main class="min-w-0 py-6">
-
-        <FixedAdsense variant="post-top" locale={locale} />
-
         <article itemscope itemtype="https://schema.org/BlogPosting">
 
           <PostBadges
@@ -175,6 +172,8 @@ const gaPageParams = {
               )}
             </div>
           )}
+
+          <FixedAdsense variant="post-top" locale={locale} />
 
           {post.place_name && (
             <PlaceInfoCard

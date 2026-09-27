@@ -464,12 +464,12 @@ Admin 본문 WYSIWYG는 클립보드 이미지 파일 붙여넣기와 외부 파
 
 ## 광고 미디에이션 Specifications
 
-| 배치                       | 사이즈 (Mobile) | 사이즈 (PC)        | 위치                                 | 컴포넌트                          |
-| -------------------------- | --------------- | ------------------ | ------------------------------------ | --------------------------------- |
-| PostLayout Fixed Adsense   | 300x50          | 468x60 (중앙 정렬) | 게시글 상세 본문 상단                | `FixedAdsense variant="post-top"` |
-| RightSidebar Fixed Adsense | --              | 300x250            | PC 우측 사이드바 상단 (sticky)       | `FixedAdsense variant="sidebar"`  |
-| Native In-Article          | fluid           | fluid              | 게시글 본문 중간 (H2 헤딩 앞에 삽입) | `insertInArticleAds()`            |
-| Native In-feed             | fluid           | fluid              | Search index 1, 4 (Feed는 비활성)    | `InFeedAdsense`                   |
+| 배치                       | 사이즈 (Mobile) | 사이즈 (PC)        | 위치                                         | 컴포넌트                          |
+| -------------------------- | --------------- | ------------------ | -------------------------------------------- | --------------------------------- |
+| PostLayout Fixed Adsense   | 300x50          | 468x60 (중앙 정렬) | 게시글 대표 이미지·공시문 아래, 정보 카드 위 | `FixedAdsense variant="post-top"` |
+| RightSidebar Fixed Adsense | --              | 300x250            | PC 우측 사이드바 상단 (sticky)               | `FixedAdsense variant="sidebar"`  |
+| Native In-Article          | fluid           | fluid              | 게시글 본문 중간 (H2 헤딩 앞에 삽입)         | `insertInArticleAds()`            |
+| Native In-feed             | fluid           | fluid              | Search index 1, 4 (Feed는 비활성)            | `InFeedAdsense`                   |
 
 피드·검색용 Native In-feed unit(`6392269057`, layout key `-6t+ed+2i-1n-4w`)은 공유한다. Search 슬롯 키는 활성이고 Feed 슬롯 키는 비활성이다. 본문은 `article.1`부터 `article.10`까지 같은 Native In-article unit(`5322463062`, `fluid`, full-width responsive)을 공유한다. In-feed는 `min-h-[280px]`, In-article은 `min-h-[250px]`를 예약하고 광고 높이 확장을 허용하며, Core Web Vitals 가드레일은 field p75 CLS 0.1 이하이다.
 
@@ -493,7 +493,7 @@ Admin 본문 WYSIWYG는 클립보드 이미지 파일 붙여넣기와 외부 파
 
 - **위치**: `shared/components/ad/FixedAdsense.astro`
 - Props: `variant` (`'post-top'` | `'sidebar'`)
-- `post-top`: 모바일 300x50, PC 468x60 (반응형 전환)
+- `post-top`: 게시글 대표 이미지와 협찬·쿠팡 공시문 아래, 장소·제품 정보 카드 위에 배치한다. 모바일 300x50, PC 468x60을 `lg` 경계에서 전환한다.
 - `sidebar`: 300x250 (PC 전용)
 
 #### `InFeedAdsense.astro`
