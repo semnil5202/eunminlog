@@ -49,6 +49,9 @@ docs/secrets-reference.md
 # generated cf function
 infra/cf-functions/viewer-request.js
 
+# manual media cleanup configuration and reports
+.media-cleanup/
+
 # claude code note
 check.md
 HANDOFF.md

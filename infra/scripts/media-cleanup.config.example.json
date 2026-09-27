@@ -1,0 +1,20 @@
+{
+  "dev": {
+    "awsProfile": "REPLACE_DEV_PROFILE",
+    "region": "ap-northeast-2",
+    "accountId": "REPLACE_ACCOUNT_ID",
+    "mediaBucket": "REPLACE_DEV_MEDIA_BUCKET",
+    "staticBucket": "REPLACE_DEV_STATIC_BUCKET",
+    "supabaseUrlEnv": "DEV_SUPABASE_URL",
+    "supabaseKeyEnv": "DEV_SUPABASE_SERVICE_ROLE_KEY"
+  },
+  "prod": {
+    "awsProfile": "REPLACE_PROD_PROFILE",
+    "region": "ap-northeast-2",
+    "accountId": "REPLACE_ACCOUNT_ID",
+    "mediaBucket": "REPLACE_PROD_MEDIA_BUCKET",
+    "staticBucket": "REPLACE_PROD_STATIC_BUCKET",
+    "supabaseUrlEnv": "PROD_SUPABASE_URL",
+    "supabaseKeyEnv": "PROD_SUPABASE_SERVICE_ROLE_KEY"
+  }
+}

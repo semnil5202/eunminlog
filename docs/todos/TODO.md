@@ -180,7 +180,7 @@
 
 - [x] 미디어 업로드 및 Pre-signed URL 로직 (S3 presigned URL + WebP 변환 + CDN URL)
 - [x] 이미지 워터마크 — Canvas API로 'eunminlog' 대각선 패턴 합성
-- [ ] S3 orphan 이미지 정리 — 게시글 미저장/삭제/수정 시 S3에 남는 미사용 이미지 처리 (S3 Lifecycle Policy 또는 별도 정리 스크립트)
+- [x] S3 orphan 이미지 수동 정리 스크립트 — dev/prod 양쪽 참조 대조, dry-run 보고서, 7일 유예 후 재검증·명시적 삭제. [사용법](../media-cleanup.md). 실제 환경 적용 검증·자동 실행은 미완료.
 
 ## Client — UI
 
