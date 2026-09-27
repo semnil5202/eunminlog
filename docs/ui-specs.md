@@ -118,7 +118,7 @@
    ```
 
    - 현재 `feed.first`, `feed.second`는 `enabled=false`로 Feed 슬롯 DOM, AdSense 요청, 쿠팡 fallback을 모두 생성하지 않는다.
-   - `search.first`, `search.second`는 활성 상태로 검색 결과의 index 1, 4(2번째·5번째 카드 직전)에 광고를 삽입한다. 최소 250px을 예약하고 뷰포트 근접 시 AdSense를 요청하며 `unfilled`이면 식품·뷰티 쿠팡 다이나믹 위젯으로 전환한다.
+   - `search.first`, `search.second`는 활성 상태로 검색 결과의 index 1, 6, 11, 16…(2·7·12·17번째 카드 직전)에 광고를 삽입한다. 최소 250px을 예약하고 뷰포트 근접 시 AdSense를 요청하며 `unfilled`이면 식품·뷰티 쿠팡 다이나믹 위젯으로 전환한다.
    - Feed는 AdSense 실제 노출 확인 후 필요한 슬롯 키를 활성화하면 SSG와 추가 페이지의 같은 index에 광고를 삽입한다.
    - CSS `lg:hidden` / `hidden lg:block`으로 visibility 토글 (별도 HTML 구조 금지)
 
@@ -143,7 +143,8 @@
 #### `PostCardGrid.astro`
 
 - **위치**: `features/post-feed/components/PostCardGrid.astro`
-- PostCard 목록을 그리드 형태로 렌더링한다. In-feed 활성화 시에만 index 1, 4(2번째·5번째 카드 직전)에 `InFeedAdsense`를 삽입한다.
+- PostCard 목록을 그리드 형태로 렌더링한다. In-feed 활성화 시에만 index 1, 6, 11, 16…(2·7·12·17번째 카드 직전)에 `InFeedAdsense`를 삽입한다.
+- 최초 SSG와 추가 JSON 페이지는 언어·카테고리에 관계없이 게시글 10개 단위다. 광고는 게시글 수에서 제외하며 전체 게시글 인덱스로 계산한다. 두 슬롯 키와 쿠팡 fallback을 번갈아 사용하고 Feed 슬롯 두 개 모두 활성화한다. 검색은 페이지네이션 없이 필터링된 전체 결과에 같은 간격을 적용한다.
 - IntersectionObserver 페이지네이션 지원
 
 #### `MobileHeader.astro`
@@ -251,6 +252,7 @@
 - **위치**: `shared/components/layout/SponsoredPostItem.astro`
 - Props: `post` (LocalizedPost), `currentSlug?`, `locale`
 - `SponsoredPostList.astro`는 `title?`을 받아 우측/하단 인기글 섹션 제목을 표시. 미전달 시 `인기글` fallback.
+- PC 우측 사이드바는 인기글이 3개 이상일 때 두 번째 글 뒤에 Native In-feed를 삽입한다. 모바일 하단 재사용 목록에는 삽입하지 않는다.
 - 인기글 섹션 제목은 페이지 범위에 맞춰 root/search는 `전체 인기글`, 대분류는 `{대분류} 인기글`, 소분류/상세는 `{소분류} 인기글`로 표시
 - 현재 글과 slug 일치 시 `border-l-primary-500` active 스타일 적용
 - 썸네일(80x80) + 제목(truncate) + 설명(line-clamp-2) 레이아웃
@@ -383,6 +385,8 @@ Admin 본문 WYSIWYG는 클립보드 이미지 파일 붙여넣기와 외부 파
 - **위치**: `features/post-detail/components/NearbyPostList.astro`
 - Props: `posts`, `currentSlug`, `categoryLabel`, `subCategoryLabel`, `moreLabel`, `subCategoryHref`, `locale`
 - 같은 서브카테고리의 인근 포스트를 썸네일 + 제목 + 설명 리스트로 표시
+- 최대 4개를 이전 글·현재 글·다음 글·다다음 글 순서로 구성한다. 경계에서는 존재하는 글만 표시한다.
+- 글이 3개 이상일 때만 두 번째 글 뒤에 Native In-feed를 삽입한다. 1~2개면 광고 DOM과 예약 공간을 만들지 않는다.
 - 현재 포스트는 `border-l-primary-500` + `aria-current="page"`로 구분
 - 썸네일은 `optimizedUrl()`로 `_688.webp` 리사이즈본을 사용
 
@@ -401,7 +405,7 @@ Admin 본문 WYSIWYG는 클립보드 이미지 파일 붙여넣기와 외부 파
 - Props: `searchData`, `suggestedKeywords`, `placeholderText`, `noResultsText`, `noResultsHintText`, `resultsText`, `suggestedText`, `sponsoredLabel`
 - 검색 폼, 추천 키워드 chip, 결과 리스트, 빈 결과 UI, 클라이언트 검색 스크립트를 하나의 컴포넌트로 통합
 - `<script type="application/json">` 으로 검색 데이터 인라인 삽입
-- 클라이언트 JS가 PostCard DOM을 동적으로 생성한다. In-feed 활성화 시에만 각 추가 페이지의 index 1, 4(2번째·5번째 카드 직전)에 광고를 삽입한다.
+- 클라이언트 JS가 PostCard DOM을 동적으로 생성한다. In-feed 활성화 시에만 누적 게시글 기준 index 1, 6, 11, 16…(2·7·12·17번째 카드 직전)에 광고를 삽입한다.
 
 ### Feature Components: Cookie Consent (`features/consent/`)
 
@@ -477,27 +481,29 @@ Admin 본문 WYSIWYG는 클립보드 이미지 파일 붙여넣기와 외부 파
 
 ## 광고 미디에이션 Specifications
 
-| 배치                       | 사이즈 (Mobile) | 사이즈 (PC)        | 위치                                         | 컴포넌트                          |
-| -------------------------- | --------------- | ------------------ | -------------------------------------------- | --------------------------------- |
-| PostLayout Fixed Adsense   | 300x50          | 468x60 (중앙 정렬) | 게시글 대표 이미지·공시문 아래, 정보 카드 위 | `FixedAdsense variant="post-top"` |
-| RightSidebar Fixed Adsense | --              | 300x250            | PC 우측 사이드바 상단 (sticky)               | `FixedAdsense variant="sidebar"`  |
-| Native In-Article          | fluid           | fluid              | 게시글 본문 중간 (H2 헤딩 앞에 삽입)         | `insertInArticleAds()`            |
-| Native In-feed             | fluid           | fluid              | Search index 1, 4 (Feed는 비활성)            | `InFeedAdsense`                   |
+| 배치                       | 사이즈 (Mobile) | 사이즈 (PC)         | 위치                                         | 컴포넌트                          |
+| -------------------------- | --------------- | ------------------- | -------------------------------------------- | --------------------------------- |
+| PostLayout Fixed Adsense   | 300x50          | 468x60 (중앙 정렬)  | 게시글 대표 이미지·공시문 아래, 정보 카드 위 | `FixedAdsense variant="post-top"` |
+| RightSidebar Fixed Adsense | --              | 300x250             | PC 우측 사이드바 상단 (sticky)               | `FixedAdsense variant="sidebar"`  |
+| 인기글 Native In-feed      | --              | fluid (300x150 고정) | 우측 인기글 두 번째 글 뒤, 글 3개 이상       | `InFeedAdsense`                   |
+| 인근 글 Native In-feed     | fluid           | fluid               | 상세 하단 인근 글 두 번째 글 뒤, 글 3개 이상 | `InFeedAdsense`                   |
+| Native In-Article          | fluid           | fluid               | 게시글 본문 중간 (H2 헤딩 앞에 삽입)         | `insertInArticleAds()`            |
+| Native In-feed             | fluid           | fluid               | Feed·Search index 1, 6, 11, 16…            | `InFeedAdsense`                   |
 
-피드·검색용 Native In-feed unit(`6392269057`, layout key `-6t+ed+2i-1n-4w`)은 공유한다. Search 슬롯 키는 활성이고 Feed 슬롯 키는 비활성이다. 본문은 `article.1`부터 `article.10`까지 같은 Native In-article unit(`5322463062`, `fluid`, full-width responsive)을 공유한다. In-feed는 `min-h-[280px]`, In-article은 `min-h-[250px]`를 예약하고 광고 높이 확장을 허용하며, Core Web Vitals 가드레일은 field p75 CLS 0.1 이하이다.
+피드·검색·인기글·인근 글 Native In-feed unit(`6392269057`, layout key `-6t+ed+2i-1n-4w`)은 공유한다. Feed·Search·인기글·인근 글 슬롯 키는 모두 활성이다. 본문은 `article.1`부터 `article.10`까지 같은 Native In-article unit(`5322463062`, `fluid`, full-width responsive)을 공유한다. 인기글은 150px 고정 높이를 사용하며, 그 밖의 In-feed는 `min-h-[280px]`, In-article은 `min-h-[250px]`를 예약하고 광고 높이 확장을 허용하며, Core Web Vitals 가드레일은 field p75 CLS 0.1 이하이다.
 
 ### Provider 선택과 CLS
 
-- Local·Development에서는 활성 광고 지면에 Google Publisher Tag(GPT) 공식 공개 샘플을 표시한다. 현재 Article은 `/6355419/Travel` fluid, Search는 `/6355419/Travel` Native In-feed, Sidebar는 `/6355419/Travel/Europe/France/Paris` 300×250, PostTop은 `/6355419/Travel/Asia`와 현재 컨테이너 크기를 사용한다. 비활성 Feed는 GPT 슬롯도 만들지 않으며 Production에서는 GPT 분기를 사용하지 않는다.
+- Local·Development에서는 활성 광고 지면에 Google Publisher Tag(GPT) 공식 공개 샘플을 표시한다. 현재 Article은 `/6355419/Travel` fluid, Search는 `/6355419/Travel` Native In-feed, Sidebar는 `/6355419/Travel/Europe/France/Paris` 300×250, PostTop은 `/6355419/Travel/Asia`와 현재 컨테이너 크기를 사용한다. Feed도 GPT 샘플을 표시하며 Production에서는 GPT 분기를 사용하지 않는다.
 - GPT가 정상 응답했지만 빈 슬롯이면 `GPT TEST AD · NO FILL`, SDK 로드·slot 정의·요청 실패면 `GPT TEST AD · LOAD FAILED`를 표시한다. 둘 다 provider `none`이며 Production에는 기술 marker를 표시하지 않는다.
 - Production에서 운영 플래그가 꺼져 있으면 사이트 심사용 AdSense base tag만 로드하고 광고 단위 요청은 만들지 않는다. 지면별 고정 이미지 또는 다이나믹 iframe fallback만 표시한다.
 - Production에서 운영 플래그가 켜져 있으면 AdSense의 `data-ad-status="unfilled"`에서만 해당 지면을 쿠팡으로 전환한다. `filled`와 `unfill-optimized`는 Google이 관리하는 AdSense 지면으로 유지한다.
-- 다이나믹 iframe `src`는 쿠팡 전환 시점에만 설정한다. Article은 화면 폭과 무관하게 홀수 순번에 680×140, 짝수 순번에 300×250 위젯을 사용한다. Search와 비활성 Feed는 화면 폭 분기 없이 In-feed 전용 680×280 위젯을 사용한다. Sidebar는 300×250을 유지하고 Local·Development 및 모바일의 숨겨진 Sidebar에서는 요청하지 않는다.
+- 다이나믹 iframe `src`는 쿠팡 전환 시점에만 설정한다. Article은 화면 폭과 무관하게 홀수 순번에 680×140, 짝수 순번에 300×250 위젯을 사용한다. Search와 Feed는 화면 폭 분기 없이 In-feed 전용 680×280 위젯을 사용한다. 인기글은 300×100, 인근 글은 680×140을 중앙 정렬하며 Sidebar는 300×250을 유지한다. Local·Development 및 모바일의 숨겨진 Sidebar에서는 요청하지 않는다.
 - 활성 상태의 ID 누락, 오류, 차단, 상태 미확인은 fallback 없이 예약 영역을 비워 둔다.
-- 고정 Display 지면은 width/height를 유지하고, Native 지면은 `min-height: 250px`를 유지하면서 AdSense creative 높이 확장을 허용한다. PC 쿠팡 fallback이 680×140이어도 예약 높이는 줄이지 않으며 래퍼에 `overflow-hidden`을 두지 않아 광고나 AdChoices를 자르지 않는다.
+- 고정 Display 지면은 width/height를 유지하고, 인기글을 제외한 Native 지면은 최소 높이를 유지하면서 AdSense creative 높이 확장을 허용한다. PC 쿠팡 fallback이 680×140이어도 예약 높이는 줄이지 않으며 래퍼에 `overflow-hidden`을 두지 않아 광고나 AdChoices를 자르지 않는다.
 - PostTop과 Sidebar는 `data-ad-format="auto"`를 사용하지 않는다. PostTop은 하나의 DOM 컨테이너에서 `lg` 미만이면 Mobile 고정 unit(`8174224200`, 300×50), `lg` 이상이면 PC 고정 unit(`1564849758`, 468×60) 하나만 선택해 요청한다. Sidebar는 PC 고정 unit(`3939731651`, 300×250)을 사용한다. 현재 컨테이너 크기를 광고 `<ins>` 인라인 픽셀 크기로 적용하고 같은 최소 높이를 예약해 AdSense 응답과 쿠팡 fallback 전환 중 CLS를 방지한다.
 - PostTop 쿠팡 fallback은 로켓 반려동물용품 고정 배너(`1013691`, 원본 728×90)를 사용한다. Mobile 300×50·PC 468×60 예약 컨테이너 안에서 원본 비율을 보존해 축소하고 중앙 정렬하며 AdSense unit 크기는 변경하지 않는다.
-- 게시글 상단만 즉시 호출한다. 활성 Sidebar·Article은 뷰포트 300px 전부터 한 번만 호출한다.
+- 게시글 상단만 즉시 호출한다. 활성 Sidebar·Article·인기글·인근 글은 뷰포트 300px 전부터 한 번만 호출한다.
 - AdSense `<ins>`는 실제 호출 시점에만 대상 컨테이너에 생성한다. 공통 요청 큐가 `data-adsbygoogle-status` 접수를 확인한 뒤 다음 슬롯을 처리해 여러 lazy 지면의 전역 `push({})` 호출이 DOM상 다른 광고 단위에 연결되지 않게 한다.
 
 ### AdSense 컴포넌트
@@ -513,7 +519,7 @@ Admin 본문 WYSIWYG는 클립보드 이미지 파일 붙여넣기와 외부 파
 
 - **위치**: `shared/components/ad/InFeedAdsense.astro`
 - Props: `slotKey`, `slotId`, `position`, `fallbackIndex`, `locale`
-- 현재 Feed에서는 비활성 슬롯 키에 해당하는 컴포넌트를 렌더링하지 않는다. Search는 활성 슬롯 키에 `w-full min-h-[280px]`로 최소 공간을 예약하고 Native creative의 가변 높이를 허용한다.
+- Feed와 Search는 활성 슬롯 키에 `w-full min-h-[280px]`로 최소 공간을 예약하고 Native creative의 가변 높이를 허용한다.
 - provider가 활성화될 때만 `role="complementary"`와 광고 접근성 라벨을 적용한다.
 - 운영 AdSense unit ID(`6392269057`)는 Feed/Search의 반복 DOM 슬롯에서 재사용한다. `data-ad-slot`과 `data-ad-position`은 각 노출의 논리 슬롯·위치를 고유하게 식별한다.
 
@@ -542,7 +548,7 @@ Admin 본문 WYSIWYG는 클립보드 이미지 파일 붙여넣기와 외부 파
 
 1. **검색 입력**: 돋보기 아이콘(좌측) + `<input type="search">`. Enter(form submit)로 검색 실행, 실시간 필터링 아님.
 2. **추천 키워드**: place_name + 카테고리 라벨을 빌드 타임에 추출. 클릭 가능한 chip 형태.
-3. **검색 결과**: 결과 건수 표시 + PostCard 리스트. Native In-feed를 result index 1, 4에 삽입하며 `unfilled`일 때 반응형 쿠팡 다이나믹 위젯으로 전환.
+3. **검색 결과**: 결과 건수 표시 + PostCard 리스트. Native In-feed를 result index 1, 6, 11, 16…에 삽입하며 `unfilled`일 때 반응형 쿠팡 다이나믹 위젯으로 전환.
 4. **결과 없음**: 아이콘 + 안내 메시지 + 힌트 텍스트
 5. **URL**: `history.replaceState`로 `?q=` 파라미터 반영 (페이지 새로고침 없음)
 
@@ -561,5 +567,7 @@ Admin 본문 WYSIWYG는 클립보드 이미지 파일 붙여넣기와 외부 파
 | Left Sidebar  | `hidden lg:block` | 숨김 (Footer로 대체)         |
 | Right Sidebar | `hidden lg:block` | In-Feed Ad로 전환            |
 | Header Nav    | 텍스트 메뉴       | Snap Scroll                  |
-| Ad 배치       | Right Sidebar     | 현재 없음(In-feed 승인 대기) |
+| Ad 배치       | Right Sidebar     | Feed 5개 간격 |
 | Footer Links  | 기본              | Full Sitemap (SEO)           |
+
+우측 인기글 인피드 컨테이너는 최소 104px·최대 150px이며 CLS 방지를 위해 높이 150px을 미리 예약하고 AdSense fluid `<ins>`에도 `height:150px`을 지정한다. [Google 공식 높이 설정](https://support.google.com/adsense/answer/9189959)을 따르며 광고를 잘라내지 않는다. 새 쿠팡 위젯 `1033444`(은민로그 인기글 인피드 관심기반 300x100)를 300×100으로 중앙 정렬한다. 기존 위젯은 보존한다. 운영 광고의 높이 적합성은 배포 후 확인해야 하며 개발 GPT fluid 샘플은 이를 검증하지 못한다.

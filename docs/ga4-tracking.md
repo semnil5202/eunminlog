@@ -121,16 +121,18 @@ AdSense와 쿠팡을 `ad_provider`로 분리한다. 빈 예약 영역(`none`)과
 | 광고 유형        | `ad_slot`                        | `ad_format`    | `ad_position`                    |
 | ---------------- | -------------------------------- | -------------- | -------------------------------- |
 | Feed (index 1)   | `"feed_card_index_1"`            | `"in_feed"`    | `"feed_card_index_1"`            |
-| Feed (index 4)   | `"feed_card_index_4"`            | `"in_feed"`    | `"feed_card_index_4"`            |
+| Feed (index 6)   | `"feed_card_index_6"`            | `"in_feed"`    | `"feed_card_index_6"`            |
 | Search (index 1) | `"search_render_N_card_index_1"` | `"in_feed"`    | `"search_render_N_card_index_1"` |
-| Search (index 4) | `"search_render_N_card_index_4"` | `"in_feed"`    | `"search_render_N_card_index_4"` |
+| Search (index 6) | `"search_render_N_card_index_6"` | `"in_feed"`    | `"search_render_N_card_index_6"` |
 | 게시글 상단      | `"post_top"`                     | `"display"`    | `"post_top"`                     |
 | 사이드바         | `"sidebar"`                      | `"display"`    | `"right_sidebar"`                |
+| 인기글 목록      | `"popular_list_in_feed"`         | `"in_feed"`    | `"popular_list_after_2"`         |
+| 인근 글 목록     | `"nearby_posts_in_feed"`         | `"in_feed"`    | `"nearby_posts_after_2"`         |
 | 본문 중간        | `"article_N"`                    | `"in_article"` | `"article_section_N"`            |
 
 > `N`은 본문 내 삽입 순서 (1, 2, ...).
 
-운영 AdSense unit ID는 형식별로 반복 DOM 슬롯에서 재사용한다. 현재 `feed.first`, `feed.second`는 비활성이라 이벤트를 만들지 않는다. 활성 `search.first`, `search.second`는 Native In-feed unit(`6392269057`)을 공유하고, `article.1`부터 `article.10`까지는 Native In-article unit(`5322463062`)을 공유한다. 위 `ad_slot`과 `ad_position`은 AdSense unit ID가 아니라 각 DOM 노출·카드 위치를 구분하는 논리 식별자다.
+운영 AdSense unit ID는 형식별로 반복 DOM 슬롯에서 재사용한다. 활성 `feed.first`, `feed.second`, `search.first`, `search.second`, `popularList.inFeed`, `nearbyList.inFeed`는 Native In-feed unit(`6392269057`)을 공유하고, `article.1`부터 `article.10`까지는 Native In-article unit(`5322463062`)을 공유한다. 위 `ad_slot`과 `ad_position`은 AdSense unit ID가 아니라 각 DOM 노출·카드 위치를 구분하는 논리 식별자다.
 
 ---
 
@@ -350,7 +352,7 @@ export function initPostClickTracker(containerId: string): void {
 - `none` 상태는 기록하지 않으며 provider 전환 시 진행 중인 view 타이머를 취소한다.
 - 쿠팡 고정 anchor 내부의 실제 클릭만 `ad_click`으로 기록한다. AdSense 및 쿠팡 다이나믹 iframe에는 click listener를 두지 않으며 동적 상품 클릭은 쿠팡 리포트에서 확인한다.
 - 슬롯 상태는 element 기준 `WeakMap`/`Map`으로 관리해 동일 이름의 동적 슬롯이 서로 간섭하지 않게 한다.
-- Search의 `ad_position`은 검색 결과의 index 1, 4(2번째·5번째 카드 직전)를 사용하며 고유 슬롯 counter와 분리한다. Feed도 재활성화 후 같은 index 규칙을 사용한다.
+- Search의 `ad_position`은 검색 결과의 index 1, 6, 11, 16…(2·7·12·17번째 카드 직전)를 사용하며 고유 슬롯 counter와 분리한다. Feed도 같은 index 규칙으로 활성화한다.
 - `unfill-optimized`는 Google이 관리하는 AdSense 지면으로 추적한다. GPT 샘플의 `NO FILL`·`LOAD FAILED` marker는 provider `none`이므로 impression/view/click 이벤트를 만들지 않는다. Production에는 기술 marker를 렌더링하지 않는다.
 
 ---

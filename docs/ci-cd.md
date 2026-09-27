@@ -171,6 +171,7 @@ Job: deploy
 - **HTML + ads.txt** (`no-cache`): 브라우저가 매번 서버에 재검증. SSG 빌드마다 내용이 바뀌므로 장기 캐시하면 안 됨. ads.txt는 Google 크롤러가 주기적으로 재검증하므로 no-cache 필수.
 - **정적 에셋** (`max-age=1년, immutable`): Astro가 파일명에 해시를 포함하므로 내용 변경 시 URL이 바뀜. 장기 캐시 안전.
 - **feed JSON** (`no-cache`): 무한스크롤 추가 로드에 사용되는 JSON 피드. 브라우저 stale 캐시 방지. `if [ -d ... ]` 조건으로 디렉토리 미존재 시 스텝 skip.
+- 페이지 크기 9→10 변경 시 피드 경로를 `/api/feed/v2/{locale}/.../{page}.json`으로 분리했다. HTML의 endpoint와 SSG JSON 생성 경로가 같은 버전을 사용하며 fetch도 `cache: no-cache`로 재검증한다. 배포의 `/*` 무효화는 유지한다. 이전 탭의 구버전 endpoint는 잔여 파일 정리 후 404가 될 수 있으므로 새로고침이 필요하다.
 - `--delete`: S3에 있지만 로컬 dist에 없는 파일 삭제. 이전 빌드의 잔여 파일 정리.
 
 #### Step 9: Invalidate CloudFront cache
