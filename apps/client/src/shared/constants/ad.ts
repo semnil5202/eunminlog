@@ -178,7 +178,7 @@ const coupangSidebarAdvertisements = [
 ] as const;
 
 const coupangPopularListAdvertisements = [
-  createCoupangDynamicAdvertisement('1033444', '쿠팡 관심 기반 추천 상품', 300, 100),
+  createCoupangDynamicAdvertisement('1033444', '쿠팡 생활용품 베스트 상품', 300, 100),
 ] as const;
 
 const coupangNearbyListAdvertisements = [

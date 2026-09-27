@@ -489,14 +489,17 @@ Admin 본문 WYSIWYG는 클립보드 이미지 파일 붙여넣기와 외부 파
 | -------------------------- | --------------- | ------------------- | -------------------------------------------- | --------------------------------- |
 | PostLayout Fixed Adsense   | 300x50          | 468x60 (중앙 정렬)  | 게시글 대표 이미지·공시문 아래, 정보 카드 위 | `FixedAdsense variant="post-top"` |
 | RightSidebar Fixed Adsense | --              | 300x250             | PC 우측 사이드바 상단 (sticky)               | `FixedAdsense variant="sidebar"`  |
-| 인기글 Native In-feed      | --              | fluid (300x150 고정) | 우측 인기글 두 번째 글 뒤, 글 3개 이상       | `InFeedAdsense`                   |
-| 인근 글 Native In-feed     | fluid           | fluid               | 상세 하단 인근 글 두 번째 글 뒤, 글 3개 이상 | `InFeedAdsense`                   |
+| 인기글 Native In-feed      | 높이 150px              | fluid (300x150 고정) | PC 우측·모바일 하단 인기글 두 번째 글 뒤, 글 3개 이상       | `InFeedAdsense`                   |
+| 인근 글 Native In-feed     | 높이 150px           | 높이 150px               | 상세 하단 인근 글 두 번째 글 뒤, 글 3개 이상 | `InFeedAdsense`                   |
 | Native In-Article          | fluid           | fluid               | 게시글 본문 중간 (H2 헤딩 앞에 삽입)         | `insertInArticleAds()`            |
 | Native In-feed             | fluid           | fluid               | Feed·Search index 1, 6, 11, 16…            | `InFeedAdsense`                   |
 
-피드·검색·인기글·인근 글 Native In-feed unit(`6392269057`, layout key `-6t+ed+2i-1n-4w`)은 공유한다. Feed·Search·인기글·인근 글 슬롯 키는 모두 활성이다. 본문은 `article.1`부터 `article.10`까지 같은 Native In-article unit(`5322463062`, `fluid`, full-width responsive)을 공유한다. 인기글은 150px 고정 높이를 사용하며, 그 밖의 In-feed는 `min-h-[280px]`, In-article은 `min-h-[250px]`를 예약하고 광고 높이 확장을 허용하며, Core Web Vitals 가드레일은 field p75 CLS 0.1 이하이다.
+피드·검색·인기글·인근 글 Native In-feed unit(`6392269057`, layout key `-6t+ed+2i-1n-4w`)은 공유한다. Feed·Search·인기글·인근 글 슬롯 키는 모두 활성이다. 본문은 `article.1`부터 `article.10`까지 같은 Native In-article unit(`5322463062`, `fluid`, full-width responsive)을 공유한다. 인기글·인근 글은 150px 고정 높이를 사용하며, 그 밖의 In-feed는 `min-h-[280px]`, In-article은 `min-h-[250px]`를 예약하고 광고 높이 확장을 허용하며, Core Web Vitals 가드레일은 field p75 CLS 0.1 이하이다.
 
 ### Provider 선택과 CLS
+
+- 인기글은 PC 우측과 `lg` 미만 게시글 하단에서 각각 사용하며, 글이 3개 이상일 때 두 번째 글 뒤에 삽입한다. 두 DOM의 추적 ID는 구분한다. 인근 글도 150px을 예약하고 AdSense `<ins>`에 높이 150px을 지정한다. 홈·검색 280px 예약은 유지한다.
+- lazy observer 및 AdSense 큐 처리 직전에 실제 폭·레이아웃 박스를 확인하여 CSS로 숨겨진 지면은 요청하지 않는다. 큐 대기 중 숨겨진 지면은 요청 표시를 해제하고 다시 관찰한다. 광고를 `overflow:hidden`으로 자르지 않는다.
 
 - Local·Development에서는 활성 광고 지면에 Google Publisher Tag(GPT) 공식 공개 샘플을 표시한다. 현재 Article은 `/6355419/Travel` fluid, Search는 `/6355419/Travel` Native In-feed, Sidebar는 `/6355419/Travel/Europe/France/Paris` 300×250, PostTop은 `/6355419/Travel/Asia`와 현재 컨테이너 크기를 사용한다. Feed도 GPT 샘플을 표시하며 Production에서는 GPT 분기를 사용하지 않는다.
 - GPT가 정상 응답했지만 빈 슬롯이면 `GPT TEST AD · NO FILL`, SDK 로드·slot 정의·요청 실패면 `GPT TEST AD · LOAD FAILED`를 표시한다. 둘 다 provider `none`이며 Production에는 기술 marker를 표시하지 않는다.
@@ -504,7 +507,7 @@ Admin 본문 WYSIWYG는 클립보드 이미지 파일 붙여넣기와 외부 파
 - Production에서 운영 플래그가 켜져 있으면 AdSense의 `data-ad-status="unfilled"`에서만 해당 지면을 쿠팡으로 전환한다. `filled`와 `unfill-optimized`는 Google이 관리하는 AdSense 지면으로 유지한다.
 - 다이나믹 iframe `src`는 쿠팡 전환 시점에만 설정한다. Article은 화면 폭과 무관하게 홀수 순번에 680×140, 짝수 순번에 300×250 위젯을 사용한다. Search와 Feed는 화면 폭 분기 없이 In-feed 전용 680×280 위젯을 사용한다. 인기글은 300×100, 인근 글은 680×140을 중앙 정렬하며 Sidebar는 300×250을 유지한다. Local·Development 및 모바일의 숨겨진 Sidebar에서는 요청하지 않는다.
 - 활성 상태의 ID 누락, 오류, 차단, 상태 미확인은 fallback 없이 예약 영역을 비워 둔다.
-- 고정 Display 지면은 width/height를 유지하고, 인기글을 제외한 Native 지면은 최소 높이를 유지하면서 AdSense creative 높이 확장을 허용한다. PC 쿠팡 fallback이 680×140이어도 예약 높이는 줄이지 않으며 래퍼에 `overflow-hidden`을 두지 않아 광고나 AdChoices를 자르지 않는다.
+- 고정 Display 지면은 width/height를 유지하고, 인기글·인근 글을 제외한 Native 지면은 최소 높이를 유지하면서 AdSense creative 높이 확장을 허용한다. PC 쿠팡 fallback이 680×140이어도 예약 높이는 줄이지 않으며 래퍼에 `overflow-hidden`을 두지 않아 광고나 AdChoices를 자르지 않는다.
 - PostTop과 Sidebar는 `data-ad-format="auto"`를 사용하지 않는다. PostTop은 하나의 DOM 컨테이너에서 `lg` 미만이면 Mobile 고정 unit(`8174224200`, 300×50), `lg` 이상이면 PC 고정 unit(`1564849758`, 468×60) 하나만 선택해 요청한다. Sidebar는 PC 고정 unit(`3939731651`, 300×250)을 사용한다. 현재 컨테이너 크기를 광고 `<ins>` 인라인 픽셀 크기로 적용하고 같은 최소 높이를 예약해 AdSense 응답과 쿠팡 fallback 전환 중 CLS를 방지한다.
 - PostTop 쿠팡 fallback은 로켓 반려동물용품 고정 배너(`1013691`, 원본 728×90)를 사용한다. Mobile 300×50·PC 468×60 예약 컨테이너 안에서 원본 비율을 보존해 축소하고 중앙 정렬하며 AdSense unit 크기는 변경하지 않는다.
 - 게시글 상단만 즉시 호출한다. 활성 Sidebar·Article·인기글·인근 글은 뷰포트 300px 전부터 한 번만 호출한다.
@@ -574,4 +577,4 @@ Admin 본문 WYSIWYG는 클립보드 이미지 파일 붙여넣기와 외부 파
 | Ad 배치       | Right Sidebar     | Feed 5개 간격 |
 | Footer Links  | 기본              | Full Sitemap (SEO)           |
 
-우측 인기글 인피드 컨테이너는 최소 104px·최대 150px이며 CLS 방지를 위해 높이 150px을 미리 예약하고 AdSense fluid `<ins>`에도 `height:150px`을 지정한다. [Google 공식 높이 설정](https://support.google.com/adsense/answer/9189959)을 따르며 광고를 잘라내지 않는다. 새 쿠팡 위젯 `1033444`(은민로그 인기글 인피드 관심기반 300x100)를 300×100으로 중앙 정렬한다. 기존 위젯은 보존한다. 운영 광고의 높이 적합성은 배포 후 확인해야 하며 개발 GPT fluid 샘플은 이를 검증하지 못한다.
+인피드 컨테이너는 우측 인기글 최소 104px·최대 150px, 게시글 하단 인근 글과 모바일 인기글 최소 112px·최대 150px이다. 구분선 1px은 광고 높이와 별도이다. 세 영역 모두 CLS 방지를 위해 실제 높이 150px을 미리 예약하고 AdSense fluid `<ins>`에도 `height:150px`을 지정하므로 최소·최대 범위 안에서 자동으로 높이가 줄어드는 구조는 아니다. [Google 공식 높이 설정](https://support.google.com/adsense/answer/9189959)을 따르며 광고를 잘라내지 않는다. 새 쿠팡 위젯 `1033444`(은민로그 인기글 인피드 생활용품 300x100)를 300×100으로 중앙 정렬한다. 기존 위젯은 보존한다. 운영 광고의 높이 적합성은 배포 후 확인해야 하며 개발 GPT fluid 샘플은 이를 검증하지 못한다.

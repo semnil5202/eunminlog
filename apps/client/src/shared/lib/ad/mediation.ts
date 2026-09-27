@@ -195,7 +195,10 @@ const createAdSenseElement = (
     applyFixedAdSenseSize(container, adsenseElement);
   } else {
     adsenseElement.dataset.adFormat = unit.format;
-    if (container.dataset.adPlacement === 'popularList') {
+    if (
+      container.dataset.adPlacement === 'popularList' ||
+      container.dataset.adPlacement === 'nearbyList'
+    ) {
       adsenseElement.style.height = '150px';
     }
   }
@@ -273,6 +276,12 @@ const processNextAdSenseRequest = (): void => {
   }
 
   const { clientId, unit, coupangElement } = registeredAdSenseSlot;
+  if (container.clientWidth === 0 || container.getClientRects().length === 0) {
+    requestedSlots.delete(container);
+    getLazyAdvertisementObserver().observe(container);
+    processNextAdSenseRequest();
+    return;
+  }
   const adsenseElement = createAdSenseElement(container, clientId, unit);
   container.appendChild(adsenseElement);
   observeAdSenseStatus(container, adsenseElement, coupangElement);
@@ -316,6 +325,7 @@ const getLazyAdvertisementObserver = (): IntersectionObserver => {
       for (const entry of entries) {
         if (!entry.isIntersecting) continue;
         const container = entry.target as HTMLElement;
+        if (container.clientWidth === 0 || container.getClientRects().length === 0) continue;
         const googlePublisherTagSampleElement = container.querySelector<HTMLElement>(
           '[data-google-publisher-tag-sample]',
         );

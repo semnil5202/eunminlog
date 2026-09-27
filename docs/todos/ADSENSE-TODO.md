@@ -15,7 +15,7 @@
 - 시간 초과, 스크립트 오류, 차단, 상태 미확인은 쿠팡으로 전환하지 않고 예약 영역을 비워 둔다.
 - 두 광고가 모두 없더라도 최소 예약 영역을 제거하지 않는다. Native creative의 가변 높이를 허용하며 field p75 CLS 0.1 이하를 가드레일로 삼는다.
 - `postTop`만 즉시 요청하며 나머지 슬롯은 `IntersectionObserver`의 300px 사전 영역에서 요청한다.
-- Display는 고정 크기를 유지하고 인기글 Native는 150px 고정 높이, 그 밖의 Native는 최소 높이를 예약한다. 광고를 고정 높이로 자르거나 `overflow-hidden`을 적용하지 않는다.
+- Display는 고정 크기를 유지하고 인기글·인근 글 Native는 150px 고정 높이, 그 밖의 Native는 최소 높이를 예약한다. 광고를 고정 높이로 자르거나 `overflow-hidden`을 적용하지 않는다.
 
 ### 1.1 환경별 실제 네트워크 동작
 
@@ -45,7 +45,7 @@
 | 피드 index 1, 6, 11, 16…    | Native In-feed    | `w-full min-h-[280px]` | 지연      | `6392269057` | `feed.first`, `feed.second`     |
 | 검색 index 1, 6, 11, 16…    | Native In-feed    | `w-full min-h-[250px]` | 지연      | `6392269057` | `search.first`, `search.second` |
 | 우측 인기글 목록   | Native In-feed    | `w-full h-[150px]` | 지연      | `6392269057` | 글 3개 이상, 두 번째 글 뒤      |
-| 상세 인근 글 목록  | Native In-feed    | `w-full min-h-[280px]` | 지연      | `6392269057` | 글 3개 이상, 두 번째 글 뒤      |
+| 상세 인근 글 목록  | Native In-feed    | `w-full h-[150px]` | 지연      | `6392269057` | 글 3개 이상, 두 번째 글 뒤      |
 | 본문 H2 경계       | Native In-article | `w-full min-h-[250px]` | 지연      | `5322463062` | `fluid`, full-width responsive  |
 
 Feed와 Search는 같은 Native In-feed unit을 index 1, 6, 11, 16…에서 사용하고 Article은 같은 Native In-article unit을 적격 H2 앞 최대 10곳에서 반복 사용한다. 활성 지면의 각 DOM 노출은 고유한 logical slot/position을 사용하며 인기글 150px 광고 지면은 글 3개 이상일 때 사용한다.
@@ -60,7 +60,7 @@ Feed와 Search는 게시글 2·7·12·17번째 직전(index 1, 6, 11, 16…)에�
 
 ### 2.1 쿠팡 fallback 지면 구성
 
-쿠팡 파트너스에서 300×250, 680×140, In-feed 전용 680×280 다이나믹 iframe을 지면별로 생성했다. Article은 화면 폭과 무관하게 홀수 순번 5개에 680×140, 짝수 순번 5개에 300×250을 교차 배치한다. Article 1·4와 Sidebar는 각각 별도 고객 관심 기반 추천 위젯으로 성과를 실험하며 나머지는 카테고리 베스트다. Search와 Feed는 화면 폭 분기 없이 680×280을 사용한다. 우측 인기글은 300×100, 상세 인근 글은 680×140의 별도 고객 관심 기반 추천 위젯을 사용한다.
+쿠팡 파트너스에서 300×250, 680×140, In-feed 전용 680×280 다이나믹 iframe을 지면별로 생성했다. Article은 화면 폭과 무관하게 홀수 순번 5개에 680×140, 짝수 순번 5개에 300×250을 교차 배치한다. Article 1·4와 Sidebar는 각각 별도 고객 관심 기반 추천 위젯으로 성과를 실험하며 나머지는 카테고리 베스트다. Search와 Feed는 화면 폭 분기 없이 680×280을 사용한다. PC·모바일 인기글은 생활용품 300×100, 상세 인근 글은 관심 기반 추천 680×140 위젯을 사용한다.
 
 Feed·Search fallback은 모두 활성 상태이며 AdSense unfilled 시 해당 위젯을 호출한다.
 
@@ -82,14 +82,14 @@ Feed·Search fallback은 모두 활성 상태이며 AdSense unfilled 시 해당 
 | Search index 1 | 식품           | 680×280 | `1014212` | Feed와 공유·활성 |
 | Search index 4 | 뷰티           | 680×280 | `1014213` | 활성             |
 | Sidebar        | 고객 관심 기반 | 300×250 | `1014244` | PC·추천 실험     |
-| 인기글 목록    | 고객 관심 기반 | 300×100 | `1033444` | 글 3개 이상      |
+| 인기글 목록    | 생활용품 | 300×100 | `1033444` | 글 3개 이상      |
 | 인근 글 목록   | 고객 관심 기반 | 680×140 | `1033426` | 글 3개 이상      |
 
 - Production 운영 플래그가 켜진 경로에서는 AdSense가 `data-ad-status="unfilled"`를 확정한 뒤에만 쿠팡 이미지 URL 또는 동적 iframe `src`를 설정한다. `filled`, `unfill-optimized`, 오류, 차단, 상태 미확인에는 쿠팡 네트워크 요청을 만들지 않는다.
 - 모든 쿠팡 다이나믹 지면은 슬롯에 고정된 iframe `src` 하나만 설정하며 화면 폭에 따른 별도 위젯 교체 요청을 만들지 않는다.
 - PostTop은 기존 즉시 로딩 정책을 유지한다. 나머지는 AdSense 지연 요청 범위와 연동하며, `unfilled` 확정 시 슬롯이 아직 호출 범위 밖이면 쿠팡도 계속 지연한다.
 - Mobile에서 숨겨지는 Sidebar는 광고 DOM 등록 여부와 관계없이 AdSense 경매, 쿠팡 이미지, 동적 위젯 스크립트·iframe 요청을 모두 만들지 않는다.
-- 고정 배너는 원본 비율과 명시 크기를 유지한다. Native AdSense는 기존 `fluid` 형식을 유지하며 인기글 In-feed는 150px 고정, 그 밖의 In-feed는 `min-height: 280px`, In-article은 `min-height: 250px`를 예약한다. 쿠팡 fallback 크기는 AdSense 요청 크기를 변경하지 않는다. 동적 위젯은 `overflow-hidden`으로 상품, CTA, 광고 표기를 자르지 않으며 field p75 CLS 0.1 이하를 검증한다.
+- 고정 배너는 원본 비율과 명시 크기를 유지한다. Native AdSense는 기존 `fluid` 형식을 유지하며 인기글·인근 글 In-feed는 150px 고정, 그 밖의 In-feed는 `min-height: 280px`, In-article은 `min-height: 250px`를 예약한다. 쿠팡 fallback 크기는 AdSense 요청 크기를 변경하지 않는다. 동적 위젯은 `overflow-hidden`으로 상품, CTA, 광고 표기를 자르지 않으며 field p75 CLS 0.1 이하를 검증한다.
 - 고정 쿠팡 fallback은 `role="complementary"`, 광고 접근성 라벨, `rel="sponsored noopener"`를 유지한다. 동적 iframe에도 광고 라벨과 제목을 제공하며, 실패 시 다른 쿠팡 광고로 연쇄 요청하지 않고 기존 예약 영역을 provider `none`으로 남긴다.
 - 같은 페이지의 Feed·Article 반복 슬롯은 서로 다른 광고 식별자를 사용한다. 다만 동적 위젯의 실제 상품 다양성은 쿠팡 응답에 따라 달라지므로 ID 분리만으로 서로 다른 상품 노출을 보장하지 않는다.
 - 다이나믹 iframe은 교차 출처이므로 앱의 DOM click listener로 내부 상품 클릭을 감지할 수 없다. 쿠팡 리포트의 클릭·수익을 기준으로 확인하고 GA4 `ad_click`은 고정 anchor fallback에만 기록한다.
@@ -135,4 +135,4 @@ publisher client ID, unit ID, layout key는 공개 식별자이므로 코드에 
 
 Production에는 `NO FILL`·`LOAD FAILED` 등 기술 marker를 표시하지 않는다.
 
-우측 인기글 인피드 컨테이너는 최소 104px·최대 150px이며 CLS 방지를 위해 높이 150px을 미리 예약하고 AdSense fluid `<ins>`에도 `height:150px`을 지정한다. [Google 공식 높이 설정](https://support.google.com/adsense/answer/9189959)을 따르며 광고를 잘라내지 않는다. 새 쿠팡 위젯 `1033444`(은민로그 인기글 인피드 관심기반 300x100)를 300×100으로 중앙 정렬한다. 기존 위젯은 보존한다. 운영 광고의 높이 적합성은 배포 후 확인해야 하며 개발 GPT fluid 샘플은 이를 검증하지 못한다.
+인피드 컨테이너는 우측 인기글 최소 104px·최대 150px, 게시글 하단 인근 글과 모바일 인기글 최소 112px·최대 150px이다. 구분선 1px은 광고 높이와 별도이다. 세 영역 모두 CLS 방지를 위해 실제 높이 150px을 미리 예약하고 AdSense fluid `<ins>`에도 `height:150px`을 지정하므로 최소·최대 범위 안에서 자동으로 높이가 줄어드는 구조는 아니다. [Google 공식 높이 설정](https://support.google.com/adsense/answer/9189959)을 따르며 광고를 잘라내지 않는다. 새 쿠팡 위젯 `1033444`(은민로그 인기글 인피드 생활용품 300x100)를 300×100으로 중앙 정렬한다. 기존 위젯은 보존한다. 운영 광고의 높이 적합성은 배포 후 확인해야 하며 개발 GPT fluid 샘플은 이를 검증하지 못한다.

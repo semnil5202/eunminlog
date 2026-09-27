@@ -132,6 +132,8 @@ AdSense와 쿠팡을 `ad_provider`로 분리한다. 빈 예약 영역(`none`)과
 
 > `N`은 본문 내 삽입 순서 (1, 2, ...).
 
+모바일 게시글 하단 인기글은 `ad_slot=mobile_popular_list_in_feed`, `ad_position=mobile_popular_list_after_2`로 PC 인기글과 구분한다. 두 지면은 같은 `popularList.inFeed` 설정과 생활용품 쿠팡 위젯 `1033444`를 공유하되 CSS로 숨겨진 쪽은 새 광고 요청을 하지 않는다.
+
 운영 AdSense unit ID는 형식별로 반복 DOM 슬롯에서 재사용한다. 활성 `feed.first`, `feed.second`, `search.first`, `search.second`, `popularList.inFeed`, `nearbyList.inFeed`는 Native In-feed unit(`6392269057`)을 공유하고, `article.1`부터 `article.10`까지는 Native In-article unit(`5322463062`)을 공유한다. 위 `ad_slot`과 `ad_position`은 AdSense unit ID가 아니라 각 DOM 노출·카드 위치를 구분하는 논리 식별자다.
 
 ---
