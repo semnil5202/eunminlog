@@ -1,3 +1,5 @@
+import { ARTICLE_AD_SLOTS } from '@eunminlog/config/article-ads';
+
 export type AdvertisementPlacement = 'feed' | 'search' | 'article' | 'postTop' | 'sidebar';
 
 export const ADVERTISEMENT_SLOT_KEY = {
@@ -191,52 +193,52 @@ export const ADVERTISEMENT_MEDIATION_CONFIG: AdvertisementMediationConfig = {
       adsenseUnitKey: ADVERTISEMENT_UNIT_KEY.feed,
     },
     [ADVERTISEMENT_SLOT_KEY.articleFirst]: {
-      enabled: true,
+      enabled: ARTICLE_AD_SLOTS[0].enabled,
       placement: 'article',
       adsenseUnitKey: ADVERTISEMENT_UNIT_KEY.article,
     },
     [ADVERTISEMENT_SLOT_KEY.articleSecond]: {
-      enabled: true,
+      enabled: ARTICLE_AD_SLOTS[1].enabled,
       placement: 'article',
       adsenseUnitKey: ADVERTISEMENT_UNIT_KEY.article,
     },
     [ADVERTISEMENT_SLOT_KEY.articleThird]: {
-      enabled: true,
+      enabled: ARTICLE_AD_SLOTS[2].enabled,
       placement: 'article',
       adsenseUnitKey: ADVERTISEMENT_UNIT_KEY.article,
     },
     [ADVERTISEMENT_SLOT_KEY.articleFourth]: {
-      enabled: true,
+      enabled: ARTICLE_AD_SLOTS[3].enabled,
       placement: 'article',
       adsenseUnitKey: ADVERTISEMENT_UNIT_KEY.article,
     },
     [ADVERTISEMENT_SLOT_KEY.articleFifth]: {
-      enabled: true,
+      enabled: ARTICLE_AD_SLOTS[4].enabled,
       placement: 'article',
       adsenseUnitKey: ADVERTISEMENT_UNIT_KEY.article,
     },
     [ADVERTISEMENT_SLOT_KEY.articleSixth]: {
-      enabled: true,
+      enabled: ARTICLE_AD_SLOTS[5].enabled,
       placement: 'article',
       adsenseUnitKey: ADVERTISEMENT_UNIT_KEY.article,
     },
     [ADVERTISEMENT_SLOT_KEY.articleSeventh]: {
-      enabled: true,
+      enabled: ARTICLE_AD_SLOTS[6].enabled,
       placement: 'article',
       adsenseUnitKey: ADVERTISEMENT_UNIT_KEY.article,
     },
     [ADVERTISEMENT_SLOT_KEY.articleEighth]: {
-      enabled: true,
+      enabled: ARTICLE_AD_SLOTS[7].enabled,
       placement: 'article',
       adsenseUnitKey: ADVERTISEMENT_UNIT_KEY.article,
     },
     [ADVERTISEMENT_SLOT_KEY.articleNinth]: {
-      enabled: true,
+      enabled: ARTICLE_AD_SLOTS[8].enabled,
       placement: 'article',
       adsenseUnitKey: ADVERTISEMENT_UNIT_KEY.article,
     },
     [ADVERTISEMENT_SLOT_KEY.articleTenth]: {
-      enabled: true,
+      enabled: ARTICLE_AD_SLOTS[9].enabled,
       placement: 'article',
       adsenseUnitKey: ADVERTISEMENT_UNIT_KEY.article,
     },

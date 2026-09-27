@@ -447,6 +447,9 @@ Admin 본문 WYSIWYG는 클립보드 이미지 파일 붙여넣기와 외부 파
 - **위치**: `features/post-detail/lib/ads.ts`
 - HTML 본문의 `<h2>` 섹션 경계에 Native In-article 광고 슬롯을 삽입
 - 직전 섹션의 표시 텍스트가 250자 이상이거나 이미지가 1개 이상인 후보를 앞에서부터 최대 10개 삽입
+- 적격 위치 계산·슬롯 활성 상태·예약 높이(최소 250px)·상하 여백(각 40px)은 `packages/config/article-ads.ts`를 Admin과 Client가 공유한다. 기존 배치 조건은 변경하지 않는다.
+- Admin 본문에는 동일한 적격 H2 앞에 `in article adsense`를 가로·세로 중앙 정렬한 미리보기를 표시한다. `#` + 공백도 H2로 변환되며, 조건을 충족하지 않는 제목 앞에는 표시하지 않는다.
+- 미리보기는 편집기 Decoration으로만 표시한다. 클릭·포커스·수정·삭제 대상이 아니며 HTML/JSON·임시저장·번역에는 포함하지 않는다. 본문 변경과 Undo/Redo에 따라 갱신하고 광고 네트워크를 호출하지 않는다.
 
 #### `buildBlogPostingSchema(post, canonical)` / `buildReviewSchema(post)`
 

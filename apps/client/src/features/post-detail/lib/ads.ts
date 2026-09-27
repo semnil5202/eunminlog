@@ -1,3 +1,4 @@
+import { ARTICLE_AD_RESERVATION } from '@eunminlog/config/article-ads';
 import {
   ADVERTISEMENT_ARTICLE_SLOT_KEYS,
   ADVERTISEMENT_MEDIATION_CONFIG,
@@ -19,7 +20,7 @@ const createAdvertisementPlaceholder = (
   const slotConfig = ADVERTISEMENT_MEDIATION_CONFIG.slots[slotKey];
   if (!slotConfig.enabled) return '';
 
-  return `\n\n<div class="not-prose relative my-[40px] w-full min-h-[250px]" data-advertisement-label="${escapedLabel}" data-ad-slot="article_${sequence}" data-ad-slot-key="${slotKey}" data-ad-format="in_article" data-ad-position="article_section_${sequence}" data-ad-placement="${slotConfig.placement}" data-ad-load-strategy="lazy" data-ad-fallback-index="${sequence - 1}" data-ad-active-provider="none"></div>\n\n`;
+  return `\n\n<div class="not-prose relative w-full" style="margin-block: ${ARTICLE_AD_RESERVATION.marginBlock}px; min-height: ${ARTICLE_AD_RESERVATION.minHeight}px" data-advertisement-label="${escapedLabel}" data-ad-slot="article_${sequence}" data-ad-slot-key="${slotKey}" data-ad-format="in_article" data-ad-position="article_section_${sequence}" data-ad-placement="${slotConfig.placement}" data-ad-load-strategy="lazy" data-ad-fallback-index="${sequence - 1}" data-ad-active-provider="none"></div>\n\n`;
 };
 
 /**

@@ -16,6 +16,7 @@ import { TextStyle } from '@tiptap/extension-text-style';
 import { CustomImageCarousel } from './image-carousel';
 import { CustomResizableImage } from './image';
 import { CustomLinkBookmark } from './link-bookmark';
+import { ArticleAdPreview } from './article-ad-preview';
 
 const HEADING_STYLES: Record<Level, string> = {
   1: '',
@@ -168,6 +169,7 @@ const CustomTableCell = TableCell.extend({
 });
 
 export const tiptapExtensions = [
+  ArticleAdPreview,
   CustomStarterKit,
   CustomBulletList,
   CustomHeading,

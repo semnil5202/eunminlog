@@ -341,6 +341,8 @@ travel (여행)    → domestic (국내), overseas (해외), accommodation (숙�
 
 **에디터 출력 포맷**: HTML 문자열 (인라인 스타일 포함). DB `content` 컬럼에 HTML로 저장.
 
+**본문 광고 미리보기**: 공개 글과 공유하는 기존 적격 조건(직전 섹션 250자 이상 또는 이미지 포함, 최대 10개 활성 슬롯)에 따라 H2 앞에 최소 250px·상하 40px 예약 영역을 표시한다. 가운데 문구는 `in article adsense`이며 `#` + 공백은 H2로 처리된다. 미리보기는 비편집·비포커스 Decoration으로 HTML/JSON·임시저장·번역에서 제외되고 본문 변경·Undo/Redo에 맞춰 갱신한다. 실제 광고 요청이나 배치 정책 변경은 없다.
+
 > **완료**: `docs/database.md`의 `content` 컬럼 설명이 "본문 (HTML -- Tiptap 에디터 출력)"으로 업데이트됨.
 
 **HTML 출력 인라인 스타일 상세**:
