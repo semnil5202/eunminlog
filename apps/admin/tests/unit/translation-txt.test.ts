@@ -39,6 +39,17 @@ function result(params = source) {
 }
 
 describe('번역 TXT 출력과 적용 검증', () => {
+  it('직접 번역과 제한된 도구 사용 및 언어별 순차 저장을 지시한다', () => {
+    const prompt = buildTranslationPrompt(source);
+    expect(prompt).toContain('현재 대화의 모델인 당신이 직접 수행하세요');
+    expect(prompt).toContain('외부 번역 API·사이트·라이브러리·다른 모델');
+    expect(prompt).toContain('브라우저 번역 기능으로 대신하는 것도 금지');
+    expect(prompt).toContain('의미 확인에만 허용');
+    expect(prompt).toContain('번역용 패키지 설치나 외부 번역 서비스 접속을 시도하지 마세요');
+    expect(prompt).toContain('en → ja → zh-CN → zh-TW → id → vi → th');
+    expect(prompt).toContain('작업용 TXT에 순차 저장');
+    expect(prompt).toContain('미완성 작업용 파일은 최종 결과로 제공하지 마세요');
+  });
   it('UTF-8 파일 전문과 파일 미지원 안내를 지시하고 인라인 반환 지시를 제거한다', () => {
     const prompt = buildTranslationPrompt(source);
     expect(prompt).toContain('UTF-8');
