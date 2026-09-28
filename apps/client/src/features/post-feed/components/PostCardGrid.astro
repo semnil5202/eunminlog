@@ -75,7 +75,7 @@ for (let index = 0; index < posts.length; index++) {
     if (item.type === "advertisement") {
       return (
         <InFeedAdsense
-          class="w-full min-h-[280px]"
+          class="w-full h-[420px] min-h-[280px] max-h-[420px]"
           slotId={`feed_card_index_${item.positionIndex}`}
           position={`feed_card_index_${item.positionIndex}`}
           slotKey={item.slotKey}
@@ -137,7 +137,7 @@ for (let index = 0; index < posts.length; index++) {
         slotKey: "feed.first" | "feed.second",
       ): HTMLDivElement | null => {
         return createAdvertisementSlotElement({
-          className: "w-full min-h-[280px]",
+          className: "w-full h-[420px] min-h-[280px] max-h-[420px]",
           slotId: `feed_card_index_${positionIndex}`,
           format: "in_feed",
           position: `feed_card_index_${positionIndex}`,

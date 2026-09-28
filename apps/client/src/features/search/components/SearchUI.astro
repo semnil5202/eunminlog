@@ -184,7 +184,7 @@ const advertisementLabel = t("a11y.advertisement", locale);
   ) => {
     const advertisementIdentifier = `search_render_${renderSequence}_card_index_${positionIndex}`;
     return createAdvertisementSlotElement({
-      className: 'w-full min-h-[280px]',
+      className: 'w-full h-[420px] min-h-[280px] max-h-[420px]',
       slotId: advertisementIdentifier,
       format: 'in_feed',
       position: advertisementIdentifier,

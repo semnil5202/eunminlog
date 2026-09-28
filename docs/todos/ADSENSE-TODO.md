@@ -15,7 +15,7 @@
 - 시간 초과, 스크립트 오류, 차단, 상태 미확인은 쿠팡으로 전환하지 않고 예약 영역을 비워 둔다.
 - 두 광고가 모두 없더라도 최소 예약 영역을 제거하지 않는다. Native creative의 가변 높이를 허용하며 field p75 CLS 0.1 이하를 가드레일로 삼는다.
 - `postTop`만 즉시 요청하며 나머지 슬롯은 `IntersectionObserver`의 300px 사전 영역에서 요청한다.
-- Display는 고정 크기를 유지하고 인기글·인근 글 Native는 150px 고정 높이, 그 밖의 Native는 최소 높이를 예약한다. 광고를 고정 높이로 자르거나 `overflow-hidden`을 적용하지 않는다.
+- Display는 고정 크기를 유지하고 인기글·인근 글 Native는 150px 고정 높이, Feed·Search는 420px, In-article은 최소 높이를 예약한다. 광고를 고정 높이로 자르거나 `overflow-hidden`을 적용하지 않는다.
 
 ### 1.1 환경별 실제 네트워크 동작
 
@@ -42,8 +42,8 @@
 | 게시글 상단 Mobile | Display           | 300×50                 | 즉시      | `8174224200` | `postTop.mobile`, 고정 크기     |
 | 게시글 상단 PC     | Display           | 468×60                 | 즉시      | `1564849758` | `postTop.desktop`, 고정 크기    |
 | 우측 사이드바      | Display           | PC 300×250             | 지연      | `3939731651` | 고정 크기                       |
-| 피드 index 1, 6, 11, 16…    | Native In-feed    | `w-full min-h-[280px]` | 지연      | `6392269057` | `feed.first`, `feed.second`     |
-| 검색 index 1, 6, 11, 16…    | Native In-feed    | `w-full min-h-[250px]` | 지연      | `6392269057` | `search.first`, `search.second` |
+| 피드 index 1, 6, 11, 16…    | Native In-feed    | `w-full h-[420px] min-h-[280px] max-h-[420px]` | 지연      | `6392269057` | `feed.first`, `feed.second`     |
+| 검색 index 1, 6, 11, 16…    | Native In-feed    | `w-full h-[420px] min-h-[280px] max-h-[420px]` | 지연      | `6392269057` | `search.first`, `search.second` |
 | 우측 인기글 목록   | Native In-feed    | `w-full h-[150px]` | 지연      | `6392269057` | 글 3개 이상, 두 번째 글 뒤      |
 | 상세 인근 글 목록  | Native In-feed    | `w-full h-[150px]` | 지연      | `6392269057` | 글 3개 이상, 두 번째 글 뒤      |
 | 본문 H2 경계       | Native In-article | `w-full min-h-[250px]` | 지연      | `5322463062` | `fluid`, full-width responsive  |
@@ -56,7 +56,7 @@ AdSense `<ins>`는 슬롯 등록 시 미리 생성하지 않는다. 즉시 또�
 
 기존 responsive display unit `5190868026`(PostTop), `3048186343`(Sidebar)은 코드에서 제거했으며 AdSense 콘솔에서도 보관 처리했다. 보고서 이력 확인이 필요하면 `보관된 단위 포함` 필터로 다시 조회할 수 있다.
 
-Feed와 Search는 게시글 2·7·12·17번째 직전(index 1, 6, 11, 16…)에서 활성화된다. 최소 280px을 예약하고 뷰포트 300px 전부터 AdSense를 요청하며 `unfilled`이면 쿠팡 다이나믹 위젯으로 전환한다.
+Feed와 Search는 게시글 2·7·12·17번째 직전(index 1, 6, 11, 16…)에서 활성화된다. 실제 높이 420px을 예약·요청하고 뷰포트 300px 전부터 AdSense를 요청하며 `unfilled`이면 쿠팡 다이나믹 위젯으로 전환한다.
 
 ### 2.1 쿠팡 fallback 지면 구성
 
@@ -89,7 +89,7 @@ Feed·Search fallback은 모두 활성 상태이며 AdSense unfilled 시 해당 
 - 모든 쿠팡 다이나믹 지면은 슬롯에 고정된 iframe `src` 하나만 설정하며 화면 폭에 따른 별도 위젯 교체 요청을 만들지 않는다.
 - PostTop은 기존 즉시 로딩 정책을 유지한다. 나머지는 AdSense 지연 요청 범위와 연동하며, `unfilled` 확정 시 슬롯이 아직 호출 범위 밖이면 쿠팡도 계속 지연한다.
 - Mobile에서 숨겨지는 Sidebar는 광고 DOM 등록 여부와 관계없이 AdSense 경매, 쿠팡 이미지, 동적 위젯 스크립트·iframe 요청을 모두 만들지 않는다.
-- 고정 배너는 원본 비율과 명시 크기를 유지한다. Native AdSense는 기존 `fluid` 형식을 유지하며 인기글·인근 글 In-feed는 150px 고정, 그 밖의 In-feed는 `min-height: 280px`, In-article은 `min-height: 250px`를 예약한다. 쿠팡 fallback 크기는 AdSense 요청 크기를 변경하지 않는다. 동적 위젯은 `overflow-hidden`으로 상품, CTA, 광고 표기를 자르지 않으며 field p75 CLS 0.1 이하를 검증한다.
+- 고정 배너는 원본 비율과 명시 크기를 유지한다. Native AdSense는 기존 `fluid` 형식을 유지하며 인기글·인근 글 In-feed는 150px 고정, Feed·Search는 높이 420px, In-article은 `min-height: 250px`를 예약한다. 쿠팡 fallback 크기는 AdSense 요청 크기를 변경하지 않는다. 동적 위젯은 `overflow-hidden`으로 상품, CTA, 광고 표기를 자르지 않으며 field p75 CLS 0.1 이하를 검증한다.
 - 고정 쿠팡 fallback은 `role="complementary"`, 광고 접근성 라벨, `rel="sponsored noopener"`를 유지한다. 동적 iframe에도 광고 라벨과 제목을 제공하며, 실패 시 다른 쿠팡 광고로 연쇄 요청하지 않고 기존 예약 영역을 provider `none`으로 남긴다.
 - 같은 페이지의 Feed·Article 반복 슬롯은 서로 다른 광고 식별자를 사용한다. 다만 동적 위젯의 실제 상품 다양성은 쿠팡 응답에 따라 달라지므로 ID 분리만으로 서로 다른 상품 노출을 보장하지 않는다.
 - 다이나믹 iframe은 교차 출처이므로 앱의 DOM click listener로 내부 상품 클릭을 감지할 수 없다. 쿠팡 리포트의 클릭·수익을 기준으로 확인하고 GA4 `ad_click`은 고정 anchor fallback에만 기록한다.

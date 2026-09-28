@@ -200,6 +200,11 @@ const createAdSenseElement = (
       container.dataset.adPlacement === 'nearbyList'
     ) {
       adsenseElement.style.height = '150px';
+    } else if (
+      container.dataset.adPlacement === 'feed' ||
+      container.dataset.adPlacement === 'search'
+    ) {
+      adsenseElement.style.height = '420px';
     }
   }
   if (unit.layoutKey) adsenseElement.dataset.adLayoutKey = unit.layoutKey;
