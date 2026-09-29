@@ -87,6 +87,8 @@ export const createCarouselNodeView: NodeViewRenderer = ({ node: initialNode, ed
         });
         const actions = slide.querySelector<HTMLElement>('.image-carousel-selected-actions');
         if (actions) actions.hidden = index !== activeIndex;
+        const remove = slide.querySelector<HTMLButtonElement>('.image-delete-button');
+        if (remove) remove.hidden = index !== activeIndex;
         const altField = slide.querySelector<HTMLElement>('.image-alt-field');
         if (altField) altField.hidden = index !== activeIndex;
         imageControls[index]?.setAttribute('aria-pressed', String(index === activeIndex));
@@ -217,7 +219,9 @@ export const createCarouselNodeView: NodeViewRenderer = ({ node: initialNode, ed
         },
         { signal },
       );
-      const remove = button('삭제', 'image-carousel-action');
+      const remove = button('×', 'image-delete-button');
+      remove.title = '이미지 삭제';
+      remove.hidden = true;
       remove.setAttribute('aria-label', `${index + 1}번 이미지 삭제`);
       remove.addEventListener(
         'click',
@@ -257,8 +261,8 @@ export const createCarouselNodeView: NodeViewRenderer = ({ node: initialNode, ed
       const selectedActions = document.createElement('div');
       selectedActions.className = 'image-carousel-selected-actions';
       selectedActions.hidden = true;
-      selectedActions.append(mosaic, remove);
-      wrapper.append(selectedActions);
+      selectedActions.append(mosaic);
+      wrapper.append(selectedActions, remove);
       slide.append(createImageAltInput(editor, image.src, `${index + 1}번 이미지 설명 (alt)`));
       for (const corner of ['nw', 'ne', 'sw', 'se']) {
         const handle = button(

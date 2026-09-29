@@ -13,6 +13,7 @@ export function History({ editor }: EditorProps) {
         type="button"
         tabIndex={-1}
         onClick={() => editor.chain().focus().undo().run()}
+        aria-label="실행 취소"
         disabled={!canUndo}
         className={cn(
           'flex h-8 w-8 cursor-pointer items-center justify-center rounded text-foreground hover:bg-accent',
@@ -25,6 +26,7 @@ export function History({ editor }: EditorProps) {
         type="button"
         tabIndex={-1}
         onClick={() => editor.chain().focus().redo().run()}
+        aria-label="다시 실행"
         disabled={!canRedo}
         className={cn(
           'flex h-8 w-8 cursor-pointer items-center justify-center rounded text-foreground hover:bg-accent',
