@@ -1,6 +1,6 @@
 # AdSense·쿠팡 광고 운영 가이드
 
-> 상태: Display·In-article·Search·인기글·인근 글 Native In-feed Production 슬롯 요청 활성화, Feed Native In-feed 활성화
+> 상태: Display·In-article·Native In-feed Production 슬롯 요청 활성화. PC 인기글은 전용 Display 300×100, 모바일 인기글은 Native In-feed 유지.
 
 ## 1. 운영 원칙
 
@@ -9,7 +9,7 @@
 - Production 빌드는 GPT 샘플 분기를 항상 비활성화한다.
 - Production의 `PUBLIC_AD_MEDIATION_ENABLED=false`는 사이트 심사용 AdSense base tag만 로드하고 광고 단위 요청은 만들지 않는다.
 - Production의 `PUBLIC_AD_MEDIATION_ENABLED=true`는 코드에 정의된 지면별 unit 설정으로 AdSense를 요청한다.
-- `ADVERTISEMENT_MEDIATION_CONFIG.slots`는 실제 노출 위치 키별 활성 상태를 관리한다. 현재 `feed.first`, `feed.second`, `search.first`, `search.second`, `popularList.inFeed`, `nearbyList.inFeed`, `article.1`~`article.10`, `postTop`, `sidebar`는 활성이다.
+- `ADVERTISEMENT_MEDIATION_CONFIG.slots`는 실제 노출 위치 키별 활성 상태를 관리한다. 현재 `feed.first`, `feed.second`, `search.first`, `search.second`, `popularList.desktop`, `popularList.inFeed`, `nearbyList.inFeed`, `article.1`~`article.10`, `postTop`, `sidebar`는 활성이다.
 - 비활성 슬롯 키는 예약 DOM, AdSense·GPT 요청, 쿠팡 fallback, GA4 광고 이벤트를 모두 생성하지 않는다. 전역 `enabled`는 Production AdSense 요청 여부만 제어하며 슬롯별 활성 상태와 독립적이다.
 - AdSense의 `data-ad-status="unfilled"`만 쿠팡으로 전환한다. `filled`와 `unfill-optimized`는 Google이 관리하는 AdSense 지면으로 유지한다.
 - 시간 초과, 스크립트 오류, 차단, 상태 미확인은 쿠팡으로 전환하지 않고 예약 영역을 비워 둔다.
@@ -44,11 +44,12 @@
 | 우측 사이드바      | Display           | PC 300×250             | 지연      | `3939731651` | 고정 크기                       |
 | 피드 index 1, 6, 11, 16…    | Native In-feed    | `w-full h-[420px] min-h-[280px] max-h-[420px]` | 지연      | `6392269057` | `feed.first`, `feed.second`     |
 | 검색 index 1, 6, 11, 16…    | Native In-feed    | `w-full h-[420px] min-h-[280px] max-h-[420px]` | 지연      | `6392269057` | `search.first`, `search.second` |
-| 우측 인기글 목록   | Native In-feed    | `w-full h-[150px]` | 지연      | `6392269057` | 글 3개 이상, 두 번째 글 뒤      |
+| 우측 인기글 목록   | Display 고정형 | 300×100 | 지연 | `8482492142` | `popularList.desktop`, 글 3개 이상, 두 번째 글 뒤 |
+| 모바일 인기글 목록 | Native In-feed | `w-full h-[150px]` | 지연 | `6392269057` | `popularList.inFeed`, 글 3개 이상, 두 번째 글 뒤 |
 | 상세 인근 글 목록  | Native In-feed    | `w-full h-[150px]` | 지연      | `6392269057` | 글 3개 이상, 두 번째 글 뒤      |
 | 본문 H2 경계       | Native In-article | `w-full min-h-[250px]` | 지연      | `5322463062` | `fluid`, full-width responsive  |
 
-Feed와 Search는 같은 Native In-feed unit을 index 1, 6, 11, 16…에서 사용하고 Article은 같은 Native In-article unit을 적격 H2 앞 최대 10곳에서 반복 사용한다. 활성 지면의 각 DOM 노출은 고유한 logical slot/position을 사용하며 인기글 150px 광고 지면은 글 3개 이상일 때 사용한다.
+Feed와 Search는 같은 Native In-feed unit을 index 1, 6, 11, 16…에서 사용하고 Article은 같은 Native In-article unit을 적격 H2 앞 최대 10곳에서 반복 사용한다. 활성 지면의 각 DOM 노출은 고유한 logical slot/position을 사용하며 인기글 광고는 글 3개 이상일 때 사용한다. PC 인기글 전용 단위 이름은 `eunminlog-popular-sidebar-fixed-300x100`이며 `popularList.desktop` 슬롯은 활성이다. 기존 상단 Sidebar 300×250과 모바일 인기글 Native는 변경하지 않는다.
 
 PostTop은 게시글 대표 이미지와 협찬·쿠팡 공시문 아래, 장소·제품 정보 카드 위에 배치한다. AdSense 콘솔에서 생성한 Mobile 300×50과 PC 468×60 고정형 unit을 `lg` breakpoint로 선택해 한 DOM 슬롯에서 하나만 요청한다. Sidebar도 별도 300×250 고정형 unit을 사용한다. 세 지면 모두 `data-ad-format="auto"`를 사용하지 않고 광고 요청 직전에 현재 예약 컨테이너의 픽셀 크기를 `<ins>` 인라인 스타일로 고정한다. 최소 높이도 동일하게 예약해 `unfilled` 전환 후 쿠팡 fallback에서 컨테이너가 접히지 않게 한다.
 
@@ -135,4 +136,4 @@ publisher client ID, unit ID, layout key는 공개 식별자이므로 코드에 
 
 Production에는 `NO FILL`·`LOAD FAILED` 등 기술 marker를 표시하지 않는다.
 
-인피드 컨테이너는 우측 인기글 최소 104px·최대 150px, 게시글 하단 인근 글과 모바일 인기글 최소 112px·최대 150px이다. 구분선 1px은 광고 높이와 별도이다. 세 영역 모두 CLS 방지를 위해 실제 높이 150px을 미리 예약하고 AdSense fluid `<ins>`에도 `height:150px`을 지정하므로 최소·최대 범위 안에서 자동으로 높이가 줄어드는 구조는 아니다. [Google 공식 높이 설정](https://support.google.com/adsense/answer/9189959)을 따르며 광고를 잘라내지 않는다. 새 쿠팡 위젯 `1033444`(은민로그 인기글 인피드 생활용품 300x100)를 300×100으로 중앙 정렬한다. 기존 위젯은 보존한다. 운영 광고의 높이 적합성은 배포 후 확인해야 하며 개발 GPT fluid 샘플은 이를 검증하지 못한다.
+PC 우측 인기글은 300×100 고정 Display로 최소·최대·예약 높이 모두 100px이며 `<ins>`도 300×100으로 요청한다. 구분선 1px은 별도다. 게시글 하단 인근 글과 모바일 인기글은 최소 112px·최대 150px, 실제 예약 높이와 fluid `<ins>` 높이 150px을 유지한다. [Google 공식 높이 설정](https://support.google.com/adsense/answer/9189959)을 따르며 광고를 잘라내지 않는다. 인기글 쿠팡 폴백은 PC·모바일 모두 생활용품 위젯 `1033444`를 300×100으로 중앙 정렬한다. PC 개발 GPT 샘플은 `/6355419/Travel/Asia` 300×100을 요청하며 샘플 미충전은 정상 처리한다. 운영 게재는 배포 후 확인한다.

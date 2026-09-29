@@ -126,13 +126,13 @@ AdSense와 쿠팡을 `ad_provider`로 분리한다. 빈 예약 영역(`none`)과
 | Search (index 6) | `"search_render_N_card_index_6"` | `"in_feed"`    | `"search_render_N_card_index_6"` |
 | 게시글 상단      | `"post_top"`                     | `"display"`    | `"post_top"`                     |
 | 사이드바         | `"sidebar"`                      | `"display"`    | `"right_sidebar"`                |
-| 인기글 목록      | `"popular_list_in_feed"`         | `"in_feed"`    | `"popular_list_after_2"`         |
+| PC 인기글 목록   | `"popular_list_fixed"`           | `"display"`    | `"popular_list_after_2"`         |
 | 인근 글 목록     | `"nearby_posts_in_feed"`         | `"in_feed"`    | `"nearby_posts_after_2"`         |
 | 본문 중간        | `"article_N"`                    | `"in_article"` | `"article_section_N"`            |
 
 > `N`은 본문 내 삽입 순서 (1, 2, ...).
 
-모바일 게시글 하단 인기글은 `ad_slot=mobile_popular_list_in_feed`, `ad_position=mobile_popular_list_after_2`로 PC 인기글과 구분한다. 두 지면은 같은 `popularList.inFeed` 설정과 생활용품 쿠팡 위젯 `1033444`를 공유하되 CSS로 숨겨진 쪽은 새 광고 요청을 하지 않는다.
+모바일 게시글 하단 인기글은 `ad_slot=mobile_popular_list_in_feed`, `ad_position=mobile_popular_list_after_2`, `ad_format=in_feed`, `popularList.inFeed` 설정을 유지한다. PC는 `popularList.desktop`에서 전용 Display unit `8482492142`(`eunminlog-popular-sidebar-fixed-300x100`)를 사용하므로 AdSense 광고 단위 보고서에서도 별도 집계된다. 두 지면은 생활용품 쿠팡 위젯 `1033444`를 공유하되 CSS로 숨겨진 쪽은 새 광고 요청을 하지 않는다. 교체 전 PC 성과는 기존 공용 In-feed 단위에 남으며 소급 분리되지 않는다.
 
 운영 AdSense unit ID는 형식별로 반복 DOM 슬롯에서 재사용한다. 활성 `feed.first`, `feed.second`, `search.first`, `search.second`, `popularList.inFeed`, `nearbyList.inFeed`는 Native In-feed unit(`6392269057`)을 공유하고, `article.1`부터 `article.10`까지는 Native In-article unit(`5322463062`)을 공유한다. 위 `ad_slot`과 `ad_position`은 AdSense unit ID가 아니라 각 DOM 노출·카드 위치를 구분하는 논리 식별자다.
 

@@ -489,12 +489,12 @@ Admin 본문 WYSIWYG는 클립보드 이미지 파일 붙여넣기와 외부 파
 | -------------------------- | --------------- | ------------------- | -------------------------------------------- | --------------------------------- |
 | PostLayout Fixed Adsense   | 300x50          | 468x60 (중앙 정렬)  | 게시글 대표 이미지·공시문 아래, 정보 카드 위 | `FixedAdsense variant="post-top"` |
 | RightSidebar Fixed Adsense | --              | 300x250             | PC 우측 사이드바 상단 (sticky)               | `FixedAdsense variant="sidebar"`  |
-| 인기글 Native In-feed      | 높이 150px              | fluid (300x150 고정) | PC 우측·모바일 하단 인기글 두 번째 글 뒤, 글 3개 이상       | `InFeedAdsense`                   |
+| 인기글 광고      | Native In-feed 높이 150px | Display 300×100 고정 | PC 우측·모바일 하단 인기글 두 번째 글 뒤, 글 3개 이상 | 모바일 `InFeedAdsense`, PC `AdSlot` |
 | 인근 글 Native In-feed     | 높이 150px           | 높이 150px               | 상세 하단 인근 글 두 번째 글 뒤, 글 3개 이상 | `InFeedAdsense`                   |
 | Native In-Article          | fluid           | fluid               | 게시글 본문 중간 (H2 헤딩 앞에 삽입)         | `insertInArticleAds()`            |
 | Native In-feed             | fluid           | fluid               | Feed·Search index 1, 6, 11, 16…            | `InFeedAdsense`                   |
 
-피드·검색·인기글·인근 글 Native In-feed unit(`6392269057`, layout key `-6t+ed+2i-1n-4w`)은 공유한다. Feed·Search·인기글·인근 글 슬롯 키는 모두 활성이다. 본문은 `article.1`부터 `article.10`까지 같은 Native In-article unit(`5322463062`, `fluid`, full-width responsive)을 공유한다. 인기글·인근 글은 150px 고정 높이를 사용하며, Feed·Search는 높이 420px, In-article은 `min-h-[250px]`를 예약하고 광고 높이 확장을 허용하며, Core Web Vitals 가드레일은 field p75 CLS 0.1 이하이다.
+피드·검색·모바일 인기글·인근 글은 Native In-feed unit(`6392269057`, layout key `-6t+ed+2i-1n-4w`)을 공유한다. PC 인기글은 `popularList.desktop` 슬롯의 별도 Display unit `8482492142`(`eunminlog-popular-sidebar-fixed-300x100`)를 사용한다. 모두 활성이다. 본문은 `article.1`부터 `article.10`까지 Native In-article unit(`5322463062`, `fluid`, full-width responsive)을 공유한다. 모바일 인기글·인근 글은 150px, PC 인기글은 100px, Feed·Search는 420px 높이를 예약한다. In-article은 `min-h-[250px]`를 예약하고 확장을 허용하며 field p75 CLS 0.1 이하를 가드레일로 삼는다.
 
 ### Provider 선택과 CLS
 
@@ -577,4 +577,4 @@ Admin 본문 WYSIWYG는 클립보드 이미지 파일 붙여넣기와 외부 파
 | Ad 배치       | Right Sidebar     | Feed 5개 간격 |
 | Footer Links  | 기본              | Full Sitemap (SEO)           |
 
-인피드 컨테이너는 우측 인기글 최소 104px·최대 150px, 게시글 하단 인근 글과 모바일 인기글 최소 112px·최대 150px이다. 구분선 1px은 광고 높이와 별도이다. 세 영역 모두 CLS 방지를 위해 실제 높이 150px을 미리 예약하고 AdSense fluid `<ins>`에도 `height:150px`을 지정하므로 최소·최대 범위 안에서 자동으로 높이가 줄어드는 구조는 아니다. [Google 공식 높이 설정](https://support.google.com/adsense/answer/9189959)을 따르며 광고를 잘라내지 않는다. 새 쿠팡 위젯 `1033444`(은민로그 인기글 인피드 생활용품 300x100)를 300×100으로 중앙 정렬한다. 기존 위젯은 보존한다. 운영 광고의 높이 적합성은 배포 후 확인해야 하며 개발 GPT fluid 샘플은 이를 검증하지 못한다.
+PC 우측 인기글은 300×100 고정 Display로 최소·최대·예약 높이 모두 100px이며 `<ins>`도 300×100으로 요청한다. 구분선 1px은 별도다. 게시글 하단 인근 글과 모바일 인기글은 최소 112px·최대 150px, 실제 예약 높이와 fluid `<ins>` 높이 150px을 유지한다. [Google 공식 높이 설정](https://support.google.com/adsense/answer/9189959)을 따르며 광고를 잘라내지 않는다. 인기글 쿠팡 폴백은 PC·모바일 모두 생활용품 위젯 `1033444`를 300×100으로 중앙 정렬한다. PC 개발 GPT 샘플은 `/6355419/Travel/Asia` 300×100을 요청하며 샘플 미충전은 정상 처리한다. 운영 게재는 배포 후 확인한다.
