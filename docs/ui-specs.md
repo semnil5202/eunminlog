@@ -252,7 +252,7 @@
 - **위치**: `shared/components/layout/SponsoredPostItem.astro`
 - Props: `post` (LocalizedPost), `currentSlug?`, `locale`
 - `SponsoredPostList.astro`는 `title?`을 받아 우측/하단 인기글 섹션 제목을 표시. 미전달 시 `인기글` fallback.
-- PC 우측 사이드바는 인기글이 3개 이상일 때 두 번째 글 뒤에 Native In-feed를 삽입한다. 모바일 하단 재사용 목록에는 삽입하지 않는다.
+- 인기글이 2개 이상이면 두 번째 글 뒤에 광고를 삽입한다. PC 우측은 Display 300×100, 모바일 하단은 Native In-feed를 사용한다. 0~1개면 광고 DOM과 예약 공간을 만들지 않는다.
 - 인기글 섹션 제목은 페이지 범위에 맞춰 root/search는 `전체 인기글`, 대분류는 `{대분류} 인기글`, 소분류/상세는 `{소분류} 인기글`로 표시
 - 현재 글과 slug 일치 시 `border-l-primary-500` active 스타일 적용
 - 썸네일(80x80) + 제목(truncate) + 설명(line-clamp-2) 레이아웃
@@ -387,7 +387,7 @@ Admin 본문 WYSIWYG는 클립보드 이미지 파일 붙여넣기와 외부 파
 - Props: `posts`, `currentSlug`, `categoryLabel`, `subCategoryLabel`, `moreLabel`, `subCategoryHref`, `locale`
 - 같은 서브카테고리의 인근 포스트를 썸네일 + 제목 + 설명 리스트로 표시
 - 최대 4개를 이전 글·현재 글·다음 글·다다음 글 순서로 구성한다. 경계에서는 존재하는 글만 표시한다.
-- 글이 3개 이상일 때만 두 번째 글 뒤에 Native In-feed를 삽입한다. 1~2개면 광고 DOM과 예약 공간을 만들지 않는다.
+- 글이 2개 이상일 때만 두 번째 글 뒤에 Native In-feed를 삽입한다. 정확히 2개면 목록 끝에 표시하며, 0~1개면 광고 DOM과 예약 공간을 만들지 않는다.
 - 현재 포스트는 `border-l-primary-500` + `aria-current="page"`로 구분
 - 썸네일은 `optimizedUrl()`로 `_688.webp` 리사이즈본을 사용
 
@@ -489,8 +489,8 @@ Admin 본문 WYSIWYG는 클립보드 이미지 파일 붙여넣기와 외부 파
 | -------------------------- | --------------- | ------------------- | -------------------------------------------- | --------------------------------- |
 | PostLayout Fixed Adsense   | 300x50          | 468x60 (중앙 정렬)  | 게시글 대표 이미지·공시문 아래, 정보 카드 위 | `FixedAdsense variant="post-top"` |
 | RightSidebar Fixed Adsense | --              | 300x250             | PC 우측 사이드바 상단 (sticky)               | `FixedAdsense variant="sidebar"`  |
-| 인기글 광고      | Native In-feed 높이 150px | Display 300×100 고정 | PC 우측·모바일 하단 인기글 두 번째 글 뒤, 글 3개 이상 | 모바일 `InFeedAdsense`, PC `AdSlot` |
-| 인근 글 Native In-feed     | 높이 150px           | 높이 150px               | 상세 하단 인근 글 두 번째 글 뒤, 글 3개 이상 | `InFeedAdsense`                   |
+| 인기글 광고      | Native In-feed 높이 150px | Display 300×100 고정 | PC 우측·모바일 하단 인기글 두 번째 글 뒤, 글 2개 이상 | 모바일 `InFeedAdsense`, PC `AdSlot` |
+| 인근 글 Native In-feed     | 높이 150px           | 높이 150px               | 상세 하단 인근 글 두 번째 글 뒤, 글 2개 이상 | `InFeedAdsense`                   |
 | Native In-Article          | fluid           | fluid               | 게시글 본문 중간 (H2 헤딩 앞에 삽입)         | `insertInArticleAds()`            |
 | Native In-feed             | fluid           | fluid               | Feed·Search index 1, 6, 11, 16…            | `InFeedAdsense`                   |
 
@@ -498,7 +498,7 @@ Admin 본문 WYSIWYG는 클립보드 이미지 파일 붙여넣기와 외부 파
 
 ### Provider 선택과 CLS
 
-- 인기글은 PC 우측과 `lg` 미만 게시글 하단에서 각각 사용하며, 글이 3개 이상일 때 두 번째 글 뒤에 삽입한다. 두 DOM의 추적 ID는 구분한다. 인근 글도 150px을 예약하고 AdSense `<ins>`에 높이 150px을 지정한다. 홈·검색은 420px 예약·요청 높이를 사용한다.
+- 인기글은 PC 우측과 `lg` 미만 게시글 하단에서 각각 사용하며, 글이 2개 이상일 때 두 번째 글 뒤에 삽입한다. 두 DOM의 추적 ID는 구분한다. 인근 글도 150px을 예약하고 AdSense `<ins>`에 높이 150px을 지정한다. 홈·검색은 420px 예약·요청 높이를 사용한다.
 - lazy observer 및 AdSense 큐 처리 직전에 실제 폭·레이아웃 박스를 확인하여 CSS로 숨겨진 지면은 요청하지 않는다. 큐 대기 중 숨겨진 지면은 요청 표시를 해제하고 다시 관찰한다. 광고를 `overflow:hidden`으로 자르지 않는다.
 
 - Local·Development에서는 활성 광고 지면에 Google Publisher Tag(GPT) 공식 공개 샘플을 표시한다. 현재 Article은 `/6355419/Travel` fluid, Search는 `/6355419/Travel` Native In-feed, Sidebar는 `/6355419/Travel/Europe/France/Paris` 300×250, PostTop은 `/6355419/Travel/Asia`와 현재 컨테이너 크기를 사용한다. Feed도 GPT 샘플을 표시하며 Production에서는 GPT 분기를 사용하지 않는다.

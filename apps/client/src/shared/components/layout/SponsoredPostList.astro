@@ -28,7 +28,7 @@ const {
 } = Astro.props;
 const popularLabel = title ?? t("sidebar.popular", locale);
 const emptyLabel = t("sidebar.popularEmpty", locale);
-const shouldShowInFeedAdvertisement = showInFeedAdvertisement && posts.length >= 3;
+const shouldShowInFeedAdvertisement = showInFeedAdvertisement && posts.length >= 2;
 ---
 
 <section class="sponsored-post-list">

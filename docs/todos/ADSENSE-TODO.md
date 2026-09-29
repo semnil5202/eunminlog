@@ -44,12 +44,12 @@
 | 우측 사이드바      | Display           | PC 300×250             | 지연      | `3939731651` | 고정 크기                       |
 | 피드 index 1, 6, 11, 16…    | Native In-feed    | `w-full h-[420px] min-h-[280px] max-h-[420px]` | 지연      | `6392269057` | `feed.first`, `feed.second`     |
 | 검색 index 1, 6, 11, 16…    | Native In-feed    | `w-full h-[420px] min-h-[280px] max-h-[420px]` | 지연      | `6392269057` | `search.first`, `search.second` |
-| 우측 인기글 목록   | Display 고정형 | 300×100 | 지연 | `8482492142` | `popularList.desktop`, 글 3개 이상, 두 번째 글 뒤 |
-| 모바일 인기글 목록 | Native In-feed | `w-full h-[150px]` | 지연 | `6392269057` | `popularList.inFeed`, 글 3개 이상, 두 번째 글 뒤 |
-| 상세 인근 글 목록  | Native In-feed    | `w-full h-[150px]` | 지연      | `6392269057` | 글 3개 이상, 두 번째 글 뒤      |
+| 우측 인기글 목록   | Display 고정형 | 300×100 | 지연 | `8482492142` | `popularList.desktop`, 글 2개 이상, 두 번째 글 뒤 |
+| 모바일 인기글 목록 | Native In-feed | `w-full h-[150px]` | 지연 | `6392269057` | `popularList.inFeed`, 글 2개 이상, 두 번째 글 뒤 |
+| 상세 인근 글 목록  | Native In-feed    | `w-full h-[150px]` | 지연      | `6392269057` | 글 2개 이상, 두 번째 글 뒤      |
 | 본문 H2 경계       | Native In-article | `w-full min-h-[250px]` | 지연      | `5322463062` | `fluid`, full-width responsive  |
 
-Feed와 Search는 같은 Native In-feed unit을 index 1, 6, 11, 16…에서 사용하고 Article은 같은 Native In-article unit을 적격 H2 앞 최대 10곳에서 반복 사용한다. 활성 지면의 각 DOM 노출은 고유한 logical slot/position을 사용하며 인기글 광고는 글 3개 이상일 때 사용한다. PC 인기글 전용 단위 이름은 `eunminlog-popular-sidebar-fixed-300x100`이며 `popularList.desktop` 슬롯은 활성이다. 기존 상단 Sidebar 300×250과 모바일 인기글 Native는 변경하지 않는다.
+Feed와 Search는 같은 Native In-feed unit을 index 1, 6, 11, 16…에서 사용하고 Article은 같은 Native In-article unit을 적격 H2 앞 최대 10곳에서 반복 사용한다. 활성 지면의 각 DOM 노출은 고유한 logical slot/position을 사용하며 인기글 광고는 글 2개 이상일 때 사용한다. PC 인기글 전용 단위 이름은 `eunminlog-popular-sidebar-fixed-300x100`이며 `popularList.desktop` 슬롯은 활성이다. 기존 상단 Sidebar 300×250과 모바일 인기글 Native는 변경하지 않는다.
 
 PostTop은 게시글 대표 이미지와 협찬·쿠팡 공시문 아래, 장소·제품 정보 카드 위에 배치한다. AdSense 콘솔에서 생성한 Mobile 300×50과 PC 468×60 고정형 unit을 `lg` breakpoint로 선택해 한 DOM 슬롯에서 하나만 요청한다. Sidebar도 별도 300×250 고정형 unit을 사용한다. 세 지면 모두 `data-ad-format="auto"`를 사용하지 않고 광고 요청 직전에 현재 예약 컨테이너의 픽셀 크기를 `<ins>` 인라인 스타일로 고정한다. 최소 높이도 동일하게 예약해 `unfilled` 전환 후 쿠팡 fallback에서 컨테이너가 접히지 않게 한다.
 
@@ -83,8 +83,8 @@ Feed·Search fallback은 모두 활성 상태이며 AdSense unfilled 시 해당 
 | Search index 1 | 식품           | 680×280 | `1014212` | Feed와 공유·활성 |
 | Search index 4 | 뷰티           | 680×280 | `1014213` | 활성             |
 | Sidebar        | 고객 관심 기반 | 300×250 | `1014244` | PC·추천 실험     |
-| 인기글 목록    | 생활용품 | 300×100 | `1033444` | 글 3개 이상      |
-| 인근 글 목록   | 고객 관심 기반 | 680×140 | `1033426` | 글 3개 이상      |
+| 인기글 목록    | 생활용품 | 300×100 | `1033444` | 글 2개 이상      |
+| 인근 글 목록   | 고객 관심 기반 | 680×140 | `1033426` | 글 2개 이상      |
 
 - Production 운영 플래그가 켜진 경로에서는 AdSense가 `data-ad-status="unfilled"`를 확정한 뒤에만 쿠팡 이미지 URL 또는 동적 iframe `src`를 설정한다. `filled`, `unfill-optimized`, 오류, 차단, 상태 미확인에는 쿠팡 네트워크 요청을 만들지 않는다.
 - 모든 쿠팡 다이나믹 지면은 슬롯에 고정된 iframe `src` 하나만 설정하며 화면 폭에 따른 별도 위젯 교체 요청을 만들지 않는다.
