@@ -2,6 +2,7 @@
 /** 포스트 상세 레이아웃. 메인 피드와 동일한 3-column 구조. */
 
 import Layout from "@/layouts/Layout.astro";
+import { normalizeInternalLinkRels } from "@eunminlog/config/link-policy";
 import LeftSidebar from "@/shared/components/layout/LeftSidebar.astro";
 import RightSidebar from "@/shared/components/layout/RightSidebar.astro";
 import BreadcrumbJsonLd from "@/shared/components/seo/BreadcrumbJsonLd.astro";
@@ -72,7 +73,7 @@ const contentWithAlts = post.image_alts?.length
   : contentWithInArticleAds;
 const contentOptimized = injectOptimizedUrls(contentWithAlts);
 const contentWithBookmarks = await injectLocalizedBookmarks(contentOptimized, locale);
-const contentWithTables = wrapTablesWithScrollContainer(contentWithBookmarks);
+const contentWithTables = normalizeInternalLinkRels(wrapTablesWithScrollContainer(contentWithBookmarks));
 const isPaidPlacement = post.is_sponsored || post.is_coupang_partners;
 const contentWithSponsored = isPaidPlacement
   ? injectSponsoredRel(contentWithTables)
