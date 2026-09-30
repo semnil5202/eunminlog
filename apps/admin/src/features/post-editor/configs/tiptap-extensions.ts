@@ -1,6 +1,7 @@
 import BulletList from '@tiptap/extension-bullet-list';
 import Heading, { type Level } from '@tiptap/extension-heading';
 import Link from '@tiptap/extension-link';
+import { normalizeLinkRel } from '@eunminlog/config/link-policy';
 import { Table } from '@tiptap/extension-table';
 import { TableCell } from '@tiptap/extension-table-cell';
 import { TableHeader } from '@tiptap/extension-table-header';
@@ -109,7 +110,16 @@ const CustomHeading = Heading.extend({
   levels: [2, 3, 4, 5],
 });
 
-const CustomLink = Link.configure({
+const CustomLink = Link.extend({
+  renderHTML(props) {
+    const output = this.parent!(props);
+    if (Array.isArray(output) && output[1] && typeof output[1] === 'object') {
+      const attributes = output[1] as Record<string, string>;
+      attributes.rel = normalizeLinkRel(attributes.href ?? '', attributes.rel ?? '');
+    }
+    return output;
+  },
+}).configure({
   openOnClick: false,
   HTMLAttributes: {
     style:

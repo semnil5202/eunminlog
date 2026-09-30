@@ -146,6 +146,9 @@ OpenAI GPT-5 Mini로 자동 번역. 한국어가 기본 언어.
 
 **유료 링크 표시**:
 
+- 일반 텍스트 내부 링크는 에디터 저장과 Client 빌드 시 `nofollow`만 제거한다. 내부 기준은 `eunminlog.site`, `.eunminlog.site` 하위 도메인 및 상대 주소이며, 기존 저장 본문도 재빌드 시 반영된다. 다른 `rel` 값과 외부 링크의 기존 속성은 유지한다.
+- 본문 `sponsored` 분기는 쿠팡 도메인 식별이 아니라 글의 `is_sponsored || is_coupang_partners` 설정으로 결정하며, 해당 글의 모든 외부 링크에 적용한다.
+
 - 쿠팡 고정 광고 링크와 협찬·쿠팡 파트너스 글의 외부 본문 링크 및 제품 구매 링크에 `rel="sponsored"`를 적용
 - 새 창 링크에는 `noopener`를 함께 적용하며, 쿠팡 추적에 referrer가 필요한 고정 배너는 파트너스 제공 `referrerpolicy="unsafe-url"`을 유지
 - AdSense와 쿠팡 다이나믹 iframe 내부 링크는 각 광고 제공자가 관리하며 애플리케이션에서 속성을 변경하지 않음

@@ -6,6 +6,7 @@
   "exports": {
     "./theme.css": "./theme.css",
     "./site": "./site.ts",
-    "./article-ads": "./article-ads.ts"
+    "./article-ads": "./article-ads.ts",
+    "./link-policy": "./link-policy.ts"
   }
 }
