@@ -77,6 +77,9 @@ const getGooglePublisherTagSampleDefinition = (
   placement: AdvertisementPlacement,
   container: HTMLElement,
 ): GooglePublisherTagSampleDefinition => {
+  if (placement === 'popularList' && container.dataset.adFormat === 'display') {
+    return { advertisementPath: '/6355419/Travel/Asia', size: [300, 100] };
+  }
   if (placement === 'postTop') {
     return {
       advertisementPath: '/6355419/Travel/Asia',
@@ -239,6 +242,7 @@ export const prepareGooglePublisherTagSample = (
 ): Promise<void> => {
   const existingPreparation = preparationPromises.get(container);
   if (existingPreparation) return existingPreparation;
+  if (container.dataset.adFormat === 'display') sampleElement.className = 'h-full w-full';
 
   const preparation = loadGooglePublisherTagScript()
     .then(

@@ -252,7 +252,7 @@
 - **위치**: `shared/components/layout/SponsoredPostItem.astro`
 - Props: `post` (LocalizedPost), `currentSlug?`, `locale`
 - `SponsoredPostList.astro`는 `title?`을 받아 우측/하단 인기글 섹션 제목을 표시. 미전달 시 `인기글` fallback.
-- PC 우측 사이드바는 인기글이 3개 이상일 때 두 번째 글 뒤에 Native In-feed를 삽입한다. 모바일 하단 재사용 목록에는 삽입하지 않는다.
+- 인기글이 2개 이상이면 두 번째 글 뒤에 광고를 삽입한다. PC 우측은 Display 300×100, 모바일 하단은 Native In-feed를 사용한다. 0~1개면 광고 DOM과 예약 공간을 만들지 않는다.
 - 인기글 섹션 제목은 페이지 범위에 맞춰 root/search는 `전체 인기글`, 대분류는 `{대분류} 인기글`, 소분류/상세는 `{소분류} 인기글`로 표시
 - 현재 글과 slug 일치 시 `border-l-primary-500` active 스타일 적용
 - 썸네일(80x80) + 제목(truncate) + 설명(line-clamp-2) 레이아웃
@@ -328,7 +328,7 @@ Admin 본문 WYSIWYG는 클립보드 이미지 파일 붙여넣기와 외부 파
 - **작성 정책**: Admin 툴바에서 2장 이상으로 생성하고, 해당 캐러셀의 `이미지 추가`로 끝에 추가한다. 삭제 후 1장이 남아도 캐러셀을 유지하고 마지막 이미지 삭제 시 블록을 제거한다.
 - **업로드 완료 화면 유지**: 업로드 완료를 이유로 커서·포커스·스크롤을 삽입 위치로 이동시키지 않는다. 툴바 파일 선택 후 시작 시점과 캐러셀 모달 종료 시점에만 필요한 본문 포커스를 스크롤 없이 복원한다. 다른 입력란의 포커스는 유지하며 별도 임시 이미지나 대기 큐 UI는 추가하지 않는다.
 - **툴바 표시**: 사진과 하단 좌우 화살표를 결합한 아이콘만 표시하며, 툴팁·접근 가능한 이름은 `캐러셀 만들기`다. 캐러셀·표 아이콘은 18px 크기, 24×24 viewBox, strokeWidth 1.75로 시각적 무게를 맞춘다.
-- **Admin 편집 경계**: 캐러셀 전체 테두리와 상단 `캐러셀 · N장`/`이미지 추가`로 전체 조작을 구분한다. 하단 `N번 이미지` 영역은 제거하고 사진 클릭/탭·Enter/Space로 선택하면 좌측 상단에 `모자이크·삭제`를 표시한다. 단일 이미지는 모자이크만 유지한다. 리사이즈는 단일 이미지와 공통 파란 점선·원형 핸들 CSS를 사용하며 이 관리 UI는 저장 HTML·공개 뷰어에 노출하지 않는다.
+- **Admin 편집 경계**: 캐러셀 전체 테두리와 상단 `캐러셀 · N장`/`이미지 추가`로 전체 조작을 구분한다. 하단 `N번 이미지` 영역은 제거하고 사진 클릭/탭·Enter/Space로 선택하면 좌측 상단에 `모자이크`, 우측 상단에 X 삭제 버튼을 표시한다. 단일 이미지도 선택 시 같은 배치를 사용한다. 삭제 버튼에는 접근성 이름을 제공하며 본문 Undo로 복원할 수 있다. 리사이즈는 단일 이미지와 공통 파란 점선·원형 핸들 CSS를 사용하며 이 관리 UI는 저장 HTML·공개 뷰어에 노출하지 않는다.
 - **캐러셀 크기 맞춤**: 드래그 중 바로 앞·뒤 사진의 실제 너비/높이에 축별로 8px 이내 진입·14px 초과 이탈하는 스냅을 제공한다. 최소/최대 제한을 우선하며 옆 사진은 바꾸지 않는다. 안내 문구 없이 높이가 맞으면 실제 사진 하단에 캐러셀 전체 너비의 파란 실선을 표시한다. 너비 실선은 사진 우측 끝에 표시하며 크기 조절 점선과 분리한다. 실선은 스냅 중에만 표시한다.
 - **선택선 가시성**: 사진과 점선 사이 6px 배경 여백, 캐러셀 편집 뷰포트 내부 16px 여백·슬라이드 사이 32px를 확보한다. 핸들은 사진 위가 아닌 점선 모서리에 배치한다. 공개 캐러셀의 간격은 변경하지 않는다.
 - 단일 이미지 편집용 내부 이미지에는 margin을 두지 않고, 본문과의 상하 12px 간격은 NodeView 컨테이너에 적용하여 선택선 간격을 사방 동일하게 유지한다.
@@ -387,7 +387,7 @@ Admin 본문 WYSIWYG는 클립보드 이미지 파일 붙여넣기와 외부 파
 - Props: `posts`, `currentSlug`, `categoryLabel`, `subCategoryLabel`, `moreLabel`, `subCategoryHref`, `locale`
 - 같은 서브카테고리의 인근 포스트를 썸네일 + 제목 + 설명 리스트로 표시
 - 최대 4개를 이전 글·현재 글·다음 글·다다음 글 순서로 구성한다. 경계에서는 존재하는 글만 표시한다.
-- 글이 3개 이상일 때만 두 번째 글 뒤에 Native In-feed를 삽입한다. 1~2개면 광고 DOM과 예약 공간을 만들지 않는다.
+- 글이 2개 이상일 때만 두 번째 글 뒤에 Native In-feed를 삽입한다. 정확히 2개면 목록 끝에 표시하며, 0~1개면 광고 DOM과 예약 공간을 만들지 않는다.
 - 현재 포스트는 `border-l-primary-500` + `aria-current="page"`로 구분
 - 썸네일은 `optimizedUrl()`로 `_688.webp` 리사이즈본을 사용
 
@@ -489,16 +489,16 @@ Admin 본문 WYSIWYG는 클립보드 이미지 파일 붙여넣기와 외부 파
 | -------------------------- | --------------- | ------------------- | -------------------------------------------- | --------------------------------- |
 | PostLayout Fixed Adsense   | 300x50          | 468x60 (중앙 정렬)  | 게시글 대표 이미지·공시문 아래, 정보 카드 위 | `FixedAdsense variant="post-top"` |
 | RightSidebar Fixed Adsense | --              | 300x250             | PC 우측 사이드바 상단 (sticky)               | `FixedAdsense variant="sidebar"`  |
-| 인기글 Native In-feed      | 높이 150px              | fluid (300x150 고정) | PC 우측·모바일 하단 인기글 두 번째 글 뒤, 글 3개 이상       | `InFeedAdsense`                   |
-| 인근 글 Native In-feed     | 높이 150px           | 높이 150px               | 상세 하단 인근 글 두 번째 글 뒤, 글 3개 이상 | `InFeedAdsense`                   |
+| 인기글 광고      | Native In-feed 높이 150px | Display 300×100 고정 | PC 우측·모바일 하단 인기글 두 번째 글 뒤, 글 2개 이상 | 모바일 `InFeedAdsense`, PC `AdSlot` |
+| 인근 글 Native In-feed     | 높이 150px           | 높이 150px               | 상세 하단 인근 글 두 번째 글 뒤, 글 2개 이상 | `InFeedAdsense`                   |
 | Native In-Article          | fluid           | fluid               | 게시글 본문 중간 (H2 헤딩 앞에 삽입)         | `insertInArticleAds()`            |
 | Native In-feed             | fluid           | fluid               | Feed·Search index 1, 6, 11, 16…            | `InFeedAdsense`                   |
 
-피드·검색·인기글·인근 글 Native In-feed unit(`6392269057`, layout key `-6t+ed+2i-1n-4w`)은 공유한다. Feed·Search·인기글·인근 글 슬롯 키는 모두 활성이다. 본문은 `article.1`부터 `article.10`까지 같은 Native In-article unit(`5322463062`, `fluid`, full-width responsive)을 공유한다. 인기글·인근 글은 150px 고정 높이를 사용하며, Feed·Search는 높이 420px, In-article은 `min-h-[250px]`를 예약하고 광고 높이 확장을 허용하며, Core Web Vitals 가드레일은 field p75 CLS 0.1 이하이다.
+피드·검색·모바일 인기글·인근 글은 Native In-feed unit(`6392269057`, layout key `-6t+ed+2i-1n-4w`)을 공유한다. PC 인기글은 `popularList.desktop` 슬롯의 별도 Display unit `8482492142`(`eunminlog-popular-sidebar-fixed-300x100`)를 사용한다. 모두 활성이다. 본문은 `article.1`부터 `article.10`까지 Native In-article unit(`5322463062`, `fluid`, full-width responsive)을 공유한다. 모바일 인기글·인근 글은 150px, PC 인기글은 100px, Feed·Search는 420px 높이를 예약한다. In-article은 `min-h-[250px]`를 예약하고 확장을 허용하며 field p75 CLS 0.1 이하를 가드레일로 삼는다.
 
 ### Provider 선택과 CLS
 
-- 인기글은 PC 우측과 `lg` 미만 게시글 하단에서 각각 사용하며, 글이 3개 이상일 때 두 번째 글 뒤에 삽입한다. 두 DOM의 추적 ID는 구분한다. 인근 글도 150px을 예약하고 AdSense `<ins>`에 높이 150px을 지정한다. 홈·검색은 420px 예약·요청 높이를 사용한다.
+- 인기글은 PC 우측과 `lg` 미만 게시글 하단에서 각각 사용하며, 글이 2개 이상일 때 두 번째 글 뒤에 삽입한다. 두 DOM의 추적 ID는 구분한다. 인근 글도 150px을 예약하고 AdSense `<ins>`에 높이 150px을 지정한다. 홈·검색은 420px 예약·요청 높이를 사용한다.
 - lazy observer 및 AdSense 큐 처리 직전에 실제 폭·레이아웃 박스를 확인하여 CSS로 숨겨진 지면은 요청하지 않는다. 큐 대기 중 숨겨진 지면은 요청 표시를 해제하고 다시 관찰한다. 광고를 `overflow:hidden`으로 자르지 않는다.
 
 - Local·Development에서는 활성 광고 지면에 Google Publisher Tag(GPT) 공식 공개 샘플을 표시한다. 현재 Article은 `/6355419/Travel` fluid, Search는 `/6355419/Travel` Native In-feed, Sidebar는 `/6355419/Travel/Europe/France/Paris` 300×250, PostTop은 `/6355419/Travel/Asia`와 현재 컨테이너 크기를 사용한다. Feed도 GPT 샘플을 표시하며 Production에서는 GPT 분기를 사용하지 않는다.
@@ -577,4 +577,4 @@ Admin 본문 WYSIWYG는 클립보드 이미지 파일 붙여넣기와 외부 파
 | Ad 배치       | Right Sidebar     | Feed 5개 간격 |
 | Footer Links  | 기본              | Full Sitemap (SEO)           |
 
-인피드 컨테이너는 우측 인기글 최소 104px·최대 150px, 게시글 하단 인근 글과 모바일 인기글 최소 112px·최대 150px이다. 구분선 1px은 광고 높이와 별도이다. 세 영역 모두 CLS 방지를 위해 실제 높이 150px을 미리 예약하고 AdSense fluid `<ins>`에도 `height:150px`을 지정하므로 최소·최대 범위 안에서 자동으로 높이가 줄어드는 구조는 아니다. [Google 공식 높이 설정](https://support.google.com/adsense/answer/9189959)을 따르며 광고를 잘라내지 않는다. 새 쿠팡 위젯 `1033444`(은민로그 인기글 인피드 생활용품 300x100)를 300×100으로 중앙 정렬한다. 기존 위젯은 보존한다. 운영 광고의 높이 적합성은 배포 후 확인해야 하며 개발 GPT fluid 샘플은 이를 검증하지 못한다.
+PC 우측 인기글은 300×100 고정 Display로 최소·최대·예약 높이 모두 100px이며 `<ins>`도 300×100으로 요청한다. 구분선 1px은 별도다. 게시글 하단 인근 글과 모바일 인기글은 최소 112px·최대 150px, 실제 예약 높이와 fluid `<ins>` 높이 150px을 유지한다. [Google 공식 높이 설정](https://support.google.com/adsense/answer/9189959)을 따르며 광고를 잘라내지 않는다. 인기글 쿠팡 폴백은 PC·모바일 모두 생활용품 위젯 `1033444`를 300×100으로 중앙 정렬한다. PC 개발 GPT 샘플은 `/6355419/Travel/Asia` 300×100을 요청하며 샘플 미충전은 정상 처리한다. 운영 게재는 배포 후 확인한다.

@@ -5,6 +5,7 @@ import { t } from "@/shared/lib/i18n/translations";
 import type { Locale } from "@/shared/types/common";
 import type { LocalizedPost } from "@/shared/types/post";
 import InFeedAdsense from "@/shared/components/ad/InFeedAdsense.astro";
+import AdvertisementSlot from "@/shared/components/ad/AdSlot.astro";
 import { ADVERTISEMENT_SLOT_KEY } from "@/shared/constants/ad";
 import SponsoredPostItem from "./SponsoredPostItem.astro";
 
@@ -27,7 +28,7 @@ const {
 } = Astro.props;
 const popularLabel = title ?? t("sidebar.popular", locale);
 const emptyLabel = t("sidebar.popularEmpty", locale);
-const shouldShowInFeedAdvertisement = showInFeedAdvertisement && posts.length >= 3;
+const shouldShowInFeedAdvertisement = showInFeedAdvertisement && posts.length >= 2;
 ---
 
 <section class="sponsored-post-list">
@@ -44,12 +45,19 @@ const shouldShowInFeedAdvertisement = showInFeedAdvertisement && posts.length >=
       </ul>
 
       {shouldShowInFeedAdvertisement && (
-        <InFeedAdsense
-          class={`h-[150px] max-h-[150px] w-full ${advertisementContext === "mobile" ? "min-h-[112px]" : "min-h-[104px]"}`}
-          slotId={advertisementContext === "mobile" ? "mobile_popular_list_in_feed" : "popular_list_in_feed"}
-          position={advertisementContext === "mobile" ? "mobile_popular_list_after_2" : "popular_list_after_2"}
+        advertisementContext === "mobile" ? <InFeedAdsense
+          class="h-[150px] max-h-[150px] min-h-[112px] w-full"
+          slotId="mobile_popular_list_in_feed"
+          position="mobile_popular_list_after_2"
           slotKey={ADVERTISEMENT_SLOT_KEY.popularList}
           locale={locale}
+        /> : <AdvertisementSlot
+          class="mx-auto h-[100px] min-h-[100px] max-h-[100px] w-[300px]"
+          slotId="popular_list_fixed"
+          format="display"
+          position="popular_list_after_2"
+          slotKey={ADVERTISEMENT_SLOT_KEY.popularListDesktop}
+          advertisementLabel={t("a11y.advertisement", locale)}
         />
       )}
 

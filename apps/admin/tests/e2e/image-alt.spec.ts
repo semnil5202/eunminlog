@@ -34,6 +34,31 @@ test.beforeEach(async ({ page }) => {
 });
 
 for (const carousel of [false, true]) {
+  test(`${carousel ? '캐러셀' : '단일'} 선택 사진의 우측 상단 X로 삭제하고 되돌린다`, async ({
+    page,
+  }) => {
+    await upload(page, carousel);
+    const count = carousel ? 2 : 1;
+    const picture = page.locator('.tiptap img').first();
+    await expect(page.locator('.image-delete-button:visible')).toHaveCount(0);
+    await picture.click();
+    const remove = page.getByRole('button', {
+      name: carousel ? '1번 이미지 삭제' : '이미지 삭제',
+      exact: true,
+    });
+    await expect(remove).toHaveText('×');
+    const imageBox = (await picture.boundingBox())!;
+    const deleteBox = (await remove.boundingBox())!;
+    expect(
+      Math.abs(deleteBox.x + deleteBox.width - (imageBox.x + imageBox.width - 8)),
+    ).toBeLessThan(2);
+    expect(Math.abs(deleteBox.y - (imageBox.y + 8))).toBeLessThan(2);
+    await remove.click();
+    await expect(page.locator('.tiptap img[src]')).toHaveCount(count - 1);
+    await page.getByRole('button', { name: '실행 취소', exact: true }).click();
+    await expect(page.locator('.tiptap img[src]')).toHaveCount(count);
+    await expect(page.getByTestId('saved-html')).not.toContainText('image-delete-button');
+  });
   test(`${carousel ? '캐러셀' : '단일'} 사진 클릭 직후 타이핑과 붙여넣기는 alt만 바꾼다`, async ({
     page,
     context,

@@ -27,6 +27,7 @@ export const ADVERTISEMENT_SLOT_KEY = {
   postTop: 'postTop',
   sidebar: 'sidebar',
   popularList: 'popularList.inFeed',
+  popularListDesktop: 'popularList.desktop',
   nearbyList: 'nearbyList.inFeed',
 } as const;
 
@@ -52,6 +53,7 @@ export const ADVERTISEMENT_UNIT_KEY = {
   postTopMobile: 'postTop.mobile',
   postTopDesktop: 'postTop.desktop',
   sidebar: 'sidebar',
+  popularListDesktop: 'popularList.desktop',
 } as const;
 
 export type AdvertisementUnitKey =
@@ -275,6 +277,11 @@ export const ADVERTISEMENT_MEDIATION_CONFIG: AdvertisementMediationConfig = {
       placement: 'popularList',
       adsenseUnitKey: ADVERTISEMENT_UNIT_KEY.feed,
     },
+    [ADVERTISEMENT_SLOT_KEY.popularListDesktop]: {
+      enabled: true,
+      placement: 'popularList',
+      adsenseUnitKey: ADVERTISEMENT_UNIT_KEY.popularListDesktop,
+    },
     [ADVERTISEMENT_SLOT_KEY.nearbyList]: {
       enabled: true,
       placement: 'nearbyList',
@@ -293,6 +300,9 @@ export const ADVERTISEMENT_MEDIATION_CONFIG: AdvertisementMediationConfig = {
         ? { slotId: '1564849758', format: 'fixed' }
         : null,
       sidebar: isProductionBuild ? { slotId: '3939731651', format: 'fixed' } : null,
+      [ADVERTISEMENT_UNIT_KEY.popularListDesktop]: isProductionBuild
+        ? { slotId: '8482492142', format: 'fixed' }
+        : null,
     },
   },
   coupang: {

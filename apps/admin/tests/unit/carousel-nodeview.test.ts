@@ -117,7 +117,8 @@ describe('캐러셀 NodeView 수명과 편집', () => {
     expect(container.querySelector('.image-carousel-actions')).toBeNull();
     expect(
       container.querySelectorAll('.image-carousel-selected-actions:not([hidden]) button'),
-    ).toHaveLength(2);
+    ).toHaveLength(1);
+    expect(container.querySelectorAll('.image-delete-button:not([hidden])')).toHaveLength(1);
     pictures[1].click();
     expect(container.querySelectorAll('.image-resize-frame')).toHaveLength(1);
     expect(pictures[1].parentElement!.classList.contains('image-resize-frame')).toBe(true);

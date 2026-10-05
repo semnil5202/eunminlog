@@ -318,6 +318,32 @@
   z-index: 5;
 }
 
+.image-delete-button {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 5;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid #d1d5db;
+  background: white;
+  color: #111827;
+  font: 24px/1 sans-serif;
+  cursor: pointer;
+}
+
+.image-delete-button:not([hidden]) {
+  display: grid;
+  place-items: center;
+}
+
+.image-delete-button:focus-visible {
+  outline: 2px solid #4a90d9;
+  outline-offset: 2px;
+}
+
+[data-mosaic-editing] > .image-delete-button,
 [data-mosaic-editing] > .image-resize-handle,
 [data-mosaic-editing] > .image-mosaic-button,
 [data-mosaic-editing] > .image-carousel-selected-actions {
@@ -325,6 +351,7 @@
 }
 
 .image-carousel-container:has([data-mosaic-editing]) .image-carousel-selected-actions,
+.image-carousel-container:has([data-mosaic-editing]) .image-delete-button,
 .image-carousel-container:has([data-mosaic-editing]) .image-carousel-arrow {
   pointer-events: none;
 }

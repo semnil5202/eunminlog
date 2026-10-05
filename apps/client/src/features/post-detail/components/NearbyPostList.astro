@@ -27,7 +27,7 @@ const {
   subCategoryHref,
   locale,
 } = Astro.props;
-const shouldShowInFeedAdvertisement = posts.length >= 3;
+const shouldShowInFeedAdvertisement = posts.length >= 2;
 ---
 
 {posts.length > 0 && (
@@ -53,17 +53,6 @@ const shouldShowInFeedAdvertisement = posts.length >= 3;
         );
         return (
           <>
-            {index === 2 && shouldShowInFeedAdvertisement && (
-              <li class="border-b border-gray-100">
-                <InFeedAdsense
-                  class="h-[150px] min-h-[112px] max-h-[150px] w-full"
-                  slotId="nearby_posts_in_feed"
-                  position="nearby_posts_after_2"
-                  slotKey={ADVERTISEMENT_SLOT_KEY.nearbyList}
-                  locale={locale}
-                />
-              </li>
-            )}
             <li
               class:list={[
                 "border-b border-gray-100",
@@ -106,6 +95,17 @@ const shouldShowInFeedAdvertisement = posts.length >= 3;
                 </div>
               </a>
             </li>
+            {index === 1 && shouldShowInFeedAdvertisement && (
+              <li class="border-b border-gray-100">
+                <InFeedAdsense
+                  class="h-[150px] min-h-[112px] max-h-[150px] w-full"
+                  slotId="nearby_posts_in_feed"
+                  position="nearby_posts_after_2"
+                  slotKey={ADVERTISEMENT_SLOT_KEY.nearbyList}
+                  locale={locale}
+                />
+              </li>
+            )}
           </>
         );
       })}

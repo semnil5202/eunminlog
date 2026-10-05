@@ -1,4 +1,5 @@
 import Image from '@tiptap/extension-image';
+import { closeHistory } from '@tiptap/pm/history';
 import { createImageAltInput, focusImageAltInput } from '../lib/image-alt-input';
 
 export const CustomResizableImage = Image.extend({
@@ -113,9 +114,35 @@ export const CustomResizableImage = Image.extend({
       });
       $container.append(mosaic);
 
+      const remove = document.createElement('button');
+      remove.type = 'button';
+      remove.textContent = '×';
+      remove.className = 'image-delete-button';
+      remove.setAttribute('aria-label', '이미지 삭제');
+      remove.title = '이미지 삭제';
+      remove.contentEditable = 'false';
+      remove.hidden = true;
+      remove.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        const pos = getPos();
+        if (pos === undefined) return;
+        const current = editor.state.doc.nodeAt(pos);
+        if (current?.type.name !== 'image') return;
+        editor.view.dispatch(closeHistory(editor.state.tr));
+        editor
+          .chain()
+          .focus()
+          .deleteRange({ from: pos, to: pos + current.nodeSize })
+          .run();
+        editor.view.dispatch(closeHistory(editor.state.tr));
+      });
+      $container.append(remove);
+
       const showHandles = () => {
         isSelected = true;
         mosaic.hidden = false;
+        remove.hidden = false;
         altField.hidden = false;
         $container.classList.add('image-resize-frame');
         dots.forEach((dot) => {
@@ -126,6 +153,7 @@ export const CustomResizableImage = Image.extend({
       const hideHandles = () => {
         isSelected = false;
         mosaic.hidden = true;
+        remove.hidden = true;
         altField.hidden = true;
         $container.classList.remove('image-resize-frame');
         dots.forEach((dot) => {
@@ -199,7 +227,9 @@ export const CustomResizableImage = Image.extend({
         ignoreMutation: () => true,
         stopEvent: (event) =>
           event.target instanceof HTMLElement &&
-          !!event.target.closest('[data-mosaic-editor], .image-mosaic-button, .image-alt-field'),
+          !!event.target.closest(
+            '[data-mosaic-editor], .image-mosaic-button, .image-delete-button, .image-alt-field',
+          ),
         destroy() {
           document.removeEventListener('click', handleOutsideClick);
         },
