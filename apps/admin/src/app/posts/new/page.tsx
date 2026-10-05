@@ -24,6 +24,7 @@ import {
   mergeImageAltEdits,
 } from '@/features/post-editor/lib/image-alt-replacement';
 import { FORM_TYPE_OPTIONS } from '@/features/post-editor/constants/category';
+import { changePostFormType } from '@/features/post-editor/lib/form-type';
 import { SUMMARY_SYSTEM_PROMPT } from '@/shared/constants/prompts';
 import {
   postFormSchema,
@@ -198,7 +199,7 @@ function NewPostContent() {
   const watchedContent = watch('content');
   const watchedPlaceName = watch('placeName');
   const watchedAddress = watch('address');
-  const formFingerprint = `${title}|${watchedContent}|${description}|${watchedPlaceName}|${watchedAddress}`;
+  const formFingerprint = `${formType}|${title}|${watchedContent}|${description}|${watchedPlaceName}|${watchedAddress}`;
 
   const skipStillValid = translationSkipDirtyCheck && skipCheckSnapshot === formFingerprint;
   const isTranslationDirty =
@@ -258,12 +259,7 @@ function NewPostContent() {
   };
 
   const handleFormTypeChange = (value: PostFormType) => {
-    setValue('formType', value);
-    setValue('placeName', '');
-    setValue('address', '');
-    setValue('pricePrefix', '');
-    setValue('price', '');
-    setValue('products', [{ name: '', source: '', link: '', pricePrefix: '', price: '' }]);
+    changePostFormType(setValue, value);
   };
 
   const handleCategoryChange = (value: string) => {
@@ -623,7 +619,7 @@ function NewPostContent() {
       <ManualTranslationSheet
         open={isManualTranslationOpen}
         onOpenChange={setIsManualTranslationOpen}
-        formType={formType as 'visit' | 'product-review'}
+        formType={formType}
         title={title}
         content={watch('content')}
         description={description}

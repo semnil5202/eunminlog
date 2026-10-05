@@ -203,12 +203,13 @@ features/auth/
 
 #### 폼 형식 (Form Type)
 
-포스트 작성/편집 폼은 **폼 형식**에 따라 입력 필드가 달라진다. 폼 형식은 UI 전용 개념으로, DB에 별도 컬럼으로 저장하지 않는다 (체험 방문 전용 필드의 nullable 여부로 구분).
+포스트 작성/편집 폼은 **폼 형식**에 따라 입력 필드가 달라진다. 폼 형식은 UI 전용 개념으로, DB에 별도 컬럼으로 저장하지 않는다. 게시글 수정 시 장소·제품 데이터의 존재 여부로 폼 형식을 복원한다.
 
 | 폼 형식 값       | 라벨      | 설명                                                             | 상태      |
 | ---------------- | --------- | ---------------------------------------------------------------- | --------- |
 | `visit`          | 체험 방문 | 장소/주소/가격대 필드 표시 + 공통 필드                           | 구현 완료 |
 | `product-review` | 제품 리뷰 | 제품 목록(제품명/구매처/구매링크/가격설명/가격) 표시 + 공통 필드 | 구현 완료 |
+| `basic`          | 기본 폼   | 장소·제품 전용 입력 없이 공통 필드만 표시                        | 구현 완료 |
 
 **공통 필드** (모든 폼 형식에 공유):
 
@@ -218,6 +219,10 @@ features/auth/
 - 카테고리 / 서브카테고리 (select)
 - 3줄 요약 (textarea + AI 요약 생성)
 - 번역 기능 (번역본 생성 + 번역본 확인)
+
+**기본 폼** (`basic` 선택 시): 공통 필드만 표시한다. 장소·주소·가격·제품·구매처·구매 링크 데이터는 `null`로 저장한다. 공개 상세에는 장소·제품 정보 카드 없이 제목·썸네일·본문이 표시된다. 3줄 요약은 메타 설명에 사용하며 기본 폼 상세의 별도 카드로 표시하지 않는다. 카테고리는 기존과 동일하게 선택한다.
+
+폼 형식을 바꾸면 장소·가격·제품·쿠팡 파트너스 입력을 초기화한다. 저장 단계에서도 선택한 폼에 해당하지 않는 전용 필드를 `null`(쿠팡 파트너스는 `false`)로 정규화해 이전 초안 값이 남지 않도록 한다. `basic-form-consistency.test.ts`에서 세 형식으로의 전환과 기본 폼 저장값을 검증한다.
 
 **체험 방문 전용 필드** (`visit` 선택 시에만 표시):
 
@@ -233,7 +238,7 @@ features/auth/
   - 가격 설명 (`price_prefix[]`) + 가격 (`price[]`) — `PriceInputRow` 공용 컴포넌트
 - "+ 제품 추가" 버튼으로 행 추가, "x" 버튼으로 행 삭제 (최소 1개 유지)
 
-**타입 정의**: `PostFormType = 'visit' | 'product-review'` (`shared/types/post.ts`)
+**타입 정의**: `PostFormType = 'visit' | 'product-review' | 'basic'` (`shared/types/post.ts`)
 **상수**: `FORM_TYPE_OPTIONS` (`features/post-editor/constants/category.ts`)
 
 #### 에디터 페이지 레이아웃 순서
@@ -259,6 +264,8 @@ features/auth/
       ├── 가격 설명 + 금액 (PriceInputRow, 50/50 너비)
       └── + 제품 추가 / × 삭제 버튼
     ↓
+[기본 폼] ← formType === 'basic' 일 때 전용 필드 없음
+    ↓
 3줄 요약 (textarea + "요약 생성" 버튼)
     ↓
 액션 버튼 (번역본 생성 / 번역본 확인하기 / 작성 완료)
@@ -269,7 +276,7 @@ features/auth/
 | ID    | 요구사항                                                                                       | 우선순위 | 상태                 |
 | ----- | ---------------------------------------------------------------------------------------------- | -------- | -------------------- |
 | PE-1  | Tiptap 리치 텍스트 에디터 (Heading, Bold, Italic, List, Link, Image, Blockquote)               | P0       | 구현 완료            |
-| PE-2  | 폼 형식 선택 (visit / product-review)                                                          | P0       | 구현 완료            |
+| PE-2  | 폼 형식 선택 (visit / product-review / basic)                                                  | P0       | 구현 완료            |
 | PE-3  | 포스트 메타데이터 폼 (title, category, sub_category, thumbnail, description)                   | P0       | 구현 완료            |
 | PE-4  | 이미지 삽입 (미디어 업로드 연동)                                                               | P0       | 구현 완료 (S3/CDN) |
 | PE-5  | 이미지 삭제 및 순서 변경 (드래그 앤 드롭)                                                      | P1       | 미구현               |
@@ -507,7 +514,7 @@ react-hook-form + Zod 기반 폼 검증. "작성 완료" / "번역본 생성하�
 - 페이지 진입 시 `getPost(postId)` Server Action 호출
 - 반환된 데이터(post + translations)를 react-hook-form `defaultValues`에 세팅
 - Tiptap 에디터에도 기존 content를 주입
-- formType 판별: `place_name`이 존재하면 `visit`, `product_name`이 존재하면 `product-review`
+- formType 판별: `product_name` 배열에 값이 있으면 `product-review`, 그렇지 않고 `place_name` 또는 `address`가 있으면 `visit`, 모두 없으면 `basic`. 별도 DB 컬럼이 없어 과거 데이터에 두 정보가 모두 비어 있다면 기본 폼으로 열린다.
 
 **수정 플로우 (다국어가 아닌 경우 — `is_multilingual === false`):**
 

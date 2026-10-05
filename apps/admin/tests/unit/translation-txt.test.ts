@@ -81,6 +81,20 @@ describe('번역 TXT 출력과 적용 검증', () => {
     expect(prompt).not.toContain('---IMAGE_ALTS---');
     expect(validateTranslationResult(result(params), params).errors).toEqual([]);
   });
+  it('기본 폼에서는 남아 있는 장소·제품 값을 번역 대상으로 사용하지 않는다', () => {
+    const params: PromptBuildParams = {
+      ...source,
+      formType: 'basic',
+      placeName: '이전 장소',
+      address: '이전 주소',
+      productNames: ['이전 제품'],
+    };
+    const prompt = buildTranslationPrompt(params);
+    expect(prompt).not.toContain('---PLACE_NAME---');
+    expect(prompt).not.toContain('---ADDRESS---');
+    expect(prompt).not.toContain('---PRODUCT_NAMES---');
+    expect(validateTranslationResult(result(params), params).errors).toEqual([]);
+  });
   it.each([
     ['언어 누락', (raw: string) => raw.slice(0, raw.indexOf('---LOCALE:th---'))],
     ['언어 중복', (raw: string) => raw + '\n' + raw],

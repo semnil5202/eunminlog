@@ -248,7 +248,7 @@ JSON 배열 파싱 -> `FlaggedTerm[]` 타입으로 변환.
 (번역된 HTML 본문)
 ```
 
-필드는 원문에 존재하는 것만 포함. `formType === 'product-review'`일 때는 PLACE_NAME/ADDRESS/PRICE_PREFIX 대신 PRODUCT_NAMES/PURCHASE_SOURCES/PRICE_PREFIXES가 포함된다.
+필드는 원문에 존재하는 것만 포함. `formType === 'product-review'`일 때는 PLACE_NAME/ADDRESS/PRICE_PREFIX 대신 PRODUCT_NAMES/PURCHASE_SOURCES/PRICE_PREFIXES가 포함된다. `formType === 'basic'`일 때는 TITLE/DESCRIPTION/CONTENT와 입력된 이미지 alt 필드만 포함한다.
 
 ### 파싱
 

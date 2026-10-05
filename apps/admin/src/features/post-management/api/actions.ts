@@ -4,6 +4,7 @@ import { supabaseServer } from '@/shared/lib/supabase-server';
 import type { PostFormValues } from '@/features/post-editor/types/form';
 import type { ImageAlt, TranslationResult } from '@/features/translation/types';
 import { triggerClientBuild } from '@/features/build-trigger/api/actions';
+import { postSpecificFields, translationSpecificFields } from '../lib/post-fields';
 
 export type PostListItem = {
   id: string;
@@ -170,16 +171,6 @@ export async function createPost(params: {
 }): Promise<{ id: string }> {
   const formValues = params.formValues;
 
-  const validProducts = formValues.products.filter((product) => product.name.trim());
-
-  const isProductReview = formValues.formType === 'product-review';
-  const productPricePrefixes = isProductReview
-    ? validProducts.map((product) => product.pricePrefix)
-    : null;
-  const productPrices = isProductReview
-    ? validProducts.map((product) => (product.price ? Number(product.price) : 0))
-    : null;
-
   const { data: post, error } = await supabaseServer
     .from('posts')
     .insert({
@@ -192,28 +183,8 @@ export async function createPost(params: {
       thumbnail: formValues.thumbnail,
       thumbnail_alt: formValues.thumbnailAlt || null,
       is_multilingual: params.translations.length > 0,
-      place_name: formValues.placeName || null,
-      address: formValues.address || null,
-      price_prefix: isProductReview
-        ? productPricePrefixes && productPricePrefixes.some(Boolean)
-          ? productPricePrefixes
-          : null
-        : formValues.pricePrefix
-          ? [formValues.pricePrefix]
-          : null,
-      price: isProductReview
-        ? productPrices && productPrices.some(Boolean)
-          ? productPrices
-          : null
-        : formValues.price
-          ? [Number(formValues.price)]
-          : null,
-      product_name: validProducts.length > 0 ? validProducts.map((product) => product.name) : null,
-      purchase_source:
-        validProducts.length > 0 ? validProducts.map((product) => product.source) : null,
-      purchase_link: validProducts.length > 0 ? validProducts.map((product) => product.link) : null,
+      ...postSpecificFields(formValues),
       image_alts: params.imageAlts ?? [],
-      is_coupang_partners: formValues.isCoupangPartners,
     })
     .select('id')
     .single();
@@ -231,14 +202,7 @@ export async function createPost(params: {
       title: translation.title,
       description: translation.description,
       content: translation.content,
-      place_name: translation.place_name || null,
-      address: translation.address || null,
-      product_name: translation.product_name || null,
-      purchase_source: translation.purchase_source || null,
-      price_prefix:
-        translation.price_prefix && translation.price_prefix.length > 0
-          ? translation.price_prefix
-          : null,
+      ...translationSpecificFields(formValues.formType, translation),
       image_alts: translation.image_alts ?? [],
       thumbnail_alt: translation.thumbnail_alt || null,
     }));
@@ -279,15 +243,6 @@ export async function updatePost(params: {
 
   if (fetchError) throw new Error(`게시글 조회 실패: ${fetchError.message}`);
 
-  const validProducts = formValues.products.filter((product) => product.name.trim());
-  const isProductReview = formValues.formType === 'product-review';
-  const productPricePrefixes = isProductReview
-    ? validProducts.map((product) => product.pricePrefix)
-    : null;
-  const productPrices = isProductReview
-    ? validProducts.map((product) => (product.price ? Number(product.price) : 0))
-    : null;
-
   const updateData: Record<string, unknown> = {
     slug: formValues.slug,
     title: formValues.title,
@@ -297,28 +252,8 @@ export async function updatePost(params: {
     sub_category: formValues.subCategory,
     thumbnail: formValues.thumbnail,
     thumbnail_alt: formValues.thumbnailAlt || null,
-    place_name: formValues.placeName || null,
-    address: formValues.address || null,
-    price_prefix: isProductReview
-      ? productPricePrefixes && productPricePrefixes.some(Boolean)
-        ? productPricePrefixes
-        : null
-      : formValues.pricePrefix
-        ? [formValues.pricePrefix]
-        : null,
-    price: isProductReview
-      ? productPrices && productPrices.some(Boolean)
-        ? productPrices
-        : null
-      : formValues.price
-        ? [Number(formValues.price)]
-        : null,
-    product_name: validProducts.length > 0 ? validProducts.map((product) => product.name) : null,
-    purchase_source:
-      validProducts.length > 0 ? validProducts.map((product) => product.source) : null,
-    purchase_link: validProducts.length > 0 ? validProducts.map((product) => product.link) : null,
+    ...postSpecificFields(formValues),
     image_alts: params.imageAlts ?? [],
-    is_coupang_partners: formValues.isCoupangPartners,
     updated_at: new Date().toISOString(),
   };
 
@@ -351,14 +286,7 @@ export async function updatePost(params: {
         title: translation.title,
         description: translation.description,
         content: translation.content,
-        place_name: translation.place_name || null,
-        address: translation.address || null,
-        product_name: translation.product_name || null,
-        purchase_source: translation.purchase_source || null,
-        price_prefix:
-          translation.price_prefix && translation.price_prefix.length > 0
-            ? translation.price_prefix
-            : null,
+        ...translationSpecificFields(formValues.formType, translation),
         image_alts: translation.image_alts ?? [],
         thumbnail_alt: translation.thumbnail_alt || null,
         updated_at: new Date().toISOString(),

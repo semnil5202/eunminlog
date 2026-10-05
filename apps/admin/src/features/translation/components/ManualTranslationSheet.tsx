@@ -18,13 +18,13 @@ import {
   type ParsedLocaleResult,
 } from '@/features/translation/lib/prompt-parser';
 import { LOCALE_FILTER_LABELS } from '@/features/translation/constants/locale';
-import type { TranslationLocale } from '@/shared/types/post';
+import type { PostFormType, TranslationLocale } from '@/shared/types/post';
 import type { ImageAlt } from '@/features/translation/types';
 
 type ManualTranslationSheetProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  formType: 'visit' | 'product-review';
+  formType: PostFormType;
   title: string;
   content: string;
   description: string;

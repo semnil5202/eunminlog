@@ -54,6 +54,7 @@ import {
   mergeImageAltEdits,
 } from '@/features/post-editor/lib/image-alt-replacement';
 import { FORM_TYPE_OPTIONS } from '@/features/post-editor/constants/category';
+import { changePostFormType } from '@/features/post-editor/lib/form-type';
 import { SUMMARY_SYSTEM_PROMPT } from '@/shared/constants/prompts';
 import {
   postFormSchema,
@@ -173,9 +174,11 @@ function EditPostForm({
 
   const initialValues = useMemo<PostFormValues>(
     () => ({
-      formType: (post.product_name && post.product_name.length > 0
+      formType: post.product_name?.length
         ? 'product-review'
-        : 'visit') as PostFormType,
+        : post.place_name || post.address
+          ? 'visit'
+          : 'basic',
       isCoupangPartners: post.is_coupang_partners ?? false,
       title: post.title,
       content: post.content,
@@ -262,7 +265,9 @@ function EditPostForm({
   const [manualTranslationResults, setManualTranslationResults] = useState<ParsedLocaleResult[]>(
     () => (postData.translations.length > 0 ? fromTranslationResults(postData.translations) : []),
   );
-  const [translationFormSnapshot, setTranslationFormSnapshot] = useState<string | null>(null);
+  const [translationFormSnapshot, setTranslationFormSnapshot] = useState<string | null>(
+    `${initialValues.formType}|${initialValues.title}|${initialValues.content}|${initialValues.description}|${initialValues.placeName}|${initialValues.address}`,
+  );
   const [translationSkipDirtyCheck, setTranslationSkipDirtyCheck] = useState(false);
   const [skipCheckSnapshot, setSkipCheckSnapshot] = useState<string | null>(null);
 
@@ -338,7 +343,7 @@ function EditPostForm({
 
   const watchedPlaceName = watch('placeName');
   const watchedAddress = watch('address');
-  const formFingerprint = `${title}|${watchedContent}|${description}|${watchedPlaceName}|${watchedAddress}`;
+  const formFingerprint = `${formType}|${title}|${watchedContent}|${description}|${watchedPlaceName}|${watchedAddress}`;
 
   const skipStillValid = translationSkipDirtyCheck && skipCheckSnapshot === formFingerprint;
   const isTranslationDirty =
@@ -398,12 +403,7 @@ function EditPostForm({
   };
 
   const handleFormTypeChange = (value: PostFormType) => {
-    setValue('formType', value);
-    setValue('placeName', '');
-    setValue('address', '');
-    setValue('pricePrefix', '');
-    setValue('price', '');
-    setValue('products', [{ name: '', source: '', link: '', pricePrefix: '', price: '' }]);
+    changePostFormType(setValue, value);
   };
 
   const handleCategoryChange = (value: string) => {
@@ -756,7 +756,7 @@ function EditPostForm({
       <ManualTranslationSheet
         open={isManualTranslationOpen}
         onOpenChange={setIsManualTranslationOpen}
-        formType={formType as 'visit' | 'product-review'}
+        formType={formType}
         title={title}
         content={watchedContent}
         description={description}

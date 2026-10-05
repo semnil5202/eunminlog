@@ -1,9 +1,11 @@
 /** 외부 AI에 붙여넣기 위한 번역 프롬프트 + 원문 데이터를 조합한다. */
 
+import type { PostFormType } from '@/shared/types/post';
+
 type ImageAlt = { src: string; alt: string };
 
 export type PromptBuildParams = {
-  formType: 'visit' | 'product-review';
+  formType: PostFormType;
   title: string;
   content: string;
   description: string;
@@ -23,7 +25,7 @@ export function getTranslationFields(params: PromptBuildParams): Record<string, 
     if (params.placeName) fields.PLACE_NAME = 0;
     if (params.address) fields.ADDRESS = 0;
     if (params.pricePrefix) fields.PRICE_PREFIX = 0;
-  } else {
+  } else if (params.formType === 'product-review') {
     for (const [field, values] of [
       ['PRODUCT_NAMES', params.productNames],
       ['PURCHASE_SOURCES', params.purchaseSources],
@@ -112,34 +114,42 @@ export function buildTranslationPrompt(params: PromptBuildParams): string {
 - 본문의 시작부터 끝까지 반드시 해당 언어로 출력해야 합니다
 
 3. 고유명사 처리
-- 장소명, 브랜드명, 메뉴명 등 고유명사는 해당 언어로 음역하세요
-- 음역이 부자연스러운 경우 "음역(보충설명)" 형태로 작성하세요
-- 예: "카페 안낙" → en: "Café Annac", ja: "カフェ・アンナク"
+${
+  formType === 'basic'
+    ? '- 인명·기관명·작품명·브랜드명 등 고유명사는 정확히 표기하고, 번역만으로 의미가 불분명하면 원어를 병기하세요'
+    : '- 장소명, 브랜드명, 메뉴명 등 고유명사는 해당 언어로 음역하세요\n- 음역이 부자연스러운 경우 "음역(보충설명)" 형태로 작성하세요\n- 예: "카페 안낙" → en: "Café Annac", ja: "カフェ・アンナク"'
+}
 
 4. 신조어/밈 처리
-- 의미를 모르는 한국어 신조어, 밈 대사, 인터넷 용어(예: 본좋카, 두쫀쿠, 존맛탱 등)에 한해 위 도구 사용 범위 안에서 웹 검색으로 의미를 확인한 뒤 직접 번역하세요. 이미 의미를 아는 용어는 검색 없이 번역하세요
+- ${formType === 'basic' ? '의미를 모르는 신조어·전문용어에 한해 위 도구 사용 범위 안에서 뜻을 확인한 뒤 직접 번역하세요. 이미 의미를 아는 용어는 검색 없이 번역하세요' : '의미를 모르는 한국어 신조어, 밈 대사, 인터넷 용어(예: 본좋카, 두쫀쿠, 존맛탱 등)에 한해 위 도구 사용 범위 안에서 웹 검색으로 의미를 확인한 뒤 직접 번역하세요. 이미 의미를 아는 용어는 검색 없이 번역하세요'}
 - 웹 검색으로도 의미를 알 수 없는 용어는 번역 전에 사용자에게 직접 의미를 확인해주세요. 오타일 가능성도 있습니다
 
 5. 어조
 - 블로그 특유의 친근한 어조를 유지하되, 해당 언어권 사용자가 읽기에 자연스러운 문장 구조를 사용하세요
-- 해당 언어권의 인기 맛집/카페/여행 블로그 문체를 참고하여, 현지인이 작성한 것처럼 자연스럽게 번역하세요
+- ${formType === 'basic' ? '원문의 사실·조건·수치·출처를 정확히 유지하고, 원문에 없는 사실이나 권고를 추가하지 마세요' : '해당 언어권의 인기 맛집/카페/여행 블로그 문체를 참고하여, 현지인이 작성한 것처럼 자연스럽게 번역하세요'}
 - 동일한 형용사나 관용구를 본문 내에서 2회 이상 반복하지 마세요. 같은 의미라도 다양한 표현을 사용하세요
 
-6. 한국 음식/메뉴명 번역
-- 한국 음식명, 메뉴명을 직역하지 마세요. 해당 언어권에서 통용되는 자연스러운 표현으로 의역하세요
-- 밑반찬, 쌈, 된장찌개 등 한국 고유 음식은 해당 언어권 독자가 이해할 수 있는 설명을 덧붙이세요
-- 예: "밑반찬" → zh-TW: "附贈的小菜", en: "complimentary side dishes"
+6. 분야별 용어 번역
+${
+  formType === 'basic'
+    ? '- 숫자·단위·백분율·표의 행과 열 관계를 유지하세요\n- 분야별 용어는 원문의 의미에 맞게 정확히 옮기고, 직역이 혼란스러우면 원어를 병기하세요'
+    : '- 한국 음식명, 메뉴명을 직역하지 마세요. 해당 언어권에서 통용되는 자연스러운 표현으로 의역하세요\n- 밑반찬, 쌈, 된장찌개 등 한국 고유 음식은 해당 언어권 독자가 이해할 수 있는 설명을 덧붙이세요\n- 예: "밑반찬" → zh-TW: "附贈的小菜", en: "complimentary side dishes"'
+}
 
 7. 이미지 alt 텍스트
 - SEO 최적화하여 해당 언어로 번역하세요
 
-8. 장소명/주소/시간/날짜 표기 규칙
+${
+  formType === 'basic'
+    ? '8. 수치·날짜·출처 표기 규칙\n- 수치, 단위, 날짜, 인용 출처와 링크의 관계를 원문 그대로 유지하세요\n- 날짜 표현은 문맥에 맞게 자연스럽게 번역하되 연도·월·일을 바꾸지 마세요'
+    : `8. 장소명/주소/시간/날짜 표기 규칙
 - en: 로마자 표기. 주소는 영어권 순서(번지→도로→구→시→국가)로 역순 표기. 시간은 12시간제(AM/PM), 날짜는 Month DD, YYYY
 - ja: 카타카나 또는 한자 표기. 주소는 일본식 순서(도도부현→시구정촌→번지)로 표기. 시간은 24시간제, 날짜는 YYYY年MM月DD日
 - zh-CN, zh-TW: 한자 표기. 주소는 중국식 순서(성/시→구→도로→번호)로 표기. 시간은 24시간제, 날짜는 YYYY年MM月DD日
 - th: 태국 문자 음차. 주소는 태국식 순서로 표기. 날짜는 태국식(DD เดือน YYYY)
 - id: 로마자 표기. 주소는 인도네시아식 순서로 표기. 날짜는 DD Bulan YYYY
-- vi: 로마자 표기. 주소는 베트남식 순서로 표기. 날짜는 DD tháng MM năm YYYY
+- vi: 로마자 표기. 주소는 베트남식 순서로 표기. 날짜는 DD tháng MM năm YYYY`
+}
 
 === 작업 순서 ===
 
