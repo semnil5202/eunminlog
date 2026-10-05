@@ -12,6 +12,7 @@ import FixedAdsense from "@/shared/components/ad/FixedAdsense.astro";
 import PostBadges from "@/features/post-detail/components/PostBadges.astro";
 import PlaceInfoCard from "@/features/post-detail/components/PlaceInfoCard.astro";
 import ProductInfoCard from "@/features/post-detail/components/ProductInfoCard.astro";
+import BasicInfoCard from "@/features/post-detail/components/BasicInfoCard.astro";
 import NearbyPostList from "@/features/post-detail/components/NearbyPostList.astro";
 import { getSponsoredPosts, getMultilingualSponsoredPosts, getPostsBySubCategory } from "@/features/post-feed/api/posts";
 import { DEFAULT_LOCALE } from "@/shared/types/common";
@@ -212,6 +213,17 @@ const gaPageParams = {
               translatedPricePrefixes={post.translated_price_prefix}
               description={post.description}
               isPaidPlacement={isPaidPlacement}
+              locale={locale}
+            />
+          )}
+
+          {!post.place_name && !post.product_name?.length && (
+            <BasicInfoCard
+              category={post.category}
+              subCategory={post.sub_category}
+              categoryLabel={categoryLabel}
+              subCategoryLabel={subCategoryLabel}
+              description={post.description}
               locale={locale}
             />
           )}

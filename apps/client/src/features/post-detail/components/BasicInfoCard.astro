@@ -1,0 +1,44 @@
+---
+/** 기본 글의 카테고리와 3줄 요약을 표시한다. */
+
+import type { Locale } from "@/shared/types/common";
+import { t } from "@/shared/lib/i18n/translations";
+import { getLocalePath } from "@/shared/lib/i18n/locales";
+
+interface Props {
+  category: string;
+  subCategory: string;
+  categoryLabel: string;
+  subCategoryLabel: string;
+  description: string;
+  locale: Locale;
+}
+
+const { category, subCategory, categoryLabel, subCategoryLabel, description, locale } = Astro.props;
+const summaryLines = description.split("\n").filter(Boolean);
+---
+
+<div class="bg-gray-50 border border-gray-200 p-5 mb-6">
+  <dl class="space-y-3 text-sm">
+    <div class="flex items-baseline gap-3">
+      <dt class="shrink-0 w-20 text-gray-500 font-medium">{t("place.category", locale)}</dt>
+      <dd class="text-gray-900">
+        <a href={getLocalePath(`/${category}/`, locale)} class="text-primary-600 underline underline-offset-4 hover:text-primary-700 transition-colors">{categoryLabel}</a>
+        <span class="text-base leading-none">›</span>
+        <a href={getLocalePath(`/${category}/${subCategory}/`, locale)} class="text-primary-600 underline underline-offset-4 hover:text-primary-700 transition-colors">{subCategoryLabel}</a>
+      </dd>
+    </div>
+    {summaryLines.length > 0 && (
+      <div class="flex items-baseline gap-3">
+        <dt class="shrink-0 w-20 text-gray-500 font-medium">{t("post.summary", locale)}</dt>
+        <dd class="text-gray-900">
+          <ul class="space-y-0.5">
+            {summaryLines.map((line) => (
+              <li class="pl-3 -indent-3">⋅ {line}</li>
+            ))}
+          </ul>
+        </dd>
+      </div>
+    )}
+  </dl>
+</div>

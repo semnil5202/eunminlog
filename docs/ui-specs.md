@@ -290,6 +290,13 @@
 - 필드 라벨 i18n: `place.category`, `product.name`, `product.source`, `place.price`, `post.summary`
 - 3줄 요약: `description`을 개행 분할하여 `⋅` 접두사 리스트로 표시
 
+#### `BasicInfoCard.astro`
+
+- **위치**: `features/post-detail/components/BasicInfoCard.astro`
+- 장소명과 제품명이 모두 없는 기본 글에 표시한다. `PlaceInfoCard`·`ProductInfoCard`와 동일한 카드 스타일과 위치를 사용한다.
+- `<dl>`에 카테고리·서브카테고리 링크와 3줄 요약만 표시한다. 요약은 현 locale의 `description`을 개행 분할한 리스트이며 별도 장소·제품 Schema.org 마크업을 넣지 않는다.
+- 필드 라벨은 기존 `place.category`, `post.summary` 번역 키를 사용한다.
+
 #### Admin 이미지 설명 (alt)
 
 - 단일·캐러셀 사진 클릭 시 해당 alt 입력란으로 스크롤 없이 포커스를 이동한다. 텍스트 입력·붙여넣기가 선택된 이미지 노드를 교체하지 않도록 설명 입력으로 전달하며 리사이즈·스와이프·편집 버튼 조작은 자동 포커스 대상에서 제외한다.
