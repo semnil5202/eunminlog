@@ -187,11 +187,15 @@ export async function createChildCategory(params: {
 }) {
   const { data: parent, error: parentError } = await supabaseServer
     .from('categories')
-    .select('id')
+    .select('id, parent_id, is_multilingual')
     .eq('slug', params.parentSlug)
     .single();
 
   if (parentError || !parent) throw new Error('대분류를 찾을 수 없습니다.');
+  if (parent.parent_id !== null) throw new Error('소분류를 대분류로 선택할 수 없습니다.');
+  if (params.isMultilingual && !parent.is_multilingual) {
+    throw new Error('다국어 미지원 대분류 아래에 다국어 지원 소분류를 만들 수 없습니다.');
+  }
 
   const { data: maxRow } = await supabaseServer
     .from('categories')
@@ -241,11 +245,41 @@ export async function updateCategory(params: {
 }) {
   const { data: existing, error: fetchError } = await supabaseServer
     .from('categories')
-    .select('slug, parent_id')
+    .select('slug, parent_id, is_multilingual')
     .eq('id', params.id)
     .single();
 
   if (fetchError) throw new Error(`카테고리 조회 실패: ${fetchError.message}`);
+  if (!existing) throw new Error('카테고리를 찾을 수 없습니다.');
+
+  if (params.parentId !== undefined) {
+    if (existing.parent_id === null)
+      throw new Error('대분류의 상위 카테고리를 변경할 수 없습니다.');
+    if (!params.parentId || params.parentId === params.id) {
+      throw new Error('유효한 대분류를 선택해 주세요.');
+    }
+
+    const { data: parent, error: parentError } = await supabaseServer
+      .from('categories')
+      .select('id, parent_id, is_multilingual')
+      .eq('id', params.parentId)
+      .single();
+
+    if (parentError || !parent) throw new Error('대분류를 찾을 수 없습니다.');
+    if (parent.parent_id !== null) throw new Error('소분류를 대분류로 선택할 수 없습니다.');
+    if (existing.is_multilingual && !parent.is_multilingual) {
+      throw new Error('다국어 지원 소분류를 다국어 미지원 대분류로 이동할 수 없습니다.');
+    }
+    if (params.parentId !== existing.parent_id) {
+      const { count, error: postError } = await supabaseServer
+        .from('posts')
+        .select('id', { count: 'exact', head: true })
+        .eq('sub_category', existing.slug);
+
+      if (postError || count === null) throw new Error('소분류의 게시글 수를 확인할 수 없습니다.');
+      if (count > 0) throw new Error('게시글이 포함된 소분류는 대분류를 변경할 수 없습니다.');
+    }
+  }
 
   const updateData: Record<string, unknown> = {
     name: params.name,
@@ -257,7 +291,7 @@ export async function updateCategory(params: {
     updateData.prev_slug = existing.slug;
   }
 
-  if (params.parentId) {
+  if (params.parentId !== undefined) {
     updateData.parent_id = params.parentId;
   }
 

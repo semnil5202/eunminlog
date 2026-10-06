@@ -1228,6 +1228,7 @@ features/build-trigger/
   - `subMultilingual`을 `false`로 자동 해제
   - 기존 입력된 번역 데이터(`subTranslations`) 초기화
 - 대분류가 다국어 지원(`is_multilingual = true`)인 경우에만 소분류 다국어 체크박스 활성화
+- `createChildCategory` Server Action도 선택한 부모가 실제 대분류인지, 다국어 지원 소분류의 부모가 다국어 지원 상태인지 검사한다. UI 비활성화만으로 정합성을 보장하지 않는다.
 
 #### 카테고리 수정 페이지 (`/categories/[id]/edit`) -- CM-5 상세
 
@@ -1254,6 +1255,7 @@ features/build-trigger/
 - 소분류 카테고리 생성 영역 UI만 표시 (대분류 영역은 숨김)
 - 서버에서 받아온 초기값(parent_id, name, slug)을 각 input에 세팅
 - 대분류 선택 드롭다운: 기존 parent 값이 선택된 상태로 표시
+- 다른 대분류로 변경할 때 `updateCategory` Server Action이 대상 부모의 계층과 다국어 상태를 다시 검사한다. 다국어 지원 소분류는 다국어 미지원 대분류로 이동할 수 없고, 글이 포함된 소분류는 대분류를 변경할 수 없다.
 - **다국어 지원 체크박스: `disabled` 처리** (CM-9) -- 서버에서 받아온 값 그대로 표시, 수정 불가
 - 뒤로가기 링크: "목록으로 돌아가기" (`/categories`)
 
