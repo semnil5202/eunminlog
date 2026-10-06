@@ -139,6 +139,22 @@ img[data-lightbox] {
 [itemprop='articleBody'] .tableWrapper {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+[itemprop='articleBody'] .tableWrapper::-webkit-scrollbar {
+  display: none;
+}
+
+[itemprop='articleBody'] .table-scrollbar {
+  height: 4px;
+  margin-top: 4px;
+  background: var(--color-gray-200);
+}
+
+[itemprop='articleBody'] .table-scrollbar-thumb {
+  height: 100%;
+  background: var(--color-primary-600);
 }
 
 [itemprop='articleBody'] td,

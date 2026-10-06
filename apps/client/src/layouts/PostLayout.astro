@@ -373,4 +373,35 @@ const gaPageParams = {
       syncArrows();
     });
   </script>
+
+  <script>
+    document.querySelectorAll<HTMLElement>('[itemprop="articleBody"] .tableWrapper').forEach((wrapper) => {
+      const indicator = document.createElement('div');
+      indicator.className = 'table-scrollbar';
+      indicator.setAttribute('aria-hidden', 'true');
+
+      const thumb = document.createElement('div');
+      thumb.className = 'table-scrollbar-thumb';
+      indicator.appendChild(thumb);
+      wrapper.after(indicator);
+
+      const syncScrollbar = () => {
+        const visibleWidth = wrapper.clientWidth;
+        const maxScroll = wrapper.scrollWidth - visibleWidth;
+        indicator.style.display = maxScroll > 1 ? '' : 'none';
+        if (maxScroll <= 1) return;
+
+        const thumbWidth = Math.max(24, visibleWidth * visibleWidth / wrapper.scrollWidth);
+        thumb.style.width = `${thumbWidth}px`;
+        thumb.style.transform = `translateX(${wrapper.scrollLeft / maxScroll * (visibleWidth - thumbWidth)}px)`;
+      };
+
+      const observer = new ResizeObserver(syncScrollbar);
+      observer.observe(wrapper);
+      const table = wrapper.querySelector('table');
+      if (table) observer.observe(table);
+      wrapper.addEventListener('scroll', syncScrollbar, { passive: true });
+      syncScrollbar();
+    });
+  </script>
 </Layout>

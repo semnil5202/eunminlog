@@ -488,6 +488,8 @@ Admin 본문 WYSIWYG는 클립보드 이미지 파일 붙여넣기와 외부 파
 | Client (빌드) | `wrapTablesWithScrollContainer()`로 래퍼 미포함 테이블 처리                                  |
 | CSS           | `.tableWrapper { overflow-x: auto }` + `td, th { min-width: 120px; vertical-align: middle }` |
 
+- PC와 모바일에서 표 너비가 표시 영역을 넘으면 표 아래에 항상 보이는 가로 스크롤 표시줄을 노출한다. 표를 스크롤하면 표시줄 위치가 따라가며, 넘치지 않는 표에서는 표시하지 않는다.
+
 ---
 
 ## 광고 미디에이션 Specifications
