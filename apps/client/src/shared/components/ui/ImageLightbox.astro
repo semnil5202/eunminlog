@@ -86,9 +86,9 @@ const { locale } = Astro.props;
     const img = (e.target as HTMLElement).closest<HTMLImageElement>(
       "[itemprop='articleBody'] img, img[data-lightbox]"
     );
-    if (img) {
-      e.preventDefault();
-      open(img.dataset.full || img.src, img.alt || "");
-    }
+    if (!img || img.closest('[data-type="link-bookmark"]')) return;
+
+    e.preventDefault();
+    open(img.dataset.full || img.src, img.alt || "");
   });
 </script>

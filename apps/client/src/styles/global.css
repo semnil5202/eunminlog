@@ -154,7 +154,7 @@ img[data-lightbox] {
 
 [itemprop='articleBody'] .table-scrollbar-thumb {
   height: 100%;
-  background: var(--color-primary-600);
+  background: var(--color-gray-400);
 }
 
 [itemprop='articleBody'] td,

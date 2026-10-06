@@ -151,15 +151,7 @@
 
 - **위치**: `shared/components/layout/MobileHeader.astro`
 - LanguageSelector + getActiveSegments 사용으로 중복 로직 제거
-
-```css
-.scroll-container {
-  display: flex;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  mask-image: linear-gradient(to right, black 85%, transparent 100%);
-}
-```
+- 카테고리 영역은 가로 스크롤과 오른쪽 페이드로 추가 항목을 안내한다. 현재 카테고리가 가려지면 오른쪽 끝의 페이드 앞까지 부드럽게 스크롤해 표시하며, 동작 축소 설정에서는 애니메이션을 생략한다.
 
 #### `PCHeader.astro`
 
@@ -369,6 +361,7 @@ Admin 본문 WYSIWYG는 클립보드 이미지 파일 붙여넣기와 외부 파
 
 - CSS: `global.css`에서 `[data-type='link-bookmark']` 스타일 정의
 - hover 효과: `background-color: #f9fafb`
+- 썸네일과 프로필 이미지를 포함한 카드 전체에서 링크가 동작한다. 북마크 내부 이미지는 이미지 확대 모달 대상에서 제외한다.
 - 모바일 (`max-width: 640px`): `flex-direction: column` 세로 배치, figure `max-height: 200px`
 - 내부 링크(`eunminlog.site`) 북마크: 빌드 타임에 다국어 URL/title/description 자동 변환 (`shared/lib/bookmark.ts` — `injectLocalizedBookmarks()`)
 - 번역 파이프라인: 북마크 영역(`data-type="link-bookmark"`)은 번역 skip (`html-sections.ts`)
@@ -488,7 +481,7 @@ Admin 본문 WYSIWYG는 클립보드 이미지 파일 붙여넣기와 외부 파
 | Client (빌드) | `wrapTablesWithScrollContainer()`로 래퍼 미포함 테이블 처리                                  |
 | CSS           | `.tableWrapper { overflow-x: auto }` + `td, th { min-width: 120px; vertical-align: middle }` |
 
-- PC와 모바일에서 표 너비가 표시 영역을 넘으면 표 아래에 항상 보이는 가로 스크롤 표시줄을 노출한다. 표를 스크롤하면 표시줄 위치가 따라가며, 넘치지 않는 표에서는 표시하지 않는다.
+- PC와 모바일에서 표 너비가 표시 영역을 넘으면 표 아래에 회색 가로 스크롤 표시줄을 항상 노출한다. 표를 스크롤하면 표시줄 위치가 따라가며, 넘치지 않는 표에서는 표시하지 않는다.
 
 ---
 
