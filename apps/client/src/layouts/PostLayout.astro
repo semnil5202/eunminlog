@@ -375,6 +375,55 @@ const gaPageParams = {
   </script>
 
   <script>
+    import { SITE_NAME_KO } from '@eunminlog/config/site';
+
+    const articleBody = document.querySelector<HTMLElement>('[itemprop="articleBody"]');
+    const sourceUrl = document.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.href;
+
+    const isEditable = (node: Node | null) => {
+      const element = node instanceof Element ? node : node?.parentElement;
+      return element?.closest('input, textarea, [contenteditable]:not([contenteditable="false"])');
+    };
+
+    document.addEventListener('copy', (event) => {
+      const selection = window.getSelection();
+      if (!articleBody || !sourceUrl || !event.clipboardData || !selection
+        || selection.isCollapsed || isEditable(document.activeElement)) return;
+
+      const text = selection.toString();
+      if (!text.trim()) return;
+
+      const ranges = Array.from({ length: selection.rangeCount }, (_, index) => selection.getRangeAt(index));
+      if (ranges.some((range) => !articleBody.contains(range.startContainer)
+        || !articleBody.contains(range.endContainer)
+        || isEditable(range.startContainer) || isEditable(range.endContainer))) return;
+
+      try {
+        const content = document.createElement('div');
+        ranges.forEach((range) => content.appendChild(range.cloneContents()));
+
+        const blankLine = document.createElement('p');
+        blankLine.appendChild(document.createElement('br'));
+        content.appendChild(blankLine);
+
+        const attribution = document.createElement('p');
+        attribution.textContent = `출처: ${SITE_NAME_KO} | `;
+        const link = document.createElement('a');
+        link.href = sourceUrl;
+        link.textContent = sourceUrl;
+        attribution.appendChild(link);
+        content.appendChild(attribution);
+
+        event.clipboardData.setData('text/plain', `${text}\n\n출처: ${SITE_NAME_KO} | ${sourceUrl}`);
+        event.clipboardData.setData('text/html', content.innerHTML);
+        event.preventDefault();
+      } catch {
+        return;
+      }
+    });
+  </script>
+
+  <script>
     document.querySelectorAll<HTMLElement>('[itemprop="articleBody"] .tableWrapper').forEach((wrapper) => {
       const indicator = document.createElement('div');
       indicator.className = 'table-scrollbar';
