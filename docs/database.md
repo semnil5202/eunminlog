@@ -19,13 +19,15 @@ DB 스키마, 인덱스, 쿼리 패턴, 스케일링 가이드, 마이그레이�
 | `true`                   | `true` 또는 `false`              |
 | `false`                  | `false`만 허용                   |
 
-**제어 레벨**: 어플리케이션 레벨 (Admin UI). DB 트리거나 CHECK 제약조건은 없음.
+**제어 레벨**: 어플리케이션 레벨 (Admin UI + 카테고리 생성·수정 Server Action). DB 트리거나 CHECK 제약조건은 없음.
 
 **Admin UI 제어 방식**:
 
 - 소분류 생성 시 (`/categories/new`): 선택한 대분류가 `is_multilingual = false`이면 소분류 다국어 체크박스를 disabled 처리
 - 대분류 선택 변경 시: 새 대분류가 다국어 미지원이면 소분류의 다국어 상태를 자동 해제하고 번역 데이터 초기화
 - `fetchParentCategories()`가 `is_multilingual` 필드를 함께 반환하여 UI에서 판단 가능
+- 소분류 생성·대분류 변경을 저장할 때 서버가 대상이 실제 대분류인지 확인하고, 다국어 미지원 대분류 아래에 다국어 지원 소분류가 놓이지 않도록 검증
+- 소분류에 글이 있으면 대분류 변경을 거부하여 기존 글의 `posts.category`와 소분류 소속이 달라지지 않게 함
 
 ### 쿠팡 파트너스
 

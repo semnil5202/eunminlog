@@ -550,7 +550,7 @@ interface SelectiveTranslateOptions {
 {
   name: string;                                   // 표시명
   slug: string;                                   // unique, URL 경로용
-  parentId: string;                               // 대분류 ID
+  parentSlug: string;                             // 대분류 slug
   isMultilingual: boolean;                        // 다국어 지원 여부
   translations?: Record<string, string>;          // 7개 언어 번역 (isMultilingual=true 시)
 }
@@ -563,7 +563,8 @@ interface SelectiveTranslateOptions {
 **Validation:**
 
 - slug 중복 검사 (UNIQUE 제약으로 DB 레벨에서도 보장)
-- parent_id 유효성 검사 (존재하는 대분류인지, 2-depth 초과 방지)
+- `parentSlug`가 존재하는 실제 대분류인지 검사 (소분류를 부모로 선택하거나 2-depth를 초과할 수 없음)
+- 다국어 지원 소분류는 다국어 지원 대분류 아래에만 생성 가능하도록 서버에서 검사
 - isMultilingual=true 시 translations 필수 (7개 언어 모두)
 
 ---
@@ -602,10 +603,10 @@ interface SelectiveTranslateOptions {
 
 ```typescript
 {
-  categoryId: string;
-  slug?: string;                 // 변경 시 UNIQUE 검증 필요
-  name?: string;
-  sort_order?: number;
+  id: string;
+  slug: string;                  // 변경 시 UNIQUE 검증 필요
+  name: string;
+  parentId?: string;             // 소분류의 새 대분류 ID
 }
 ```
 
@@ -615,7 +616,9 @@ interface SelectiveTranslateOptions {
 
 **제약:**
 
-- `parent_id`는 수정 불가 (대분류/소분류 계층 변경 방지)
+- 대분류는 소분류로 변경할 수 없다. 소분류의 `parentId` 변경 시 새 부모가 실제 대분류인지 서버에서 검사한다.
+- 다국어 지원 소분류는 다국어 미지원 대분류로 이동할 수 없다. 미지원 소분류는 지원·미지원 대분류 모두로 이동할 수 있다.
+- 글이 포함된 소분류의 대분류 변경은 거부한다. 이동 시 기존 `posts.category`와 소분류 소속이 어긋나는 것을 막기 위해서다. 글 수 조회 오류도 이동 거부로 처리한다.
 - `is_multilingual`은 수정 불가 (한 번 설정 후 변경 불가 -- 추후 지원 예정)
 - `slug` 수정 시 UNIQUE 제약 위반 검사 필요 (DB 레벨 + application 레벨)
 - `slug` 수정 시 해당 카테고리를 참조하는 `posts.category` 또는 `posts.sub_category` 값도 함께 업데이트 필요 (application-level, FK 없으므로)
