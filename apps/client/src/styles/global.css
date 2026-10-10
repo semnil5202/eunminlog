@@ -146,9 +146,14 @@ img[data-lightbox] {
   display: none;
 }
 
+[itemprop='articleBody'] .tableWrapper[data-scroll-overflow] > table {
+  margin-bottom: 0 !important;
+}
+
 [itemprop='articleBody'] .table-scrollbar {
   height: 4px;
   margin-top: 4px;
+  margin-bottom: 12px;
   background: var(--color-gray-200);
 }
 

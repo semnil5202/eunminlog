@@ -437,6 +437,7 @@ const gaPageParams = {
       const syncScrollbar = () => {
         const visibleWidth = wrapper.clientWidth;
         const maxScroll = wrapper.scrollWidth - visibleWidth;
+        wrapper.toggleAttribute('data-scroll-overflow', maxScroll > 1);
         indicator.style.display = maxScroll > 1 ? '' : 'none';
         if (maxScroll <= 1) return;
 

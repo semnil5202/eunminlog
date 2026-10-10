@@ -116,9 +116,7 @@ const { activeCategory } = getActiveSegments(Astro.url.pathname, locale);
       if (offset) {
         nav.scrollBy({
           left: offset,
-          behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
-            ? "auto"
-            : "smooth",
+          behavior: "instant",
         });
       }
     };
