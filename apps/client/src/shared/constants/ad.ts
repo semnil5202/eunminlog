@@ -49,6 +49,7 @@ export type AdvertisementSlotKey =
 
 export const ADVERTISEMENT_UNIT_KEY = {
   feed: 'feed',
+  postBottom: 'postBottom',
   article: 'article',
   postTopMobile: 'postTop.mobile',
   postTopDesktop: 'postTop.desktop',
@@ -125,6 +126,12 @@ const articleAdSenseUnit: AdSenseUnitConfig = {
   slotId: '5322463062',
   format: 'fluid',
   layout: 'in-article',
+};
+
+const postBottomAdSenseUnit: AdSenseUnitConfig = {
+  slotId: '4186599463',
+  format: 'fluid',
+  layoutKey: '-h0-h+j-90+m4',
 };
 
 const coupangPostTopAdvertisement: CoupangAdvertisementConfig = {
@@ -275,7 +282,7 @@ export const ADVERTISEMENT_MEDIATION_CONFIG: AdvertisementMediationConfig = {
     [ADVERTISEMENT_SLOT_KEY.popularList]: {
       enabled: true,
       placement: 'popularList',
-      adsenseUnitKey: ADVERTISEMENT_UNIT_KEY.feed,
+      adsenseUnitKey: ADVERTISEMENT_UNIT_KEY.postBottom,
     },
     [ADVERTISEMENT_SLOT_KEY.popularListDesktop]: {
       enabled: true,
@@ -285,13 +292,14 @@ export const ADVERTISEMENT_MEDIATION_CONFIG: AdvertisementMediationConfig = {
     [ADVERTISEMENT_SLOT_KEY.nearbyList]: {
       enabled: true,
       placement: 'nearbyList',
-      adsenseUnitKey: ADVERTISEMENT_UNIT_KEY.feed,
+      adsenseUnitKey: ADVERTISEMENT_UNIT_KEY.postBottom,
     },
   },
   adsense: {
     clientId: isProductionBuild ? normalizeAdSenseClientId(adSenseClientId) : null,
     units: {
       feed: isProductionBuild ? feedAdSenseUnit : null,
+      [ADVERTISEMENT_UNIT_KEY.postBottom]: isProductionBuild ? postBottomAdSenseUnit : null,
       article: isProductionBuild ? articleAdSenseUnit : null,
       [ADVERTISEMENT_UNIT_KEY.postTopMobile]: isProductionBuild
         ? { slotId: '8174224200', format: 'fixed' }

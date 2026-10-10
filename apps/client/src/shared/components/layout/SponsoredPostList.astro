@@ -46,7 +46,7 @@ const shouldShowInFeedAdvertisement = showInFeedAdvertisement && posts.length >=
 
       {shouldShowInFeedAdvertisement && (
         advertisementContext === "mobile" ? <InFeedAdsense
-          class="h-[150px] max-h-[150px] min-h-[112px] w-full"
+          class="min-h-[150px] w-full"
           slotId="mobile_popular_list_in_feed"
           position="mobile_popular_list_after_2"
           slotKey={ADVERTISEMENT_SLOT_KEY.popularList}

@@ -498,16 +498,16 @@ Admin 본문 WYSIWYG는 클립보드 이미지 파일 붙여넣기와 외부 파
 | -------------------------- | --------------- | ------------------- | -------------------------------------------- | --------------------------------- |
 | PostLayout Fixed Adsense   | 300x50          | 468x60 (중앙 정렬)  | 게시글 대표 이미지·공시문 아래, 정보 카드 위 | `FixedAdsense variant="post-top"` |
 | RightSidebar Fixed Adsense | --              | 300x250             | PC 우측 사이드바 상단 (sticky)               | `FixedAdsense variant="sidebar"`  |
-| 인기글 광고      | Native In-feed 높이 150px | Display 300×100 고정 | PC 우측·모바일 하단 인기글 두 번째 글 뒤, 글 2개 이상 | 모바일 `InFeedAdsense`, PC `AdSlot` |
-| 인근 글 Native In-feed     | 높이 150px           | 높이 150px               | 상세 하단 인근 글 두 번째 글 뒤, 글 2개 이상 | `InFeedAdsense`                   |
+| 인기글 광고      | Native In-feed 150px 예약·확장 허용 | Display 300×100 고정 | PC 우측·모바일 하단 인기글 두 번째 글 뒤, 글 2개 이상 | 모바일 `InFeedAdsense`, PC `AdSlot` |
+| 인근 글 Native In-feed     | 150px 예약·확장 허용 | 150px 예약·확장 허용 | 상세 하단 인근 글 두 번째 글 뒤, 글 2개 이상 | `InFeedAdsense`                   |
 | Native In-Article          | fluid           | fluid               | 게시글 본문 중간 (H2 헤딩 앞에 삽입)         | `insertInArticleAds()`            |
 | Native In-feed             | fluid           | fluid               | Feed·Search index 1, 6, 11, 16…            | `InFeedAdsense`                   |
 
-피드·검색·모바일 인기글·인근 글은 Native In-feed unit(`6392269057`, layout key `-6t+ed+2i-1n-4w`)을 공유한다. PC 인기글은 `popularList.desktop` 슬롯의 별도 Display unit `8482492142`(`eunminlog-popular-sidebar-fixed-300x100`)를 사용한다. 모두 활성이다. 본문은 `article.1`부터 `article.10`까지 Native In-article unit(`5322463062`, `fluid`, full-width responsive)을 공유한다. 모바일 인기글·인근 글은 150px, PC 인기글은 100px, Feed·Search는 420px 높이를 예약한다. In-article은 `min-h-[250px]`를 예약하고 확장을 허용하며 field p75 CLS 0.1 이하를 가드레일로 삼는다.
+피드·검색은 Native In-feed unit(`6392269057`, layout key `-6t+ed+2i-1n-4w`)을 공유한다. 모바일 인기글과 PC·모바일 인근 글은 별도 가로형 `postBottom` unit `4186599463`(`eunminlog-post-bottom-in-feed`, layout key `-h0-h+j-90+m4`)을 공유하여 하단 성과를 합산한다. PC 인기글은 `popularList.desktop` 슬롯의 별도 Display unit `8482492142`(`eunminlog-popular-sidebar-fixed`)를 사용한다. 모두 활성이다. 본문은 `article.1`부터 `article.10`까지 Native In-article unit(`5322463062`, `fluid`, full-width responsive)을 공유한다. 모바일 인기글·인근 글은 150px, PC 인기글은 100px, Feed·Search는 420px 높이를 예약한다. In-article은 `min-h-[250px]`를 예약하고 확장을 허용하며 field p75 CLS 0.1 이하를 가드레일로 삼는다.
 
 ### Provider 선택과 CLS
 
-- 인기글은 PC 우측과 `lg` 미만 게시글 하단에서 각각 사용하며, 글이 2개 이상일 때 두 번째 글 뒤에 삽입한다. 두 DOM의 추적 ID는 구분한다. 인근 글도 150px을 예약하고 AdSense `<ins>`에 높이 150px을 지정한다. 홈·검색은 420px 예약·요청 높이를 사용한다.
+- 인기글은 PC 우측과 `lg` 미만 게시글 하단에서 각각 사용하며, 글이 2개 이상일 때 두 번째 글 뒤에 삽입한다. 두 DOM의 추적 ID는 구분한다. 모바일 인기글·인근 글은 `min-h-[150px]`로 예약하고 AdSense `<ins>` 초기 높이 150px을 지정하되, 부모의 고정 높이·최대 높이 없이 실제 fluid 광고 높이를 정상 문서 흐름에 반영한다. 홈·검색은 420px 예약·요청 높이를 사용한다.
 - lazy observer 및 AdSense 큐 처리 직전에 실제 폭·레이아웃 박스를 확인하여 CSS로 숨겨진 지면은 요청하지 않는다. 큐 대기 중 숨겨진 지면은 요청 표시를 해제하고 다시 관찰한다. 광고를 `overflow:hidden`으로 자르지 않는다.
 
 - Local·Development에서는 활성 광고 지면에 Google Publisher Tag(GPT) 공식 공개 샘플을 표시한다. 현재 Article은 `/6355419/Travel` fluid, Search는 `/6355419/Travel` Native In-feed, Sidebar는 `/6355419/Travel/Europe/France/Paris` 300×250, PostTop은 `/6355419/Travel/Asia`와 현재 컨테이너 크기를 사용한다. Feed도 GPT 샘플을 표시하며 Production에서는 GPT 분기를 사용하지 않는다.
@@ -586,4 +586,4 @@ Admin 본문 WYSIWYG는 클립보드 이미지 파일 붙여넣기와 외부 파
 | Ad 배치       | Right Sidebar     | Feed 5개 간격 |
 | Footer Links  | 기본              | Full Sitemap (SEO)           |
 
-PC 우측 인기글은 300×100 고정 Display로 최소·최대·예약 높이 모두 100px이며 `<ins>`도 300×100으로 요청한다. 구분선 1px은 별도다. 게시글 하단 인근 글과 모바일 인기글은 최소 112px·최대 150px, 실제 예약 높이와 fluid `<ins>` 높이 150px을 유지한다. [Google 공식 높이 설정](https://support.google.com/adsense/answer/9189959)을 따르며 광고를 잘라내지 않는다. 인기글 쿠팡 폴백은 PC·모바일 모두 생활용품 위젯 `1033444`를 300×100으로 중앙 정렬한다. PC 개발 GPT 샘플은 `/6355419/Travel/Asia` 300×100을 요청하며 샘플 미충전은 정상 처리한다. 운영 게재는 배포 후 확인한다.
+PC 우측 인기글은 300×100 고정 Display로 최소·최대·예약 높이 모두 100px이며 `<ins>`도 300×100으로 요청한다. 구분선 1px은 별도다. 게시글 하단 인근 글과 모바일 인기글은 예약·최소 높이 및 fluid `<ins>` 초기 요청 높이를 150px로 유지하고 실제 광고 높이 확장을 허용한다. 150px은 최대 높이 보장이 아니며, 실제 광고가 287px이면 부모도 확장하여 다음 글을 덮지 않는다. [Google 공식 높이 설정](https://support.google.com/adsense/answer/9189959)을 참고하며 광고를 잘라내지 않는다. 인기글 쿠팡 폴백은 PC·모바일 모두 생활용품 위젯 `1033444`를 300×100으로 중앙 정렬한다. PC 개발 GPT 샘플은 `/6355419/Travel/Asia` 300×100을 요청하며 샘플 미충전은 정상 처리한다. 운영 게재는 배포 후 확인한다.
