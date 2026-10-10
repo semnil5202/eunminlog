@@ -15,7 +15,7 @@
 - 시간 초과, 스크립트 오류, 차단, 상태 미확인은 쿠팡으로 전환하지 않고 예약 영역을 비워 둔다.
 - 두 광고가 모두 없더라도 최소 예약 영역을 제거하지 않는다. Native creative의 가변 높이를 허용하며 field p75 CLS 0.1 이하를 가드레일로 삼는다.
 - `postTop`만 즉시 요청하며 나머지 슬롯은 `IntersectionObserver`의 300px 사전 영역에서 요청한다.
-- Display는 고정 크기를 유지하고 인기글·인근 글 Native는 150px 고정 높이, Feed·Search는 420px, In-article은 최소 높이를 예약한다. 광고를 고정 높이로 자르거나 `overflow-hidden`을 적용하지 않는다.
+- Display는 고정 크기를 유지하고 모바일 인기글·인근 글 Native는 150px 최소 높이를 예약하며 실제 광고 높이 확장을 허용한다. Feed·Search는 420px, In-article은 최소 높이를 예약한다. 광고를 고정 높이로 자르거나 `overflow-hidden`을 적용하지 않는다.
 
 ### 1.1 환경별 실제 네트워크 동작
 
@@ -45,11 +45,11 @@
 | 피드 index 1, 6, 11, 16…    | Native In-feed    | `w-full h-[420px] min-h-[280px] max-h-[420px]` | 지연      | `6392269057` | `feed.first`, `feed.second`     |
 | 검색 index 1, 6, 11, 16…    | Native In-feed    | `w-full h-[420px] min-h-[280px] max-h-[420px]` | 지연      | `6392269057` | `search.first`, `search.second` |
 | 우측 인기글 목록   | Display 고정형 | 300×100 | 지연 | `8482492142` | `popularList.desktop`, 글 2개 이상, 두 번째 글 뒤 |
-| 모바일 인기글 목록 | Native In-feed | `w-full h-[150px]` | 지연 | `6392269057` | `popularList.inFeed`, 글 2개 이상, 두 번째 글 뒤 |
-| 상세 인근 글 목록  | Native In-feed    | `w-full h-[150px]` | 지연      | `6392269057` | 글 2개 이상, 두 번째 글 뒤      |
+| 모바일 인기글 목록 | Native In-feed | `w-full min-h-[150px]` | 지연 | `4186599463` | `popularList.inFeed`, 글 2개 이상, 두 번째 글 뒤 |
+| 상세 인근 글 목록  | Native In-feed    | `w-full min-h-[150px]` | 지연      | `4186599463` | 글 2개 이상, 두 번째 글 뒤      |
 | 본문 H2 경계       | Native In-article | `w-full min-h-[250px]` | 지연      | `5322463062` | `fluid`, full-width responsive  |
 
-Feed와 Search는 같은 Native In-feed unit을 index 1, 6, 11, 16…에서 사용하고 Article은 같은 Native In-article unit을 적격 H2 앞 최대 10곳에서 반복 사용한다. 활성 지면의 각 DOM 노출은 고유한 logical slot/position을 사용하며 인기글 광고는 글 2개 이상일 때 사용한다. PC 인기글 전용 단위 이름은 `eunminlog-popular-sidebar-fixed-300x100`이며 `popularList.desktop` 슬롯은 활성이다. 기존 상단 Sidebar 300×250과 모바일 인기글 Native는 변경하지 않는다.
+Feed와 Search는 같은 Native In-feed unit을 index 1, 6, 11, 16…에서 사용하고 Article은 같은 Native In-article unit을 적격 H2 앞 최대 10곳에서 반복 사용한다. 모바일 인기글과 PC·모바일 인근 글은 `eunminlog-post-bottom-in-feed`(`4186599463`, layout key `-h0-h+j-90+m4`)를 공유한다. 활성 지면의 각 DOM 노출은 고유한 logical slot/position을 사용하며 인기글 광고는 글 2개 이상일 때 사용한다. PC 인기글 전용 단위 이름은 `eunminlog-popular-sidebar-fixed`이며 `popularList.desktop` 슬롯은 활성이다. 기존 상단 Sidebar 300×250과 PC 인기글 Display는 변경하지 않는다.
 
 PostTop은 게시글 대표 이미지와 협찬·쿠팡 공시문 아래, 장소·제품 정보 카드 위에 배치한다. AdSense 콘솔에서 생성한 Mobile 300×50과 PC 468×60 고정형 unit을 `lg` breakpoint로 선택해 한 DOM 슬롯에서 하나만 요청한다. Sidebar도 별도 300×250 고정형 unit을 사용한다. 세 지면 모두 `data-ad-format="auto"`를 사용하지 않고 광고 요청 직전에 현재 예약 컨테이너의 픽셀 크기를 `<ins>` 인라인 스타일로 고정한다. 최소 높이도 동일하게 예약해 `unfilled` 전환 후 쿠팡 fallback에서 컨테이너가 접히지 않게 한다.
 
@@ -90,7 +90,7 @@ Feed·Search fallback은 모두 활성 상태이며 AdSense unfilled 시 해당 
 - 모든 쿠팡 다이나믹 지면은 슬롯에 고정된 iframe `src` 하나만 설정하며 화면 폭에 따른 별도 위젯 교체 요청을 만들지 않는다.
 - PostTop은 기존 즉시 로딩 정책을 유지한다. 나머지는 AdSense 지연 요청 범위와 연동하며, `unfilled` 확정 시 슬롯이 아직 호출 범위 밖이면 쿠팡도 계속 지연한다.
 - Mobile에서 숨겨지는 Sidebar는 광고 DOM 등록 여부와 관계없이 AdSense 경매, 쿠팡 이미지, 동적 위젯 스크립트·iframe 요청을 모두 만들지 않는다.
-- 고정 배너는 원본 비율과 명시 크기를 유지한다. Native AdSense는 기존 `fluid` 형식을 유지하며 인기글·인근 글 In-feed는 150px 고정, Feed·Search는 높이 420px, In-article은 `min-height: 250px`를 예약한다. 쿠팡 fallback 크기는 AdSense 요청 크기를 변경하지 않는다. 동적 위젯은 `overflow-hidden`으로 상품, CTA, 광고 표기를 자르지 않으며 field p75 CLS 0.1 이하를 검증한다.
+- 고정 배너는 원본 비율과 명시 크기를 유지한다. Native AdSense는 `fluid` 형식을 유지하며 모바일 인기글·인근 글 In-feed는 150px 예약·초기 요청 후 실제 높이 확장을 허용한다. Feed·Search는 높이 420px, In-article은 `min-height: 250px`를 예약한다. 쿠팡 fallback 크기는 AdSense 요청 크기를 변경하지 않는다. 동적 위젯은 `overflow-hidden`으로 상품, CTA, 광고 표기를 자르지 않으며 field p75 CLS 0.1 이하를 검증한다.
 - 고정 쿠팡 fallback은 `role="complementary"`, 광고 접근성 라벨, `rel="sponsored noopener"`를 유지한다. 동적 iframe에도 광고 라벨과 제목을 제공하며, 실패 시 다른 쿠팡 광고로 연쇄 요청하지 않고 기존 예약 영역을 provider `none`으로 남긴다.
 - 같은 페이지의 Feed·Article 반복 슬롯은 서로 다른 광고 식별자를 사용한다. 다만 동적 위젯의 실제 상품 다양성은 쿠팡 응답에 따라 달라지므로 ID 분리만으로 서로 다른 상품 노출을 보장하지 않는다.
 - 다이나믹 iframe은 교차 출처이므로 앱의 DOM click listener로 내부 상품 클릭을 감지할 수 없다. 쿠팡 리포트의 클릭·수익을 기준으로 확인하고 GA4 `ad_click`은 고정 anchor fallback에만 기록한다.
@@ -121,6 +121,9 @@ publisher client ID, unit ID, layout key는 공개 식별자이므로 코드에 
 
 ## 5. 미결 사항과 승인 후 체크리스트
 
+- [ ] 새 하단 가로형 In-feed `4186599463`(`eunminlog-post-bottom-in-feed`) 배포 후 PC·모바일 인근 글 및 모바일 인기글에서 실제 광고 높이 분포와 스크롤 중 CLS를 실측한다. 현재 예약·초기 요청 높이는 150px이며 부모는 실제 광고 높이에 따라 확장한다. 실측 결과를 바탕으로 예약 높이 유지·상향 여부를 결정한다.
+- [ ] 광고 호출은 `rootMargin: '300px 0px'`로 화면 진입 약 300px 전에 시작하지만 큐 대기·네트워크·빠른 스크롤로 진입 후 완료될 수 있으므로, 느린 네트워크·빠른 스크롤에서도 다음 글 겹침 여부와 field p75 CLS 0.1 이하를 확인한다. GPT 공개 샘플은 새 AdSense 디자인·높이를 검증하지 못하므로 실제 운영 게재 결과로 판단한다.
+
 현재 코드·광고 단위·문서 연결과 Local·Development GPT 미리보기는 완료했다. 2026-08-03 기준 Supabase REST 응답 `200`과 Client SSG 86페이지 전체 빌드를 확인했으므로 `fetchCategoryTree: TypeError: fetch failed`는 샌드박스 DNS 제한에 의한 검증 환경 오류로 종결한다.
 
 승인 전에는 긴 게시글 In-article, Mobile/PC Display GPT 미리보기와 다음 Production 배포의 슬롯 요청을 검증한다. 활성 Search는 검색 결과 변경 시 슬롯 재생성·지연 요청·쿠팡 전환을 검증하고, Feed는 승인 후 활성화해 무한스크롤을 검증한다. CMP·실제 광고 상태·GA4·field CLS는 AdSense 승인과 Production 트래픽이 있어야 완료할 수 있다.
@@ -136,4 +139,4 @@ publisher client ID, unit ID, layout key는 공개 식별자이므로 코드에 
 
 Production에는 `NO FILL`·`LOAD FAILED` 등 기술 marker를 표시하지 않는다.
 
-PC 우측 인기글은 300×100 고정 Display로 최소·최대·예약 높이 모두 100px이며 `<ins>`도 300×100으로 요청한다. 구분선 1px은 별도다. 게시글 하단 인근 글과 모바일 인기글은 최소 112px·최대 150px, 실제 예약 높이와 fluid `<ins>` 높이 150px을 유지한다. [Google 공식 높이 설정](https://support.google.com/adsense/answer/9189959)을 따르며 광고를 잘라내지 않는다. 인기글 쿠팡 폴백은 PC·모바일 모두 생활용품 위젯 `1033444`를 300×100으로 중앙 정렬한다. PC 개발 GPT 샘플은 `/6355419/Travel/Asia` 300×100을 요청하며 샘플 미충전은 정상 처리한다. 운영 게재는 배포 후 확인한다.
+PC 우측 인기글은 300×100 고정 Display로 최소·최대·예약 높이 모두 100px이며 `<ins>`도 300×100으로 요청한다. 구분선 1px은 별도다. 게시글 하단 인근 글과 모바일 인기글은 최소·예약 높이 및 fluid `<ins>` 초기 요청 높이를 150px로 유지하며 실제 높이 확장을 허용한다. 150px은 최대 높이 보장이 아니다. [Google 공식 높이 설정](https://support.google.com/adsense/answer/9189959)을 참고하며 광고를 잘라내지 않는다. 인기글 쿠팡 폴백은 PC·모바일 모두 생활용품 위젯 `1033444`를 300×100으로 중앙 정렬한다. PC 개발 GPT 샘플은 `/6355419/Travel/Asia` 300×100을 요청하며 샘플 미충전은 정상 처리한다. 운영 게재는 배포 후 확인한다.
