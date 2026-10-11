@@ -503,7 +503,9 @@ Admin 본문 WYSIWYG는 클립보드 이미지 파일 붙여넣기와 외부 파
 | Native In-Article          | fluid           | fluid               | 게시글 본문 중간 (H2 헤딩 앞에 삽입)         | `insertInArticleAds()`            |
 | Native In-feed             | fluid           | fluid               | Feed·Search index 1, 6, 11, 16…            | `InFeedAdsense`                   |
 
-피드·검색은 Native In-feed unit(`6392269057`, layout key `-6t+ed+2i-1n-4w`)을 공유한다. 모바일 인기글과 PC·모바일 인근 글은 별도 가로형 `postBottom` unit `4186599463`(`eunminlog-post-bottom-in-feed`, layout key `-h0-h+j-90+m4`)을 공유하여 하단 성과를 합산한다. PC 인기글은 `popularList.desktop` 슬롯의 별도 Display unit `8482492142`(`eunminlog-popular-sidebar-fixed`)를 사용한다. 모두 활성이다. 본문은 `article.1`부터 `article.10`까지 Native In-article unit(`5322463062`, `fluid`, full-width responsive)을 공유한다. 모바일 인기글·인근 글은 150px, PC 인기글은 100px, Feed·Search는 420px 높이를 예약한다. In-article은 `min-h-[250px]`를 예약하고 확장을 허용하며 field p75 CLS 0.1 이하를 가드레일로 삼는다.
+피드·검색은 Native In-feed unit(`6392269057`, layout key `-8w+bg+2h-1n-4t`)을 공유한다. 모바일 인기글과 PC·모바일 인근 글은 별도 가로형 `postBottom` unit `4186599463`(`eunminlog-post-bottom-in-feed`, layout key `-h0-h+j-90+m4`)을 공유하여 하단 성과를 합산한다. PC 인기글은 `popularList.desktop` 슬롯의 별도 Display unit `8482492142`(`eunminlog-popular-sidebar-fixed`)를 사용한다. 모두 활성이다. 본문은 `article.1`부터 `article.10`까지 Native In-article unit(`5322463062`, `fluid`, full-width responsive)을 공유한다. 모바일 인기글·인근 글은 150px, PC 인기글은 100px, Feed·Search는 420px 높이를 예약한다. In-article은 `min-h-[250px]`를 예약하고 확장을 허용하며 field p75 CLS 0.1 이하를 가드레일로 삼는다.
+
+피드·검색 unit의 AdSense 이미지 설정은 너비 80%, 비율 1.91:1이다. 제목·설명·버튼 설정과 사이트의 420px 예약·요청 높이는 유지한다. 이미지 너비 변경 시 생성된 새 layout key를 사이트 코드에도 동기화한다.
 
 ### Provider 선택과 CLS
 

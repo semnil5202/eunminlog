@@ -119,7 +119,7 @@ const adSenseClientId = 'ca-pub-8569467907518315';
 const feedAdSenseUnit: AdSenseUnitConfig = {
   slotId: '6392269057',
   format: 'fluid',
-  layoutKey: '-6t+ed+2i-1n-4w',
+  layoutKey: '-8w+bg+2h-1n-4t',
 };
 
 const articleAdSenseUnit: AdSenseUnitConfig = {
