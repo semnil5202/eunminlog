@@ -1,7 +1,9 @@
 'use server';
 
+import { requireAdmin } from '@/shared/lib/admin-auth';
+
 import { supabaseServer } from '@/shared/lib/supabase-server';
-import { triggerClientBuild } from '@/features/build-trigger/api/actions';
+import { dispatchClientBuild } from '@/features/build-trigger/api/trigger-build';
 
 export type CategoryWithCount = {
   id: string;
@@ -15,6 +17,8 @@ export type CategoryWithCount = {
 };
 
 export async function fetchCategories(): Promise<CategoryWithCount[]> {
+  await requireAdmin();
+
   const { data: categories, error: catError } = await supabaseServer
     .from('categories')
     .select('*')
@@ -49,6 +53,8 @@ export async function fetchCategories(): Promise<CategoryWithCount[]> {
 }
 
 export async function fetchCategory(id: string) {
+  await requireAdmin();
+
   const { data, error } = await supabaseServer.from('categories').select('*').eq('id', id).single();
 
   if (error) throw new Error(`카테고리 조회 실패: ${error.message}`);
@@ -65,6 +71,8 @@ export async function fetchCategory(id: string) {
 }
 
 export async function fetchParentCategories() {
+  await requireAdmin();
+
   const { data, error } = await supabaseServer
     .from('categories')
     .select('id, slug, name, is_multilingual')
@@ -81,6 +89,8 @@ export async function fetchCategoryOptions(): Promise<{
   parents: CategoryOption[];
   subMap: Record<string, CategoryOption[]>;
 }> {
+  await requireAdmin();
+
   const { data, error } = await supabaseServer
     .from('categories')
     .select('id, slug, name, parent_id, is_multilingual')
@@ -124,6 +134,8 @@ export async function createParentCategory(params: {
   isMultilingual: boolean;
   translations?: Record<string, string>;
 }) {
+  await requireAdmin();
+
   const { data: maxRow } = await supabaseServer
     .from('categories')
     .select('sort_order')
@@ -156,7 +168,7 @@ export async function createParentCategory(params: {
   }
 
   try {
-    await triggerClientBuild();
+    await dispatchClientBuild();
   } catch {
     // silent: 빌드 트리거 실패는 저장 결과에 영향을 주지 않음
   }
@@ -185,6 +197,8 @@ export async function createChildCategory(params: {
   isMultilingual: boolean;
   translations?: Record<string, string>;
 }) {
+  await requireAdmin();
+
   const { data: parent, error: parentError } = await supabaseServer
     .from('categories')
     .select('id, parent_id, is_multilingual')
@@ -229,7 +243,7 @@ export async function createChildCategory(params: {
   }
 
   try {
-    await triggerClientBuild();
+    await dispatchClientBuild();
   } catch {
     // silent: 빌드 트리거 실패는 저장 결과에 영향을 주지 않음
   }
@@ -243,6 +257,8 @@ export async function updateCategory(params: {
   slug: string;
   parentId?: string;
 }) {
+  await requireAdmin();
+
   const { data: existing, error: fetchError } = await supabaseServer
     .from('categories')
     .select('slug, parent_id, is_multilingual')
@@ -321,13 +337,15 @@ export async function updateCategory(params: {
   }
 
   try {
-    await triggerClientBuild();
+    await dispatchClientBuild();
   } catch {
     // silent: 빌드 트리거 실패는 저장 결과에 영향을 주지 않음
   }
 }
 
 export async function deleteCategories(ids: string[]) {
+  await requireAdmin();
+
   if (ids.length === 0) return { success: false, deletedCount: 0 };
 
   const { data: categories, error: fetchError } = await supabaseServer
@@ -370,7 +388,7 @@ export async function deleteCategories(ids: string[]) {
   if (error) throw new Error(`카테고리 삭제 실패: ${error.message}`);
 
   try {
-    await triggerClientBuild();
+    await dispatchClientBuild();
   } catch {
     // silent: 빌드 트리거 실패는 저장 결과에 영향을 주지 않음
   }

@@ -1,5 +1,7 @@
 'use server';
 
+import { requireAdmin } from '@/shared/lib/admin-auth';
+
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
@@ -21,6 +23,8 @@ export async function getPresignedUrl(
   key?: string,
   contentType?: string,
 ) {
+  await requireAdmin();
+
   if (!ALLOWED_IMAGE_TYPES.includes(fileType as (typeof ALLOWED_IMAGE_TYPES)[number])) {
     throw new Error('허용되지 않는 이미지 형식입니다. (jpeg, png, webp만 허용)');
   }

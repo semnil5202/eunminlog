@@ -1,9 +1,11 @@
 'use server';
 
+import { requireAdmin } from '@/shared/lib/admin-auth';
+
 import { supabaseServer } from '@/shared/lib/supabase-server';
 import type { PostFormValues } from '@/features/post-editor/types/form';
 import type { ImageAlt, TranslationResult } from '@/features/translation/types';
-import { triggerClientBuild } from '@/features/build-trigger/api/actions';
+import { dispatchClientBuild } from '@/features/build-trigger/api/trigger-build';
 import { postSpecificFields, translationSpecificFields } from '../lib/post-fields';
 
 export type PostListItem = {
@@ -25,6 +27,8 @@ export async function fetchPosts(params: {
   to?: string;
   search?: string;
 }): Promise<{ posts: PostListItem[]; totalCount: number }> {
+  await requireAdmin();
+
   const orderColumn = params.sortBy === 'updatedAt' ? 'updated_at' : 'created_at';
 
   let query = supabaseServer
@@ -54,6 +58,8 @@ export async function fetchPosts(params: {
 export async function updatePostRecommendations(
   recommendations: { id: string; isRecommended: boolean }[],
 ) {
+  await requireAdmin();
+
   if (recommendations.length === 0) return { success: true, updatedCount: 0, buildFailed: false };
 
   const recommendedPostIds = recommendations
@@ -83,7 +89,7 @@ export async function updatePostRecommendations(
 
   let buildFailed = false;
   try {
-    await triggerClientBuild();
+    await dispatchClientBuild();
   } catch {
     buildFailed = true;
   }
@@ -92,6 +98,8 @@ export async function updatePostRecommendations(
 }
 
 export async function fetchPost(id: string) {
+  await requireAdmin();
+
   const { data: post, error: postError } = await supabaseServer
     .from('posts')
     .select('*')
@@ -169,6 +177,8 @@ export async function createPost(params: {
   imageAlts?: ImageAlt[];
   draftId?: string | null;
 }): Promise<{ id: string }> {
+  await requireAdmin();
+
   const formValues = params.formValues;
 
   const { data: post, error } = await supabaseServer
@@ -219,7 +229,7 @@ export async function createPost(params: {
   }
 
   try {
-    await triggerClientBuild();
+    await dispatchClientBuild();
   } catch {
     // silent: 빌드 트리거 실패는 저장 결과에 영향을 주지 않음
   }
@@ -233,6 +243,8 @@ export async function updatePost(params: {
   translations: TranslationResult[];
   imageAlts?: ImageAlt[];
 }): Promise<void> {
+  await requireAdmin();
+
   const formValues = params.formValues;
 
   const { data: existing, error: fetchError } = await supabaseServer
@@ -299,13 +311,15 @@ export async function updatePost(params: {
   }
 
   try {
-    await triggerClientBuild();
+    await dispatchClientBuild();
   } catch {
     // silent: 빌드 트리거 실패는 저장 결과에 영향을 주지 않음
   }
 }
 
 export async function deletePosts(ids: string[]) {
+  await requireAdmin();
+
   if (ids.length === 0) return { success: false, deletedCount: 0 };
 
   const { error, count } = await supabaseServer
@@ -317,7 +331,7 @@ export async function deletePosts(ids: string[]) {
 
   let buildFailed = false;
   try {
-    await triggerClientBuild();
+    await dispatchClientBuild();
   } catch {
     buildFailed = true;
   }

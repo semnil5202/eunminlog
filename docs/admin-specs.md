@@ -1,7 +1,7 @@
 # Admin App Specification
 
 > Date: 2026-03-04
-> Last Updated: 2026-03-16
+> Last Updated: 2026-10-15 (Admin 인증·권한 경계와 OG 조회 정책 동기화)
 > Status: Phase 1~5 완료. 링크 북마크 (OG 태그 카드, 내부 링크 다국어 변환, 번역 skip). 제품 리뷰 필드 배열 변환 (`text`→`text[]`, `useFieldArray` 동적 폼, `PriceInputRow` 공용 컴포넌트). GPT-5 Mini 모델 통일 + 프롬프트 중앙 집중화. 섹션 기반 번역 컨트롤. 번역 용어 검토 per-locale 지원 (suggestions: `Record<string, string>[]`, 재번역 시 용어 검토 단계 추가)
 
 ## 1. Overview
@@ -22,7 +22,7 @@
 | Framework   | Next.js 15 (App Router, React 19)                                                                                         |
 | 렌더링      | CSR 기반. Server Action/API Route는 보안 민감 로직에만 사용                                                               |
 | 에디터      | Tiptap (ProseMirror 기반 리치 텍스트 에디터)                                                                              |
-| 인증        | Supabase Auth (email/password)                                                                                            |
+| 인증·권한  | Supabase Auth (email/password) + 서버가 관리하는 `app_metadata.role=admin`                                               |
 | DB          | Supabase PostgreSQL (`posts`, `post_translations`)                                                                        |
 | 미디어      | AWS S3 (`media-eunminlog` 버킷) + CloudFront (`media.eunminlog.site`)                                                     |
 | 번역        | OpenAI GPT-5 Mini (브라우저 직접 호출). 번역+요약+용어 추출+슬러그+카테고리 번역. 프롬프트: `shared/constants/prompts.ts` |
@@ -60,7 +60,7 @@ Admin 앱은 HTTPS 환경에서 로컬 개발한다 (Supabase Auth 등 보안 �
 
 | 제약                       | 이유                               | 대응                                                                 |
 | -------------------------- | ---------------------------------- | -------------------------------------------------------------------- |
-| Vercel Hobby 10초 타임아웃 | Serverless Function 실행 시간 제한 | GPT 호출을 브라우저에서 직접 수행 (Server Action 타임아웃 제약 회피) |
+| Vercel Hobby 10초 타임아웃 | Serverless Function 실행 시간 제한 | 현행 브라우저 GPT 호출은 키 노출 위험이 있어 서버 이전 시 실행 시간 대책 필요 |
 | S3 퍼블릭 액세스 차단      | 보안 정책                          | Pre-signed URL로 업로드, CloudFront OAC로 서빙                       |
 | Admin은 SEO 불필요         | 관리자 전용, 크롤링 대상 아님      | CSR 기반, `robots: noindex`                                          |
 
@@ -80,14 +80,17 @@ Admin 앱은 HTTPS 환경에서 로컬 개발한다 (Supabase Auth 등 보안 �
 /categories/[id]/edit      → 카테고리 수정 (기존 데이터 로드 → 폼 반영 → 수정) — 미구현
 ```
 
-> **구현 결정**: Route Groups (`(authenticated)` 등)를 사용하지 않고 **flat 구조**를 채택했다. 사이드바가 전체 페이지에 글로벌로 적용되며, 인증 가드는 추후 auth feature에서 추가한다.
+> **구현 결정**: Route Groups (`(authenticated)` 등)를 사용하지 않고 **flat 구조**를 채택했다. 사이드바가 전체 페이지에 글로벌로 적용되며, 페이지 접근은 미들웨어에서 검사한다. API Route와 Server Action은 각 진입점에서 별도로 권한을 검사한다.
 
-### 2-2. 인증 가드 (미구현)
+### 2-2. 인증·관리자 권한 경계
 
-- 모든 `/dashboard`, `/posts/*` 라우트는 인증 필수 (예정).
-- 비인증 사용자는 로그인 페이지로 리다이렉트 (예정).
-- 인증 상태는 Supabase Auth 세션으로 관리. CSR에서 `supabase.auth.getSession()`으로 확인.
-- 로그인 페이지의 URL은 auth feature 구현 시 확정.
+- 운영 계정은 Supabase Auth에서 관리자만 수동 발급한다. 배포 전 기존 계정의 서버 관리 `app_metadata.role`에 `admin`을 부여한다. 사용자 수정 가능 메타데이터로 관리자 여부를 판단하지 않는다.
+- 미들웨어는 `/login`과 정적 경로를 제외한 페이지에서 `auth.getUser()`와 관리자 역할을 검사한다. 미인증 사용자는 `/login`으로 이동하며, 역할이 없는 로그인 사용자는 403을 받는다.
+- `/api/`는 미들웨어 matcher 대상이 아니므로 임시저장·OG 메타데이터 Route Handler가 직접 검사한다. 미인증은 401, 관리자 역할 없음은 403이다. 서비스 역할 키로 DB를 읽거나 수정하기 전에 검사해야 한다.
+- 포스트·카테고리 조회/수정, 슬러그 중복 확인, 이미지 업로드 URL 발급, 빌드 요청을 포함한 Server Action도 각 공개 진입점에서 직접 관리자 권한을 검사한다. 클라이언트 세션 표시나 미들웨어만으로 권한을 보장하지 않는다.
+- 임시저장 최대 10개와 초과 시 오래된 항목 삭제 규칙은 유지한다. 관리자 검사가 이 조회·삭제보다 선행한다. 현재 초안은 관리자별 소유권 없이 공유되며, 이번 작업에 DB 컬럼·테이블 변경이나 SQL 마이그레이션은 없다.
+- OG URL 조회는 관리자 전용이다. 내부·사설 주소와 DNS 결과, 리다이렉트 목적지를 검사하고 응답 형식·크기·전체 시간을 제한한다. 현재 호출 제한은 서버 인스턴스별 메모리 기준이므로 여러 인스턴스에 걸친 제한은 보장하지 않는다. 배포 전 플랫폼 수준 규칙을 검토한다.
+- 공개 검색 API는 이번 보안 보완 범위에 포함하지 않는다. 운영 배포 코드·Vercel 접근 제한·실제 무인증 호출 가능성은 검증하지 않았다.
 
 ### 2-3. 레이아웃 구조
 
@@ -131,7 +134,7 @@ RootLayout (app/layout.tsx)
 | Feature           | 설명                                   | 주요 페이지                       | 상태                                                                                 |
 | ----------------- | -------------------------------------- | --------------------------------- | ------------------------------------------------------------------------------------ |
 | `metrics`         | 핵심 지표 (조회수/추천수/댓글수)       | `/`                               | Mock 구현 완료                                                                       |
-| `auth`            | 로그인/로그아웃, 세션 관리             | TBD (로그인 페이지)               | 미구현                                                                               |
+| `auth`            | 로그인/로그아웃, 세션 관리             | `/login`                         | 로그인/로그아웃 구현. 서버 관리자 권한 검사 적용                                     |
 | `post-editor`     | Tiptap 에디터, 포스트 생성/편집 폼     | `/posts/new`, `/posts/[id]/edit`  | 에디터 + 폼 형식 + 메타 폼 + 썸네일 + 번역 연동 + S3 이미지 업로드 구현 완료    |
 | `post-management` | 포스트 목록, 삭제, 추천 게시글 관리    | `/posts`                          | 목록/삭제/추천 수정 모드 구현 완료                                                   |
 | `media`           | 이미지 업로드, Pre-signed URL          | 에디터 내 사용                    | 구현 완료 (S3 presigned URL + WebP 변환 + 워터마크 + 688px 리사이징 + CDN URL)       |
@@ -159,23 +162,20 @@ RootLayout (app/layout.tsx)
 #### Supabase Auth Flow
 
 ```
-[로그인 페이지]
+[로그인 페이지 /login]
   → 이메일/비밀번호 입력
   → supabase.auth.signInWithPassword({ email, password })
-  → 성공: /dashboard로 리다이렉트
+  → 성공: /로 이동, 페이지 미들웨어에서 관리자 역할 검사
   → 실패: 에러 메시지 표시
 
 [로그아웃]
   → supabase.auth.signOut()
-  → /로 리다이렉트
+  → /login으로 이동
 
-[세션 확인]
-  → supabase.auth.getSession()
-  → 세션 있음: 인증 상태 유지
-  → 세션 없음/만료: /로 리다이렉트
-
-[세션 갱신]
-  → supabase.auth.onAuthStateChange() 리스너로 자동 갱신
+[보호 페이지·서버 진입점]
+  → 서버 auth.getUser() + app_metadata.role 검사
+  → 미인증: 페이지는 /login으로 이동, API는 401
+  → 역할 없음: 403
 ```
 
 #### Server Action vs CSR 구분
@@ -183,9 +183,11 @@ RootLayout (app/layout.tsx)
 | 작업            | 처리 위치                 | 이유                 |
 | --------------- | ------------------------- | -------------------- |
 | 로그인/로그아웃 | CSR (Supabase Client SDK) | 클라이언트 세션 관리 |
-| 세션 확인       | CSR (Supabase Client SDK) | 실시간 상태 확인     |
+| 권한 확인       | 서버 미들웨어·각 관리자 진입점 | 보호 페이지 및 기능 호출 전 검사 |
 
-#### 폴더 구조
+#### 기존 설계 폴더 구조
+
+아래는 초기 feature 분리안이다. 현재 로그인은 `app/login/page.tsx`, 로그아웃은 `shared/components/layout/AppSidebar.tsx`, 서버 권한 검사는 `shared/lib/admin-auth.ts`에 위치한다.
 
 ```
 features/auth/
@@ -608,11 +610,11 @@ react-hook-form + Zod 기반 폼 검증. "작성 완료" / "번역본 생성하�
 | 작업                                 | 처리 위치                                                | 이유                                                 |
 | ------------------------------------ | -------------------------------------------------------- | ---------------------------------------------------- |
 | 에디터 렌더링/조작                   | CSR                                                      | UI 인터랙션                                          |
-| 포스트 저장 (Supabase insert/update) | Server Action                                            | Supabase Service Role Key 보호                       |
-| 포스트 조회 (편집 시 데이터 로드)    | Server Action                                            | Supabase Service Role Key 보호                       |
+| 포스트 저장 (Supabase insert/update) | Server Action                                            | 관리자 권한 검사 후 서비스 역할 키로 DB 접근        |
+| 포스트 조회 (편집 시 데이터 로드)    | Server Action                                            | 관리자 권한 검사 후 서비스 역할 키로 DB 접근        |
 | 이미지 업로드                        | CSR → Server Action (Pre-signed URL 생성) → CSR (S3 PUT) | 하이브리드                                           |
 | 번역 (GPT-5 Mini)                    | 브라우저 직접 호출 (언어별 병렬)                         | Vercel 타임아웃 회피, `Promise.allSettled` 병렬 처리 |
-| 빌드 트리거                          | Server Action                                            | GitHub Token 보호                                    |
+| 빌드 트리거                          | Server Action                                            | 관리자 권한 검사 후 GitHub Token 사용                |
 
 #### 폴더 구조
 
@@ -900,7 +902,7 @@ features/media/
 - **모델**: GPT-5 Mini (`gpt-5-mini`). 번역+요약+용어 추출+슬러그+카테고리 번역 모두 사용.
 - **프롬프트 관리**: 모든 GPT 프롬프트를 `shared/constants/prompts.ts`에 중앙 집중 관리. 상세: [`docs/gpt-prompts.md`](gpt-prompts.md).
 - **응답 포맷**: `response_format: { type: 'json_object' }` 사용으로 JSON 파싱 안정성 확보.
-- **API Key**: 브라우저에서 직접 호출하므로 클라이언트에 노출되나, Admin은 인증된 관리자만 접근 가능하여 허용. 환경 변수 상세: [`secrets-reference.md` 섹션 1](secrets-reference.md).
+- **API Key 위험**: 현행 브라우저 직접 호출과 `NEXT_PUBLIC_OPENAI_API_KEY`는 키를 클라이언트에 노출할 수 있다. Admin 로그인은 노출된 키의 보호 수단이 아니다. 서버 측 호출로 옮기고 기존 키 교체 여부를 검토하는 별도 후속 보안 작업이 필요하다. 환경 변수 상세: [`secrets-reference.md` 섹션 1](secrets-reference.md).
 - **병렬 처리**: 7개 locale 번역을 `Promise.allSettled()`로 병렬 실행. 개별 locale 실패가 전체를 중단시키지 않음 (`TranslationResult.failed?: boolean`).
 - **번역 대상 필드**: title, description(3줄 요약), content, place_name, address. 주소(address)는 locale별 표기 방식 적용 (일본식, 중국식, 영어권 역순 등).
 - **선택적 번역**: 체크된 필드/섹션만 GPT에 전송하여 output 토큰 비용 절감. 본문은 `content_sections` 형식(인덱스+HTML 배열)으로 응답받아 기존 번역에 섹션별 머지. `html-sections.ts`의 `splitHtmlToSections()`, `reassembleSections()`, `compareSections()` 유틸리티 사용.
@@ -1014,7 +1016,7 @@ features/translation/
 
 | ID   | 요구사항                                              | 우선순위 | 비고                                                                                              |
 | ---- | ----------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------- |
-| BT-1 | GitHub Actions `workflow_dispatch` API 호출 유틸 함수 | P0       | `triggerClientBuild()` Server Action                                                              |
+| BT-1 | GitHub Actions `workflow_dispatch` API 호출 유틸 함수 | P0       | 관리자 검사 Action `triggerClientBuild()`와 내부 함수 `dispatchClientBuild()`                     |
 | BT-2 | 게시글 작성/수정 성공 시 자동 트리거                  | P0       | `createPost`, `updatePost` 내부에서 호출                                                          |
 | BT-3 | 카테고리 생성/수정/삭제 성공 시 자동 트리거           | P0       | `createParentCategory`, `createChildCategory`, `updateCategory`, `deleteCategories` 내부에서 호출 |
 | BT-4 | 트리거 실패 시 Silent 처리 (서버 로그만 기록)         | P0       | 사용자에게 에러 표시하지 않음                                                                     |
@@ -1028,7 +1030,7 @@ features/translation/
     ├─ "작성완료" 클릭 ────>│                                       │
     │                        ├─ DB INSERT/UPDATE (게시글 저장)       │
     │                        │                                       │
-    │                        ├─ triggerClientBuild()                  │
+    │                        ├─ dispatchClientBuild()                 │
     │                        │  ├─ POST /repos/.../dispatches        │
     │                        │  ├─ ref: main 또는 develop (자동)     │
     │                        │  └─ Authorization: Bearer {PAT}       │
@@ -1040,7 +1042,7 @@ features/translation/
     │    (기존 성공 toast)   │                                       │
 ```
 
-**핵심 원칙**: `triggerClientBuild()`는 fire-and-forget이 아니라 await하되, 실패 시 예외를 throw하지 않는다. DB 저장 성공 후 호출하므로 트리거 실패가 저장 결과에 영향을 주지 않는다.
+**핵심 원칙**: 게시글·카테고리 Action은 먼저 관리자 권한을 검사하고 DB 저장 성공 후 내부 함수 `dispatchClientBuild()`를 await한다. 이 함수는 트리거 실패를 서버 로그에 기록하고 throw하지 않아 저장 결과에 영향을 주지 않는다. 외부에서 직접 호출 가능한 `triggerClientBuild()` Server Action은 자체 관리자 검사를 수행한다.
 
 #### 트리거 호출 위치 (기존 Server Action에 추가)
 
@@ -1091,10 +1093,10 @@ features/translation/
 
 **로컬 개발 환경**: `VERCEL_ENV`가 설정되지 않은 로컬 환경에서는 빌드 트리거를 스킵한다. 로컬에서 게시글을 저장해도 빌드가 실행되지 않는다.
 
-#### `triggerClientBuild()` 구현 가이드
+#### `dispatchClientBuild()` 구현 가이드
 
 ```
-함수 시그니처: triggerClientBuild(): Promise<void>
+함수 시그니처: dispatchClientBuild(): Promise<void>
 
 1. VERCEL_ENV가 미설정이면 early return (로컬 환경 스킵)
 2. GITHUB_PAT, GITHUB_REPO_OWNER, GITHUB_REPO_NAME, GITHUB_WORKFLOW_ID 환경변수 확인
@@ -1125,16 +1127,17 @@ features/translation/
 ```
 features/build-trigger/
 └── api/
-    └── actions.ts              # triggerClientBuild() Server Action
+    ├── actions.ts              # 관리자 검사 후 dispatchClientBuild()를 호출하는 Server Action
+    └── trigger-build.ts        # 내부 GitHub workflow_dispatch 함수
 ```
 
-기존 설계에서 `components/`, `hooks/` 폴더를 제거한다. 자동 트리거 방식이므로 UI 컴포넌트와 클라이언트 훅이 불필요하다. `triggerClientBuild()` 단일 함수만 제공하며, 기존 Server Action들이 이 함수를 import하여 호출한다.
+자동 트리거 방식이므로 별도 UI 컴포넌트와 클라이언트 훅은 없다. 게시글·카테고리 Action은 자체 관리자 검사 후 `dispatchClientBuild()`를 호출한다.
 
 #### feature 간 import 예외
 
-`triggerClientBuild()`는 `features/build-trigger/api/actions.ts`에 위치하지만, `features/post-management/`와 `features/category-management/`의 Server Action에서 직접 import한다. 이는 feature 간 직접 import 금지 원칙의 예외이다.
+`dispatchClientBuild()`는 `features/build-trigger/api/trigger-build.ts`에 위치하지만, `features/post-management/`와 `features/category-management/`의 Server Action에서 직접 import한다. 이는 feature 간 직접 import 금지 원칙의 예외이다.
 
-**예외 허용 근거**: `triggerClientBuild()`를 `shared/`로 옮기면 GitHub API 호출이라는 build-trigger 도메인 로직이 shared에 섞인다. 빌드 트리거는 명확히 `build-trigger` 도메인에 속하므로, cross-feature import를 허용하는 것이 구조적으로 더 명확하다.
+**예외 허용 근거**: `dispatchClientBuild()`를 `shared/`로 옮기면 GitHub API 호출이라는 build-trigger 도메인 로직이 shared에 섞인다. 빌드 트리거는 명확히 `build-trigger` 도메인에 속하므로, cross-feature import를 허용하는 것이 구조적으로 더 명확하다.
 
 **대안**: 이 예외가 불편하면 `shared/lib/build-trigger.ts`로 옮기는 것도 가능하다. 단, 이 경우 `features/build-trigger/` 폴더 자체가 불필요해진다.
 
@@ -1626,7 +1629,8 @@ src/features/
 │       └── locales.ts
 └── build-trigger/
     └── api/
-        └── actions.ts              # triggerClientBuild()
+        ├── actions.ts              # 관리자 검사 Server Action
+        └── trigger-build.ts        # 내부 GitHub 빌드 요청
 ```
 
 ---
@@ -1723,7 +1727,7 @@ src/features/
 | Phase | Feature             | 작업                                                                                                            | 우선순위 | 상태                                                             |
 | ----- | ------------------- | --------------------------------------------------------------------------------------------------------------- | -------- | ---------------------------------------------------------------- |
 | 1     | shared + infra      | Supabase 클라이언트, 타입 정의, HTTPS 로컬 dev 서버, 사이드바, 핵심 지표 페이지 (mock), SearchFilter            | P0       | **완료**                                                         |
-| 2     | auth                | 로그인/로그아웃, 인증 가드                                                                                      | P0       | 미착수                                                           |
+| 2     | auth                | 로그인/로그아웃, 인증 가드                                                                                      | P0       | 구현 완료. 관리자 역할 검사 보강                                 |
 | 3     | post-editor         | Tiptap 에디터, 폼 형식, 메타 폼, 썸네일, 카테고리, 체험방문 필드, 3줄 요약, 포스트 저장(생성)                   | P0       | **에디터 + 폼 형식 + 메타 폼 + S3 이미지 업로드 구현 완료** |
 | 3-1   | translation         | 고유명사 추출, GPT-5 Mini 번역 실행 (병렬), 미리보기 Sheet, 실패 fallback, locale 재시도                        | P0       | **구현 완료** (DB 저장 미연동)                                   |
 | 4     | media               | Pre-signed URL, S3 업로드, 에디터 이미지 삽입                                                                   | P0       | 구현 완료                                                        |
@@ -1733,7 +1737,7 @@ src/features/
 | 5-3   | post-management     | `/posts` + `/` 페이지에 Pagination 적용 (pageSize 10, URL `page` 쿼리 연동)                                     | P0       | 미착수                                                           |
 | 6     | post-editor         | 포스트 편집 (기존 데이터 로드 + 수정)                                                                           | P0       | 미착수                                                           |
 | 7     | translation (완성)  | 번역 결과 DB 저장 (post_translations UPSERT)                                                                    | P0       | 미착수                                                           |
-| 8     | build-trigger       | GitHub Actions 자동 트리거 (`triggerClientBuild()` + 기존 Server Action 연동)                                   | P1       | 미착수                                                           |
+| 8     | build-trigger       | GitHub Actions 자동 트리거 (`dispatchClientBuild()` + 기존 Server Action 연동)                                  | P1       | 구현 완료. 직접 호출 Action에 관리자 검사 적용                  |
 | 9     | post-editor         | 이미지 순서 변경, rating 입력                                                                                   | P1       | 미착수                                                           |
 | 10    | post-management     | 필터링, 검색                                                                                                    | P2       | 미착수                                                           |
 | 11    | metrics             | GA4 API 연동 (mock → 실제 데이터)                                                                               | P2       | 미착수                                                           |
@@ -1797,9 +1801,10 @@ ALTER TABLE post_translations ADD COLUMN address text;
 
 ## 12. 보안 체크리스트
 
-- [ ] Supabase RLS(Row Level Security) 정책 설정 -- 인증된 사용자만 posts/post_translations CRUD 가능
+- [ ] Supabase RLS(Row Level Security) 정책 별도 검토. Admin 서비스 역할 키 조회·수정은 RLS에 의존할 수 없으므로 서버 관리자 검사 필수
 - [ ] OpenAI API Key에 사용량 제한(Rate Limit) 및 월 비용 상한(Usage Limit) 설정
 - [ ] AWS IAM 정책 -- Pre-signed URL 생성용 최소 권한 원칙 (PutObject only on media-eunminlog bucket)
 - [ ] GitHub Token -- workflow dispatch 최소 권한 (Fine-grained Token 권장)
-- [x] OpenAI API Key — 브라우저 직접 호출 (Admin은 인증된 관리자만 접근)
-- [ ] Admin 앱 Vercel 배포 시 접근 제한 (Vercel Authentication 또는 Supabase Auth로 충분)
+- [ ] OpenAI API Key — 브라우저 노출 가능성을 제거하도록 서버 측 호출로 이전하고 키 교체 검토
+- [ ] Admin 앱 Vercel 배포 시 플랫폼 접근 제한과 OG 호출량 제한 규칙 검토 (현재 인스턴스별 메모리 제한만 적용)
+- [ ] 운영 배포 코드·접근 제한·권한 거부 동작은 운영 데이터를 변경하지 않는 방식으로 별도 검증

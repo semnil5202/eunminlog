@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 
+import { getAdminAccess } from '@/shared/lib/admin-auth';
 import { supabaseServer } from '@/shared/lib/supabase-server';
 
 export const dynamic = 'force-dynamic';
@@ -8,6 +9,14 @@ const MAX_DRAFTS = 10;
 
 /** GET /api/drafts — 임시저장 목록 (updated_at DESC) */
 export async function GET() {
+  const access = await getAdminAccess();
+  if (access.status !== 200) {
+    return NextResponse.json(
+      { error: access.status === 401 ? '인증이 필요합니다.' : '관리자 권한이 필요합니다.' },
+      { status: access.status },
+    );
+  }
+
   const { data, error } = await supabaseServer
     .from('post_drafts')
     .select('id, post_id, title, updated_at')
@@ -23,6 +32,14 @@ export async function GET() {
 
 /** POST /api/drafts — 임시저장 upsert (최대 10개, 초과 시 가장 오래된 것 삭제) */
 export async function POST(request: Request) {
+  const access = await getAdminAccess();
+  if (access.status !== 200) {
+    return NextResponse.json(
+      { error: access.status === 401 ? '인증이 필요합니다.' : '관리자 권한이 필요합니다.' },
+      { status: access.status },
+    );
+  }
+
   const body = (await request.json()) as {
     id?: string;
     post_id?: string | null;

@@ -1,22 +1,33 @@
 # Admin API Specs
 
-> Last updated: 2026-03-16 (용어 추출 per-locale 지원 — suggestions: `Record<string, string>[]`, confirmedTerms per-locale 지원, 재번역 시 용어 검토 단계 추가)
+> Last updated: 2026-10-15 (Admin API·Server Action 관리자 권한 경계와 OG 조회 정책 동기화)
 
-Admin 앱에서 필요한 API 엔드포인트 목록. Server Action 기반으로 구현하며, Supabase service role 키를 사용한다.
+Admin 앱에서 필요한 API 엔드포인트 목록. 관리자 기능은 Server Action 또는 Route Handler에서 실행하며, Supabase service role 키를 사용하는 DB 작업에는 서버 관리자 권한 검사가 선행한다.
 
 > DB SQL 쿼리는 [`secrets-reference.md`](secrets-reference.md) 섹션 8을 참조한다.
 
 ---
 
-## 1. 인증 (Phase 2)
+## 1. 인증·권한
 
-Supabase Auth 클라이언트 SDK 사용 (Server Action 아님).
+로그인·로그아웃은 Supabase Auth 클라이언트 SDK를 사용한다. 운영 계정은 관리자만 수동 발급하고, 배포 전에 서버 관리 `app_metadata.role=admin`을 부여한다. 사용자 수정 가능 메타데이터는 권한 근거로 사용하지 않는다.
 
 | 기능      | 메서드                               | 비고           |
 | --------- | ------------------------------------ | -------------- |
 | 로그인    | `supabase.auth.signInWithPassword()` | email/password |
 | 로그아웃  | `supabase.auth.signOut()`            |                |
 | 세션 확인 | `supabase.auth.getSession()`         | 앱 로드 시     |
+
+서버는 요청 쿠키의 세션으로 `auth.getUser()`를 호출하고 `app_metadata.role`을 확인한다. 각 관리자 Server Action은 조회·수정·업로드 URL 발급·빌드 트리거 전에 직접 검사한다. 미들웨어는 페이지 이동을 보조하지만 `/api/`에는 적용되지 않는다. 관리자 Route Handler는 인증 실패 401, 역할 부족 403을 응답하며, 서비스 역할 키로 DB에 접근하기 전에 검사를 마쳐야 한다.
+
+| 대상 | 적용 경계 |
+| --- | --- |
+| `/api/drafts`, `/api/drafts/[id]` | 목록·상세 조회, 생성·수정·삭제 및 최대 10개 초과 시 오래된 초안 삭제 전 관리자 검사 |
+| `/api/og-metadata` | 관리자 검사 후 URL·DNS·리다이렉트 목적지 검증, 응답 형식·크기·전체 시간 제한 |
+| `post-management`, `category-management` Actions | 게시글·카테고리 조회와 모든 변경 진입점 직접 검사 |
+| `post-editor`, `media`, `build-trigger` Actions | 슬러그 중복 확인, S3 업로드 URL 발급, 빌드 요청 진입점 직접 검사 |
+
+OG 요청은 공개 IPv4 목적지에 연결을 고정하고 리다이렉트마다 DNS를 재검사한다. IPv6 전용 사이트는 현재 지원하지 않는다. 최대 리다이렉트 3회, 전체 5초, HTML 512KiB로 제한한다. 관리자별 인스턴스당 분당 20회 초과 시 429를 응답한다. 현행 메모리 카운터는 분산 환경의 전역 제한을 보장하지 않으므로 배포 전 플랫폼 규칙 또는 공유 저장소 기반 제한을 검토한다. 공개 검색 API는 이번 범위에 포함되지 않으며, 향후 도입하더라도 관리자 Action이나 서비스 역할 조회를 공개 경로로 재사용하지 않는다. 이번 변경에는 DB 테이블·컬럼 추가나 SQL 마이그레이션이 없다. 운영 배포 코드, Vercel의 추가 접근 제한, 운영 환경의 실제 무인증 호출 여부는 검증하지 않았다.
 
 ---
 

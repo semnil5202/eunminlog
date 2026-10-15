@@ -21,6 +21,10 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
+  if (user.app_metadata?.role !== 'admin') {
+    return new NextResponse('관리자 권한이 필요합니다.', { status: 403 });
+  }
+
   return response;
 }
 

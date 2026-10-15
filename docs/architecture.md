@@ -13,7 +13,7 @@ graph LR
 
     %% 2. AI 서비스
     subgraph Group_AI [2. AI Service: GPTs]
-        Logic <-->|Translate| OpenAI(OpenAI GPT-5 Mini)
+        Editor <-->|기존 브라우저 API 호출 경로| OpenAI(OpenAI GPT-5 Mini)
     end
 
     %% 3. 데이터베이스 (Content Store)
@@ -48,7 +48,7 @@ graph LR
 ## Flow
 
 1. **콘텐츠 작성**: Admin이 Next.js Editor에서 글 작성 → Server Action → Supabase에 저장
-2. **AI 번역**: 저장 시 OpenAI GPT-5 Mini를 통해 다국어 번역 처리 (`is_multilingual === true`인 포스트만)
+2. **AI 번역**: 현재 기본 작업 흐름은 수동 번역 Sheet이며, 기존 브라우저 OpenAI API 호출 경로도 코드에 남아 있다. `NEXT_PUBLIC_OPENAI_API_KEY`와 브라우저 직접 호출은 키 노출 위험이 있어 서버 이전·키 교체 검토가 별도 후속 작업이다.
 3. **빌드 트리거**: Node.js Logic이 GitHub Actions에 빌드 트리거 API 호출
 4. **SSG 빌드**: Astro가 빌드 타임에 Supabase에서 전체 포스트 Fetch → 정적 HTML 생성. 다국어 경로 조건부 생성: 포스트 상세는 `is_multilingual === true`인 포스트만, 카테고리/서브카테고리 인덱스는 해당 분류에 multilingual 포스트가 1개 이상 존재할 때만 locale 경로를 생성 (thin content 방지)
 5. **배포**: 생성된 HTML을 AWS S3에 업로드, CloudFront CDN으로 서빙. CloudFront Function(Viewer Request)이 `/path/` → `/path/index.html` 매핑을 처리.
@@ -58,8 +58,16 @@ graph LR
 
 | App           | Framework               | 역할                      | 렌더링                                                      |
 | ------------- | ----------------------- | ------------------------- | ----------------------------------------------------------- |
-| `apps/admin`  | Next.js 15 (App Router) | 글 작성/편집, 빌드 트리거 | CSR (Server Action for 서버 로직, GPT는 브라우저 직접 호출) |
+| `apps/admin`  | Next.js 15 (App Router) | 글 작성/편집, 빌드 트리거 | CSR + 관리자 검사된 Server Action/Route Handler. 기존 GPT 브라우저 호출은 보안 후속 대상 |
 | `apps/client` | Astro 5                 | 공개 블로그 뷰어          | SSG                                                         |
+
+## Admin 인증·권한 경계
+
+- Supabase Auth 계정은 관리자만 수동 발급한다. 배포 전 기존 계정에 서버 관리 `app_metadata.role=admin`을 부여한다. 이번 경계 보완은 기존 Auth 메타데이터를 사용하며 DB 테이블·컬럼 추가나 SQL 마이그레이션이 없다.
+- 페이지 미들웨어는 `auth.getUser()`와 역할을 검사해 미인증 사용자를 `/login`으로 보내고 권한 없는 로그인 사용자에게 403을 응답한다. `/api/`는 matcher에서 제외되므로 임시저장·OG Route Handler가 직접 검사한다. Route Handler의 미인증 응답은 401, 관리자 권한 없음은 403이다.
+- 게시글·카테고리 조회/수정, 슬러그 중복 확인, 이미지 업로드 URL 발급, 빌드 요청의 Server Action도 각 진입점에서 직접 검사한다. Supabase service role 키로 DB에 접근하거나 S3·GitHub 기능을 호출하기 전에 권한을 확인한다. 미들웨어는 독립적인 서버 권한 검사를 대체하지 않는다.
+- 임시저장의 최대 10개 정책과 오래된 초안 삭제는 관리자 검사 이후에만 실행한다. OG 조회는 URL·DNS·리다이렉트 목적지를 검증하고 응답 형식·크기·전체 시간 및 호출량을 제한한다. 현재 호출량 제한은 서버 인스턴스 메모리에만 적용되므로 분산 배포 전체의 제한은 보장하지 않으며, 배포 전 플랫폼 규칙을 검토한다.
+- 공개 검색 API는 이번 작업에 포함되지 않는다. 운영 배포 코드와 Vercel 추가 접근 제한, 운영 환경의 실제 무인증 호출 가능성은 검증하지 않았다. 운영 데이터를 생성·수정·삭제하는 방식의 보안 시험은 수행하지 않는다.
 
 ## 외부 서비스
 
