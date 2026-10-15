@@ -3,13 +3,15 @@ import { createChildCategory, updateCategory } from '@/features/category-managem
 
 const mocks = vi.hoisted(() => ({
   from: vi.fn(),
-  triggerClientBuild: vi.fn(),
+  dispatchClientBuild: vi.fn(),
+  requireAdmin: vi.fn(),
 }));
 
 vi.mock('@/shared/lib/supabase-server', () => ({ supabaseServer: { from: mocks.from } }));
-vi.mock('@/features/build-trigger/api/actions', () => ({
-  triggerClientBuild: mocks.triggerClientBuild,
+vi.mock('@/features/build-trigger/api/trigger-build', () => ({
+  dispatchClientBuild: mocks.dispatchClientBuild,
 }));
+vi.mock('@/shared/lib/admin-auth', () => ({ requireAdmin: mocks.requireAdmin }));
 
 type Category = {
   id: string;
@@ -66,7 +68,8 @@ function mockDatabase(categories: Category[], postCount = 0, postError: Error | 
 
 beforeEach(() => {
   mocks.from.mockReset();
-  mocks.triggerClientBuild.mockReset().mockResolvedValue(undefined);
+  mocks.dispatchClientBuild.mockReset().mockResolvedValue(undefined);
+  mocks.requireAdmin.mockReset().mockResolvedValue({ id: 'admin-1' });
 });
 
 describe('카테고리 계층 및 다국어 정합성', () => {
