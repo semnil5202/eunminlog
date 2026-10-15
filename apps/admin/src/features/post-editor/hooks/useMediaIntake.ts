@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Editor } from '@tiptap/core';
 import { closeHistory } from '@tiptap/pm/history';
 import { toast } from 'sonner';
@@ -11,12 +11,14 @@ import {
   type UploadImageResult,
 } from '@/features/media/lib/upload-image';
 import { captureMediaTarget, insertMedia } from '../lib/media-insertion';
+import { convertHeicToJpeg } from '../lib/image';
 
 export type MediaIntakeMode = 'images' | 'carousel' | 'append';
 export type MediaIntakeItem = {
   id: string;
   file: File;
   preview: string;
+  previewError?: boolean;
   status: 'waiting' | 'uploading' | 'success' | 'error';
   error?: string;
   result?: UploadImageResult;
@@ -26,25 +28,26 @@ type IntakeSession = {
   target: ReturnType<typeof captureMediaTarget>;
   items: MediaIntakeItem[];
   busy: boolean;
+  dialogOpen: boolean;
   error?: string;
   toastId?: string | number;
+  notificationId: string;
 };
 
 /** 본문 이미지 입력과 캐러셀 생성·추가의 업로드 세션을 관리한다. */
 export function useMediaIntake(editor: Editor | null) {
-  const notificationId = useId();
   const active = useRef<IntakeSession | null>(null);
   const [session, setSession] = useState<IntakeSession | null>(null);
 
   const refresh = (current: IntakeSession) => {
     if (active.current !== current) return;
     setSession({ ...current, items: [...current.items] });
-    const options = { id: notificationId, duration: Infinity, dismissible: false };
+    const options = { id: current.notificationId, duration: Infinity, dismissible: false };
     const cancel = (event: { preventDefault: () => void }) => {
       event.preventDefault();
       if (active.current === current) close();
     };
-    if (current.busy && current.mode === 'images') {
+    if (current.busy && current.toastId === undefined) {
       current.toastId = toast.loading('이미지 업로드 중...', {
         ...options,
         description: undefined,
@@ -103,6 +106,8 @@ export function useMediaIntake(editor: Editor | null) {
       target: captureMediaTarget(editor, mode === 'append' ? 'carousel' : 'insert', pos),
       items: [],
       busy: false,
+      dialogOpen: mode !== 'images',
+      notificationId: crypto.randomUUID(),
     };
     active.current = current;
     refresh(current);
@@ -110,20 +115,36 @@ export function useMediaIntake(editor: Editor | null) {
   const addFiles = (files: File[]) => {
     const current = active.current;
     if (!current || current.busy) return;
-    current.items.push(
-      ...files.map((file): MediaIntakeItem => {
-        const error = validateImageFile(file) ?? undefined;
-        return {
-          id: crypto.randomUUID(),
-          file,
-          preview: URL.createObjectURL(file),
-          status: error ? 'error' : 'waiting',
-          error,
-        };
-      }),
-    );
+    const added = files.map((file): MediaIntakeItem => {
+      const error = validateImageFile(file) ?? undefined;
+      return {
+        id: crypto.randomUUID(),
+        file,
+        preview: URL.createObjectURL(file),
+        status: error ? 'error' : 'waiting',
+        error,
+      };
+    });
+    current.items.push(...added);
     current.error = undefined;
     refresh(current);
+    for (const item of added) {
+      if (!/\.hei[cf]$/i.test(item.file.name) && !/image\/hei[cf]/i.test(item.file.type)) continue;
+      void convertHeicToJpeg(item.file)
+        .then((converted) => {
+          if (active.current !== current || !current.items.includes(item)) return;
+          const preview = URL.createObjectURL(converted);
+          URL.revokeObjectURL(item.preview);
+          item.preview = preview;
+          item.previewError = false;
+          refresh(current);
+        })
+        .catch(() => {
+          if (active.current !== current || !current.items.includes(item)) return;
+          item.previewError = true;
+          refresh(current);
+        });
+    }
   };
   const remove = (id: string) => {
     const current = active.current;
@@ -153,6 +174,7 @@ export function useMediaIntake(editor: Editor | null) {
       return;
     }
     current.busy = true;
+    current.dialogOpen = false;
     current.error = undefined;
     refresh(current);
     const pending = current.items.filter((item) => !item.result);
@@ -218,17 +240,16 @@ export function useMediaIntake(editor: Editor | null) {
         applied = insertMedia(editor, pos, results, current.mode);
       }
       if (!applied) throw new Error('이미지를 삽입하지 못했습니다. 위치를 다시 선택해주세요.');
-      current.toastId = undefined;
-      close();
-      if (current.mode === 'images')
-        toast.success('이미지 업로드 완료', {
-          id: notificationId,
-          duration: 4000,
-          dismissible: true,
-          description: undefined,
-          action: undefined,
-          cancel: undefined,
-        });
+      dispose();
+      setSession(null);
+      toast.success('이미지 업로드 완료', {
+        id: current.notificationId,
+        duration: 4000,
+        dismissible: true,
+        description: undefined,
+        action: undefined,
+        cancel: undefined,
+      });
     } catch (error) {
       current.error = error instanceof Error ? error.message : '이미지를 삽입하지 못했습니다.';
       refresh(current);

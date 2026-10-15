@@ -81,7 +81,7 @@ test('영역 추가·키보드 이동과 크기 조절·삭제 후 취소는 업
   const region = page.getByRole('button', { name: '1번 모자이크 영역' });
   const initial = await region.boundingBox();
   const picture = (await page.locator('[data-mosaic-editor] canvas').boundingBox())!;
-  const expectedSide = Math.min(picture.width, picture.height) * 0.09;
+  const expectedSide = Math.min(picture.width, picture.height) * 0.045;
   expect(Math.abs(initial!.width - expectedSide)).toBeLessThan(1);
   expect(Math.abs(initial!.height - expectedSide)).toBeLessThan(1);
   await region.focus();
@@ -162,37 +162,52 @@ test('사진 클릭 또는 탭으로 생성한 모자이크를 적용하고 본�
   await expect(page.getByTestId('saved-html')).toHaveText(before!);
 });
 
-test('저장 실패는 원본과 초안을 보존하고 재시도할 수 있다', async ({ page }) => {
+test('백그라운드 저장 실패는 원본을 보존하고 다시 편집할 수 있다', async ({ page }) => {
   await openSingle(page);
   const before = await page.getByTestId('saved-html').textContent();
   await tools(page).getByRole('button', { name: '영역 추가' }).click();
   await page.evaluate(() => Object.assign(window, { mosaicFail: true }));
   await tools(page).getByRole('button', { name: '적용', exact: true }).click();
+  await expect(tools(page)).toHaveCount(0);
   await expect(page.getByText('테스트 모자이크 업로드 실패', { exact: true })).toBeVisible();
-  await expect(tools(page).getByRole('button', { name: '적용', exact: true })).toBeEnabled();
   expect(await page.getByTestId('saved-html').textContent()).toBe(before);
-  await tools(page)
-    .getByRole('button', { name: '적용', exact: true })
-    .evaluate((button) => button.scrollIntoView({ block: 'center' }));
+  await images(page).click();
+  await page.getByRole('button', { name: '모자이크', exact: true }).click();
+  await tools(page).getByRole('button', { name: '영역 추가' }).click();
   await tools(page).getByRole('button', { name: '적용', exact: true }).click();
   await expect(tools(page)).toHaveCount(0);
-  expect(await calls(page)).toEqual(['portrait.png', 'mosaic.png', 'mosaic.png']);
+  await expect.poll(() => calls(page)).toEqual(['portrait.png', 'mosaic.png', 'mosaic.png']);
 });
 
-test('저장 중 취소 후 늦은 결과를 무시하고 다시 편집할 수 있다', async ({ page }) => {
+test('백그라운드 저장 취소 후 늦은 결과를 무시하고 다시 편집할 수 있다', async ({ page }) => {
   await openSingle(page);
   const before = await page.getByTestId('saved-html').textContent();
   await tools(page).getByRole('button', { name: '영역 추가' }).click();
   await page.evaluate(() => Object.assign(window, { mosaicDelay: 1800 }));
   await tools(page).getByRole('button', { name: '적용', exact: true }).click();
   await expect.poll(() => calls(page)).toContain('mosaic.png');
-  await tools(page).getByRole('button', { name: '취소', exact: true }).click();
+  await expect(tools(page)).toHaveCount(0);
+  await page.getByRole('button', { name: '업로드 취소', exact: true }).click();
   await images(page).click();
   await page.getByRole('button', { name: '모자이크', exact: true }).click();
   await expect(tools(page).getByRole('button', { name: '영역 추가' })).toBeEnabled();
   await page.waitForTimeout(1900);
   expect(await page.getByTestId('saved-html').textContent()).toBe(before);
   await expect(tools(page)).toBeVisible();
+});
+
+test('모자이크 업로드 동안 모달 없이 본문을 편집해도 원래 사진만 교체한다', async ({ page }) => {
+  await openSingle(page);
+  const source = await images(page).getAttribute('src');
+  await tools(page).getByRole('button', { name: '영역 추가' }).click();
+  await page.evaluate(() => Object.assign(window, { mosaicDelay: 800 }));
+  await tools(page).getByRole('button', { name: '적용', exact: true }).click();
+  await expect(tools(page)).toHaveCount(0);
+  await expect(images(page)).toHaveAttribute('src', source!);
+  await page.locator('.tiptap p').last().click();
+  await page.keyboard.type('업로드 중 작성');
+  await expect(images(page)).not.toHaveAttribute('src', source!);
+  await expect(page.getByTestId('saved-html')).toContainText('업로드 중 작성');
 });
 
 test('Undo로 대상 이미지가 제거되면 편집 세션도 종료한다', async ({ page }) => {

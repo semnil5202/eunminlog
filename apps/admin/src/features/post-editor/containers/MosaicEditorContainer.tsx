@@ -4,7 +4,6 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
-import { uploadImageFile } from '@/features/media/lib/upload-image';
 import { clampRect, getImageMapping, renderMosaic, type MosaicRect } from '../lib/mosaic';
 import type { captureMosaicTarget } from '../lib/mosaic-target';
 
@@ -17,11 +16,11 @@ export type MosaicSession = {
 export function MosaicEditorContainer({
   session,
   onClose,
-  onReplace,
+  onApply,
 }: {
   session: MosaicSession;
   onClose: () => void;
-  onReplace?: (previous: string, next: string) => void;
+  onApply: (canvas: HTMLCanvasElement, session: MosaicSession) => void;
 }) {
   const { image, target } = session;
   const host = image.parentElement!;
@@ -36,7 +35,6 @@ export function MosaicEditorContainer({
   const returnFocus = useRef(document.activeElement as HTMLElement | null);
   const live = useRef(true);
   const saving = useRef(false);
-  const savingToast = useRef<string | number | undefined>(undefined);
   const lastSize = useRef<{ width: number; height: number } | null>(null);
   const drag = useRef<{
     index: number;
@@ -98,11 +96,7 @@ export function MosaicEditorContainer({
       live.current = false;
       cancelled = true;
       controller.abort();
-      if (savingToast.current !== undefined) toast.dismiss(savingToast.current);
       if (url) URL.revokeObjectURL(url);
-      queueMicrotask(() => {
-        if (!live.current) target.dispose();
-      });
     };
   }, [target]);
 
@@ -128,7 +122,7 @@ export function MosaicEditorContainer({
 
   const addRegion = (x: number, y: number) => {
     if (!source || busy) return;
-    const side = Math.min(source.naturalWidth, source.naturalHeight) * 0.09;
+    const side = Math.min(source.naturalWidth, source.naturalHeight) * 0.045;
     const dimensions = lastSize.current ?? {
       width: side / source.naturalWidth,
       height: side / source.naturalHeight,
@@ -148,36 +142,18 @@ export function MosaicEditorContainer({
     live.current = false;
     onClose();
   };
-  const apply = async () => {
+  const apply = () => {
     if (!source || !regions.length || saving.current) return;
     saving.current = true;
     setBusy(true);
-    const notification = toast.loading('모자이크 이미지 저장 중…');
-    savingToast.current = notification;
     try {
       const canvas = renderMosaic(source, regions);
-      const blob = await new Promise<Blob>((resolve, reject) =>
-        canvas.toBlob(
-          (value) => (value ? resolve(value) : reject(new Error('이미지를 변환하지 못했습니다.'))),
-          'image/png',
-        ),
-      );
       if (!live.current) return;
-      const result = await uploadImageFile(new File([blob], 'mosaic.png', { type: 'image/png' }), {
-        watermark: false,
-      });
-      if (!live.current) return;
-      if (!target.apply(result.url))
-        throw new Error('편집 대상이 변경되었습니다. 이미지를 다시 선택해주세요.');
-      onReplace?.(target.src, result.url);
-      toast.success('모자이크를 적용했습니다.');
-      onClose();
+      onApply(canvas, session);
     } catch (error) {
       if (live.current)
         toast.error(error instanceof Error ? error.message : '모자이크 저장에 실패했습니다.');
     } finally {
-      toast.dismiss(notification);
-      savingToast.current = undefined;
       saving.current = false;
       if (live.current) setBusy(false);
     }

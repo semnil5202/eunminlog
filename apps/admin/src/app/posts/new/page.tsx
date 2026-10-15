@@ -92,6 +92,7 @@ function NewPostContent() {
   }, []);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [mediaPending, setMediaPending] = useState(false);
   const [imageAlts, setImageAlts] = useState<ImageAlt[]>([]);
   const [savedImageAlts, setSavedImageAlts] = useState<ImageAlt[]>([]);
   const savedAltMap = new Map(savedImageAlts.map(({ src, alt }) => [src, alt]));
@@ -281,6 +282,10 @@ function NewPostContent() {
   };
 
   const handleSubmitClick = async () => {
+    if (mediaPending) {
+      toast.error('이미지 업로드가 끝난 뒤 작성 완료를 눌러주세요.');
+      return;
+    }
     setImageAltError(false);
 
     const valid = await trigger();
@@ -420,6 +425,7 @@ function NewPostContent() {
                 onImageReplace={handleImageReplace}
                 imageAlts={imageAlts}
                 onImageAltChange={handleImageAltChange}
+                onPendingChange={setMediaPending}
               >
                 <div className="p-4">
                   <div className="flex items-center justify-between">
@@ -581,7 +587,7 @@ function NewPostContent() {
             <button
               type="button"
               onClick={handleSubmitClick}
-              disabled={isSubmitting}
+              disabled={isSubmitting || mediaPending}
               className="inline-flex items-center justify-center gap-1.5 h-10 bg-primary px-5 text-sm font-medium text-primary-foreground shadow-xs transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isSubmitting ? (
@@ -589,7 +595,7 @@ function NewPostContent() {
               ) : (
                 <Check className="size-4" />
               )}
-              {isSubmitting ? '작성 중...' : '작성 완료'}
+              {isSubmitting ? '작성 중...' : mediaPending ? '이미지 업로드 중...' : '작성 완료'}
             </button>
           </div>
           {imageAltError && (

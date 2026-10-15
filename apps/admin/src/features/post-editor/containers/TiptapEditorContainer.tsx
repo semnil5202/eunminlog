@@ -1,6 +1,7 @@
 'use client';
 
-import { type ReactNode, useCallback, useEffect, useLayoutEffect, useState } from 'react';
+import { type ReactNode, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
 
 import { cn } from '@/lib/utils';
 import { useTiptapEditor } from '../hooks/useTiptapEditor';
@@ -15,6 +16,7 @@ import { useImageTransfer } from '../hooks/useImageTransfer';
 import { MosaicEditorContainer, type MosaicSession } from './MosaicEditorContainer';
 import { captureMosaicTarget } from '../lib/mosaic-target';
 import { syncImageAltInputs } from '../lib/image-alt-input';
+import { uploadImageFile } from '@/features/media/lib/upload-image';
 
 type TiptapEditorContainerProps = {
   content: string;
@@ -25,6 +27,7 @@ type TiptapEditorContainerProps = {
   onImageReplace?: (previous: string, next: string) => void;
   imageAlts?: { src: string; alt: string }[];
   onImageAltChange?: (src: string, alt: string) => void;
+  onPendingChange?: (pending: boolean) => void;
 };
 
 export function TiptapEditorContainer({
@@ -36,6 +39,7 @@ export function TiptapEditorContainer({
   onImageReplace,
   imageAlts,
   onImageAltChange,
+  onPendingChange,
 }: TiptapEditorContainerProps) {
   const [isMounted, setIsMounted] = useState(false);
   const [isHtmlMode, setIsHtmlMode] = useState(false);
@@ -43,12 +47,90 @@ export function TiptapEditorContainer({
   const { editor, pastedUrl, clearPastedUrl } = useTiptapEditor({ content, onChange });
   const intake = useMediaIntake(editor);
   const [mosaic, setMosaic] = useState<MosaicSession | null>(null);
+  const [mosaicSaving, setMosaicSaving] = useState(false);
+  const mosaicTask = useRef<MosaicSession | null>(null);
   const transfer = useImageTransfer({
     editor,
     disabled: isHtmlMode || !!mosaic,
     uploadFiles: intake.uploadFiles,
   });
   const openMedia = intake.open;
+
+  useEffect(() => {
+    if (!mosaic) return;
+    return () => {
+      if (mosaicTask.current !== mosaic) mosaic.target.dispose();
+    };
+  }, [mosaic]);
+
+  useEffect(() => {
+    onPendingChange?.(!!intake.session?.busy || mosaicSaving);
+  }, [intake.session?.busy, mosaicSaving, onPendingChange]);
+
+  useEffect(
+    () => () => {
+      mosaicTask.current?.target.dispose();
+      mosaicTask.current = null;
+      onPendingChange?.(false);
+    },
+    [editor, onPendingChange],
+  );
+
+  const saveMosaic = (canvas: HTMLCanvasElement, session: MosaicSession) => {
+    if (mosaicTask.current) return;
+    mosaicTask.current = session;
+    setMosaicSaving(true);
+    setMosaic(null);
+    const notification = toast.loading('모자이크 이미지 업로드 중…', {
+      duration: Infinity,
+      dismissible: false,
+      action: {
+        label: '업로드 취소',
+        onClick: () => {
+          if (mosaicTask.current !== session) return;
+          session.target.dispose();
+          mosaicTask.current = null;
+          setMosaicSaving(false);
+          toast.message('모자이크 작업을 종료했습니다.', { id: notification });
+        },
+      },
+    });
+    void new Promise<Blob>((resolve, reject) =>
+      canvas.toBlob(
+        (blob) => (blob ? resolve(blob) : reject(new Error('이미지를 변환하지 못했습니다.'))),
+        'image/png',
+      ),
+    )
+      .then((blob) => {
+        canvas.width = 0;
+        canvas.height = 0;
+        if (mosaicTask.current !== session) return null;
+        return uploadImageFile(new File([blob], 'mosaic.png', { type: 'image/png' }), {
+          watermark: false,
+        });
+      })
+      .then((result) => {
+        if (!result || mosaicTask.current !== session) return;
+        if (!session.target.apply(result.url))
+          throw new Error('편집 대상이 변경되었습니다. 이미지를 다시 선택해주세요.');
+        onImageReplace?.(session.target.src, result.url);
+        toast.success('모자이크를 적용했습니다.', { id: notification });
+      })
+      .catch((error) => {
+        canvas.width = 0;
+        canvas.height = 0;
+        if (mosaicTask.current !== session) return;
+        toast.error(error instanceof Error ? error.message : '모자이크 저장에 실패했습니다.', {
+          id: notification,
+        });
+      })
+      .finally(() => {
+        if (mosaicTask.current !== session) return;
+        session.target.dispose();
+        mosaicTask.current = null;
+        setMosaicSaving(false);
+      });
+  };
 
   useLayoutEffect(() => {
     if (!editor || editor.isDestroyed) return;
@@ -73,7 +155,7 @@ export function TiptapEditorContainer({
   useEffect(() => {
     if (!editor || isHtmlMode) return;
     const start = (event: Event) => {
-      if (mosaic || intake.session) return;
+      if (mosaic || intake.session || mosaicSaving) return;
       const { pos, index, image } = (
         event as CustomEvent<{ pos: number; index?: number; image: HTMLImageElement }>
       ).detail;
@@ -82,7 +164,7 @@ export function TiptapEditorContainer({
     };
     editor.view.dom.addEventListener('image:mosaic', start);
     return () => editor.view.dom.removeEventListener('image:mosaic', start);
-  }, [editor, isHtmlMode, mosaic, intake.session]);
+  }, [editor, isHtmlMode, mosaic, intake.session, mosaicSaving]);
 
   useEffect(() => {
     if (!editor || isHtmlMode) return;
@@ -133,7 +215,7 @@ export function TiptapEditorContainer({
         editor={editor}
         isHtmlMode={isHtmlMode}
         onToggleHtmlMode={handleToggleHtmlMode}
-        mediaBusy={!!intake.session || !!mosaic}
+        mediaBusy={!!intake.session || !!mosaic || mosaicSaving}
         onImagesBegin={() => intake.open('images')}
         onImageFiles={(files) => {
           intake.addFiles(files);
@@ -145,11 +227,14 @@ export function TiptapEditorContainer({
       {mosaic && (
         <MosaicEditorContainer
           session={mosaic}
-          onClose={() => setMosaic(null)}
-          onReplace={onImageReplace}
+          onClose={() => {
+            mosaic.target.dispose();
+            setMosaic(null);
+          }}
+          onApply={saveMosaic}
         />
       )}
-      {intake.session && intake.session.mode !== 'images' && (
+      {intake.session?.dialogOpen && intake.session.mode !== 'images' && (
         <MediaIntakeDialog
           {...intake.session}
           onClose={intake.close}
