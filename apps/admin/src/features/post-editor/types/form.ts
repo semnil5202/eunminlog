@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { getSingleProductName, isValidRating } from '@eunminlog/config/rating';
 
 export const TITLE_MAX_LENGTH = 50;
 
@@ -30,8 +31,25 @@ export const postFormSchema = z
     pricePrefix: z.string(),
     price: z.string(),
     products: z.array(productSchema),
+    rating: z
+      .number()
+      .nullable()
+      .refine((value) => value === null || isValidRating(value), {
+        message: '평점은 1~5 사이에서 소수 한 자리까지 입력해주세요.',
+      }),
   })
   .superRefine((data, ctx) => {
+    if (
+      data.rating !== null &&
+      (data.formType !== 'product-review' ||
+        !getSingleProductName(data.products.map((product) => product.name)))
+    ) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['rating'],
+        message: '평점은 단일 제품 리뷰에서만 입력할 수 있습니다.',
+      });
+    }
     if (data.formType === 'visit') {
       if (!data.placeName.trim())
         ctx.addIssue({ code: 'custom', path: ['placeName'], message: '장소를 입력해주세요.' });
@@ -45,6 +63,7 @@ export type PostFormValues = z.infer<typeof postFormSchema>;
 export const POST_FORM_DEFAULTS: PostFormValues = {
   formType: 'visit',
   isCoupangPartners: false,
+  rating: null,
   title: '',
   content: '',
   category: '',

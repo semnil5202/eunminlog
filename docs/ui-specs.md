@@ -250,14 +250,6 @@
 - 본문 이미지에 `prose-img:cursor-pointer` 적용 (PostLayout CSS, 에디터 독립)
 - 접근성: `role="dialog"`, `aria-modal="true"`, `aria-label`
 
-#### `StarRating.astro`
-
-- **위치**: `shared/components/ui/StarRating.astro`
-- Props: `rating` (number)
-- SVG 별 아이콘 5개 (filled + empty), 숫자 점수 표시
-- Schema.org `Rating` 마이크로데이터 (`itemprop="reviewRating"`) 포함
-- **현재 미사용**: PlaceInfoCard에서 평점 대신 3줄 요약으로 전환됨. 향후 rating UI 복원 시 재사용 가능
-
 #### `SponsoredPostItem.astro`
 
 - **위치**: `shared/components/layout/SponsoredPostItem.astro`
@@ -287,14 +279,17 @@
 
 #### `ProductInfoCard.astro`
 
+- **평점 UI (2026-10-16, P1, 결정 RATING-01)**: 단일 제품 리뷰에서 명시적으로 입력한 유효 평점이 있을 때 가격 아래·3줄 요약 위에 `평점 3.8/5`를 표시한다. 별 아이콘은 사용하지 않는다. 라벨은 기존 `text-gray-500`, 점수 숫자만 `text-primary-600`·`font-semibold`, `/5`는 기존 값 색상인 `text-gray-900`으로 표시한다. 지원하는 8개 언어의 라벨·접근성 문구를 번역하고 점수는 공통 값으로 유지한다.
+- 미입력·유효 제품 0개·복수 제품·장소 정보 카드가 표시되는 글에는 평점 행과 Product/Review JSON-LD를 생성하지 않는다. UI와 JSON-LD는 같은 검증 기준을 사용한다.
+
 - **위치**: `features/post-detail/components/ProductInfoCard.astro`
 - Props: `categoryLabel`, `subCategoryLabel`, `productNames` (`string[]`), `translatedProductNames?`, `purchaseSources` (`string[]`), `translatedPurchaseSources?`, `purchaseLinks` (`string[]`), `prices?` (`number[]`), `pricePrefixes?` (`string[]`), `translatedPricePrefixes?`, `description`, `isPaidPlacement`, `locale`
-- Schema.org `Product` 마이크로데이터 포함
+- 조건에 맞는 단일 제품 평점은 별도 Product/Review JSON-LD로 표현하며 카드 자체에 중복 Product 마이크로데이터를 추가하지 않는다.
 - `border-radius` 없음 (`bg-gray-50 border border-gray-200 p-5 mb-6`)
 - `<dl>` 기반 키-값 레이아웃: 카테고리, 제품별(제품명/구매처/가격), 3줄 요약
 - **제품 2개 이상**: PC 2열 그리드 (`grid-cols-1 lg:grid-cols-2`), `border-t border-b border-gray-200 py-3` 구분선
 - **제품 1개**: 심플 레이아웃 (그리드/보더 없음)
-- 제품명: `translatedProductNames` 우선 표시, `font-semibold`, `itemprop="name"`
+- 제품명: `translatedProductNames` 우선 표시, `font-semibold`
 - 구매처: 텍스트 + 구매 링크가 있으면 외부 링크 아이콘. 협찬 또는 쿠팡 파트너스 글이면 `rel="sponsored noopener noreferrer"`, 아니면 `rel="noopener noreferrer"`
 - 가격 표시: `pricePrefix + price.toLocaleString() + '원'` 조합 (한국 원화 단위 명시)
 - dt 라벨 폭: 제품 섹션 내부 `w-16` (64px), 카테고리/요약 `w-20` (80px)
@@ -475,10 +470,10 @@ Admin 본문 WYSIWYG는 클립보드 이미지 파일 붙여넣기와 외부 파
 - Admin 본문에는 동일한 적격 H2 앞에 `in article adsense`를 가로·세로 중앙 정렬한 미리보기를 표시한다. `#` + 공백도 H2로 변환되며, 조건을 충족하지 않는 제목 앞에는 표시하지 않는다.
 - 미리보기는 편집기 Decoration으로만 표시한다. 클릭·포커스·수정·삭제 대상이 아니며 HTML/JSON·임시저장·번역에는 포함하지 않는다. 본문 변경과 Undo/Redo에 따라 갱신하고 광고 네트워크를 호출하지 않는다.
 
-#### `buildBlogPostingSchema(post, canonical)` / `buildReviewSchema(post)`
+#### 게시글·제품 리뷰 스키마 생성
 
-- **위치**: `features/post-detail/lib/schema.ts`
-- JSON-LD 스키마 객체 생성 유틸리티. PostLayout에서 인라인으로 작성하던 로직을 분리.
+- **위치**: `features/post-detail/lib/schema.ts` (BlogPosting), `features/post-detail/lib/product-review.ts` (Product/Review), `packages/config/rating.ts` (Admin·Client 공통 평점 검증)
+- 기존 BlogPosting 생성과 단일 제품의 조건부 Product/Review 생성을 담당한다. 평점 숫자·대상 검증은 공개 카드와 동일한 기준을 사용하며, 대상이 없으면 제품 리뷰 스키마를 생략한다. 상세 계약은 [`seo-strategy.md`](seo-strategy.md)의 단일 제품 리뷰 항목을 참조한다.
 
 #### `buildSearchData(posts, locale)`
 

@@ -46,6 +46,7 @@ import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { CategorySelector } from '@/features/post-editor/components/CategorySelector';
 import { ThumbnailUpload } from '@/features/post-editor/components/ThumbnailUpload';
+import { restoreDraftRating } from '@/features/post-editor/lib/rating';
 import { ProductReviewFields } from '@/features/post-editor/components/ProductReviewFields';
 import { VisitFields } from '@/features/post-editor/components/VisitFields';
 import { TiptapEditorContainer } from '@/features/post-editor/containers/TiptapEditorContainer';
@@ -90,6 +91,7 @@ export default function EditPostPage() {
       thumbnail: string;
       thumbnail_alt: string | null;
       is_coupang_partners: boolean;
+      rating: number | null;
       is_multilingual: boolean;
       place_name: string | null;
       address: string | null;
@@ -154,6 +156,7 @@ function EditPostForm({
       thumbnail: string;
       thumbnail_alt: string | null;
       is_coupang_partners: boolean;
+      rating: number | null;
       is_multilingual: boolean;
       place_name: string | null;
       address: string | null;
@@ -180,6 +183,7 @@ function EditPostForm({
           ? 'visit'
           : 'basic',
       isCoupangPartners: post.is_coupang_partners ?? false,
+      rating: post.rating ?? null,
       title: post.title,
       content: post.content,
       category: post.category,
@@ -318,7 +322,7 @@ function EditPostForm({
           price: (p as { price?: string }).price ?? '',
         }));
       }
-      reset(formData);
+      reset({ ...formData, rating: restoreDraftRating(formData) });
       loadDraftId(draft.id);
       setImageAlts(draft.image_alts);
       setSavedImageAlts(draft.image_alts);

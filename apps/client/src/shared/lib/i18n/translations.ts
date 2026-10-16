@@ -14,6 +14,7 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'post.coupangPartnersDisclosure':
       '이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.',
     'post.summary': '3줄 요약',
+    'product.rating': '평점',
     'post.copyLink': '주소 복사',
     'post.copyLinkSuccess': '주소를 복사했습니다.',
     'post.copyLinkError': '복사하지 못했습니다. 주소창의 URL을 복사해 주세요.',
@@ -118,6 +119,7 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'post.coupangPartnersDisclosure':
       'This post contains Coupang Partners affiliate links, through which a small commission may be earned.',
     'post.summary': '3-Line Summary',
+    'product.rating': 'Rating',
     'post.copyLink': 'Copy link',
     'post.copyLinkSuccess': 'Link copied.',
     'post.copyLinkError': 'Could not copy. Please copy the URL from the address bar.',
@@ -222,6 +224,7 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'post.coupangPartnersDisclosure':
       'この記事にはCoupang Partnersのアフィリエイトリンクが含まれており、それにより一定の手数料を受け取る場合があります。',
     'post.summary': '3行要約',
+    'product.rating': '評価',
     'post.copyLink': 'リンクをコピー',
     'post.copyLinkSuccess': 'リンクをコピーしました。',
     'post.copyLinkError': 'コピーできませんでした。アドレスバーのURLをコピーしてください。',
@@ -325,6 +328,7 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'post.sponsoredDisclosure': '本文由赞助商赞助撰写。',
     'post.coupangPartnersDisclosure': '本文包含酷澎合作伙伴联盟链接，可能因此获得一定的佣金。',
     'post.summary': '3行摘要',
+    'product.rating': '评分',
     'post.copyLink': '复制链接',
     'post.copyLinkSuccess': '链接已复制。',
     'post.copyLinkError': '无法复制，请复制地址栏中的网址。',
@@ -424,6 +428,7 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'post.sponsoredDisclosure': '本文由贊助商贊助撰寫。',
     'post.coupangPartnersDisclosure': '本文包含酷澎合作夥伴聯盟連結，可能因此獲得一定的佣金。',
     'post.summary': '3行摘要',
+    'product.rating': '評分',
     'post.copyLink': '複製連結',
     'post.copyLinkSuccess': '已複製連結。',
     'post.copyLinkError': '無法複製，請複製網址列中的網址。',
@@ -524,6 +529,7 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'post.coupangPartnersDisclosure':
       'Postingan ini mengandung tautan afiliasi Coupang Partners dan komisi kecil mungkin diperoleh.',
     'post.summary': 'Ringkasan 3 Baris',
+    'product.rating': 'Penilaian',
     'post.copyLink': 'Salin tautan',
     'post.copyLinkSuccess': 'Tautan disalin.',
     'post.copyLinkError': 'Gagal menyalin. Silakan salin URL dari bilah alamat.',
@@ -628,6 +634,7 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'post.coupangPartnersDisclosure':
       'Bài viết này chứa liên kết liên kết Coupang Partners và có thể nhận được một khoản hoa hồng nhỏ.',
     'post.summary': 'Tóm tắt 3 dòng',
+    'product.rating': 'Điểm đánh giá',
     'post.copyLink': 'Sao chép liên kết',
     'post.copyLinkSuccess': 'Đã sao chép liên kết.',
     'post.copyLinkError': 'Không thể sao chép. Vui lòng sao chép URL từ thanh địa chỉ.',
@@ -732,6 +739,7 @@ const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'post.coupangPartnersDisclosure':
       'โพสต์นี้มีลิงก์พันธมิตร Coupang Partners ซึ่งอาจได้รับค่าคอมมิชชั่นเล็กน้อย',
     'post.summary': 'สรุป 3 บรรทัด',
+    'product.rating': 'คะแนน',
     'post.copyLink': 'คัดลอกลิงก์',
     'post.copyLinkSuccess': 'คัดลอกลิงก์แล้ว',
     'post.copyLinkError': 'คัดลอกไม่ได้ โปรดคัดลอก URL จากแถบที่อยู่',

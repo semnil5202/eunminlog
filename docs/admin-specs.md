@@ -289,7 +289,7 @@ features/auth/
 | PE-9  | is_sponsored 토글                                                                              | P0       | 미구현               |
 | PE-9B | is_recommended 관리 (`/posts` 목록의 추천 게시글 수정 모드)                                    | P0       | 구현 완료            |
 | PE-9A | is_coupang_partners 체크박스 (제품 리뷰 폼 전용, 제품 목록 우측 배치)                          | P0       | 구현 완료            |
-| PE-10 | rating 입력 (1.0-5.0, 0.5 단위)                                                                | P1       | 미구현               |
+| PE-10 | 단일 제품 리뷰 선택적 rating 입력 (1.0-5.0, 0.1 단위)                                          | P1       | 구현                 |
 | PE-11 | place_name, address, price_prefix, price 입력 (체험 방문 전용)                                 | P1       | 구현 완료            |
 | PE-12 | 3줄 요약 AI 생성 (Server Action, GPT-5 Mini)                                                   | P0       | 구현 완료            |
 | PE-13 | 번역 트리거 (에디터 내 번역본 생성/확인)                                                       | P0       | 구현 완료            |
@@ -315,14 +315,23 @@ features/auth/
 | 쿠팡 파트너스 | checkbox      | N    | `is_coupang_partners` | product-review 전용  | 기본값 `false`. 제품 목록 라벨 우측 배치              |
 | 추천 여부     | checkbox      | N    | `is_recommended`      | 목록 관리            | `/posts` 추천 게시글 수정 모드에서 일괄 변경          |
 | 다국어 제공   | toggle        | N    | `is_multilingual`     | 공통                 | 기본값 `true` (미구현)                                |
-| 평점          | number input  | N    | `rating`              | 공통                 | 1.0-5.0, 0.5 단위 (미구현)                            |
-| 장소명        | text input    | N    | `place_name`          | visit 전용           | Schema.org `itemReviewed`                             |
+| 평점          | number input  | N    | `rating`              | 단일 product-review  | 1.0-5.0, 0.1 단위. 미입력은 `null`                    |
+| 장소명        | text input    | N    | `place_name`          | visit 전용           | 장소 정보 카드 표시                                   |
 | 주소          | text input    | N    | `address`             | visit 전용           | Schema.org                                            |
 | 가격 접두어   | text input    | N    | `price_prefix[]`      | visit / product 공용 | PriceInputRow 컴포넌트. 배열 (제품별 가격 설명)       |
 | 가격          | number input  | N    | `price[]`             | visit / product 공용 | PriceInputRow 컴포넌트. 배열 (제품별 가격)            |
 | 제품명        | text input    | N    | `product_name[]`      | product 전용         | useFieldArray 동적 행. 배열                           |
 | 구매처        | text input    | N    | `purchase_source[]`   | product 전용         | 배열                                                  |
 | 구매 링크     | url input     | N    | `purchase_link[]`     | product 전용         | 배열                                                  |
+
+#### 단일 제품 평점 (2026-10-16, P1, 결정 RATING-01)
+
+- `product-review` 형식이며 공백 제거 후 유효한 제품명이 정확히 1개일 때만 평점 입력을 표시한다. 카테고리 자체로 제품 리뷰 여부를 판단하지 않는다. 입력란은 제품 목록과 제품 추가 버튼 아래, 3줄 요약 바로 위에 배치한다. 라벨은 `은민 평점`이며 `(선택)` 표시는 붙이지 않는다. 안내문에 입력 범위·미입력 시 미공개와 `리뷰 JSON-LD 적용을 위해 단일 제품만 평가합니다.`를 표시한다.
+- 기본값은 공란이며 미입력·삭제는 `null`이다. 1~5 범위의 소수 1자리까지만 허용한다. 본문 점수를 자동 추출하거나 기본 5점을 부여하지 않는다.
+- 유효 제품이 0개·2개 이상이 되거나 다른 폼 형식으로 전환하면 입력한 평점을 초기화한다. 서버에서도 동일한 대상·범위·소수 자릿수를 검증하며 부적격 대상에 점수가 전달되면 저장을 거부한다.
+- 신규 작성·수정·임시저장·복원에 동일한 값을 사용한다. 과거 임시저장에 `rating`이 없으면 공란으로 복원한다. 단일 `posts.rating`을 여러 제품에 복제하지 않는다.
+- 저장한 평점은 공개 제품 정보 카드와 조건부 Product/Review JSON-LD에 함께 사용한다. 평점을 삭제하고 배포하면 두 곳에서 모두 제거된다. 기존 본문 점수도 작성자가 직접 확인해 입력한다.
+- 평점 E2E는 `tests/e2e/product-rating.spec.ts`와 `tests/harness/RatingHarness.tsx`에서 실제 폼 컴포넌트로 검증한다. 데스크톱·모바일 각각 입력·초기화·메모리 초안 복원·유효성 검사를 확인하며 실제 인증·Supabase 임시저장·DB 저장은 범위에 포함하지 않는다.
 
 #### 카테고리-서브카테고리 매핑
 
@@ -1739,7 +1748,7 @@ src/features/
 | 6     | post-editor         | 포스트 편집 (기존 데이터 로드 + 수정)                                                                           | P0       | 미착수                                                           |
 | 7     | translation (완성)  | 번역 결과 DB 저장 (post_translations UPSERT)                                                                    | P0       | 미착수                                                           |
 | 8     | build-trigger       | GitHub Actions 자동 트리거 (`dispatchClientBuild()` + 기존 Server Action 연동)                                  | P1       | 구현 완료. 직접 호출 Action에 관리자 검사 적용                  |
-| 9     | post-editor         | 이미지 순서 변경, rating 입력                                                                                   | P1       | 미착수                                                           |
+| 9     | post-editor         | 이미지 순서 변경 (평점 입력은 단일 제품 리뷰에 구현)                                                             | P1       | 이미지 순서 변경 미착수                                           |
 | 10    | post-management     | 필터링, 검색                                                                                                    | P2       | 미착수                                                           |
 | 11    | metrics             | GA4 API 연동 (mock → 실제 데이터)                                                                               | P2       | 미착수                                                           |
 

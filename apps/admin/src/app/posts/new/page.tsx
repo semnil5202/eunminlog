@@ -16,6 +16,7 @@ import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { CategorySelector } from '@/features/post-editor/components/CategorySelector';
 import { ThumbnailUpload } from '@/features/post-editor/components/ThumbnailUpload';
+import { restoreDraftRating } from '@/features/post-editor/lib/rating';
 import { ProductReviewFields } from '@/features/post-editor/components/ProductReviewFields';
 import { VisitFields } from '@/features/post-editor/components/VisitFields';
 import { TiptapEditorContainer } from '@/features/post-editor/containers/TiptapEditorContainer';
@@ -173,7 +174,7 @@ function NewPostContent() {
           price: (p as { price?: string }).price ?? '',
         }));
       }
-      reset(formData);
+      reset({ ...formData, rating: restoreDraftRating(formData) });
       loadDraftId(draft.id);
       setImageAlts(draft.image_alts);
       setSavedImageAlts(draft.image_alts);

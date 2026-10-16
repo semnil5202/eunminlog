@@ -28,10 +28,16 @@
 
 ### 상세 페이지
 
-- `BlogPosting` + `Review` (nested)
-  - `itemReviewed`: Restaurant / Place
-  - `reviewRating`: 1-5 stars
-  - `author`: Semin & Chaeun
+- 모든 글에 기존 `BlogPosting`을 유지한다. Restaurant/Place Review는 현재 생성하지 않는다.
+
+#### 단일 제품 리뷰 (2026-10-16, P1, 결정 RATING-01)
+
+- 어드민에서 명시적으로 입력한 1~5 범위 소수 1자리 평점이 있고, 제품 정보 카드에 표시되는 유효 제품이 정확히 1개일 때만 별도 `Product` JSON-LD와 내부 `review: Review`를 생성한다. 장소 정보가 우선 표시되는 글·제품 없는 글·복수 제품·평점 미입력 글은 제외한다.
+- `Product`의 제품명·이미지·URL과 `Review`의 작성자·작성일·평점은 실제 게시글에 근거한다. `reviewRating`은 `ratingValue`, `bestRating: 5`, `worstRating: 1`을 사용한다. 개인 작성자의 단일 평가이므로 `AggregateRating`·리뷰 수를 생성하지 않는다.
+- 브랜드·제조사는 구매처로 추정하지 않으며 리뷰 작성 시점 구매 가격으로 판매 `Offer`를 생성하지 않는다. 본문 평점을 파싱하거나 기존 글의 점수를 자동 채우지 않는다.
+- 공개 평점 UI와 스키마는 동일한 제품 수·점수 검증 기준을 사용한다. 평점 삭제 후 재빌드하면 UI와 Review가 모두 제거된다. 8개 언어에서 동일 점수를 사용하고 제품명·요약·절대 canonical은 해당 페이지와 일치시킨다.
+- JSON-LD 직렬화 시 `<`를 이스케이프해 본문·제품명 등의 문자열이 script 요소를 종료하지 않도록 한다.
+- 빌드 HTML에서 UI·스키마 일치를 검증하고 Rich Results Test로 확인한다. 유효한 구조화 데이터라도 검색결과 별점 노출은 보장되지 않는다.
 
 ## robots.txt
 

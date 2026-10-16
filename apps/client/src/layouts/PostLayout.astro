@@ -6,6 +6,8 @@ import { normalizeInternalLinkRels } from "@eunminlog/config/link-policy";
 import LeftSidebar from "@/shared/components/layout/LeftSidebar.astro";
 import RightSidebar from "@/shared/components/layout/RightSidebar.astro";
 import BreadcrumbJsonLd from "@/shared/components/seo/BreadcrumbJsonLd.astro";
+import JsonLd from "@/shared/components/seo/JsonLd.astro";
+import { buildProductReviewSchema } from "@/features/post-detail/lib/product-review";
 import BlogPostingJsonLd from "@/shared/components/seo/BlogPostingJsonLd.astro";
 import SponsoredPostList from "@/shared/components/layout/SponsoredPostList.astro";
 import FixedAdsense from "@/shared/components/ad/FixedAdsense.astro";
@@ -82,6 +84,7 @@ const contentWithSponsored = isPaidPlacement
   : contentWithTables;
 const contentWithAds = injectZoomIcons(contentWithSponsored);
 const blogPosting = buildBlogPostingSchema(post, canonical);
+const productReview = buildProductReviewSchema(post, new URL(canonical, Astro.site).href);
 const sponsoredLabel = t("post.sponsoredBadge", locale);
 const popularLabel = t("post.popularBadge", locale);
 const popularTitle = t("sidebar.scopedPopular", locale).replaceAll("{0}", subCategoryLabel);
@@ -111,6 +114,7 @@ const gaPageParams = {
     <link rel="preload" href={optimizedUrl(post.thumbnail)} as="image" type="image/webp" fetchpriority="high" />
     <BreadcrumbJsonLd items={breadcrumbs} />
     <BlogPostingJsonLd posting={blogPosting} />
+    {productReview && <JsonLd schema={productReview} />}
   </Fragment>
 
   <div class="max-w-screen-xl mx-auto px-4 lg:px-6">
@@ -205,6 +209,7 @@ const gaPageParams = {
               subCategory={post.sub_category}
               categoryLabel={categoryLabel}
               subCategoryLabel={subCategoryLabel}
+              rating={productReview?.review.reviewRating.ratingValue ?? null}
               productNames={post.product_name}
               translatedProductNames={post.translated_product_name}
               purchaseSources={post.purchase_source}

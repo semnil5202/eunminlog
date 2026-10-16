@@ -1,11 +1,12 @@
 ---
-/** 제품 정보 카드. Schema.org Product 마크업을 포함한다. */
+/** 제품 정보와 선택적으로 입력한 평점을 표시한다. */
 
 import type { Locale } from "@/shared/types/common";
 import { t } from "@/shared/lib/i18n/translations";
 import { getLocalePath } from "@/shared/lib/i18n/locales";
 
 interface Props {
+  rating?: number | null;
   category: string;
   subCategory: string;
   categoryLabel: string;
@@ -24,6 +25,7 @@ interface Props {
 }
 
 const {
+  rating = null,
   category,
   subCategory,
   categoryLabel,
@@ -48,7 +50,9 @@ const purchaseLinkRel = isPaidPlacement
   ? "sponsored noopener noreferrer"
   : "noopener noreferrer";
 
-const displayProductNames = translatedProductNames ?? productNames;
+const displayProductNames = translatedProductNames?.length === productNames?.length && translatedProductNames?.every((name) => name.trim())
+  ? translatedProductNames
+  : productNames;
 const displayPurchaseSources = translatedPurchaseSources ?? purchaseSources;
 const displayPricePrefixes = translatedPricePrefixes ?? pricePrefixes;
 
@@ -58,7 +62,7 @@ const products = (displayProductNames ?? []).map((name, i) => ({
   link: purchaseLinks?.[i] ?? '',
   pricePrefix: displayPricePrefixes?.[i] ?? '',
   price: prices?.[i] ?? null,
-}));
+})).filter((product) => product.name.trim());
 ---
 
 <div
@@ -131,6 +135,12 @@ const products = (displayProductNames ?? []).map((name, i) => ({
         </div>
       ))}
     </div>
+    {rating !== null && (
+      <div class="flex items-baseline gap-3">
+        <dt class="shrink-0 w-20 text-gray-500 font-medium">{t("product.rating", locale)}</dt>
+        <dd class="text-gray-900"><span class="text-primary-600 font-semibold">{rating.toFixed(1)}</span>/5</dd>
+      </div>
+    )}
     {summaryLines.length > 0 && (
       <div class="flex items-baseline gap-3">
         <dt class="shrink-0 w-20 text-gray-500 font-medium">{summaryLabel}</dt>

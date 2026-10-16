@@ -11,6 +11,7 @@ import { useAutoSaveDraft } from '@/features/draft/hooks/useAutoSaveDraft';
 import { fetchDraft } from '@/features/draft/api';
 import { POST_FORM_DEFAULTS } from '@/features/post-editor/types/form';
 import './styles.css';
+import { RatingHarness } from './RatingHarness';
 
 function App() {
   const [content, setContent] = useState('<p>앞 본문 뒤 본문</p>');
@@ -89,6 +90,6 @@ function App() {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    {new URLSearchParams(location.search).has('rating') ? <RatingHarness /> : <App />}
   </StrictMode>,
 );

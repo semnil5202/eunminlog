@@ -17,7 +17,7 @@ export type Post = {
   is_coupang_partners: boolean;
   is_recommended: boolean;
   is_multilingual: boolean;
-  rating: number;
+  rating: number | null;
   place_name: string;
   address: string;
   price_prefix: string[] | null;

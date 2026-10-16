@@ -77,6 +77,7 @@ describe('기본 폼 전환 정합성', () => {
       purchase_source: null,
       purchase_link: null,
       is_coupang_partners: false,
+      rating: null,
     });
     expect(translationSpecificFields('basic', translation)).toEqual({
       place_name: null,

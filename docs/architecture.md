@@ -142,7 +142,6 @@ src/
 │   │   │   └── Hreflang.astro              # hreflang 대체 링크
 │   │   └── ui/
 │   │       ├── ImageLightbox.astro         # 전역 이미지 라이트박스 (Layout에 1회 삽입)
-│   │       ├── StarRating.astro            # 별점 SVG (Schema.org Rating 포함)
 │   │       ├── PostBadge.astro             # 협찬글/인기글 상태 뱃지
 │   │       └── Toast.astro                 # 전역 토스트 알림 (Layout에 1회 삽입)
 │   ├── constants/

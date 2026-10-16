@@ -180,6 +180,7 @@ export async function createPost(params: {
   await requireAdmin();
 
   const formValues = params.formValues;
+  const specificFields = postSpecificFields(formValues);
 
   const { data: post, error } = await supabaseServer
     .from('posts')
@@ -193,7 +194,7 @@ export async function createPost(params: {
       thumbnail: formValues.thumbnail,
       thumbnail_alt: formValues.thumbnailAlt || null,
       is_multilingual: params.translations.length > 0,
-      ...postSpecificFields(formValues),
+      ...specificFields,
       image_alts: params.imageAlts ?? [],
     })
     .select('id')
@@ -246,6 +247,7 @@ export async function updatePost(params: {
   await requireAdmin();
 
   const formValues = params.formValues;
+  const specificFields = postSpecificFields(formValues);
 
   const { data: existing, error: fetchError } = await supabaseServer
     .from('posts')
@@ -264,7 +266,7 @@ export async function updatePost(params: {
     sub_category: formValues.subCategory,
     thumbnail: formValues.thumbnail,
     thumbnail_alt: formValues.thumbnailAlt || null,
-    ...postSpecificFields(formValues),
+    ...specificFields,
     image_alts: params.imageAlts ?? [],
     updated_at: new Date().toISOString(),
   };

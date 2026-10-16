@@ -13,6 +13,7 @@ export function changePostFormType(
 ) {
   setValue('formType', formType, { shouldDirty: true });
   setValue('isCoupangPartners', false);
+  setValue('rating', null);
   setValue('placeName', '');
   setValue('address', '');
   setValue('pricePrefix', '');

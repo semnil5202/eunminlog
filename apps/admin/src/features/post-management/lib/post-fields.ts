@@ -1,3 +1,4 @@
+import { validateProductReviewRating } from '@eunminlog/config/rating';
 import type { PostFormValues } from '@/features/post-editor/types/form';
 import type { TranslationResult } from '@/features/translation/types';
 
@@ -7,11 +8,17 @@ import type { TranslationResult } from '@/features/translation/types';
 export function postSpecificFields(values: PostFormValues) {
   const isVisit = values.formType === 'visit';
   const isProductReview = values.formType === 'product-review';
+  const rating = validateProductReviewRating(
+    values.rating,
+    isProductReview,
+    Array.isArray(values.products) ? values.products.map((product) => product?.name) : null,
+  );
   const products = isProductReview ? values.products.filter((product) => product.name.trim()) : [];
   const productPricePrefixes = products.map((product) => product.pricePrefix);
   const productPrices = products.map((product) => (product.price ? Number(product.price) : 0));
 
   return {
+    ...(rating !== undefined ? { rating } : {}),
     place_name: isVisit ? values.placeName || null : null,
     address: isVisit ? values.address || null : null,
     price_prefix: isProductReview
