@@ -221,6 +221,19 @@
 - Main 영역 패딩: 모바일 `pt-3 pb-6`, PC `py-6`
 - 최대 너비: `max-w-screen-xl`, 수평 패딩: `px-4 lg:px-6`
 
+#### 게시글 주소 복사
+
+- 상단 날짜 행 오른쪽, 하단 AI 안내 아래·관련 글 목록 위 중앙에 `CopyPostLink.astro` 버튼을 배치한다. 좁은 화면에서는 날짜 행이 줄바꿈될 수 있다.
+- 상단은 날짜와 같은 회색의 16px 복사 아이콘을 32×32px 원형 테두리 안에 표시한다. 클릭 영역은 44×44px이며 텍스트는 스크린리더용으로 숨기고 다국어 툴팁을 제공한다.
+- 하단 아이콘·텍스트는 일반 본문과 같은 `gray-900`(`#111827`)을 사용하고 원형 테두리는 `gray-500`(`#6B7280`)·1px로 표시한다. 48×48px 원형 테두리 안에 20×20px 복사 아이콘을 표시하고, 8px 아래에 다국어 `주소 복사` 텍스트를 배치한다. 아이콘과 텍스트 전체가 하나의 버튼이며 영역 상하 margin은 각각 40px이다. 관련 글 영역의 기존 상단 48px margin은 제거해 간격을 중복 지정하지 않는다. PC·모바일에 같은 배치를 사용한다.
+- 클릭하면 현재 언어 페이지의 절대 canonical URL만 복사한다. 쿼리와 해시는 제외한다. 복사 중 해당 버튼을 비활성화하고 완료 후 재시도를 허용한다.
+- Clipboard API 성공 후에만 성공 토스트를 표시한다. 실패·API 미지원 시 주소창 URL을 직접 복사하도록 안내한다. 비동기 알림은 전역 Toast의 `toast:show` 이벤트를 사용한다.
+
+#### 공용 토스트
+
+- 모바일·PC 모두 화면 상단 24px에 표시하고 위에서 내려오는 방향으로 전환한다. 모바일은 좌우 24px 여백, PC는 내용 너비로 가운데 정렬한다. 4초 뒤 자동으로 숨긴다.
+- 토스트는 루트의 `z-50`, 헤더는 `z-40`이다. 번역 드롭다운의 `z-50`은 헤더 내부 스태킹 컨텍스트에 속하므로 토스트가 그 위에 표시된다.
+
 #### 본문 복사 출처
 
 - `PostLayout.astro`에서 본문 안의 텍스트를 복사하면 원문 뒤에 빈 줄과 `출처: 은민로그 | 본문페이지 URL`을 추가한다. URL은 현재 언어 페이지의 canonical을 사용한다.
@@ -419,13 +432,14 @@ Admin 본문 WYSIWYG는 클립보드 이미지 파일 붙여넣기와 외부 파
 #### `CookieConsentBanner.astro`
 
 - **위치**: `features/consent/components/CookieConsentBanner.astro`
+- **현재 상태**: 컴포넌트는 남아 있지만 레이아웃에서 사용하지 않아 자체 쿠키 배너는 표시되지 않는다.
 - Props: `locale`
 - `CONSENT_REQUIRED_LOCALES` (`en`, `ja`, `zh-CN`, `th`)에 해당하는 locale에서만 렌더링 (SSG 빌드 타임 결정)
 - Sticky Footer Banner (`fixed bottom-0`, `z-40`), slide-up/slide-down 애니메이션
 - 수락/거부 2-button (GDPR 요구사항: 동등한 시각적 비중)
 - 수락: `cookie_consent=true` (365일), 거부: `cookie_consent=false` (1일)
 - GA4 `cookie_consent` 이벤트 전송 (`action: accept/reject`, `content_locale`)
-- `Layout.astro`에 삽입 (`Footer` 아래, `Toast`/`ImageLightbox` 위)
+- 향후 사용 시 `Layout.astro`의 `Footer` 아래에 삽입한다. 현재는 연결하지 않는다.
 - 상세 스펙: [`docs/cookie-consent-specs.md`](cookie-consent-specs.md)
 
 ### Shared Components: Layout

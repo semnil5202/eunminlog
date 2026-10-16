@@ -1,6 +1,7 @@
 type GtagEvent =
   | 'select_content'
   | 'search'
+  | 'copy_link_click'
   | 'ad_impression'
   | 'ad_view'
   | 'ad_click'

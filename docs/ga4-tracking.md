@@ -75,6 +75,17 @@ GA4의 자동 `page_view`는 `page_location`, `page_title`만 수집한다. 게�
 
 ---
 
+### 2.2.1 게시글 주소 복사 (`copy_link_click`)
+
+- 상단·하단 주소 복사 버튼의 클릭 시도마다 한 번 전송한다. 복사 중 비활성 버튼은 제외한다. 복사 성공이나 실제 SNS 공유 완료를 의미하지 않는다.
+- 기존 `trackEvent`와 GA 초기화 경로를 사용하며 복사 성공·실패와 무관하게 클릭 시점에 기록한다.
+
+| 파라미터 | 타입 | 설명 |
+| --- | --- | --- |
+| `content_slug` | string | 게시글 slug |
+| `content_locale` | string | 현재 콘텐츠 언어 |
+| `placement` | string | 상단 `post_top`, 하단 `post_bottom` |
+
 ### 2.3 광고 provider Tracking
 
 AdSense와 쿠팡을 `ad_provider`로 분리한다. 빈 예약 영역(`none`)과 Local·Development의 GPT 공식 샘플·테스트 marker는 이벤트를 보내지 않으며 AdSense iframe 클릭은 수집하지 않는다.
@@ -163,7 +174,7 @@ AdSense와 쿠팡을 `ad_provider`로 분리한다. 빈 예약 영역(`none`)과
 
 **대상 locale**: `en`, `ja`, `zh-CN`, `th` (CONSENT_REQUIRED_LOCALES)
 
-**구현 위치**: `features/consent/components/CookieConsentBanner.astro` 인라인 스크립트에서 `window.gtag()` 직접 호출
+**구현 위치**: `features/consent/components/CookieConsentBanner.astro` 인라인 스크립트에서 `window.gtag()` 직접 호출. 현재 컴포넌트가 레이아웃에서 사용되지 않아 이 이벤트는 발생하지 않는다.
 
 ---
 

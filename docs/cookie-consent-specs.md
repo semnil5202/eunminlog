@@ -1,7 +1,7 @@
 # Cookie Consent & Google CMP 연동 스펙
 
 > 작성일: 2026-03-06
-> 상태: 자체 배너 UI + 쿠키 저장 + GA4 이벤트 구현 완료. AdSense 동의 신호는 Google 인증 CMP가 전담한다.
+> 상태: 자체 배너 UI + 쿠키 저장 + GA4 이벤트 코드는 남아 있으나 현재 레이아웃에서 사용하지 않아 자체 배너는 표시되지 않는다. 아래 배치·동작은 재연결 시 참고할 스펙이다. AdSense 동의 신호는 Google 인증 CMP가 전담한다.
 > 관련 문서: [ui-specs.md](ui-specs.md), [ga4-tracking.md](ga4-tracking.md), [seo-strategy.md](seo-strategy.md), [theme.md](theme.md)
 
 ---

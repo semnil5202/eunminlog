@@ -13,6 +13,7 @@ import PostBadges from "@/features/post-detail/components/PostBadges.astro";
 import PlaceInfoCard from "@/features/post-detail/components/PlaceInfoCard.astro";
 import ProductInfoCard from "@/features/post-detail/components/ProductInfoCard.astro";
 import BasicInfoCard from "@/features/post-detail/components/BasicInfoCard.astro";
+import CopyPostLink from "@/features/post-detail/components/CopyPostLink.astro";
 import NearbyPostList from "@/features/post-detail/components/NearbyPostList.astro";
 import { getSponsoredPosts, getMultilingualSponsoredPosts, getPostsBySubCategory } from "@/features/post-feed/api/posts";
 import { DEFAULT_LOCALE } from "@/shared/types/common";
@@ -134,7 +135,7 @@ const gaPageParams = {
             {post.title}
           </h1>
 
-          <div class="flex items-center gap-1 text-sm text-gray-500 mb-5">
+          <div class="flex flex-wrap items-center justify-between gap-x-3 text-sm text-gray-500 mb-5">
             <time
               datetime={post.created_at}
               itemprop="datePublished"
@@ -145,6 +146,7 @@ const gaPageParams = {
               </svg>
               {publishDate}
             </time>
+            <CopyPostLink locale={locale} slug={post.slug} placement="post_top" />
           </div>
 
           <div class="aspect-video w-full overflow-hidden mb-5 bg-gray-100 relative img-zoom-parent">
@@ -245,6 +247,10 @@ const gaPageParams = {
             ? t("post.aiRefined", locale)
             : t("post.aiTranslated", locale)}
         </p>
+
+        <div class="my-10 flex justify-center">
+          <CopyPostLink locale={locale} slug={post.slug} placement="post_bottom" />
+        </div>
 
         <NearbyPostList
           posts={nearbyLocalized}

@@ -1,0 +1,75 @@
+---
+/** 게시글 canonical 주소를 복사하는 버튼. */
+import { t } from "@/shared/lib/i18n/translations";
+import type { Locale } from "@/shared/types/common";
+
+interface Props {
+  locale: Locale;
+  slug: string;
+  placement: "post_top" | "post_bottom";
+}
+
+const { locale, slug, placement } = Astro.props;
+const isBottom = placement === "post_bottom";
+---
+
+<button
+  type="button"
+  class:list={[
+    "inline-flex shrink-0 items-center justify-center text-sm font-normal focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50 cursor-pointer",
+    isBottom
+      ? "flex-col gap-2 px-2 group text-gray-900"
+      : "size-11 group text-gray-500 hover:text-gray-900",
+  ]}
+  title={t("post.copyLink", locale)}
+  data-copy-post-link
+  data-slug={slug}
+  data-locale={locale}
+  data-placement={placement}
+  data-success={t("post.copyLinkSuccess", locale)}
+  data-error={t("post.copyLinkError", locale)}
+>
+  <span class:list={[
+    "inline-flex items-center justify-center rounded-full border group-hover:bg-gray-50",
+    isBottom ? "size-12 border-gray-500" : "size-8 border-gray-300",
+  ]} aria-hidden="true">
+  <svg xmlns="http://www.w3.org/2000/svg" class={isBottom ? "size-5" : "size-4"} width={isBottom ? 20 : 16} height={isBottom ? 20 : 16} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <rect x="8" y="8" width="12" height="13" rx="1" />
+    <path d="M16 8V3H3v13h5" />
+  </svg>
+  </span>
+  <span class:list={{ "sr-only": !isBottom }}>{t("post.copyLink", locale)}</span>
+</button>
+
+<script>
+  import { trackEvent } from "@/shared/lib/analytics/gtag";
+
+  document.addEventListener("click", async (event) => {
+    if (!(event.target instanceof Element)) return;
+    const button = event.target.closest<HTMLButtonElement>("[data-copy-post-link]");
+    if (!button || button.disabled) return;
+
+    trackEvent("copy_link_click", {
+      content_slug: button.dataset.slug!,
+      content_locale: button.dataset.locale!,
+      placement: button.dataset.placement!,
+    });
+
+    button.disabled = true;
+    let message = button.dataset.error!;
+    try {
+      const canonical = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+      if (!canonical?.href) throw new Error("Missing canonical URL");
+      const url = new URL(canonical.href);
+      url.search = "";
+      url.hash = "";
+      await navigator.clipboard.writeText(url.href);
+      message = button.dataset.success!;
+    } catch {
+      message = button.dataset.error!;
+    } finally {
+      button.disabled = false;
+    }
+    document.dispatchEvent(new CustomEvent("toast:show", { detail: { message } }));
+  });
+</script>
