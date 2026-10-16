@@ -2,6 +2,7 @@
   "name": "@eunminlog/admin",
   "version": "0.0.1",
   "private": true,
+  "license": "UNLICENSED",
   "type": "module",
   "scripts": {
     "dev": "next dev -H local-admin.eunminlog.site -p 4322 --experimental-https --experimental-https-key local-key.pem --experimental-https-cert local.pem",
