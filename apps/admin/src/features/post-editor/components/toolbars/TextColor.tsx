@@ -34,7 +34,7 @@ export function TextColor({ editor }: EditorProps) {
       const inTable = editor.isActive('table');
       setPos({ top: rect.bottom + (inTable ? 40 : 4), left: rect.left });
     }
-  }, [open]);
+  }, [open, editor]);
 
   useEffect(() => {
     if (!open) return;

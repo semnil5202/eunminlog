@@ -235,6 +235,7 @@ function EditPostForm({
 
   const [showSubmitDialog, setShowSubmitDialog] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [mediaPending, setMediaPending] = useState(false);
   const [imageAlts, setImageAlts] = useState<ImageAlt[]>(postData.imageAlts ?? []);
   const [savedImageAlts, setSavedImageAlts] = useState<ImageAlt[]>(postData.imageAlts ?? []);
   const savedAltMap = new Map(savedImageAlts.map(({ src, alt }) => [src, alt]));
@@ -423,6 +424,10 @@ function EditPostForm({
   };
 
   const handleSubmitClick = async () => {
+    if (mediaPending) {
+      toast.error('이미지 업로드가 끝난 뒤 수정 완료를 눌러주세요.');
+      return;
+    }
     const valid = await trigger();
     if (!valid) {
       focusFirstEmptyField();
@@ -564,6 +569,7 @@ function EditPostForm({
                 onImageReplace={handleImageReplace}
                 imageAlts={imageAlts}
                 onImageAltChange={handleImageAltChange}
+                onPendingChange={setMediaPending}
               >
                 <div className="p-4">
                   <div className="flex items-center justify-between">
@@ -723,7 +729,7 @@ function EditPostForm({
             <button
               type="button"
               onClick={handleSubmitClick}
-              disabled={isSubmitting}
+              disabled={isSubmitting || mediaPending}
               className="inline-flex items-center justify-center gap-1.5 h-10 bg-primary px-5 text-sm font-medium text-primary-foreground shadow-xs transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isSubmitting ? (
@@ -731,7 +737,7 @@ function EditPostForm({
               ) : (
                 <Check className="size-4" />
               )}
-              {isSubmitting ? '수정 중...' : '수정 완료'}
+              {isSubmitting ? '수정 중...' : mediaPending ? '이미지 업로드 중...' : '수정 완료'}
             </button>
           </div>
         </div>

@@ -1,6 +1,6 @@
 import { isHeic, heicTo } from 'heic-to';
 
-async function convertHeicToJpeg(file: File): Promise<File> {
+export async function convertHeicToJpeg(file: File): Promise<File> {
   if (!(await isHeic(file))) return file;
   const blob = await heicTo({ blob: file, type: 'image/jpeg', quality: 0.92 });
   return new File([blob], file.name.replace(/\.hei[cf]$/i, '.jpg'), { type: 'image/jpeg' });

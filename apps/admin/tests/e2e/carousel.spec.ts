@@ -86,11 +86,31 @@ test('선택·미리보기·취소는 업로드와 본문 변경을 발생시키
   await openCarousel(page, ['one.png']);
   await expect(page.getByRole('button', { name: '생성', exact: true })).toBeDisabled();
   await expect(page.getByAltText('1번 이미지 미리보기')).toBeVisible();
+  await expect
+    .poll(() =>
+      page
+        .getByAltText('1번 이미지 미리보기')
+        .evaluate((image: HTMLImageElement) => image.naturalWidth),
+    )
+    .toBeGreaterThan(0);
   await page.getByRole('button', { name: '취소', exact: true }).click();
   expect(await page.getByTestId('saved-html').textContent()).toBe(before);
   expect(
     await page.evaluate(() => (window as unknown as { uploadCalls: string[] }).uploadCalls),
   ).toEqual([]);
+});
+
+test('브라우저가 디코딩하지 못하는 선택 이미지는 깨진 alt 대신 안내를 표시한다', async ({
+  page,
+}) => {
+  await page.getByRole('button', { name: '캐러셀 만들기', exact: true }).click();
+  await page.getByLabel('이미지 파일 선택').setInputFiles({
+    name: 'broken.png',
+    mimeType: 'image/png',
+    buffer: Buffer.from('not an image'),
+  });
+  await expect(page.getByText('미리보기 불가')).toBeVisible();
+  await expect(page.getByAltText('1번 이미지 미리보기')).toHaveCount(0);
 });
 
 test('명시적으로 생성하고 1장을 추가한 다음 단일 Undo로 추가만 취소한다', async ({
@@ -135,10 +155,24 @@ test('생성 실패는 세션을 해제하고 새 캐러셀에 늦은 응답을 
   expect(sources[1]).toContain('two.png');
 });
 
-test('업로드 중 취소 후 늦은 응답은 본문에 삽입되지 않는다', async ({ page }) => {
+test('생성 후 모달을 닫고 본문 편집 중에도 처음 선택한 위치에 삽입한다', async ({ page }) => {
+  await page.locator('.tiptap').click();
+  await page.keyboard.type('기존 문장');
   await openCarousel(page, ['slow-one.png', 'slow-two.png']);
   await page.getByRole('button', { name: '생성', exact: true }).click();
-  await page.getByRole('button', { name: '취소', exact: true }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(page.locator('.image-carousel-container')).toHaveCount(0);
+  await page.locator('.tiptap').click();
+  await page.keyboard.type('추가 문장');
+  await expect(page.locator('.image-carousel-slide')).toHaveCount(2);
+  await expect(page.getByTestId('saved-html')).toContainText('추가 문장');
+});
+
+test('백그라운드 업로드 취소 후 늦은 응답은 본문에 삽입되지 않는다', async ({ page }) => {
+  await openCarousel(page, ['slow-one.png', 'slow-two.png']);
+  await page.getByRole('button', { name: '생성', exact: true }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await page.getByRole('button', { name: '업로드 취소', exact: true }).dispatchEvent('click');
   await page.waitForTimeout(1100);
   await expect(page.locator('.image-carousel-container')).toHaveCount(0);
 });
@@ -451,9 +485,9 @@ test('일반 이미지 실패는 알림 후 즉시 해제되어 다른 파일을
   const before = await page.getByTestId('saved-html').textContent();
   const nextChooser = page.waitForEvent('filechooser');
   await page.getByRole('button', { name: '이미지 추가', exact: true }).click();
-  await (await nextChooser).setFiles(files('slow.png'));
-  await page.getByRole('button', { name: '업로드 취소', exact: true }).click();
-  await page.waitForTimeout(1000);
+  await (await nextChooser).setFiles(files('very-slow.png'));
+  await page.getByRole('button', { name: '업로드 취소', exact: true }).dispatchEvent('click');
+  await page.waitForTimeout(2100);
   expect(await page.getByTestId('saved-html').textContent()).toBe(before);
   await expect(page.getByRole('button', { name: '이미지 추가', exact: true })).toBeEnabled();
 });

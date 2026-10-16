@@ -1,6 +1,6 @@
 'use client';
 
-import { useId, useRef } from 'react';
+import { useId, useRef, useState } from 'react';
 import { Images, Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -41,6 +41,7 @@ export function MediaIntakeDialog({
   onReturnFocus,
 }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const [failedPreviews, setFailedPreviews] = useState<string[]>([]);
   const hintId = useId();
   const minimum = mode === 'carousel' ? 2 : 1;
   const selectionHint =
@@ -128,11 +129,18 @@ export function MediaIntakeDialog({
             {items.map((item, index) => (
               <li key={item.id} className="flex items-center gap-3 border border-input p-3">
                 <span className="text-sm font-medium text-muted-foreground">{index + 1}</span>
-                <img
-                  src={item.preview}
-                  alt={`${index + 1}번 이미지 미리보기`}
-                  className="size-16 shrink-0 rounded-none object-cover"
-                />
+                {item.previewError || failedPreviews.includes(item.preview) ? (
+                  <span className="flex size-16 shrink-0 items-center justify-center bg-muted text-center text-xs text-muted-foreground">
+                    미리보기 불가
+                  </span>
+                ) : (
+                  <img
+                    src={item.preview}
+                    alt={`${index + 1}번 이미지 미리보기`}
+                    onError={() => setFailedPreviews((urls) => [...urls, item.preview])}
+                    className="size-16 shrink-0 rounded-none object-cover"
+                  />
+                )}
                 <div className="min-w-0 grow">
                   <p className="truncate text-sm" title={item.file.name}>
                     {item.file.name}
@@ -160,7 +168,7 @@ export function MediaIntakeDialog({
             파일당 최대 50MB · 여러 파일 합산 제한 없음
           </p>
           <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-            GIF는 정지 이미지로 변환됩니다. HEIC는 미리보기가 표시되지 않을 수 있습니다.
+            GIF는 정지 이미지로 변환됩니다. HEIC는 변환 후 미리보기를 표시합니다.
           </p>
           {error && (
             <p role="alert" className="mt-3 text-sm text-destructive">
