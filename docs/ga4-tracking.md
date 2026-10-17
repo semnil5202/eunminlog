@@ -63,7 +63,7 @@ GA4의 자동 `page_view`는 `page_location`, `page_title`만 수집한다. 게�
 
 ### 2.2 Post Card Click (`select_content`)
 
-사용자가 피드에서 게시글 카드를 클릭할 때 발생한다. GA4 추천 이벤트 `select_content`를 사용한다.
+사용자가 피드·검색 결과·본문 하단 인접 글·인기글 목록에서 게시글 카드를 클릭할 때 발생한다. GA4 추천 이벤트 `select_content`를 사용한다.
 
 | 파라미터               | 타입    | 예시              | 설명                            |
 | ---------------------- | ------- | ----------------- | ------------------------------- |
@@ -74,6 +74,13 @@ GA4의 자동 `page_view`는 `page_location`, `page_title`만 수집한다. 게�
 | `is_sponsored`         | boolean | `true`            | 협찬 여부                       |
 
 ---
+
+게시글 카드의 `placement`는 `feed`, `search_results`, `nearby_posts`, `popular_sidebar`, `popular_mobile`로 구분한다. 인기글은 PC 사이드바와 모바일 하단 배치 위치를 각각 기록한다. 주소 복사는 기존 `post_top`·`post_bottom` 값을 유지한다. GA4 이벤트 범위 맞춤 측정기준 `placement`는 2026-10-17 운영 속성에 등록했다. 같은 날 로컬 인앱브라우저 테스트에서 DebugView의 `copy_link_click` (`post_top`·`post_bottom`)과 `select_content` (`feed`·`nearby_posts`) 수신을 확인했다. 테스트용 `debug_mode` 설정은 배포 코드에 포함하지 않는다.
+
+### GA 초기화와 이벤트 연결
+
+- Astro `define:vars`는 스크립트를 함수 범위로 감싼다. 추적 함수는 지역 함수가 아니라 `window.gtag`에 연결해 공용 `trackEvent`에서 접근할 수 있도록 한다.
+- `js`·`config` 명령은 페이지 초기화 때 큐에 먼저 넣는다. 원격 gtag 스크립트 다운로드는 기존처럼 첫 사용자 상호작용까지 지연하되, 최초 클릭 이벤트가 `config`보다 먼저 기록되지 않게 한다.
 
 ### 2.2.1 게시글 주소 복사 (`copy_link_click`)
 
@@ -115,17 +122,7 @@ AdSense와 쿠팡을 `ad_provider`로 분리한다. 빈 예약 영역(`none`)과
 | `page_type`        | string | `"list"`         | 현재 페이지 유형         |
 | `view_duration_ms` | number | `1000`           | 뷰포트 체류 시간 (ms)    |
 
-#### 2.3.3 Ad Click (`ad_click` -- 커스텀 이벤트)
-
-실제 쿠팡 고정 anchor 클릭에만 발생한다. AdSense 및 쿠팡 다이나믹 iframe 내부 클릭은 교차 출처 경계 때문에 신뢰성 있게 감지할 수 없어 추적하지 않는다.
-
-| 파라미터      | 타입   | 예시             | 설명                |
-| ------------- | ------ | ---------------- | ------------------- |
-| `ad_slot`     | string | `"feed_1"`       | 광고 슬롯 식별자    |
-| `ad_format`   | string | `"in_feed"`      | 광고 포맷           |
-| `ad_position` | string | `"feed_index_1"` | 페이지 내 배치 위치 |
-| `ad_provider` | string | `"coupang"`      | 항상 `coupang`      |
-| `page_type`   | string | `"list"`         | 현재 페이지 유형    |
+광고 클릭·클릭률·수익은 AdSense 및 쿠팡 보고서에서 확인한다. 자체 광고 클릭 이벤트는 수집하지 않는다.
 
 #### `ad_slot` / `ad_format` / `ad_position` 값 정의
 
@@ -206,7 +203,6 @@ type GtagEvent =
   | 'search'
   | 'ad_impression'
   | 'ad_view'
-  | 'ad_click'
   | 'cookie_consent';
 
 type GtagParams = Record<string, string | number | boolean>;
@@ -328,7 +324,7 @@ PostCard는 SSG 빌드 타임에 렌더링되고, 무한스크롤로 동적 추�
 ```typescript
 import { trackEvent } from './gtag';
 
-export function initPostClickTracker(containerId: string): void {
+export function initPostClickTracker(containerId: string, placement: string): void {
   const container = document.getElementById(containerId);
   if (!container) return;
 
@@ -338,6 +334,7 @@ export function initPostClickTracker(containerId: string): void {
 
     trackEvent('select_content', {
       content_type: 'post',
+      placement,
       content_slug: article.dataset.postSlug!,
       content_category: article.dataset.postCategory!,
       content_sub_category: article.dataset.postSubCategory!,
@@ -363,7 +360,7 @@ export function initPostClickTracker(containerId: string): void {
 - 50% 이상 뷰포트 진입 시 현재 `data-ad-active-provider`의 `ad_impression`을 provider별 1회 기록한다.
 - 같은 provider가 1초 이상 유지되면 `ad_view`를 provider별 1회 기록한다.
 - `none` 상태는 기록하지 않으며 provider 전환 시 진행 중인 view 타이머를 취소한다.
-- 쿠팡 고정 anchor 내부의 실제 클릭만 `ad_click`으로 기록한다. AdSense 및 쿠팡 다이나믹 iframe에는 click listener를 두지 않으며 동적 상품 클릭은 쿠팡 리포트에서 확인한다.
+- 광고 슬롯에 클릭 추적 listener를 등록하지 않는다. 고정 쿠팡 링크를 포함한 광고 클릭·클릭률·수익은 각 플랫폼 보고서에서 확인한다.
 - 슬롯 상태는 element 기준 `WeakMap`/`Map`으로 관리해 동일 이름의 동적 슬롯이 서로 간섭하지 않게 한다.
 - Search의 `ad_position`은 검색 결과의 index 1, 6, 11, 16…(2·7·12·17번째 카드 직전)를 사용하며 고유 슬롯 counter와 분리한다. Feed도 같은 index 규칙으로 활성화한다.
 - `unfill-optimized`는 Google이 관리하는 AdSense 지면으로 추적한다. GPT 샘플의 `NO FILL`·`LOAD FAILED` marker는 provider `none`이므로 impression/view/click 이벤트를 만들지 않는다. Production에는 기술 marker를 렌더링하지 않는다.

@@ -31,7 +31,7 @@ const emptyLabel = t("sidebar.popularEmpty", locale);
 const shouldShowInFeedAdvertisement = showInFeedAdvertisement && posts.length >= 2;
 ---
 
-<section class="sponsored-post-list">
+<section class="sponsored-post-list" data-placement={advertisementContext === "mobile" ? "popular_mobile" : "popular_sidebar"}>
   <h2 class="text-[16px] font-bold text-primary-600 pb-2 border-b border-gray-200">
     {popularLabel}
   </h2>
@@ -83,6 +83,7 @@ const shouldShowInFeedAdvertisement = showInFeedAdvertisement && posts.length >=
       if (!postElement) return;
       trackEvent("select_content", {
         content_type: "post",
+        placement: container.dataset.placement!,
         content_slug: postElement.dataset.postSlug!,
         content_category: postElement.dataset.postCategory!,
         content_sub_category: postElement.dataset.postSubCategory!,

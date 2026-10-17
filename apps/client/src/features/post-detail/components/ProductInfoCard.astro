@@ -138,7 +138,7 @@ const products = (displayProductNames ?? []).map((name, i) => ({
     {rating !== null && (
       <div class="flex items-baseline gap-3">
         <dt class="shrink-0 w-20 text-gray-500 font-medium">{t("product.rating", locale)}</dt>
-        <dd class="text-gray-900"><span class="text-primary-600 font-semibold">{rating.toFixed(1)}</span>/5</dd>
+        <dd class="text-gray-900">{rating.toFixed(1)}/5</dd>
       </div>
     )}
     {summaryLines.length > 0 && (

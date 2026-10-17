@@ -11,7 +11,7 @@
     "preview": "astro preview",
     "test:incremental": "node scripts/test-incremental-build.mjs",
     "lint": "eslint .",
-    "test": "node --test src/features/post-detail/lib/article-ad-placement.test.mjs src/shared/lib/date.test.mjs src/shared/lib/ad/feed-placement.test.mjs src/shared/lib/ad/popular-placement.test.mjs src/features/post-detail/lib/product-review.test.mjs src/shared/lib/fetch-all-rows.test.mjs src/shared/lib/build-data-index.test.mjs src/shared/lib/page-cache-model.test.mjs src/shared/lib/request-snapshot.test.mjs"
+    "test": "node --test src/features/post-detail/lib/article-ad-placement.test.mjs src/shared/lib/date.test.mjs src/shared/lib/ad/feed-placement.test.mjs src/shared/lib/ad/popular-placement.test.mjs src/features/post-detail/lib/product-review.test.mjs src/shared/lib/fetch-all-rows.test.mjs src/shared/lib/build-data-index.test.mjs src/shared/lib/page-cache-model.test.mjs src/shared/lib/request-snapshot.test.mjs src/shared/lib/analytics/gtag-init.test.mjs"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.0",

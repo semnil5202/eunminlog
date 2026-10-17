@@ -219,7 +219,7 @@ features/auth/
 - 썸네일 (이미지 업로드)
 - 본문 (제목 입력 + Tiptap 에디터)
 - 카테고리 / 서브카테고리 (select)
-- 3줄 요약 (textarea + AI 요약 생성)
+- 3줄 요약 (textarea + 프롬프트 복사)
 - 번역 기능 (번역본 생성 + 번역본 확인)
 
 **기본 폼** (`basic` 선택 시): 공통 필드만 표시한다. 장소·주소·가격·제품·구매처·구매 링크 데이터는 `null`로 저장한다. 공개 상세에는 제목·썸네일 다음에 카테고리와 3줄 요약을 담은 `BasicInfoCard`가 표시되고, 그 아래에 본문이 나온다. 3줄 요약은 메타 설명에도 사용한다. 카테고리는 기존과 동일하게 선택한다.
@@ -268,7 +268,7 @@ features/auth/
     ↓
 [기본 폼] ← formType === 'basic' 일 때 전용 필드 없음
     ↓
-3줄 요약 (textarea + "요약 생성" 버튼)
+3줄 요약 (textarea + "프롬프트 복사" 버튼)
     ↓
 액션 버튼 (번역본 생성 / 번역본 확인하기 / 작성 완료)
 ```
@@ -291,13 +291,13 @@ features/auth/
 | PE-9A | is_coupang_partners 체크박스 (제품 리뷰 폼 전용, 제품 목록 우측 배치)                          | P0       | 구현 완료            |
 | PE-10 | 단일 제품 리뷰 선택적 rating 입력 (1.0-5.0, 0.1 단위)                                          | P1       | 구현                 |
 | PE-11 | place_name, address, price_prefix, price 입력 (체험 방문 전용)                                 | P1       | 구현 완료            |
-| PE-12 | 3줄 요약 AI 생성 (Server Action, GPT-5 Mini)                                                   | P0       | 구현 완료            |
+| PE-12 | 3줄 요약 프롬프트 복사                                                                          | P0       | 구현 완료            |
 | PE-13 | 번역 트리거 (에디터 내 번역본 생성/확인)                                                       | P0       | 구현 완료            |
 | PE-14 | 저장 시 빌드 트리거 옵션                                                                       | P1       | 미구현               |
 | PE-15 | 미리보기 (선택적)                                                                              | P2       | 미구현               |
 | PE-16 | 썸네일 업로드 (WebP 변환, blob URL 미리보기) + alt 텍스트 입력                                 | P0       | 구현 완료            |
 | PE-17 | 폼 검증 — react-hook-form + Zod. 버튼 클릭 시 검증 → 미입력 필드 focus + 에러 메시지           | P0       | 구현 완료            |
-| PE-18 | Loading spinner — 요약 생성, 번역본 생성하기 버튼에 LoaderIcon animate-spin 표시               | P0       | 구현 완료            |
+| PE-18 | Loading spinner — 번역본 생성하기 버튼에 LoaderIcon animate-spin 표시                          | P0       | 구현 완료            |
 | PE-19 | Label 스타일 — 모든 label 검은색(`text-base font-bold`) + 필수값 `*` primary-600 표시          | P0       | 구현 완료            |
 
 #### 포스트 메타데이터 폼 필드
@@ -305,7 +305,7 @@ features/auth/
 | 필드          | 입력 타입     | 필수 | DB 컬럼               | 폼 형식              | 비고                                                  |
 | ------------- | ------------- | ---- | --------------------- | -------------------- | ----------------------------------------------------- |
 | 제목          | text input    | Y    | `title`               | 공통                 | 40자 제한 + 글자수 카운터                             |
-| 설명          | textarea      | Y    | `description`         | 공통                 | 3줄 요약 + AI 생성 버튼                               |
+| 설명          | textarea      | Y    | `description`         | 공통                 | 3줄 요약 + 프롬프트 복사 버튼                         |
 | Slug          | text input    | Y    | `slug`                | 공통                 | URL slug, unique. 자동 생성 + 수동 편집 가능 (미구현) |
 | 카테고리      | select        | Y    | `category`            | 공통                 | `delicious`, `cafe`, `travel`                         |
 | 서브카테고리  | select        | Y    | `sub_category`        | 공통                 | 카테고리에 따라 동적 변경                             |
@@ -438,6 +438,7 @@ travel (여행)    → domestic (국내), overseas (해외), accommodation (숙�
 - **선택 입력 보호**: 단일·캐러셀 사진 클릭 시 해당 alt 입력란에 즉시 포커스한다. 이미지 노드 선택 상태의 텍스트 입력·붙여넣기도 alt로 전달해 사진 교체를 방지한다. 리사이즈·스와이프·모자이크 버튼에서는 alt 포커스를 강제하지 않는다.
 - **alt 입력 경로**: 신규·수정 화면 모두 썸네일 바로 아래에 `썸네일 이미지 설명 (alt)` 입력란을 상시 표시한다. 단일 이미지·캐러셀 사진을 선택하면 해당 사진 하단에 설명 입력란을 표시하며 사진 크기 조절 프레임에는 포함하지 않는다. 모자이크 편집 중에는 해당 입력란을 숨긴다.
 - **alt 공통 상태**: 본문은 기존 URL별 `imageAlts`, 썸네일은 폼의 `thumbnailAlt`를 그대로 사용한다. 입력 즉시 공통 상태에 반영하고 하단 `이미지 alt 입력` 드로어와 양방향으로 공유한다. 드로어도 닫기 전부터 반영되며 입력 중 공백·한글 조합을 보존한다. 같은 URL은 같은 설명을 공유하며 드로어에는 중복 URL을 한 번만 표시한다. DB·게시글 저장 형식은 변경하지 않는다.
+- **alt 프롬프트 복사**: 드로어 설명 아래 버튼에서 글 제목, 에디터의 본문 HTML 원본, 본문 이미지의 URL 목록을 복사한다. 대상 목록은 드로어의 본문 이미지 순서로, 북마크 이미지 제외·같은 URL 중복 제거를 따른다. 썸네일 alt는 수동 입력하며 프롬프트 대상에서 제외한다. 프롬프트는 이미지 주변 문맥에 근거한 짧고 구체적인 대체 텍스트를 대상당 한 줄씩 번호 없이 반환하게 한다. 매장명·지역명은 식별에 필요할 때만 넣고 모든 alt에 같은 키워드를 반복하지 않는다. HTML만으로 실제 모습을 알 수 없으면 추측하지 않고 `이미지 확인 필요`로 표시하며 사용자가 미리보기와 대조한다. 본문 이미지가 없으면 버튼을 비활성화하고 복사 실패는 토스트로 알린다. 복사만 수행하며 기존 alt 값이나 저장 형식은 변경하지 않는다.
 - **alt 임시저장**: 입력 즉시 서버 저장하지 않고 기존 2분 자동저장·수동 임시저장에 최신 설명을 포함한다. 계속 입력해도 자동저장 주기는 다시 시작하지 않으며 중복 저장 요청을 방지한다. 빈 alt 목록도 초안 복원 시 덮어쓴다. alt만 수정해도 페이지 이탈 경고에 포함하고 모자이크 URL 교체·Undo의 기존 설명 보존 정책은 유지한다.
 
 - **모자이크 취소 버튼**: ghost 스타일에 1px `border-input` 테두리를 적용한다.
@@ -469,7 +470,7 @@ travel (여행)    → domestic (국내), overseas (해외), accommodation (숙�
 - 본문 영역: 제목 입력 (`text input`, 40자 제한, 글자수 카운터) + `<Separator />` + `TiptapEditorContainer`
 - 체험 방문 전용 필드: `VisitFields` 컴포넌트 (폼 형식이 `visit`일 때만 렌더링)
 - 제품 리뷰 전용 필드: `ProductReviewFields` 컴포넌트 (폼 형식이 `product-review`일 때만 렌더링, `useFieldArray` 동적 행)
-- 3줄 요약: textarea + "요약 생성" 버튼 (브라우저 직접 GPT 호출 `streamSummary` -- GPT-5 Mini API 연동 완료)
+- 3줄 요약: textarea + "프롬프트 복사" 버튼. 에디터의 본문 HTML 원본을 그대로 복사해 제목·표·목록 구조를 제공한다. 프롬프트는 HTML 속성·이미지 URL·북마크·광고 정보를 제외하고 중요한 주요 문단 3개를 동적으로 선택하여 원래 순서대로 각 한 줄씩 독립된 완성형 문장으로 요약하도록 지시한다. 결과는 `description`과 SEO 메타 설명에 사용되므로 한국어 기준 공백·문장부호 포함 150~160자를 권장하고 200자를 넘기지 않도록 안내한다. 번역문에는 같은 글자 수를 강제하지 않는다.
 - 액션 버튼: "번역본 생성하기" (카테고리 선택 + 미번역 시) / "용어 검토 계속하기" (Sheet 닫은 후 재오픈) / "번역본 확인하기" (Languages 아이콘, 번역 완료 시) / "작성 완료"/"수정 완료" (Check 아이콘). 모바일: `grid grid-cols-2`, PC: `flex` 레이아웃
 - `TiptapEditorContainer` (SSR-safe: `isMounted` 패턴 + `TiptapEditorSkeleton` 로딩 상태)
 
@@ -497,13 +498,12 @@ react-hook-form + Zod 기반 폼 검증. "작성 완료" / "번역본 생성하�
 
 **개별 버튼 비활성화 (disabled) 조건**:
 
-- "요약 생성" 버튼: 이미 요약 완료(`isSummarized`) 또는 요약 진행 중(`isSummarizing`)이면 비활성화
+- "프롬프트 복사" 버튼: 본문이 비어 있으면 비활성화
 
 **Loading spinner (PE-18)**:
 
 | 버튼            | 스피너 조건              | 아이콘                                              |
 | --------------- | ------------------------ | --------------------------------------------------- |
-| 요약 생성       | `isSummarizing === true` | `LoaderIcon` (lucide-react) `animate-spin` `size-3` |
 | 번역본 생성하기 | `isExtracting === true`  | `LoaderIcon` (lucide-react) `animate-spin` `size-4` |
 
 **Label 스타일 (PE-19)**:
@@ -996,7 +996,7 @@ features/translation/
 
 **GPT API 실패 fallback 처리**:
 
-- 요약 생성 실패: `toast.error` 알림 (sonner)
+- 프롬프트 복사 시 본문이 비어 있으면 `toast.error` 알림 (sonner)
 - 용어 추출 실패: `toast.error` 알림 + "번역본 재생성하기" 버튼 텍스트로 변경
 - 번역 실패 (locale별): 실패 locale별 `toast.error` 알림 + TranslationPreviewSheet에서 "다시 시도" 버튼 표시
 - `retrySingleLocale` Server Action: 단일 locale만 재번역 실행

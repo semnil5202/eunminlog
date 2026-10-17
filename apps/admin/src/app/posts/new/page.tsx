@@ -26,7 +26,7 @@ import {
 } from '@/features/post-editor/lib/image-alt-replacement';
 import { FORM_TYPE_OPTIONS } from '@/features/post-editor/constants/category';
 import { changePostFormType } from '@/features/post-editor/lib/form-type';
-import { SUMMARY_SYSTEM_PROMPT } from '@/shared/constants/prompts';
+import { buildSummaryCopyPrompt } from '@/features/post-editor/lib/summary-prompt';
 import {
   postFormSchema,
   POST_FORM_DEFAULTS,
@@ -270,14 +270,11 @@ function NewPostContent() {
   };
 
   const handleCopySummaryPrompt = async () => {
-    const contentText = watch('content')
-      .replace(/<[^>]*>/g, '')
-      .trim();
-    if (!contentText) {
+    const prompt = buildSummaryCopyPrompt(title, watchedContent);
+    if (!prompt) {
       toast.error('본문을 먼저 입력해주세요.');
       return;
     }
-    const prompt = `${SUMMARY_SYSTEM_PROMPT}\n\n제목: ${title}\n\n본문:\n${contentText}\n\n위 내용을 바탕으로 3줄 요약을 작성해주세요. 각 줄은 줄바꿈(\\n)으로 구분해주세요.`;
     await navigator.clipboard.writeText(prompt);
     toast.success('3줄 요약 프롬프트가 복사되었습니다.');
   };
@@ -610,6 +607,7 @@ function NewPostContent() {
       <ImageAltSheet
         open={isAltSheetOpen}
         onOpenChange={setIsAltSheetOpen}
+        title={title}
         content={watch('content')}
         imageAlts={imageAlts}
         onComplete={handleImageAltComplete}

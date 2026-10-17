@@ -4,7 +4,6 @@ type GtagEvent =
   | 'copy_link_click'
   | 'ad_impression'
   | 'ad_view'
-  | 'ad_click'
   | 'cookie_consent';
 
 type GtagParams = Record<string, string | number | boolean>;
