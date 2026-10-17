@@ -44,6 +44,7 @@ import {
   updatePostRecommendations,
   type PostListItem,
 } from '@/features/post-management/api/actions';
+import { getEffectivePostListFilter } from '@/features/post-management/lib/post-list-filter';
 
 type SortKey = 'publishedAt' | 'updatedAt';
 
@@ -122,9 +123,7 @@ function PostsContent() {
           page: pageNumber,
           pageSize: PAGE_SIZE,
           sortBy: sort,
-          from: filter.from || undefined,
-          to: filter.to || undefined,
-          search: filter.query || undefined,
+          ...getEffectivePostListFilter(filter),
         });
         setPosts(result.posts);
         setTotalCount(result.totalCount);
@@ -149,10 +148,11 @@ function PostsContent() {
   const buildQueryString = useCallback(
     (filter: FilterFormValues, sort: SortKey, pageNumber: number) => {
       const params = new URLSearchParams();
+      const { from, to, search } = getEffectivePostListFilter(filter);
       if (pageNumber > 1) params.set('page', String(pageNumber));
-      if (filter.from) params.set('from', filter.from);
-      if (filter.to) params.set('to', filter.to);
-      if (filter.query) params.set('q', filter.query);
+      if (from) params.set('from', from);
+      if (to) params.set('to', to);
+      if (search) params.set('q', search);
       if (sort !== 'publishedAt') params.set('sort', sort);
       const queryString = params.toString();
       return queryString ? `/posts?${queryString}` : '/posts';
@@ -301,6 +301,9 @@ function PostsContent() {
       <SearchFilter onSearch={handleSearch}>
         <SearchFilter.DateRange registerFrom={register('from')} registerTo={register('to')} />
         <SearchFilter.Query register={register('query')} placeholder="게시글 제목 검색" />
+        <p className="text-xs text-muted-foreground">
+          제목 검색어를 입력하면 기간과 관계없이 전체 게시글에서 검색합니다.
+        </p>
       </SearchFilter>
 
       <div>
