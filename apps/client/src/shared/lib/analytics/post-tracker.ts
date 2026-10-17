@@ -1,6 +1,6 @@
 import { trackEvent } from './gtag';
 
-export function initPostClickTracker(containerId: string): void {
+export function initPostClickTracker(containerId: string, placement: string): void {
   const container = document.getElementById(containerId);
   if (!container) return;
 
@@ -10,6 +10,7 @@ export function initPostClickTracker(containerId: string): void {
 
     trackEvent('select_content', {
       content_type: 'post',
+      placement,
       content_slug: article.dataset.postSlug!,
       content_category: article.dataset.postCategory!,
       content_sub_category: article.dataset.postSubCategory!,

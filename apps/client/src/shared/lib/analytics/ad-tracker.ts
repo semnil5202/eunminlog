@@ -94,20 +94,6 @@ export function observeNewAdSlot(element: HTMLElement): void {
     clearViewTimer(state);
     trackImpressionAndView(state);
   });
-  element.addEventListener('click', (event) => {
-    const providerElement = (event.target as HTMLElement).closest<HTMLElement>(
-      '[data-ad-provider]',
-    );
-    const provider = providerElement?.dataset.adProvider;
-    if (provider !== 'coupang') return;
-    trackEvent('ad_click', {
-      ad_slot: element.dataset.adSlot ?? 'unknown',
-      ad_format: element.dataset.adFormat ?? 'unknown',
-      ad_position: element.dataset.adPosition ?? 'unknown',
-      ad_provider: provider,
-      page_type: pageType,
-    });
-  });
 }
 
 /** 다시 렌더링할 영역 안의 광고 슬롯 observer와 타이머를 해제한다. */

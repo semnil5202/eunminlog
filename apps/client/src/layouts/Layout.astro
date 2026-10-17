@@ -74,8 +74,9 @@ const webSiteSchema: Record<string, unknown> = {
     )}
     <script is:inline define:vars={{ GA_MEASUREMENT_ID, gaPageParams }}>
       window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
+      window.gtag = window.gtag || function(){window.dataLayer.push(arguments);};
+      window.gtag('js', new Date());
+      window.gtag('config', GA_MEASUREMENT_ID, gaPageParams);
 
       var analyticsLoaded = false;
       function loadAnalytics() {
@@ -86,7 +87,6 @@ const webSiteSchema: Record<string, unknown> = {
         gtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA_MEASUREMENT_ID;
         gtagScript.async = true;
         document.head.appendChild(gtagScript);
-        gtag('config', GA_MEASUREMENT_ID, gaPageParams);
 
         if (window.location.hostname !== 'eunminlog.site') return;
 
