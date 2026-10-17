@@ -219,7 +219,7 @@ features/auth/
 - 썸네일 (이미지 업로드)
 - 본문 (제목 입력 + Tiptap 에디터)
 - 카테고리 / 서브카테고리 (select)
-- 3줄 요약 (textarea + AI 요약 생성)
+- 3줄 요약 (textarea + 프롬프트 복사)
 - 번역 기능 (번역본 생성 + 번역본 확인)
 
 **기본 폼** (`basic` 선택 시): 공통 필드만 표시한다. 장소·주소·가격·제품·구매처·구매 링크 데이터는 `null`로 저장한다. 공개 상세에는 제목·썸네일 다음에 카테고리와 3줄 요약을 담은 `BasicInfoCard`가 표시되고, 그 아래에 본문이 나온다. 3줄 요약은 메타 설명에도 사용한다. 카테고리는 기존과 동일하게 선택한다.
@@ -268,7 +268,7 @@ features/auth/
     ↓
 [기본 폼] ← formType === 'basic' 일 때 전용 필드 없음
     ↓
-3줄 요약 (textarea + "요약 생성" 버튼)
+3줄 요약 (textarea + "프롬프트 복사" 버튼)
     ↓
 액션 버튼 (번역본 생성 / 번역본 확인하기 / 작성 완료)
 ```
@@ -291,13 +291,13 @@ features/auth/
 | PE-9A | is_coupang_partners 체크박스 (제품 리뷰 폼 전용, 제품 목록 우측 배치)                          | P0       | 구현 완료            |
 | PE-10 | 단일 제품 리뷰 선택적 rating 입력 (1.0-5.0, 0.1 단위)                                          | P1       | 구현                 |
 | PE-11 | place_name, address, price_prefix, price 입력 (체험 방문 전용)                                 | P1       | 구현 완료            |
-| PE-12 | 3줄 요약 AI 생성 (Server Action, GPT-5 Mini)                                                   | P0       | 구현 완료            |
+| PE-12 | 3줄 요약 프롬프트 복사                                                                          | P0       | 구현 완료            |
 | PE-13 | 번역 트리거 (에디터 내 번역본 생성/확인)                                                       | P0       | 구현 완료            |
 | PE-14 | 저장 시 빌드 트리거 옵션                                                                       | P1       | 미구현               |
 | PE-15 | 미리보기 (선택적)                                                                              | P2       | 미구현               |
 | PE-16 | 썸네일 업로드 (WebP 변환, blob URL 미리보기) + alt 텍스트 입력                                 | P0       | 구현 완료            |
 | PE-17 | 폼 검증 — react-hook-form + Zod. 버튼 클릭 시 검증 → 미입력 필드 focus + 에러 메시지           | P0       | 구현 완료            |
-| PE-18 | Loading spinner — 요약 생성, 번역본 생성하기 버튼에 LoaderIcon animate-spin 표시               | P0       | 구현 완료            |
+| PE-18 | Loading spinner — 번역본 생성하기 버튼에 LoaderIcon animate-spin 표시                          | P0       | 구현 완료            |
 | PE-19 | Label 스타일 — 모든 label 검은색(`text-base font-bold`) + 필수값 `*` primary-600 표시          | P0       | 구현 완료            |
 
 #### 포스트 메타데이터 폼 필드
@@ -305,7 +305,7 @@ features/auth/
 | 필드          | 입력 타입     | 필수 | DB 컬럼               | 폼 형식              | 비고                                                  |
 | ------------- | ------------- | ---- | --------------------- | -------------------- | ----------------------------------------------------- |
 | 제목          | text input    | Y    | `title`               | 공통                 | 40자 제한 + 글자수 카운터                             |
-| 설명          | textarea      | Y    | `description`         | 공통                 | 3줄 요약 + AI 생성 버튼                               |
+| 설명          | textarea      | Y    | `description`         | 공통                 | 3줄 요약 + 프롬프트 복사 버튼                         |
 | Slug          | text input    | Y    | `slug`                | 공통                 | URL slug, unique. 자동 생성 + 수동 편집 가능 (미구현) |
 | 카테고리      | select        | Y    | `category`            | 공통                 | `delicious`, `cafe`, `travel`                         |
 | 서브카테고리  | select        | Y    | `sub_category`        | 공통                 | 카테고리에 따라 동적 변경                             |
@@ -469,7 +469,7 @@ travel (여행)    → domestic (국내), overseas (해외), accommodation (숙�
 - 본문 영역: 제목 입력 (`text input`, 40자 제한, 글자수 카운터) + `<Separator />` + `TiptapEditorContainer`
 - 체험 방문 전용 필드: `VisitFields` 컴포넌트 (폼 형식이 `visit`일 때만 렌더링)
 - 제품 리뷰 전용 필드: `ProductReviewFields` 컴포넌트 (폼 형식이 `product-review`일 때만 렌더링, `useFieldArray` 동적 행)
-- 3줄 요약: textarea + "요약 생성" 버튼 (브라우저 직접 GPT 호출 `streamSummary` -- GPT-5 Mini API 연동 완료)
+- 3줄 요약: textarea + "프롬프트 복사" 버튼. 에디터의 본문 HTML 원본을 그대로 복사해 제목·표·목록 구조를 제공한다. 프롬프트는 HTML 속성·이미지 URL·북마크·광고 정보를 제외하고 중요한 주요 문단 3개를 동적으로 선택하여 원래 순서대로 각 한 줄씩 독립된 완성형 문장으로 요약하도록 지시한다. 결과는 `description`과 SEO 메타 설명에 사용되므로 한국어 기준 공백·문장부호 포함 150~160자를 권장하고 200자를 넘기지 않도록 안내한다. 번역문에는 같은 글자 수를 강제하지 않는다.
 - 액션 버튼: "번역본 생성하기" (카테고리 선택 + 미번역 시) / "용어 검토 계속하기" (Sheet 닫은 후 재오픈) / "번역본 확인하기" (Languages 아이콘, 번역 완료 시) / "작성 완료"/"수정 완료" (Check 아이콘). 모바일: `grid grid-cols-2`, PC: `flex` 레이아웃
 - `TiptapEditorContainer` (SSR-safe: `isMounted` 패턴 + `TiptapEditorSkeleton` 로딩 상태)
 
@@ -497,13 +497,12 @@ react-hook-form + Zod 기반 폼 검증. "작성 완료" / "번역본 생성하�
 
 **개별 버튼 비활성화 (disabled) 조건**:
 
-- "요약 생성" 버튼: 이미 요약 완료(`isSummarized`) 또는 요약 진행 중(`isSummarizing`)이면 비활성화
+- "프롬프트 복사" 버튼: 본문이 비어 있으면 비활성화
 
 **Loading spinner (PE-18)**:
 
 | 버튼            | 스피너 조건              | 아이콘                                              |
 | --------------- | ------------------------ | --------------------------------------------------- |
-| 요약 생성       | `isSummarizing === true` | `LoaderIcon` (lucide-react) `animate-spin` `size-3` |
 | 번역본 생성하기 | `isExtracting === true`  | `LoaderIcon` (lucide-react) `animate-spin` `size-4` |
 
 **Label 스타일 (PE-19)**:
@@ -996,7 +995,7 @@ features/translation/
 
 **GPT API 실패 fallback 처리**:
 
-- 요약 생성 실패: `toast.error` 알림 (sonner)
+- 프롬프트 복사 시 본문이 비어 있으면 `toast.error` 알림 (sonner)
 - 용어 추출 실패: `toast.error` 알림 + "번역본 재생성하기" 버튼 텍스트로 변경
 - 번역 실패 (locale별): 실패 locale별 `toast.error` 알림 + TranslationPreviewSheet에서 "다시 시도" 버튼 표시
 - `retrySingleLocale` Server Action: 단일 locale만 재번역 실행
