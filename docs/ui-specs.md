@@ -178,6 +178,7 @@
 - 카테고리/서브카테고리 인덱스 페이지 상단에 수평 서브카테고리 탭을 표시
 - MobileHeader와 동일한 UI 패턴: 텍스트 링크 + `|` 구분선 + `mask-image` 우측 페이드 아웃
 - Active 서브카테고리는 `text-primary-600`으로 하이라이트, 나머지는 `text-gray-700`
+- 탭 라벨·링크·선택 상태는 frontmatter에서 준비하며, 라벨 조회는 `Promise.all`로 완료한 뒤 템플릿에서는 동기 렌더링한다. 배열 순서는 기존 서브카테고리 순서를 유지한다.
 - 적용 페이지: `[category]/index`, `[category]/[sub_category]/index`, `[locale]/[category]/index`, `[locale]/[category]/[sub_category]/index`
 
 ```css
@@ -262,6 +263,8 @@
 - 썸네일은 `optimizedUrl()`로 `_688.webp` 리사이즈본을 사용
 
 ### Feature Components: Post Detail (`features/post-detail/`)
+
+장소·제품·기본 정보 카드의 카테고리 링크와 `›` 구분자는 `flex flex-wrap items-baseline gap-x-1`로 배치한다. 템플릿 공백 대신 CSS로 가로 간격 4px을 유지하며, 긴 분류명은 줄바꿈을 허용한다.
 
 #### `PlaceInfoCard.astro`
 

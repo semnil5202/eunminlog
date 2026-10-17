@@ -16,9 +16,9 @@
     "@astrojs/sitemap": "^3.7.0",
     "@eunminlog/config": "workspace:*",
     "@supabase/supabase-js": "^2.98.0",
-    "@tailwindcss/vite": "^4.1.18",
-    "astro": "^5",
-    "tailwindcss": "^4.1.18"
+    "@tailwindcss/vite": "^4.2.2",
+    "astro": "^7.2.0",
+    "tailwindcss": "^4.2.2"
   },
   "devDependencies": {
     "@eunminlog/eslint-config": "workspace:*",

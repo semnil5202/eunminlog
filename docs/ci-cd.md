@@ -203,6 +203,10 @@ Job: deploy
 
 ## 7. 빌드 최적화 고려사항
 
+### 로컬 Turbo 캐시
+
+`turbo.json`의 `cacheDir`을 `.turbo/cache`로 명시하여 각 체크아웃·워크트리 내부에 캐시를 저장한다. Git worktree에서 원본 저장소의 공유 캐시를 자동 선택하면 Codex의 쓰기 허용 범위 밖 경로에 접근하여 `Operation not permitted`가 발생할 수 있다. 명시한 경로는 워크트리별 캐시를 사용하므로 워크트리 간 캐시 공유는 하지 않는다. GitHub Actions의 client 배포는 Turbo 대신 `pnpm --filter @eunminlog/client build`를 직접 실행하며, Astro 증분 캐시 보존은 별도 설정이 필요하다.
+
 ### Turbo Remote Cache (향후)
 
 현재는 GitHub Actions의 pnpm store 캐싱만 사용. 빌드 빈도가 높아지면 Turbo Remote Cache(Vercel 또는 self-hosted)를 도입하여 빌드 결과물 자체를 캐싱할 수 있다.

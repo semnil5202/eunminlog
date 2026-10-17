@@ -24,32 +24,36 @@ const activeSubs = locale !== DEFAULT_LOCALE
   ? await getMultilingualSubCategories(category)
   : await getActiveSubCategorySlugs(category);
 const subCategories = allSubCategories.filter((s) => activeSubs.includes(s));
+const tabs = await Promise.all(
+  subCategories.map(async (sub) => ({
+    slug: sub,
+    label: await getSubCategoryLabel(sub, locale),
+    href: getLocalePath(`/${category}/${sub}/`, locale),
+    isActive: activeSubCategory === sub,
+  })),
+);
 ---
 
 <nav aria-label={t("a11y.subCategoryNav", locale)} class="block lg:hidden -mx-4 mb-4 border-b border-gray-200">
   <div class="flex items-center gap-1 overflow-x-auto scrollbar-none whitespace-nowrap px-4 pb-3" style="mask-image:linear-gradient(to right,black calc(100% - 24px),transparent);-webkit-mask-image:linear-gradient(to right,black calc(100% - 24px),transparent)">
-    {subCategories.map((sub, index) => {
-      const isActive = activeSubCategory === sub;
-      const href = getLocalePath(`/${category}/${sub}/`, locale);
-      return (
-        <>
-          <a
-            href={href}
-            class:list={[
-              "shrink-0 px-2.5 py-1.5 text-body2 font-semibold transition-colors duration-150 rounded-md hover:bg-primary-50",
-              isActive
-                ? "text-primary-600"
-                : "text-gray-700 hover:text-primary-500",
-            ]}
-            aria-current={isActive ? "true" : undefined}
-          >
-            {await getSubCategoryLabel(sub, locale)}
-          </a>
-          {index < subCategories.length - 1 && (
-            <span class="text-gray-300 select-none" aria-hidden="true">|</span>
-          )}
-        </>
-      );
-    })}
+    {tabs.map((tab, index) => (
+      <>
+        <a
+          href={tab.href}
+          class:list={[
+            "shrink-0 px-2.5 py-1.5 text-body2 font-semibold transition-colors duration-150 rounded-md hover:bg-primary-50",
+            tab.isActive
+              ? "text-primary-600"
+              : "text-gray-700 hover:text-primary-500",
+          ]}
+          aria-current={tab.isActive ? "true" : undefined}
+        >
+          {tab.label}
+        </a>
+        {index < tabs.length - 1 && (
+          <span class="text-gray-300 select-none" aria-hidden="true">|</span>
+        )}
+      </>
+    ))}
   </div>
 </nav>

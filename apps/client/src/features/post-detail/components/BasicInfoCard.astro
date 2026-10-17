@@ -22,7 +22,7 @@ const summaryLines = description.split("\n").filter(Boolean);
   <dl class="space-y-3 text-sm">
     <div class="flex items-baseline gap-3">
       <dt class="shrink-0 w-20 text-gray-500 font-medium">{t("place.category", locale)}</dt>
-      <dd class="text-gray-900">
+      <dd class="flex flex-wrap items-baseline gap-x-1 text-gray-900">
         <a href={getLocalePath(`/${category}/`, locale)} class="text-primary-600 underline underline-offset-4 hover:text-primary-700 transition-colors">{categoryLabel}</a>
         <span class="text-base leading-none">›</span>
         <a href={getLocalePath(`/${category}/${subCategory}/`, locale)} class="text-primary-600 underline underline-offset-4 hover:text-primary-700 transition-colors">{subCategoryLabel}</a>

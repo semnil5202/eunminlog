@@ -9,6 +9,7 @@
 - **패키지명**: `@eunminlog/config`
 - **파일 위치**: `packages/config/theme.css`
 - **방식**: Tailwind CSS v4 `@theme inline` (CSS custom property 기반)
+- **버전**: 양 앱의 `tailwindcss`와 Vite/PostCSS 플러그인은 4.2.2를 기준으로 맞춘다. `@tailwindcss/vite` 4.2.2부터 Vite 8을 지원한다.
 
 ### Import 구조
 

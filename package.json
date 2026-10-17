@@ -16,6 +16,13 @@
     "format:check": "prettier --check ."
   },
   "pnpm": {
+    "packageExtensions": {
+      "@hookform/resolvers@5.2.2": {
+        "peerDependencies": {
+          "zod": "^3.25.0 || ^4.0.0"
+        }
+      }
+    },
     "onlyBuiltDependencies": [
       "esbuild",
       "sharp",

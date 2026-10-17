@@ -6,6 +6,8 @@ const png = Buffer.from(
 );
 const files = (names: string[]) =>
   names.map((name) => ({ name, mimeType: 'image/png', buffer: png }));
+const images = (page: Page) => page.locator('.tiptap img:not(.ProseMirror-separator)');
+
 async function upload(page: Page, carousel = false) {
   if (carousel) {
     await page.getByRole('button', { name: '캐러셀 만들기', exact: true }).click();
@@ -16,7 +18,7 @@ async function upload(page: Page, carousel = false) {
     await page.getByRole('button', { name: '이미지 추가', exact: true }).click();
     await (await chooser).setFiles(files(['one.png']));
   }
-  await expect(page.locator('.tiptap img').first()).toBeVisible();
+  await expect(images(page).first()).toBeVisible();
 }
 
 test.beforeEach(async ({ page }) => {
@@ -39,7 +41,7 @@ for (const carousel of [false, true]) {
   }) => {
     await upload(page, carousel);
     const count = carousel ? 2 : 1;
-    const picture = page.locator('.tiptap img').first();
+    const picture = images(page).first();
     await expect(page.locator('.image-delete-button:visible')).toHaveCount(0);
     await picture.click();
     const remove = page.getByRole('button', {
@@ -54,9 +56,9 @@ for (const carousel of [false, true]) {
     ).toBeLessThan(2);
     expect(Math.abs(deleteBox.y - (imageBox.y + 8))).toBeLessThan(2);
     await remove.click();
-    await expect(page.locator('.tiptap img[src]')).toHaveCount(count - 1);
+    await expect(images(page)).toHaveCount(count - 1);
     await page.getByRole('button', { name: '실행 취소', exact: true }).click();
-    await expect(page.locator('.tiptap img[src]')).toHaveCount(count);
+    await expect(images(page)).toHaveCount(count);
     await expect(page.getByTestId('saved-html')).not.toContainText('image-delete-button');
   });
   test(`${carousel ? '캐러셀' : '단일'} 사진 클릭 직후 타이핑과 붙여넣기는 alt만 바꾼다`, async ({
@@ -65,7 +67,7 @@ for (const carousel of [false, true]) {
   }) => {
     await upload(page, carousel);
     const before = await page.getByTestId('saved-html').textContent();
-    await page.locator('.tiptap img').first().click();
+    await images(page).first().click();
     const input = page.locator('.image-alt-field:not([hidden]) input');
     await expect(input).toBeFocused();
     await page.keyboard.type('Photo ');
@@ -81,7 +83,7 @@ for (const carousel of [false, true]) {
 
 test('사진 하단 alt와 드로어가 양방향 공유되고 사진 크기에는 영향이 없다', async ({ page }) => {
   await upload(page);
-  const picture = page.locator('.tiptap img').first();
+  const picture = images(page).first();
   const original = await picture.boundingBox();
   await picture.click();
   const inline = page.locator('.image-alt-field input');
@@ -146,7 +148,7 @@ test('드로어 입력 중 자동 임시저장되고 수동 저장 후 다시 �
     .poll(() => saved.image_alts)
     .toEqual([expect.objectContaining({ alt: '열린 드로어 설명' })]);
   await drawer.getByRole('button', { name: '완료', exact: true }).click();
-  await page.locator('.tiptap img').first().click();
+  await images(page).first().click();
   await page.getByLabel('이미지 설명 (alt)', { exact: true }).fill('수동 저장 설명');
   await page.getByRole('button', { name: '임시저장', exact: true }).click();
   await expect
@@ -157,7 +159,7 @@ test('드로어 입력 중 자동 임시저장되고 수동 저장 후 다시 �
   await expect(page.locator('.tiptap')).toBeVisible();
   await page.getByRole('button', { name: '임시저장 불러오기', exact: true }).click();
   await expect(page.getByTestId('saved-html')).toContainText('<img');
-  await page.locator('.tiptap img').first().click();
+  await images(page).first().click();
   await expect(page.getByLabel('이미지 설명 (alt)', { exact: true })).toHaveValue('수동 저장 설명');
   await expect(page.getByLabel('썸네일 이미지 설명 (alt)', { exact: true })).toHaveValue(
     '썸네일 저장',
