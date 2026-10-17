@@ -1,7 +1,7 @@
 # CI/CD Pipeline — GitHub Actions
 
-> Date: 2026-03-02 (2026-03-06 리다이렉트 매핑 + CF Function 업데이트 추가)
-> Status: Draft (PM 작성, 승인 후 se가 구현)
+> Date: 2026-03-02 (2026-10-17 내용 해시 기반 S3 업로드·실패 복구 반영)
+> Status: 구현 문서 (해시 업로드의 실제 배포·CI 시간은 미검증)
 
 ## 1. Overview
 
@@ -14,7 +14,7 @@ Push to main/develop
   → GitHub Actions Trigger
     → pnpm install (monorepo 전체)
     → pnpm --filter @eunminlog/client build
-    → aws s3 sync dist/ → S3 버킷
+    → 파일 SHA-256·메타데이터 비교 → 변경 업로드·삭제 정리 → S3 배포 목록 확정
     → aws cloudfront create-invalidation /*
 ```
 
@@ -148,37 +148,53 @@ Job: deploy
 
 #### Step 8: Deploy to S3
 
-파일 유형별 `Cache-Control` 분리 배포:
+내용 해시 기반 배포 스크립트가 기존 `aws s3 sync` 3단계를 대체한다.
 
 ```yaml
-- name: Deploy to S3 (HTML + ads.txt — no-cache)
-  run: |
-    aws s3 sync apps/client/dist/ s3://${{ env.S3_BUCKET }} \
-      --exclude "*" --include "*.html" --include "ads.txt" \
-      --cache-control "no-cache" \
-      --delete
-
-- name: Deploy to S3 (static assets — long cache)
-  run: |
-    aws s3 sync apps/client/dist/ s3://${{ env.S3_BUCKET }} \
-      --exclude "*.html" --exclude "ads.txt" \
-      --cache-control "public, max-age=31536000, immutable" \
-      --delete
-
-- name: Deploy feed JSON (no-cache)
-  run: |
-    if [ -d "apps/client/dist/api/feed/" ]; then
-      aws s3 sync apps/client/dist/api/feed/ s3://${{ env.S3_BUCKET }}/api/feed/ \
-        --cache-control "no-cache" \
-        --delete
-    fi
+- name: Deploy changed files to S3
+  run: node infra/scripts/deploy-static.mjs --dist apps/client/dist --bucket "$S3_BUCKET"
 ```
 
-- **HTML + ads.txt** (`no-cache`): 브라우저가 매번 서버에 재검증. SSG 빌드마다 내용이 바뀌므로 장기 캐시하면 안 됨. ads.txt는 Google 크롤러가 주기적으로 재검증하므로 no-cache 필수.
-- **정적 에셋** (`max-age=1년, immutable`): Astro가 파일명에 해시를 포함하므로 내용 변경 시 URL이 바뀜. 장기 캐시 안전.
-- **feed JSON** (`no-cache`): 무한스크롤 추가 로드에 사용되는 JSON 피드. 브라우저 stale 캐시 방지. `if [ -d ... ]` 조건으로 디렉토리 미존재 시 스텝 skip.
-- 페이지 크기 9→10 변경 시 피드 경로를 `/api/feed/v2/{locale}/.../{page}.json`으로 분리했다. HTML의 endpoint와 SSG JSON 생성 경로가 같은 버전을 사용하며 fetch도 `cache: no-cache`로 재검증한다. 배포의 `/*` 무효화는 유지한다. 이전 탭의 구버전 endpoint는 잔여 파일 정리 후 404가 될 수 있으므로 새로고침이 필요하다.
-- `--delete`: S3에 있지만 로컬 dist에 없는 파일 삭제. 이전 빌드의 잔여 파일 정리.
+`deploy-static-core.mjs`가 계획·실행 순서를 담당하고 `deploy-static-s3.mjs`가 S3 입출력을 담당한다. 파일별 바이트의 SHA-256·크기·Content-Type·Cache-Control·Content-Encoding을 직전 성공 목록과 비교한다. 수정 시각은 비교하지 않는다. 확장자로 Content-Type을 결정하고 알 수 없는 확장자는 `application/octet-stream`을 사용한다. 현재 Content-Encoding은 `null`이며 압축 인코딩을 자동 추론하지 않는다.
+
+| 파일 | Cache-Control |
+| --- | --- |
+| `*.html`, 루트 `ads.txt`, `api/feed/*` | `no-cache` |
+| 그 외 정적 출력 | `public, max-age=31536000, immutable` |
+
+- **배포 목록**: 버킷별 `_deploy/manifest.json`에 마지막 성공 파일 목록을 저장한다. 현재 목록은 러너에서 빌드 출력으로 생성하며, 관리 파일은 출력·삭제 대상에서 제외한다. `schemaVersion`과 버킷명을 검증해 환경 혼용을 방지한다. `index.html`이 없는 출력·목록, 심볼릭 링크와 잘못된 경로는 중단한다.
+- **평상시 비교**: 이전 manifest와 pending을 읽는다. 내용·메타데이터가 같으면 파일을 전송하지 않는다. 변경 없는 정상 실행은 관리 파일도 다시 저장하지 않는다. 새 경로·내용 변경·메타데이터 변경은 업로드하고 이전 목록에만 있는 경로는 삭제한다. 비HTML 파일을 먼저, HTML을 나중에 전송하며 기본 병렬 업로드는 8개(`--concurrency 1~64`)다.
+- **최초 전환**: manifest가 없으면 원격 키를 페이지네이션으로 끝까지 수집한다. 현재 파일을 모두 업로드하고 현재 출력에 없는 원격 파일을 정리해 기존 `sync --delete` 동작을 유지한다. `_deploy` 관리 영역은 제외한다. 첫 도입에는 업로드 감소 효과가 없다.
+
+##### 실패 복구와 동시 실행 (P0, S3-DEPLOY-001, 2026-10-17)
+
+직전 manifest만 유지하면 실패 중 업로드한 신규 파일이나 원래 내용으로 되돌린 파일을 놓칠 수 있으므로, 파일 변경 전에 `_deploy/pending.json`에 변경·삭제 대상 키를 기록한다.
+
+```text
+빌드 출력 해시 계산 → manifest·pending 읽기 → 배포 계획
+→ pending 먼저 저장 → 비HTML 업로드 → HTML 업로드 → 삭제
+→ 모든 파일 작업 성공 → manifest 확정 → pending 삭제
+→ CloudFront Function 갱신 → /* 무효화
+```
+
+남아 있는 pending은 다음 실행에서 복구한다. pending 키가 현재 출력에 있으면 이전 manifest와 같더라도 강제로 다시 업로드하고, 없으면 삭제한다. 재실행 목표가 실패한 빌드와 달라져도 최신 출력으로 수렴한다. pending 저장 실패 시 콘텐츠를 변경하지 않으며 파일 작업·manifest 저장 실패 시 pending을 남긴다. manifest 저장 뒤 pending 삭제가 실패해도 다음 실행에서 재처리한다. 파일 스트림 업로드의 일시 오류는 같은 실행에서 자동 재시도를 보장하지 않으며 pending을 남기고 실패하므로 워크플로를 재실행한다. 객체 없음만 초기 상태로 인정하고 접근 권한·통신·JSON·스키마 오류는 중단한다. 삭제 응답의 부분 실패도 성공으로 처리하지 않는다.
+
+대상 환경별 GitHub Actions `concurrency`를 사용하고 `cancel-in-progress: false`로 실행 중 배포를 취소하지 않는다. `main`은 production, 나머지는 development 그룹으로 묶어 같은 버킷의 배포를 직렬화한다. 이 잠금은 해당 워크플로의 협력 실행을 위한 것이며 외부 도구의 동시 쓰기까지 막지 않는다.
+
+여러 S3 객체를 한 번에 원자적으로 전환하는 방식은 아니다. 실패 시 일부 파일이 먼저 반영될 수 있으며 자동 롤백하지 않고 다음 실행에서 복구한다. manifest는 S3 파일 전체를 매번 검증하는 목록이 아니므로, 관리 목록 밖에서 수동으로 수정·삭제·추가한 객체는 평상시 비교로 감지하지 않는다. 관리 파일을 지워 복구 상태를 잃거나 버킷을 외부에서 변경하지 않도록 한다. CloudFront Function 갱신·`/*` 무효화는 업로드 건수와 관계없이 기존대로 실행하므로, S3 성공 뒤 CloudFront 단계가 실패해도 재실행에서 다시 요청한다.
+
+##### 검증과 측정 (P1, S3-DEPLOY-002, 2026-10-17)
+
+```bash
+node --test infra/scripts/deploy-static.test.mjs infra/scripts/deploy-static-s3.test.mjs
+node infra/scripts/deploy-static.mjs --dist apps/client/dist --bucket "$S3_BUCKET" --dry-run
+```
+
+로컬 검증에서 배포 코어 46개·SDK/CLI/워크플로 6개 테스트를 모두 통과했다. 기존 인프라 테스트 포함 66개·Client 67개 테스트, frozen lockfile 오프라인 설치를 통과했다. 기존 로컬 dist 109개를 메모리 스토리지에 처음 적용한 뒤 다시 실행하면 콘텐츠 업로드·삭제가 모두 0건이었다. 이는 실제 S3 속도 측정이 아니다. fixture 스토리지와 모킹된 SDK를 사용해 무변경·수정·발행·삭제·메타데이터 변경, 최초 전환, 페이지네이션, 부분 업로드·삭제·manifest/pending 처리 실패 후 재실행을 확인한다. `--dry-run`은 실제 환경에서는 읽기 권한·연결이 필요하지만 업로드·삭제·관리 파일 저장을 하지 않는다. 운영 S3 쓰기·배포는 별도 사용자 승인 후 진행한다.
+
+기존 운영 [#390](https://github.com/semnil5202/eunminlog/actions/runs/39000729052)은 전체 약 65초 중 기존 sync 3단계가 약 33초(23+5+5초), 업로드 552개였다. 이는 **기존 방식의 기준값**이며 새 해시 업로드의 실제 Actions 시간·운영 저장/복구 효과는 아직 측정하지 않았다. 무변경·소수 변경에서 전송량 감소를 기대하되 로컬 fixture 결과를 실제 배포 속도로 해석하지 않는다.
+
+피드 경로는 `/api/feed/v2/{locale}/.../{page}.json`을 사용하며 HTML endpoint와 버전을 맞춘다. 삭제 정리 뒤 이전 탭의 구버전 endpoint는 404일 수 있어 새로고침이 필요하다. 리다이렉트 생성·CloudFront 정책은 이번 변경으로 바꾸지 않는다.
 
 #### Step 9: Invalidate CloudFront cache
 
@@ -259,15 +275,15 @@ on:
 
 #### 중복 빌드 가능성
 
-Admin에서 게시글을 저장하면 `workflow_dispatch`로 빌드가 트리거된다. 동시에 client 코드를 push하면 `push` 트리거로도 빌드가 실행될 수 있다. GitHub Actions는 동일 워크플로우의 concurrent run을 허용하므로 두 빌드가 병렬 실행된다. 이는 SSG 특성상 문제가 되지 않는다 (마지막 빌드의 S3 sync가 최종 상태를 반영).
-
-향후 빌드 빈도가 높아지면 `concurrency` 옵션으로 동시 실행을 제한할 수 있다:
+Admin에서 게시글을 저장하면 `workflow_dispatch`로 빌드가 트리거되고, 같은 시점의 코드 push도 별도 실행을 만들 수 있다. 해시 배포 목록·복구 journal을 동시에 갱신하면 정합성이 깨지므로 대상 환경별 `concurrency`를 적용한다.
 
 ```yaml
 concurrency:
-  group: deploy-client-${{ github.ref }}
-  cancel-in-progress: true
+  group: deploy-client-${{ github.ref_name == 'main' && 'production' || 'development' }}
+  cancel-in-progress: false
 ```
+
+실행 중 배포를 취소하지 않고 같은 환경은 직렬화한다. GitHub의 대기 실행은 후속 실행으로 대체될 수 있으므로 모든 트리거를 순서대로 배포하는 큐는 아니며, main과 development는 별도 버킷·관리 목록을 사용한다.
 
 #### Admin 측 환경변수 (Vercel)
 

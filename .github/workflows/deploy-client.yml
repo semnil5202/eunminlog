@@ -14,6 +14,10 @@ on:
       - '.github/workflows/deploy-client.yml'
   workflow_dispatch:
 
+concurrency:
+  group: deploy-client-${{ github.ref_name == 'main' && 'production' || 'development' }}
+  cancel-in-progress: false
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -86,29 +90,8 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-northeast-2
 
-      - name: Deploy to S3 (HTML + ads.txt — no-cache)
-        run: |
-          aws s3 sync apps/client/dist/ s3://${{ env.S3_BUCKET }} \
-            --exclude "*" --include "*.html" --include "ads.txt" \
-            --cache-control "no-cache" \
-            --delete
-
-      - name: Deploy to S3 (feed JSON — no-cache)
-        run: |
-          if [ -d "apps/client/dist/api/feed/" ]; then
-            aws s3 sync apps/client/dist/api/feed/ s3://${{ env.S3_BUCKET }}/api/feed/ \
-              --cache-control "no-cache" \
-              --delete
-          fi
-
-      - name: Deploy to S3 (static assets — long cache)
-        run: |
-          aws s3 sync apps/client/dist/ s3://${{ env.S3_BUCKET }} \
-            --exclude "*.html" \
-            --exclude "ads.txt" \
-            --exclude "api/feed/*" \
-            --cache-control "public, max-age=31536000, immutable" \
-            --delete
+      - name: Deploy changed files to S3
+        run: node infra/scripts/deploy-static.mjs --dist apps/client/dist --bucket "$S3_BUCKET"
 
       - name: Update CloudFront Function
         run: |

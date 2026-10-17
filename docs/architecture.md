@@ -113,6 +113,18 @@ Supabase의 기본 상한은 한 요청당 반환 1,000행이며 프로젝트 �
 
 운영 홈·영문 홈·검색·robots·sitemap·실제 상세 경로의 HTTP 200과 상세 BlogPosting을 확인했다. 운영 DB를 직접 수정하지 않았다. 원본 체크아웃은 develop으로 복귀했다. Actions에는 v4 등 액션의 Node.js 20 런타임이 Node.js 24로 강제 실행된다는 비차단 경고와 ubuntu-latest의 Ubuntu 26 전환 예고가 남아 있으며 이번 실행 실패는 없었다. 액션 버전·러너 변경 대응은 별도 작업으로 남긴다.
 
+### 내용 해시 기반 S3 업로드 (2026-10-17, S3-DEPLOY-001)
+
+Astro 증분 캐시는 **HTML 렌더링**을 줄이고, `infra/scripts/deploy-static.mjs`는 빌드가 끝난 **파일 전송**을 줄인다. 렌더링 캐시에서 복사한 파일도 수정 시각이 바뀔 수 있으므로 S3 업로드 여부는 수정 시각이 아닌 최종 바이트의 SHA-256·크기·Content-Type·Cache-Control·Content-Encoding으로 판단한다. 현재 Content-Encoding은 `null`이다.
+
+환경별 S3 `_deploy/manifest.json`은 마지막 성공 출력 목록이다. 같은 파일은 유지하고 변경·신규 파일만 업로드하며 사라진 경로는 삭제한다. 첫 도입은 원격 키 목록을 끝까지 읽어 기존 잔여 파일을 정리하고 현재 출력을 전체 업로드한다. `_deploy`는 예약된 관리 영역으로 빌드 출력에 들어갈 수 없고 일반 삭제에서도 제외한다. 환경별 직렬 실행과 `cancel-in-progress: false`를 적용한다.
+
+실패 복구를 위해 파일 쓰기 전에 `_deploy/pending.json`에 변경·삭제 대상 키를 저장한다. 모든 파일 작업이 성공해야 manifest를 확정하고 pending을 지운다. 다음 실행은 미완료 키를 최신 출력으로 강제 업로드하거나 삭제하므로, 실패 중 생긴 신규 파일·부분 변경·부분 삭제와 다음 빌드의 되돌림까지 수렴시킨다. S3 다중 객체의 원자적 배포·자동 롤백은 아니며 중간 실패 시 일부 반영 상태가 생길 수 있다. 외부 수동 수정·삭제·추가와 외부 도구의 동시 쓰기는 manifest 비교·워크플로 잠금으로 감지하거나 차단하지 않는다.
+
+HTML·ads.txt·피드 JSON의 `no-cache`, 나머지 정적 파일의 장기 캐시와 전체 CloudFront 무효화 정책은 유지한다. 비HTML 파일을 먼저 전송하고 HTML을 나중에 전송한다. 파일별 S3 HEAD는 하지 않고 직전 manifest와 pending을 읽으며, 최초 초기화만 원격 전체 목록을 사용한다. 관리 파일의 부재 외 권한·통신·손상 오류는 중단한다.
+
+검증은 `node --test infra/scripts/deploy-static.test.mjs infra/scripts/deploy-static-s3.test.mjs`의 fixture·SDK 모킹 52개를 모두 통과했다. 기존 인프라 테스트 포함 66개·Client 67개도 통과했다. 기존 로컬 dist 109개의 모사 저장소 재실행은 업로드·삭제 모두 0건이었다. 무변경·수정·발행·삭제·메타데이터 변경과 실패 후 재실행을 확인하며 운영 데이터 쓰기는 수행하지 않는다. 기존 운영 #390의 업로드 552개·S3 약 33초/전체 약 65초는 기존 sync 기준값이다. 새 방식은 아직 배포하지 않았고 실제 Actions 시간·S3 저장/복구는 미검증이다. 상세 CLI·동시 실행·복구 계약은 [ci-cd.md](ci-cd.md)의 Deploy to S3를 참조한다.
+
 ## App별 역할
 
 | App           | Framework               | 역할                      | 렌더링                                                      |
