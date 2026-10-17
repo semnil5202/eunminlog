@@ -124,18 +124,22 @@ Job: deploy
 
 #### Step 6: Build client
 
+환경 설정 후 Astro `cacheDir`를 먼저 복원하고, 아래 빌드가 성공하면 배포 전에 저장한다. 캐시 경로·키·실패 동작은 섹션 7의 Astro 빌드 캐시 보존을 참조한다.
+
 ```yaml
 - name: Build client
   run: pnpm --filter @eunminlog/client build
   env:
-    SITE_URL: ${{ env.SITE_URL }}
+    PUBLIC_STAGE: ${{ env.PUBLIC_STAGE }}
     PUBLIC_AD_MEDIATION_ENABLED: ${{ env.PUBLIC_AD_MEDIATION_ENABLED }}
+    SUPABASE_URL: ${{ env.SUPABASE_URL }}
+    SUPABASE_SERVICE_ROLE_KEY: ${{ env.SUPABASE_SERVICE_ROLE_KEY }}
 ```
 
 `pnpm --filter @eunminlog/client build`를 사용하는 이유:
 
 - `pnpm build` (turbo build)는 admin 포함 전체 빌드. admin은 배포 대상이 아니므로 불필요.
-- filter 빌드는 turbo의 `dependsOn: ["^build"]`에 의해 의존 패키지(config, tsconfig)는 자동 빌드됨.
+- 선택한 Client의 `astro build` 스크립트를 직접 실행한다. Turbo 작업은 실행하지 않으며 workspace의 공유 설정·스타일 소스는 Client 빌드에서 참조한다.
 - 빌드 시간 절약 + 불필요한 admin 빌드 에러 방지.
 
 #### Step 7: Configure AWS credentials
@@ -205,11 +209,19 @@ Job: deploy
 
 ### 로컬 Turbo 캐시
 
-`turbo.json`의 `cacheDir`을 `.turbo/cache`로 명시하여 각 체크아웃·워크트리 내부에 캐시를 저장한다. Git worktree에서 원본 저장소의 공유 캐시를 자동 선택하면 Codex의 쓰기 허용 범위 밖 경로에 접근하여 `Operation not permitted`가 발생할 수 있다. 명시한 경로는 워크트리별 캐시를 사용하므로 워크트리 간 캐시 공유는 하지 않는다. GitHub Actions의 client 배포는 Turbo 대신 `pnpm --filter @eunminlog/client build`를 직접 실행하며, Astro 증분 캐시 보존은 별도 설정이 필요하다.
+`turbo.json`의 `cacheDir`을 `.turbo/cache`로 명시하여 각 체크아웃·워크트리 내부에 캐시를 저장한다. Git worktree에서 원본 저장소의 공유 캐시를 자동 선택하면 Codex의 쓰기 허용 범위 밖 경로에 접근하여 `Operation not permitted`가 발생할 수 있다. 명시한 경로는 워크트리별 캐시를 사용하므로 워크트리 간 캐시 공유는 하지 않는다. GitHub Actions의 client 배포는 Turbo 대신 `pnpm --filter @eunminlog/client build`를 직접 실행하며, Astro 캐시는 아래 별도 단계로 보존한다.
+
+### Astro 빌드 캐시 보존
+
+`deploy-client.yml`은 의존성 설치·환경 설정 후 `actions/cache/restore@v4`로 `apps/client/node_modules/.astro`를 복원하고, Client 빌드 성공 직후 `actions/cache/save@v4`로 같은 경로를 저장한다. 배포 단계가 실패해도 성공한 빌드 캐시는 저장되며 빌드 실패 시 저장 단계는 실행하지 않는다. `dist`나 `node_modules` 전체를 저장하지 않는다.
+
+캐시 키는 버전 접두사·OS·Node 24·브랜치·`PUBLIC_STAGE`·lockfile/astro.config 해시·run ID·run attempt를 포함한다. GitHub 캐시는 같은 키를 덮어쓸 수 없으므로 실행별 새 키로 저장하고, 같은 브랜치·환경·lock/config 접두사의 최신 캐시만 복원한다. 동일 커밋으로 콘텐츠 빌드를 반복해도 새 결과를 저장하며 main/develop 간 캐시를 섞지 않는다. 캐시 미스 시 정상적으로 전체 빌드한다.
+
+`incrementalBuild`를 활성화했고 상세·대분류·소분류·다국어 홈의 `getStaticPaths()`에서 페이지별 `cacheKey`를 반환한다. 데이터·공개 환경값·현재 연도를 모델에 반영하고 Astro가 코드 의존성을 함께 검사한다. 한국어 홈·검색·피드 JSON 등 키가 없는 출력은 계속 생성한다. 캐시를 비우거나 `astro build --force`를 실행하면 전체를 다시 렌더링하고 새 캐시를 기록한다. 실행별 캐시는 저장 용량을 소비하므로 실제 캐시 크기와 복원·저장 시간, 저장소 캐시 사용량을 확인한다. 로컬의 이전 캐시 복원과 증분/강제 빌드 출력 비교는 검증했으나 GitHub Actions 서버에서의 실제 저장·복원은 아직 실행하지 않았다. 자동 검증은 `pnpm --filter @eunminlog/client test:incremental`을 사용한다. 수집·키 범위·측정 한계는 [architecture.md](architecture.md)의 Client 빌드 데이터 재사용·증분 빌드를 참조한다.
 
 ### Turbo Remote Cache (향후)
 
-현재는 GitHub Actions의 pnpm store 캐싱만 사용. 빌드 빈도가 높아지면 Turbo Remote Cache(Vercel 또는 self-hosted)를 도입하여 빌드 결과물 자체를 캐싱할 수 있다.
+현재는 GitHub Actions의 pnpm store와 Astro cacheDir 보존을 사용. 빌드 빈도가 높아지면 Turbo Remote Cache(Vercel 또는 self-hosted)를 도입하여 빌드 결과물 자체를 캐싱할 수 있다.
 
 ### Admin → GitHub Actions 빌드 트리거 (workflow_dispatch)
 

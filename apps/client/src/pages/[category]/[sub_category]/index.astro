@@ -1,6 +1,7 @@
 ---
 /** 한국어 서브카테고리 인덱스 (/{category}/{sub_category}/) */
 
+import { getListPageCacheKey } from "@/shared/lib/page-cache";
 import ListLayout from "@/layouts/ListLayout.astro";
 import PostCardGrid from "@/features/post-feed/components/PostCardGrid.astro";
 import BreadcrumbJsonLd from "@/shared/components/seo/BreadcrumbJsonLd.astro";
@@ -31,7 +32,10 @@ export const getStaticPaths = async () => {
     }
   }
 
-  return paths;
+  return Promise.all(paths.map(async (entry) => ({
+    ...entry,
+    cacheKey: await getListPageCacheKey(DEFAULT_LOCALE, entry.props.category, entry.props.sub_category),
+  })));
 };
 
 interface Props {

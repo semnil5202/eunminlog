@@ -2,6 +2,7 @@ import { defineConfig } from 'astro/config';
 import sitemap from '@astrojs/sitemap';
 import tailwindcss from '@tailwindcss/vite';
 import fs from 'node:fs';
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { getSiteUrlFromEnv } from '@eunminlog/config/site';
 
 const localDomain = 'local-client.eunminlog.site';
@@ -14,10 +15,26 @@ const siteUrl = getSiteUrlFromEnv(process.env.PUBLIC_STAGE);
 export default defineConfig({
   site: siteUrl,
   trailingSlash: 'always',
+  experimental: {
+    incrementalBuild: true,
+  },
   build: {
     inlineStylesheets: 'always',
   },
   integrations: [
+    {
+      name: 'eunminlog-build-data',
+      hooks: {
+        'astro:server:setup': ({ server }) => {
+          const storage = new AsyncLocalStorage();
+          globalThis[Symbol.for('eunminlog.client.dev-build-data')] = storage;
+          server.middlewares.use((_request, _response, next) => storage.run({}, next));
+        },
+        'astro:build:start': () => {
+          delete globalThis[Symbol.for('eunminlog.client.build-data.v1')];
+        },
+      },
+    },
     sitemap({
       i18n: {
         defaultLocale: 'ko',

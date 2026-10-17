@@ -1,6 +1,7 @@
 ---
 /** 다국어 카테고리 인덱스 (/{locale}/{category}/) */
 
+import { getListPageCacheKey } from "@/shared/lib/page-cache";
 import ListLayout from "@/layouts/ListLayout.astro";
 import PostCardGrid from "@/features/post-feed/components/PostCardGrid.astro";
 import BreadcrumbJsonLd from "@/shared/components/seo/BreadcrumbJsonLd.astro";
@@ -35,7 +36,10 @@ export const getStaticPaths = async () => {
     }
   }
 
-  return paths;
+  return Promise.all(paths.map(async (entry) => ({
+    ...entry,
+    cacheKey: await getListPageCacheKey(entry.props.locale, entry.props.category),
+  })));
 };
 
 interface Props {

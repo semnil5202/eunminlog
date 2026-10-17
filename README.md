@@ -7,8 +7,8 @@
 | Layer    | Technology                           |
 | -------- | ------------------------------------ |
 | Admin    | Next.js 15 (App Router, React 19)    |
-| Client   | Astro 5 (SSG)                        |
-| Styling  | Tailwind CSS                         |
+| Client   | Astro 7.2.0 (SSG, 증분 빌드)         |
+| Styling  | Tailwind CSS 4.2.2                   |
 | DB       | Supabase (PostgreSQL)                |
 | AI       | OpenAI GPT-5 Nano (다국어 번역+요약) |
 | CI/CD    | GitHub Actions                       |
@@ -52,11 +52,12 @@ pnpm --filter @eunminlog/client dev   # localhost:4321
 
 ## Scripts
 
-| Command      | Description                |
-| ------------ | -------------------------- |
-| `pnpm dev`   | 전체 dev 서버 기동 (Turbo) |
-| `pnpm build` | 전체 프로덕션 빌드         |
-| `pnpm lint`  | 전체 ESLint 검사           |
+| Command                                            | Description                              |
+| -------------------------------------------------- | ---------------------------------------- |
+| `pnpm dev`                                         | 전체 dev 서버 기동 (Turbo)               |
+| `pnpm build`                                       | 전체 프로덕션 빌드                       |
+| `pnpm lint`                                        | 전체 ESLint 검사                         |
+| `pnpm --filter @eunminlog/client test:incremental` | 격리된 데이터로 증분/전체 빌드 출력 비교 |
 
 ## Architecture
 
@@ -68,7 +69,7 @@ GitHub Actions → Astro SSG Build ─────┘
               AWS S3 + CloudFront → 사용자
 ```
 
-자세한 내용은 [`docs/architecture.md`](docs/architecture.md) 참고.
+Client는 빌드별 데이터 맵을 재사용하고 상세·분류·다국어 홈에 페이지별 캐시 키를 적용한다. 한국어 홈·모든 언어의 검색·피드 JSON은 같은 맵에서 매번 생성한다. 캐시 범위·검증·측정 한계는 [`docs/architecture.md`](docs/architecture.md), CI 캐시 보존은 [`docs/ci-cd.md`](docs/ci-cd.md) 참고.
 
 ## License
 

@@ -1,6 +1,7 @@
 ---
 /** 한국어 포스트 상세 페이지 (/{category}/{sub_category}/{slug}/) */
 
+import { getPostPageCacheKey } from "@/shared/lib/page-cache";
 import PostLayout from "@/layouts/PostLayout.astro";
 import { DEFAULT_LOCALE } from "@/shared/types/common";
 import type { LocalizedPost } from "@/shared/types/post";
@@ -11,7 +12,8 @@ import { getCategoryLabel, getSubCategoryLabel } from "@/shared/lib/i18n/categor
 export const getStaticPaths = async () => {
   const posts = await getAllPosts();
 
-  return posts.map((post) => ({
+  return Promise.all(posts.map(async (post) => ({
+    cacheKey: await getPostPageCacheKey(post, DEFAULT_LOCALE),
     params: {
       category: post.category,
       sub_category: post.sub_category,
@@ -22,7 +24,7 @@ export const getStaticPaths = async () => {
       category: post.category,
       sub_category: post.sub_category,
     },
-  }));
+  })));
 };
 
 interface Props {

@@ -1,13 +1,8 @@
 import { type Locale, DEFAULT_LOCALE } from '@/shared/types/common';
 import type { CategoryNode } from '@/shared/types/category';
-import { fetchCategoryTree, type CategoryTreeNode } from '@/features/post-feed/api/categories';
+import { getBuildData } from '@/shared/lib/build-data';
 
-let _treeCache: CategoryTreeNode[] | null = null;
-
-const getTree = async (): Promise<CategoryTreeNode[]> => {
-  if (!_treeCache) _treeCache = await fetchCategoryTree();
-  return _treeCache;
-};
+const getTree = async () => (await getBuildData()).categoryTree;
 
 const resolveLabel = (
   name: string,

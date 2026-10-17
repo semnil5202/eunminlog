@@ -1,6 +1,7 @@
 ---
 /** 다국어 홈 페이지 (/{locale}/) */
 
+import { getListPageCacheKey } from "@/shared/lib/page-cache";
 import ListLayout from "@/layouts/ListLayout.astro";
 import PostCardGrid from "@/features/post-feed/components/PostCardGrid.astro";
 import BreadcrumbJsonLd from "@/shared/components/seo/BreadcrumbJsonLd.astro";
@@ -15,10 +16,11 @@ import { t } from "@/shared/lib/i18n/translations";
 export const getStaticPaths = async () => {
   const nonDefaultLocales = LOCALES.filter((l) => l !== DEFAULT_LOCALE);
 
-  return nonDefaultLocales.map((locale) => ({
+  return Promise.all(nonDefaultLocales.map(async (locale) => ({
+    cacheKey: await getListPageCacheKey(locale),
     params: { locale },
     props: { locale },
-  }));
+  })));
 };
 
 interface Props {

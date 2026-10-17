@@ -131,6 +131,8 @@ OpenAI GPT-5 Mini로 자동 번역. 한국어가 기본 언어.
 
 ### SEO 다국어 대응
 
+증분 빌드에서도 상세의 canonical·hreflang·JSON-LD에 사용하는 원문/번역 값과 분류·경로를 페이지 키에 반영한다. 원문 수정 시각을 다국어 상세의 `dateModified`로 사용하는 정책은 유지한다. 발행·삭제·slug/분류 이동·다국어 해제 시 경로 목록을 다시 계산하며 sitemap·검색·피드 JSON도 갱신한다. 검증 범위는 [architecture.md](architecture.md)의 Client 빌드 데이터 재사용·증분 빌드를 참조한다.
+
 - `<link rel="alternate" hreflang="{locale}">` 태그 필수
 - `<link rel="alternate" hreflang="x-default">` → 한국어 페이지
 - Canonical은 각 언어 페이지 자기 자신을 가리킴

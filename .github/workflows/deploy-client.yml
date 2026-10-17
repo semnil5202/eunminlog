@@ -51,6 +51,15 @@ jobs:
             echo "CF_FUNCTION_NAME=${{ secrets.DEV_CF_FUNCTION_NAME }}" >> $GITHUB_ENV
           fi
 
+      - name: Restore Astro cache
+        id: astro-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: apps/client/node_modules/.astro
+          key: astro-v1-${{ runner.os }}-node24-${{ github.ref_name }}-${{ env.PUBLIC_STAGE }}-${{ hashFiles('pnpm-lock.yaml', 'apps/client/astro.config.mjs') }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            astro-v1-${{ runner.os }}-node24-${{ github.ref_name }}-${{ env.PUBLIC_STAGE }}-${{ hashFiles('pnpm-lock.yaml', 'apps/client/astro.config.mjs') }}-
+
       - name: Build client
         run: pnpm --filter @eunminlog/client build
         env:
@@ -58,6 +67,12 @@ jobs:
           PUBLIC_AD_MEDIATION_ENABLED: ${{ env.PUBLIC_AD_MEDIATION_ENABLED }}
           SUPABASE_URL: ${{ env.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ env.SUPABASE_SERVICE_ROLE_KEY }}
+
+      - name: Save Astro cache
+        uses: actions/cache/save@v4
+        with:
+          path: apps/client/node_modules/.astro
+          key: ${{ steps.astro-cache.outputs.cache-primary-key }}
 
       - name: Generate redirect mappings
         run: node infra/scripts/generate-redirects.mjs

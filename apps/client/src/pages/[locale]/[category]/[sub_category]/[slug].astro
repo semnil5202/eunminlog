@@ -1,6 +1,7 @@
 ---
 /** 다국어 포스트 상세 페이지 (/{locale}/{category}/{sub_category}/{slug}/) */
 
+import { getPostPageCacheKey } from "@/shared/lib/page-cache";
 import PostLayout from "@/layouts/PostLayout.astro";
 import { LOCALES, DEFAULT_LOCALE } from "@/shared/types/common";
 import type { Locale } from "@/shared/types/common";
@@ -38,7 +39,11 @@ export const getStaticPaths = async () => {
     }
   }
 
-  return paths;
+  const postsBySlug = new Map(posts.map((post) => [post.slug, post]));
+  return Promise.all(paths.map(async (entry) => ({
+    ...entry,
+    cacheKey: await getPostPageCacheKey(postsBySlug.get(entry.props.slug)!, entry.props.locale),
+  })));
 };
 
 interface Props {

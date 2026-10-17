@@ -1,62 +1,19 @@
-/** 빌드 타임 번역 쿼리 API. Supabase PostgreSQL 기반. */
+/** 빌드 타임 번역 조회 API. */
 
 import type { Post, PostTranslation, LocalizedPost } from '@/shared/types/post';
 import type { Locale } from '@/shared/types/common';
-import { supabase } from '@/shared/lib/supabase';
+import { getBuildData } from '@/shared/lib/build-data';
+import { resolveLocalizedPost } from '@/shared/lib/build-data-index';
 
 export const getTranslation = async (
   postId: string,
   locale: Locale,
-): Promise<PostTranslation | undefined> => {
-  const { data, error } = await supabase
-    .from('post_translations')
-    .select('*')
-    .eq('post_id', postId)
-    .eq('locale', locale)
-    .maybeSingle();
+): Promise<PostTranslation | undefined> =>
+  (await getBuildData()).translationsByPostId.get(postId)?.get(locale);
 
-  if (error) throw new Error(`getTranslation failed: ${error.message}`);
-  return (data as PostTranslation) ?? undefined;
-};
+export const getTranslationsForPost = async (postId: string): Promise<PostTranslation[]> => [
+  ...((await getBuildData()).translationsByPostId.get(postId)?.values() ?? []),
+];
 
-export const getTranslationsForPost = async (postId: string): Promise<PostTranslation[]> => {
-  const { data, error } = await supabase
-    .from('post_translations')
-    .select('*')
-    .eq('post_id', postId);
-
-  if (error) throw new Error(`getTranslationsForPost failed: ${error.message}`);
-  return (data ?? []) as PostTranslation[];
-};
-
-export const getLocalizedPost = async (post: Post, locale: Locale): Promise<LocalizedPost> => {
-  const translation = await getTranslation(post.id, locale);
-
-  if (translation) {
-    return {
-      ...post,
-      title: translation.title,
-      description: translation.description || post.description,
-      content: translation.content,
-      translated_place_name: translation.place_name,
-      translated_address: translation.address,
-      translated_product_name: translation.product_name,
-      translated_purchase_source: translation.purchase_source,
-      translated_price_prefix: translation.price_prefix,
-      thumbnail_alt: translation.thumbnail_alt || post.thumbnail_alt,
-      image_alts: translation.image_alts?.length ? translation.image_alts : post.image_alts,
-      locale,
-    };
-  }
-
-  return {
-    ...post,
-    translated_place_name: null,
-    translated_address: null,
-    translated_product_name: null,
-    translated_purchase_source: null,
-    translated_price_prefix: null,
-    image_alts: post.image_alts ?? [],
-    locale,
-  };
-};
+export const getLocalizedPost = async (post: Post, locale: Locale): Promise<LocalizedPost> =>
+  resolveLocalizedPost(post, await getTranslation(post.id, locale), locale);

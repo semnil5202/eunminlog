@@ -17,9 +17,8 @@ import ProductInfoCard from "@/features/post-detail/components/ProductInfoCard.a
 import BasicInfoCard from "@/features/post-detail/components/BasicInfoCard.astro";
 import CopyPostLink from "@/features/post-detail/components/CopyPostLink.astro";
 import NearbyPostList from "@/features/post-detail/components/NearbyPostList.astro";
-import { getSponsoredPosts, getMultilingualSponsoredPosts, getPostsBySubCategory } from "@/features/post-feed/api/posts";
+import { getPostPageContext } from "@/shared/lib/page-cache";
 import { DEFAULT_LOCALE } from "@/shared/types/common";
-import { getLocalizedPost } from "@/features/post-feed/api/translations";
 import { getLocalePath } from "@/shared/lib/i18n/locales";
 import { t } from "@/shared/lib/i18n/translations";
 import { formatDate } from "@/shared/lib/date";
@@ -44,27 +43,7 @@ interface Props {
 
 const { post, locale, breadcrumbs, canonical, path, categoryLabel, subCategoryLabel } = Astro.props;
 
-const fetchSponsored = locale === DEFAULT_LOCALE
-  ? getSponsoredPosts(post.category, post.sub_category)
-  : getMultilingualSponsoredPosts(post.category, post.sub_category);
-
-const [sponsoredRaw, subCategoryPosts] = await Promise.all([
-  fetchSponsored,
-  getPostsBySubCategory(post.category, post.sub_category),
-]);
-const sponsoredLocalized = await Promise.all(
-  sponsoredRaw.map((sponsoredPost) => getLocalizedPost(sponsoredPost, locale)),
-);
-
-const currentIndex = subCategoryPosts.findIndex(
-  (subCategoryPost) => subCategoryPost.slug === post.slug,
-);
-const sliceStart = Math.max(0, currentIndex - 1);
-const sliceEnd = Math.min(subCategoryPosts.length, sliceStart + 4);
-const nearbyPosts = subCategoryPosts.slice(sliceStart, sliceEnd);
-const nearbyLocalized = await Promise.all(
-  nearbyPosts.map((nearbyPost) => getLocalizedPost(nearbyPost, locale)),
-);
+const { sponsoredLocalized, nearbyLocalized } = await getPostPageContext(post, locale);
 
 const subCategoryHref = getLocalePath(`/${post.category}/${post.sub_category}/`, locale);
 const publishDate = formatDate(post.created_at, locale);

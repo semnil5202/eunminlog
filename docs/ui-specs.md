@@ -451,6 +451,11 @@ Admin 본문 WYSIWYG는 클립보드 이미지 파일 붙여넣기와 외부 파
 
 ### Shared Utilities
 
+#### 상세의 추천·인접 글 데이터
+
+- `PostLayout.astro`와 페이지 캐시 키 계산이 `shared/lib/page-cache.ts`의 `getPostPageContext()`를 공유한다. 추천은 같은 범위의 첫 4개, 인접 글은 현재 글 앞 한 칸부터 최대 4개이며 현재 글도 포함한다.
+- 카드의 제목·설명·링크·대체 텍스트·배지·추적 값 변경도 포함 페이지의 재생성 판단에 반영한다. UI 구조·노출 조건은 유지한다. 데이터 수명과 검증 범위는 [architecture.md](architecture.md)의 Client 빌드 데이터 재사용·증분 빌드를 참조한다.
+
 #### `formatDate(dateStr, locale)`
 
 - **위치**: `shared/lib/date.ts`
