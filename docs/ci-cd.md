@@ -217,7 +217,7 @@ Job: deploy
 
 캐시 키는 버전 접두사·OS·Node 24·브랜치·`PUBLIC_STAGE`·lockfile/astro.config 해시·run ID·run attempt를 포함한다. GitHub 캐시는 같은 키를 덮어쓸 수 없으므로 실행별 새 키로 저장하고, 같은 브랜치·환경·lock/config 접두사의 최신 캐시만 복원한다. 동일 커밋으로 콘텐츠 빌드를 반복해도 새 결과를 저장하며 main/develop 간 캐시를 섞지 않는다. 캐시 미스 시 정상적으로 전체 빌드한다.
 
-`incrementalBuild`를 활성화했고 상세·대분류·소분류·다국어 홈의 `getStaticPaths()`에서 페이지별 `cacheKey`를 반환한다. 데이터·공개 환경값·현재 연도를 모델에 반영하고 Astro가 코드 의존성을 함께 검사한다. 한국어 홈·검색·피드 JSON 등 키가 없는 출력은 계속 생성한다. 캐시를 비우거나 `astro build --force`를 실행하면 전체를 다시 렌더링하고 새 캐시를 기록한다. 실행별 캐시는 저장 용량을 소비하므로 실제 캐시 크기와 복원·저장 시간, 저장소 캐시 사용량을 확인한다. 로컬의 이전 캐시 복원과 증분/강제 빌드 출력 비교는 검증했으나 GitHub Actions 서버에서의 실제 저장·복원은 아직 실행하지 않았다. 자동 검증은 `pnpm --filter @eunminlog/client test:incremental`을 사용한다. 수집·키 범위·측정 한계는 [architecture.md](architecture.md)의 Client 빌드 데이터 재사용·증분 빌드를 참조한다.
+`incrementalBuild`를 활성화했고 상세·대분류·소분류·다국어 홈의 `getStaticPaths()`에서 페이지별 `cacheKey`를 반환한다. 데이터·공개 환경값·현재 연도를 모델에 반영하고 Astro가 코드 의존성을 함께 검사한다. 한국어 홈·검색·피드 JSON 등 키가 없는 출력은 계속 생성한다. 캐시를 비우거나 `astro build --force`를 실행하면 전체를 다시 렌더링하고 새 캐시를 기록한다. 실행별 캐시는 저장 용량을 소비하므로 실제 캐시 크기와 복원·저장 시간, 저장소 캐시 사용량을 확인한다. 로컬의 증분/강제 빌드 출력 비교와 GitHub Actions 서버의 실제 저장·복원을 검증했다. 2026-10-17 main의 첫 실행은 캐시 미스 후 저장했고, 동일 커밋을 재실행해 이전 실행 키 복원 및 434개 경로 재사용을 확인했다. 압축 캐시는 약 1.63MiB, Astro 내부 빌드는 첫 실행 8.68초·복원 실행 8.96초였다. 캐시 복원은 정상이나 이 두 실행에서 추가 시간 단축은 확인되지 않았다. [첫 실행](https://github.com/semnil5202/eunminlog/actions/runs/38999821486), [복원 검증](https://github.com/semnil5202/eunminlog/actions/runs/38999940802)은 모두 S3/CloudFront 배포까지 성공했다. 자동 검증은 `pnpm --filter @eunminlog/client test:incremental`을 사용한다. 수집·키 범위·측정 한계는 [architecture.md](architecture.md)의 Client 빌드 데이터 재사용·증분 빌드를 참조한다.
 
 ### Turbo Remote Cache (향후)
 
