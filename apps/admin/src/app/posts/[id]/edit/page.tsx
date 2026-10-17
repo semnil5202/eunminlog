@@ -749,6 +749,7 @@ function EditPostForm({
       <ImageAltSheet
         open={isAltSheetOpen}
         onOpenChange={setIsAltSheetOpen}
+        title={title}
         content={watchedContent}
         imageAlts={imageAlts}
         onComplete={handleImageAltComplete}

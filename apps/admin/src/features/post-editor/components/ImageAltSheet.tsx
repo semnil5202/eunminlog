@@ -1,6 +1,8 @@
 'use client';
 
 import { useMemo } from 'react';
+import { ClipboardCopy } from 'lucide-react';
+import { toast } from 'sonner';
 
 import {
   Sheet,
@@ -10,12 +12,14 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
+import { buildImageAltCopyPrompt } from '@/features/post-editor/lib/image-alt-prompt';
 
 import type { ImageAlt } from '@/features/translation/types';
 
 type ImageAltSheetProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  title: string;
   content: string;
   imageAlts: ImageAlt[];
   onComplete: (alts: ImageAlt[]) => void;
@@ -38,6 +42,7 @@ export function extractImageSrcs(html: string): string[] {
 export function ImageAltSheet({
   open,
   onOpenChange,
+  title,
   content,
   imageAlts,
   onComplete,
@@ -65,6 +70,19 @@ export function ImageAltSheet({
     onOpenChange(false);
   };
 
+  const handleCopyPrompt = async () => {
+    const targets = imageSrcs.map((src, index) => ({ label: `본문 이미지 ${index + 1}`, src }));
+    const prompt = buildImageAltCopyPrompt(title, content, targets);
+    if (!prompt) return;
+
+    try {
+      await navigator.clipboard.writeText(prompt);
+      toast.success('이미지 alt 프롬프트가 복사되었습니다.');
+    } catch {
+      toast.error('프롬프트를 복사하지 못했습니다.');
+    }
+  };
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="flex w-full flex-col sm:max-w-[688px]">
@@ -73,6 +91,15 @@ export function ImageAltSheet({
           <SheetDescription className="text-base">
             각 이미지에 대한 설명을 입력해주세요. SEO에 직접 반영됩니다.
           </SheetDescription>
+          <button
+            type="button"
+            onClick={handleCopyPrompt}
+            disabled={imageSrcs.length === 0}
+            className="inline-flex w-fit items-center gap-1.5 rounded-md border border-input px-3 py-1.5 text-xs font-medium transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <ClipboardCopy className="size-3.5" />
+            프롬프트 복사
+          </button>
         </SheetHeader>
 
         <div className="flex-1 overflow-y-auto px-4 pb-4">

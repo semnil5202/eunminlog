@@ -607,6 +607,7 @@ function NewPostContent() {
       <ImageAltSheet
         open={isAltSheetOpen}
         onOpenChange={setIsAltSheetOpen}
+        title={title}
         content={watch('content')}
         imageAlts={imageAlts}
         onComplete={handleImageAltComplete}
